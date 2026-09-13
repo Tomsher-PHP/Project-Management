@@ -11,6 +11,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use App\Mail\MeetingExternalParticipantAssignedMail;
 use App\Mail\MeetingExternalParticipantRemovedMail;
+use App\Mail\MeetingExternalParticipantRescheduledMail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -67,6 +68,10 @@ class MeetingService
      */
     public function getCalendarEvents(array $filters = [], ?User $user = null, ?string $start = null, ?string $end = null): array
     {
+        $rescheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_RESCHEDULED)
+            ->value('id');
+
         $query = Meeting::query()
             ->with([
                 'project:id,name,project_code',
@@ -81,6 +86,13 @@ class MeetingService
             ->when(! empty($filters['meeting_type_id']), fn(Builder $q) => $q->where('meeting_type_id', $filters['meeting_type_id']))
             ->when(! empty($filters['meeting_location_id']), fn(Builder $q) => $q->where('meeting_location_id', $filters['meeting_location_id']))
             ->when(! empty($filters['meeting_status_id']), fn(Builder $q) => $q->where('meeting_status_id', $filters['meeting_status_id']))
+            ->when(empty($filters['meeting_status_id']), function (Builder $q) use ($rescheduledStatusId) {
+                if ($rescheduledStatusId) {
+                    $q->where('meeting_status_id', '!=', $rescheduledStatusId);
+                } else {
+                    $q->whereDoesntHave('meetingStatus', fn($sq) => $sq->where('code', MeetingStatus::STATUS_RESCHEDULED));
+                }
+            })
             ->when(! empty($filters['organizer_id']), fn(Builder $q) => $q->where('organizer_id', $filters['organizer_id']))
             ->when(! empty($filters['search']), function (Builder $q) use ($filters) {
                 $search = $filters['search'];
@@ -148,58 +160,78 @@ class MeetingService
     }
 
     /**
+     * Create a new Meeting record in database along with participants, tags, and attachments.
+     */
+    public function createMeetingRecord(array $data, ?User $user = null, array $files = []): Meeting
+    {
+        if (empty($data['organizer_id']) && $user) {
+            $data['organizer_id'] = $user->id;
+        }
+
+        if (empty($data['organizer_id']) && Auth::check()) {
+            $data['organizer_id'] = Auth::id();
+        }
+
+        if (empty($data['meeting_status_id'])) {
+            $defaultStatusId = MeetingStatus::query()->where('is_default', true)->value('id')
+                ?? MeetingStatus::query()->where('code', MeetingStatus::STATUS_SCHEDULED)->value('id')
+                ?? MeetingStatus::query()->first()?->id;
+
+            if (! $defaultStatusId) {
+                throw new \RuntimeException('Default meeting status could not be resolved from database.');
+            }
+
+            $data['meeting_status_id'] = $defaultStatusId;
+        }
+
+        $meeting = Meeting::create([
+            'project_id' => $data['project_id'] ?? null,
+            'meeting_type_id' => $data['meeting_type_id'],
+            'meeting_location_id' => $data['meeting_location_id'] ?? null,
+            'meeting_status_id' => $data['meeting_status_id'],
+            'organizer_id' => $data['organizer_id'] ?? null,
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'start_at' => $data['start_at'],
+            'end_at' => $data['end_at'],
+            'url' => $data['url'] ?? null,
+            'location_details' => $data['location_details'] ?? null,
+            'rescheduled_from_id' => $data['rescheduled_from_id'] ?? null,
+            'reschedule_reason' => $data['reschedule_reason'] ?? null,
+            'added_by' => $data['added_by'] ?? ($user?->id ?? Auth::id()),
+        ]);
+
+        $this->syncParticipants($meeting, $data['participants'] ?? []);
+
+        if (isset($data['tag_ids']) && is_array($data['tag_ids'])) {
+            $meeting->tags()->sync($data['tag_ids']);
+        }
+
+        if (! empty($files['attachments'])) {
+            $disk = env('FILESYSTEM_DISK', config('filesystems.default'));
+            foreach ($files['attachments'] as $file) {
+                $this->attachmentService->upload(
+                    $file,
+                    'meetings',
+                    $meeting,
+                    $disk,
+                    'public',
+                    false,
+                    Meeting::MEETING_FILE_CATEGORY
+                );
+            }
+        }
+
+        return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags', 'attachments']);
+    }
+
+    /**
      * Create a new Meeting along with participants and tags.
      */
     public function create(array $data, ?User $user = null, array $files = []): Meeting
     {
         $createdMeeting = DB::transaction(function () use ($data, $user, $files) {
-            if (empty($data['organizer_id']) && $user) {
-                $data['organizer_id'] = $user->id;
-            }
-
-            if (empty($data['meeting_status_id'])) {
-                $data['meeting_status_id'] = MeetingStatus::query()->where('is_default', true)->value('id')
-                    ?? MeetingStatus::query()->where('code', MeetingStatus::STATUS_SCHEDULED)->value('id')
-                    ?? MeetingStatus::query()->first()?->id;
-            }
-
-            $meeting = Meeting::create([
-                'project_id' => $data['project_id'] ?? null,
-                'meeting_type_id' => $data['meeting_type_id'],
-                'meeting_location_id' => $data['meeting_location_id'] ?? null,
-                'meeting_status_id' => $data['meeting_status_id'],
-                'organizer_id' => $data['organizer_id'],
-                'title' => $data['title'],
-                'description' => $data['description'] ?? null,
-                'start_at' => $data['start_at'],
-                'end_at' => $data['end_at'],
-                'url' => $data['url'] ?? null,
-                'location_details' => $data['location_details'] ?? null,
-                'added_by' => $data['added_by'] ?? ($user?->id ?? Auth::id()),
-            ]);
-
-            $this->syncParticipants($meeting, $data['participants'] ?? []);
-
-            if (isset($data['tag_ids']) && is_array($data['tag_ids'])) {
-                $meeting->tags()->sync($data['tag_ids']);
-            }
-
-            if (! empty($files['attachments'])) {
-                $disk = env('FILESYSTEM_DISK', config('filesystems.default'));
-                foreach ($files['attachments'] as $file) {
-                    $this->attachmentService->upload(
-                        $file,
-                        'meetings',
-                        $meeting,
-                        $disk,
-                        'public',
-                        false,
-                        Meeting::MEETING_FILE_CATEGORY
-                    );
-                }
-            }
-
-            return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags', 'attachments']);
+            return $this->createMeetingRecord($data, $user, $files);
         });
 
         $actor = $user ?? auth()->user();
@@ -209,6 +241,96 @@ class MeetingService
         $this->sendExternalParticipantEmailsOnCreate($createdMeeting);
 
         return $createdMeeting;
+    }
+
+    /**
+     * Reschedule an existing meeting by creating a new meeting occurrence
+     * and marking the original meeting as Rescheduled.
+     *
+     * @throws \InvalidArgumentException|\RuntimeException
+     */
+    public function reschedule(Meeting $originalMeeting, array $data, ?User $user = null, array $files = []): Meeting
+    {
+        if (! $originalMeeting->exists || ! $originalMeeting->canBeRescheduled()) {
+            throw new \InvalidArgumentException('The specified meeting is not eligible for rescheduling.');
+        }
+
+        $rescheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_RESCHEDULED)
+            ->value('id')
+            ?? MeetingStatus::query()->where('name', 'like', '%rescheduled%')->value('id');
+
+        if (! $rescheduledStatusId) {
+            throw new \RuntimeException('Rescheduled meeting status could not be resolved from the database.');
+        }
+
+        // Capture original external participants BEFORE reschedule
+        $originalExternalMap = [];
+        $originalExternal = $originalMeeting->participants()
+            ->where(function ($query) {
+                $query->where('is_external', true)->orWhereNull('user_id');
+            })
+            ->whereNotNull('email')
+            ->get();
+
+        foreach ($originalExternal as $p) {
+            $email = strtolower(trim((string) $p->email));
+            if ($email !== '') {
+                $originalExternalMap[$email] = [
+                    'name' => $p->name,
+                    'send_email' => (bool) $p->send_email,
+                ];
+            }
+        }
+
+        $originalMeeting->loadMissing('meetingStatus');
+        $oldStatusName = $originalMeeting->meetingStatus?->name ?? 'Scheduled';
+
+        // Link new meeting to original meeting and strip any forced meeting_status_id
+        // so that the new meeting resolves default status (is_default = 1).
+        unset($data['meeting_status_id']);
+        $data['rescheduled_from_id'] = $originalMeeting->id;
+
+        $newMeeting = DB::transaction(function () use ($originalMeeting, $data, $user, $files, $rescheduledStatusId) {
+            // Pessimistically lock original meeting to prevent concurrent double-reschedule
+            $lockedOriginal = Meeting::query()->where('id', $originalMeeting->id)->lockForUpdate()->first();
+            if (! $lockedOriginal || ! $lockedOriginal->canBeRescheduled()) {
+                throw new \InvalidArgumentException('This meeting has already been rescheduled or is no longer eligible.');
+            }
+
+            $newMeeting = $this->createMeetingRecord($data, $user, $files);
+
+            $lockedOriginal->update([
+                'meeting_status_id' => $rescheduledStatusId,
+                'updated_by' => $user?->id ?? Auth::id(),
+            ]);
+
+            return $newMeeting;
+        });
+
+        $actor = $user ?? auth()->user();
+
+        // 1. Notify internal participants of status change on original meeting
+        $originalMeeting->refresh();
+        $originalMeeting->loadMissing('meetingStatus');
+        $rescheduledStatusName = $originalMeeting->meetingStatus?->name ?? 'Rescheduled';
+        $this->notificationService->notifyMeetingStatusChanged($originalMeeting, $actor, $oldStatusName, $rescheduledStatusName);
+
+        // 2. Notify internal participants of new meeting assignment
+        $this->notificationService->notifyMeetingAssigned($newMeeting, $actor);
+
+        // 3. Send email notifications to external participants for reschedule
+        $this->sendExternalParticipantEmailsOnReschedule($originalMeeting, $newMeeting, $originalExternalMap);
+
+        return $newMeeting;
+    }
+
+    /**
+     * Alias for reschedule() to support rescheduleMeeting naming convention.
+     */
+    public function rescheduleMeeting(Meeting $originalMeeting, array $data, ?User $user = null, array $files = []): Meeting
+    {
+        return $this->reschedule($originalMeeting, $data, $user, $files);
     }
 
     /**
@@ -479,7 +601,7 @@ class MeetingService
      */
     protected function sendExternalParticipantEmailsOnCreate(Meeting $meeting): void
     {
-        $meeting->loadMissing(['organizer', 'meetingLocation', 'meetingType', 'participants']);
+        $meeting->load(['organizer', 'meetingLocation', 'meetingType', 'participants']);
 
         $sentEmails = [];
 
@@ -590,6 +712,84 @@ class MeetingService
                 Mail::to($email)->send(new MeetingExternalParticipantRemovedMail($meeting, $participant->name));
             } catch (\Throwable $e) {
                 logger()->error("Failed to send external participant removal email on delete to {$email}: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Send email notifications to external participants upon meeting reschedule.
+     */
+    protected function sendExternalParticipantEmailsOnReschedule(Meeting $originalMeeting, Meeting $newMeeting, array $originalExternalMap): void
+    {
+        $newMeeting->load(['organizer', 'meetingLocation', 'meetingType', 'participants']);
+        $originalMeeting->load(['organizer', 'meetingLocation', 'meetingType', 'participants']);
+
+        $newExternalMap = [];
+        foreach ($newMeeting->participants as $p) {
+            $isExternal = (bool) $p->is_external || empty($p->user_id);
+            if (! $isExternal) {
+                continue;
+            }
+
+            $email = strtolower(trim((string) $p->email));
+            if ($email !== '') {
+                $newExternalMap[$email] = [
+                    'name' => $p->name,
+                    'send_email' => (bool) $p->send_email,
+                ];
+            }
+        }
+
+        $sentEmails = [];
+
+        // 1. External participants removed from original meeting
+        foreach ($originalExternalMap as $email => $oldInfo) {
+            if (! $oldInfo['send_email']) {
+                continue;
+            }
+
+            $isStillParticipantWithEmail = isset($newExternalMap[$email]) && $newExternalMap[$email]['send_email'];
+
+            if (! $isStillParticipantWithEmail) {
+                if (! in_array($email, $sentEmails, true)) {
+                    $sentEmails[] = $email;
+                    try {
+                        Mail::to($email)->send(new MeetingExternalParticipantRemovedMail($originalMeeting, $oldInfo['name']));
+                    } catch (\Throwable $e) {
+                        logger()->error("Failed to send external participant removal email on reschedule to {$email}: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        // 2. External participants retained or newly added
+        foreach ($newExternalMap as $email => $newInfo) {
+            if (! $newInfo['send_email']) {
+                continue;
+            }
+
+            if (in_array($email, $sentEmails, true)) {
+                continue;
+            }
+
+            $wasInOriginal = isset($originalExternalMap[$email]) && $originalExternalMap[$email]['send_email'];
+
+            if ($wasInOriginal) {
+                // Participant retained: send Rescheduled email
+                $sentEmails[] = $email;
+                try {
+                    Mail::to($email)->send(new MeetingExternalParticipantRescheduledMail($originalMeeting, $newMeeting, $newInfo['name']));
+                } catch (\Throwable $e) {
+                    logger()->error("Failed to send external participant rescheduled email to {$email}: " . $e->getMessage());
+                }
+            } else {
+                // Participant newly added: send normal Assigned email
+                $sentEmails[] = $email;
+                try {
+                    Mail::to($email)->send(new MeetingExternalParticipantAssignedMail($newMeeting, $newInfo['name']));
+                } catch (\Throwable $e) {
+                    logger()->error("Failed to send external participant assigned email on reschedule to {$email}: " . $e->getMessage());
+                }
             }
         }
     }

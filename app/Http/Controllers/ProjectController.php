@@ -10,6 +10,7 @@ use App\Http\Requests\ProjectPaymentStatusRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Attachment;
 use App\Models\Meeting;
+use App\Models\MeetingStatus;
 use App\Models\AgileMilestone;
 use App\Models\AgileMilestoneStatus;
 use App\Models\AgileSprint;
@@ -572,6 +573,10 @@ class ProjectController extends Controller
         $timezone = config('constants.timezone');
         $now = now()->setTimezone($timezone);
 
+        $rescheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_RESCHEDULED)
+            ->value('id');
+
         $upcomingPaginator = Meeting::query()
             ->where('project_id', $project->id)
             ->when($authUser, fn($q) => $q->accessibleBy($authUser))
@@ -584,6 +589,11 @@ class ProjectController extends Controller
                 'attachments',
             ])
             ->where('start_at', '>=', $now)
+            ->when($rescheduledStatusId, function (Builder $q) use ($rescheduledStatusId) {
+                $q->where('meeting_status_id', '!=', $rescheduledStatusId);
+            }, function (Builder $q) {
+                $q->whereDoesntHave('meetingStatus', fn($sq) => $sq->where('code', MeetingStatus::STATUS_RESCHEDULED));
+            })
             ->orderBy('start_at', 'asc')
             ->paginate($perPage, ['*'], 'upcoming_page', 1);
 
@@ -598,7 +608,14 @@ class ProjectController extends Controller
                 'participants.user',
                 'attachments',
             ])
-            ->where('start_at', '<', $now)
+            ->where(function (Builder $q) use ($now, $rescheduledStatusId) {
+                $q->where('start_at', '<', $now);
+                if ($rescheduledStatusId) {
+                    $q->orWhere('meeting_status_id', $rescheduledStatusId);
+                } else {
+                    $q->orWhereHas('meetingStatus', fn($sq) => $sq->where('code', MeetingStatus::STATUS_RESCHEDULED));
+                }
+            })
             ->orderBy('start_at', 'desc')
             ->paginate($perPage, ['*'], 'past_page', 1);
 
@@ -639,6 +656,11 @@ class ProjectController extends Controller
 
         $page = max((int) $request->integer('page', 1), 1);
         $perPage = 4;
+        $now = now()->setTimezone(config('constants.timezone'));
+
+        $rescheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_RESCHEDULED)
+            ->value('id');
 
         $query = Meeting::query()
             ->where('project_id', $project->id)
@@ -653,9 +675,22 @@ class ProjectController extends Controller
             ]);
 
         if ($group === 'upcoming') {
-            $query->where('start_at', '>=', now())->orderBy('start_at', 'asc');
+            $query->where('start_at', '>=', $now)
+                ->when($rescheduledStatusId, function (Builder $q) use ($rescheduledStatusId) {
+                    $q->where('meeting_status_id', '!=', $rescheduledStatusId);
+                }, function (Builder $q) {
+                    $q->whereDoesntHave('meetingStatus', fn($sq) => $sq->where('code', MeetingStatus::STATUS_RESCHEDULED));
+                })
+                ->orderBy('start_at', 'asc');
         } else {
-            $query->where('start_at', '<', now())->orderBy('start_at', 'desc');
+            $query->where(function (Builder $q) use ($now, $rescheduledStatusId) {
+                $q->where('start_at', '<', $now);
+                if ($rescheduledStatusId) {
+                    $q->orWhere('meeting_status_id', $rescheduledStatusId);
+                } else {
+                    $q->orWhereHas('meetingStatus', fn($sq) => $sq->where('code', MeetingStatus::STATUS_RESCHEDULED));
+                }
+            })->orderBy('start_at', 'desc');
         }
 
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);

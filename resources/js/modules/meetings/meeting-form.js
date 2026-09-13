@@ -28,6 +28,42 @@ document.addEventListener("DOMContentLoaded", () => {
     const existingAttachmentsSection = document.getElementById("existing_meeting_attachments_section");
     const existingAttachmentsList = document.getElementById("existing_meeting_attachments_list");
 
+    // Reschedule Mode state & elements
+    const rescheduleModal = document.getElementById("reschedule_modal");
+    const rescheduleCurrentTimeEl = document.getElementById("reschedule_modal_current_time");
+    const rescheduleNewStartAtEl = document.getElementById("reschedule_new_start_at");
+    const rescheduleReasonEl = document.getElementById("reschedule_reason_input");
+    const rescheduleContinueBtn = document.getElementById("reschedule_continue_btn");
+    const rescheduleCloseBtns = document.querySelectorAll("[data-reschedule-modal-close]");
+    const rescheduleStartAtError = document.getElementById("reschedule_start_at_error");
+    const rescheduleReasonError = document.getElementById("reschedule_reason_error");
+
+    let isRescheduleMode = false;
+    let rescheduleOriginalMeetingId = null;
+    let rescheduleUrl = null;
+    let rescheduleState = {
+        newStartAt: "",
+        reason: "",
+        originalDurationMinutes: 60,
+    };
+
+    function resetRescheduleState() {
+        isRescheduleMode = false;
+        rescheduleOriginalMeetingId = null;
+        rescheduleUrl = null;
+        rescheduleState = {
+            newStartAt: "",
+            reason: "",
+            originalDurationMinutes: 60,
+        };
+        if (form) {
+            form.action = form.dataset.createUrl;
+            formMethodInput.value = "POST";
+        }
+        if (modalTitle) modalTitle.textContent = "Add New Meeting";
+        if (submitBtn) submitBtn.textContent = "Save Meeting";
+    }
+
     let externalIndex = 0;
     let quillEditor = null;
     let pendingMeetingFiles = [];
@@ -218,6 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 5. Open Create Modal
     function openCreateModal() {
+        resetRescheduleState();
         clearDynamicOptions();
 
         form.reset();
@@ -296,6 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 6. Close Modal
     function closeModal() {
         modal.classList.add("hidden");
+        resetRescheduleState();
     }
 
     if (openCreateBtn) {
@@ -524,6 +562,277 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // 7b. Reschedule Modal Handlers
+    function openSmallRescheduleModal(btnData) {
+        if (!rescheduleModal) return;
+
+        rescheduleOriginalMeetingId = btnData.id;
+        rescheduleUrl = btnData.rescheduleUrl;
+
+        if (rescheduleCurrentTimeEl) {
+            rescheduleCurrentTimeEl.textContent = btnData.displayTime || "N/A";
+        }
+
+        let durationMins = 60;
+        if (btnData.startAt && btnData.endAt) {
+            const startDate = parseDateTimeStr(btnData.startAt);
+            const endDate = parseDateTimeStr(btnData.endAt);
+            if (startDate && endDate) {
+                const diffMinutes = Math.round((endDate.getTime() - startDate.getTime()) / (60 * 1000));
+                if (diffMinutes > 0) durationMins = diffMinutes;
+            }
+        }
+        rescheduleState.originalDurationMinutes = durationMins;
+
+        if (rescheduleNewStartAtEl) {
+            rescheduleNewStartAtEl.value = btnData.startAt || "";
+        }
+
+        if (rescheduleReasonEl) {
+            rescheduleReasonEl.value = "";
+        }
+        if (rescheduleStartAtError) {
+            rescheduleStartAtError.textContent = "";
+            rescheduleStartAtError.classList.add("hidden");
+        }
+        if (rescheduleReasonError) {
+            rescheduleReasonError.textContent = "";
+            rescheduleReasonError.classList.add("hidden");
+        }
+
+        rescheduleModal.classList.remove("hidden");
+    }
+
+    function closeSmallRescheduleModal() {
+        if (rescheduleModal) {
+            rescheduleModal.classList.add("hidden");
+        }
+    }
+
+    if (rescheduleContinueBtn) {
+        rescheduleContinueBtn.addEventListener("click", () => {
+            const startVal = rescheduleNewStartAtEl ? rescheduleNewStartAtEl.value.trim() : "";
+            const reasonVal = rescheduleReasonEl ? rescheduleReasonEl.value.trim() : "";
+
+            let hasError = false;
+
+            if (!startVal) {
+                if (rescheduleStartAtError) {
+                    rescheduleStartAtError.textContent = "Please select a new start date & time.";
+                    rescheduleStartAtError.classList.remove("hidden");
+                }
+                hasError = true;
+            } else if (rescheduleStartAtError) {
+                rescheduleStartAtError.classList.add("hidden");
+            }
+
+            if (!reasonVal) {
+                if (rescheduleReasonError) {
+                    rescheduleReasonError.textContent = "Please enter a reason for rescheduling.";
+                    rescheduleReasonError.classList.remove("hidden");
+                }
+                hasError = true;
+            } else if (rescheduleReasonError) {
+                rescheduleReasonError.classList.add("hidden");
+            }
+
+            if (hasError) return;
+
+            rescheduleState.newStartAt = startVal;
+            rescheduleState.reason = reasonVal;
+
+            closeSmallRescheduleModal();
+            const editUrl = form.dataset.editUrl || `/meetings/${rescheduleOriginalMeetingId}/edit`;
+            openRescheduleCreateModal(editUrl, rescheduleUrl);
+        });
+    }
+
+    rescheduleCloseBtns.forEach((btn) => {
+        btn.addEventListener("click", closeSmallRescheduleModal);
+    });
+
+    if (rescheduleModal) {
+        rescheduleModal.addEventListener("click", (e) => {
+            if (e.target === rescheduleModal) {
+                closeSmallRescheduleModal();
+            }
+        });
+    }
+
+    async function openRescheduleCreateModal(editUrl, submitRescheduleUrl) {
+        if (!editUrl || !submitRescheduleUrl) return;
+
+        try {
+            const response = await fetch(editUrl, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    Accept: "application/json",
+                },
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.status) {
+                Alert.error(result.message || "Failed to load meeting details for reschedule.");
+                return;
+            }
+
+            const data = result.data;
+
+            isRescheduleMode = true;
+            form.action = submitRescheduleUrl;
+            formMethodInput.value = "POST";
+            modalTitle.textContent = "Reschedule Meeting";
+            submitBtn.textContent = "Reschedule";
+
+            // Prefill title with (Rescheduled) suffix without repeating
+            let baseTitle = (data.title || "").trim();
+            const suffix = "(Rescheduled)";
+            if (!baseTitle.toLowerCase().endsWith(suffix.toLowerCase())) {
+                baseTitle = `${baseTitle} ${suffix}`;
+            }
+            document.getElementById("meeting_title").value = baseTitle;
+
+            document.getElementById("meeting_url").value = data.url || "";
+            document.getElementById("meeting_location_details").value = data.location_details || "";
+
+            // New Start Date & Time from small modal + preserve original duration
+            if (startInputEl) startInputEl.value = rescheduleState.newStartAt;
+            if (durationInputEl) durationInputEl.value = rescheduleState.originalDurationMinutes;
+            calculateEndAt();
+
+            clearDynamicOptions();
+
+            // Project
+            const projectSelect = document.getElementById("meeting_project_id");
+            if (projectSelect && projectSelect.tomselect) {
+                if (data.project_id && data.project) {
+                    projectSelect.tomselect.addOption({
+                        value: String(data.project.id),
+                        text: data.project.name,
+                        subtype: data.project.project_code || "",
+                    });
+                    projectSelect.tomselect.setValue(String(data.project_id));
+                } else if (data.project_id) {
+                    projectSelect.tomselect.setValue(String(data.project_id));
+                } else {
+                    projectSelect.tomselect.clear();
+                }
+            }
+
+            // Meeting Type
+            const typeSelect = document.getElementById("meeting_type_id");
+            if (typeSelect && typeSelect.tomselect) {
+                if (data.meeting_type_id && data.meeting_type) {
+                    const val = String(data.meeting_type.id);
+                    if (!typeSelect.tomselect.options[val]) {
+                        typeSelect.tomselect.addOption({
+                            value: val,
+                            text: data.meeting_type.name,
+                        });
+                        trackDynamicOption(typeSelect, val);
+                    }
+                    typeSelect.tomselect.setValue(val);
+                } else if (data.meeting_type_id) {
+                    typeSelect.tomselect.setValue(String(data.meeting_type_id));
+                } else {
+                    typeSelect.tomselect.clear();
+                }
+            }
+
+            // Location
+            const locationSelect = document.getElementById("meeting_location_id");
+            if (locationSelect && locationSelect.tomselect) {
+                if (data.meeting_location_id && data.meeting_location) {
+                    const val = String(data.meeting_location.id);
+                    if (!locationSelect.tomselect.options[val]) {
+                        locationSelect.tomselect.addOption({
+                            value: val,
+                            text: data.meeting_location.name,
+                        });
+                        trackDynamicOption(locationSelect, val);
+                    }
+                    locationSelect.tomselect.setValue(val);
+                } else if (data.meeting_location_id) {
+                    locationSelect.tomselect.setValue(String(data.meeting_location_id));
+                } else {
+                    locationSelect.tomselect.clear();
+                }
+            }
+
+            // Organizer
+            const organizerSelect = document.getElementById("meeting_organizer_id");
+            if (organizerSelect && organizerSelect.tomselect) {
+                if (data.organizer_id) organizerSelect.tomselect.setValue(String(data.organizer_id));
+                else organizerSelect.tomselect.clear();
+            }
+
+            // Tags
+            const tagsSelect = document.getElementById("meeting_tag_ids");
+            if (tagsSelect && tagsSelect.tomselect) {
+                const tagIds = [];
+                if (Array.isArray(data.tags)) {
+                    data.tags.forEach((tag) => {
+                        const val = String(tag.id);
+                        if (!tagsSelect.tomselect.options[val]) {
+                            tagsSelect.tomselect.addOption({
+                                value: val,
+                                text: tag.name,
+                            });
+                            trackDynamicOption(tagsSelect, val);
+                        }
+                        tagIds.push(val);
+                    });
+                }
+                tagsSelect.tomselect.setValue(tagIds);
+            }
+
+            // Quill Description
+            if (quillEditor) {
+                quillEditor.clipboard.dangerouslyPasteHTML(data.description || "");
+            }
+
+            // Participants
+            if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
+                internalParticipantsSelect.tomselect.clear();
+            }
+            if (externalParticipantsContainer) {
+                externalParticipantsContainer.innerHTML = "";
+                externalIndex = 0;
+            }
+
+            if (data.participants && data.participants.length > 0) {
+                const internalUserIds = [];
+                data.participants.forEach((p) => {
+                    const isExt = isBool(p.is_external) || !p.user_id;
+                    if (!isExt && p.user_id) {
+                        internalUserIds.push(String(p.user_id));
+                    } else {
+                        addExternalParticipantRow(p);
+                    }
+                });
+
+                if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
+                    internalParticipantsSelect.tomselect.setValue(internalUserIds);
+                }
+            }
+
+            // Attachments reset
+            pendingMeetingFiles = [];
+            if (attachmentsInput) attachmentsInput.value = "";
+            if (selectedFilesContainer) selectedFilesContainer.innerHTML = "";
+            if (existingAttachmentsSection) existingAttachmentsSection.classList.add("hidden");
+
+            if (window.closeMeetingPreview && typeof window.closeMeetingPreview === "function") {
+                window.closeMeetingPreview();
+            }
+
+            modal.classList.remove("hidden");
+        } catch (err) {
+            console.error("Error loading meeting details for reschedule:", err);
+            Alert.error("An error occurred while preparing reschedule form.");
+        }
+    }
+
     // Delegation handler for any click on .edit-meeting-btn, .delete-meeting-attachment-btn, or .remove-pending-file-btn
     document.addEventListener("click", async (e) => {
         const removePendingBtn = e.target.closest(".remove-pending-file-btn");
@@ -545,6 +854,24 @@ document.addEventListener("DOMContentLoaded", () => {
             const updateUrl = btn.dataset.updateUrl;
             if (editUrl && updateUrl) {
                 openEditMeetingModal(editUrl, updateUrl);
+            }
+            return;
+        }
+
+        const rescheduleBtn = e.target.closest(".reschedule-meeting-btn");
+        if (rescheduleBtn) {
+            e.preventDefault();
+            const btnData = {
+                id: rescheduleBtn.dataset.id,
+                title: rescheduleBtn.dataset.title,
+                editUrl: rescheduleBtn.dataset.editUrl || `/meetings/${rescheduleBtn.dataset.id}/edit`,
+                rescheduleUrl: rescheduleBtn.dataset.rescheduleUrl,
+                displayTime: rescheduleBtn.dataset.displayTime,
+                startAt: rescheduleBtn.dataset.startAt,
+                endAt: rescheduleBtn.dataset.endAt,
+            };
+            if (btnData.id && btnData.rescheduleUrl) {
+                openSmallRescheduleModal(btnData);
             }
             return;
         }
@@ -726,6 +1053,11 @@ document.addEventListener("DOMContentLoaded", () => {
             pendingMeetingFiles.forEach((file) => {
                 formData.append("attachments[]", file);
             });
+
+            if (isRescheduleMode) {
+                formData.append("reschedule_reason", rescheduleState.reason);
+            }
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
             const response = await fetch(form.action, {
@@ -751,8 +1083,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            Alert.success(result.message || "Meeting saved successfully.");
+            Alert.success(result.message || (isRescheduleMode ? "Meeting rescheduled successfully." : "Meeting saved successfully."));
             closeModal();
+            closeSmallRescheduleModal();
+            resetRescheduleState();
+
+            if (typeof window.refreshMeetingCalendar === "function") {
+                window.refreshMeetingCalendar();
+            }
+            if (window.closeMeetingPreview && typeof window.closeMeetingPreview === "function") {
+                window.closeMeetingPreview();
+            }
 
             setTimeout(() => {
                 window.location.reload();

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Meeting;
+use App\Models\MeetingStatus;
 use App\Providers\AppServiceProvider;
 use App\Services\NotificationService;
 use Illuminate\Console\Command;
@@ -34,6 +35,10 @@ class NotifyMeetingReminder extends Command
         $sentCount = 0;
         $minutesBefore = (int) config('constants.meeting_reminder_notification_min', 10);
 
+        $rescheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_RESCHEDULED)
+            ->value('id');
+
         $meetings = Meeting::query()
             ->with([
                 'project:id,name',
@@ -48,6 +53,11 @@ class NotifyMeetingReminder extends Command
             ->whereNotNull('start_at')
             ->where('start_at', '>', $now)
             ->where('start_at', '<=', $now->copy()->addMinutes($minutesBefore))
+            ->when($rescheduledStatusId, function ($q) use ($rescheduledStatusId) {
+                $q->where('meeting_status_id', '!=', $rescheduledStatusId);
+            }, function ($q) {
+                $q->whereDoesntHave('meetingStatus', fn($sq) => $sq->where('code', MeetingStatus::STATUS_RESCHEDULED));
+            })
             ->get();
 
         if ($meetings->isNotEmpty()) {

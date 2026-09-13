@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\MeetingRequest;
+use App\Http\Requests\RescheduleMeetingRequest;
 use App\Models\Attachment;
 use App\Models\Meeting;
 use App\Models\MeetingLocation;
@@ -63,6 +64,10 @@ class MeetingController extends Controller
         $calendarEnd = $selectedDate->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
         $totalDays = (int) $calendarStart->diffInDays($calendarEnd) + 1;
 
+        $rescheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_RESCHEDULED)
+            ->value('id');
+
         $calendarMeetings = Meeting::query()
             ->with([
                 'project:id,name,project_code',
@@ -88,6 +93,13 @@ class MeetingController extends Controller
             ->when(! empty($request->input('meeting_status_id')), function (Builder $q) use ($request) {
                 $val = $request->input('meeting_status_id');
                 is_array($val) ? $q->whereIn('meeting_status_id', array_filter($val)) : $q->where('meeting_status_id', $val);
+            })
+            ->when(empty($request->input('meeting_status_id')), function (Builder $q) use ($rescheduledStatusId) {
+                if ($rescheduledStatusId) {
+                    $q->where('meeting_status_id', '!=', $rescheduledStatusId);
+                } else {
+                    $q->whereDoesntHave('meetingStatus', fn($sq) => $sq->where('code', MeetingStatus::STATUS_RESCHEDULED));
+                }
             })
             ->when(! empty($request->input('organizer_id')), function (Builder $q) use ($request) {
                 $val = $request->input('organizer_id');
@@ -201,6 +213,10 @@ class MeetingController extends Controller
         $formattedDate = $date->format('d M Y');
         $authUser = auth()->user();
 
+        $rescheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_RESCHEDULED)
+            ->value('id');
+
         $meetings = Meeting::query()
             ->with([
                 'project:id,name,project_code',
@@ -210,6 +226,11 @@ class MeetingController extends Controller
                 'organizer:id,name,email',
             ])
             ->when($authUser, fn(Builder $q) => $q->accessibleBy($authUser))
+            ->when($rescheduledStatusId, function (Builder $q) use ($rescheduledStatusId) {
+                $q->where('meeting_status_id', '!=', $rescheduledStatusId);
+            }, function (Builder $q) {
+                $q->whereDoesntHave('meetingStatus', fn($sq) => $sq->where('code', MeetingStatus::STATUS_RESCHEDULED));
+            })
             ->whereDate('start_at', '<=', $date->toDateString())
             ->whereDate('end_at', '>=', $date->toDateString())
             ->orderBy('start_at', 'asc')
@@ -243,6 +264,71 @@ class MeetingController extends Controller
         }
 
         return redirect()->route('meetings.index')->with('success', 'Meeting created successfully.');
+    }
+
+    /**
+     * Reschedule an existing meeting.
+     */
+    public function reschedule(RescheduleMeetingRequest $request, Meeting $meeting): JsonResponse|RedirectResponse
+    {
+        $authUser = auth()->user();
+
+        if (! Meeting::query()->where('id', $meeting->id)->accessibleBy($authUser)->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized to edit this meeting.',
+            ], 403);
+        }
+
+        if (! $meeting->canBeRescheduled()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'This meeting cannot be rescheduled because its current status does not allow rescheduling.',
+            ], 422);
+        }
+
+        try {
+            $validated = $request->validated();
+            $validated['participants'] = $request->input('participants', []);
+
+            $newMeeting = $this->meetingService->reschedule(
+                $meeting,
+                $validated,
+                $request->user(),
+                $request->allFiles()
+            );
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Meeting rescheduled successfully.',
+                    'data' => $newMeeting,
+                    'original_meeting_id' => $meeting->id,
+                ]);
+            }
+
+            return redirect()->route('meetings.index')->with('success', 'Meeting rescheduled successfully.');
+        } catch (\InvalidArgumentException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
+            return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            logger()->error('Meeting reschedule failed: ' . $e->getMessage(), ['exception' => $e]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed to reschedule meeting. Please try again.',
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to reschedule meeting.');
+        }
     }
 
     /**
@@ -372,6 +458,12 @@ class MeetingController extends Controller
             'participants.user',
             'tags',
             'attachments',
+            'rescheduledFrom' => function ($q) use ($authUser) {
+                $q->accessibleBy($authUser)->with('meetingStatus');
+            },
+            'rescheduledTo' => function ($q) use ($authUser) {
+                $q->accessibleBy($authUser)->with('meetingStatus');
+            },
         ]);
 
         $meetingStatuses = MeetingStatus::active()->orderBy('sort_order')->get();

@@ -20,35 +20,32 @@ class MeetingRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if ($this->filled('start_at')) {
-            $durationMinutes = (int) $this->input('duration_minutes', 60);
-            if ($durationMinutes < 1) {
-                $durationMinutes = 60;
-            }
-
             try {
                 $start = \Carbon\Carbon::parse($this->input('start_at'));
                 $endAtInput = $this->input('end_at');
-                $endAt = null;
 
                 if (! empty($endAtInput)) {
                     try {
                         $parsedEnd = \Carbon\Carbon::parse($endAtInput);
-                        if ($parsedEnd->greaterThanOrEqualTo($start)) {
-                            $endAt = $parsedEnd->format('Y-m-d H:i:s');
-                        }
+                        $this->merge([
+                            'start_at' => $start->format('Y-m-d H:i:s'),
+                            'end_at' => $parsedEnd->format('Y-m-d H:i:s'),
+                        ]);
                     } catch (\Throwable $e) {
-                        // ignore parse exception
+                        $this->merge([
+                            'start_at' => $start->format('Y-m-d H:i:s'),
+                        ]);
                     }
+                } else {
+                    $durationMinutes = (int) $this->input('duration_minutes', 60);
+                    if ($durationMinutes < 1) {
+                        $durationMinutes = 60;
+                    }
+                    $this->merge([
+                        'start_at' => $start->format('Y-m-d H:i:s'),
+                        'end_at' => $start->copy()->addMinutes($durationMinutes)->format('Y-m-d H:i:s'),
+                    ]);
                 }
-
-                if (! $endAt || $this->has('duration_minutes')) {
-                    $endAt = $start->copy()->addMinutes($durationMinutes)->format('Y-m-d H:i:s');
-                }
-
-                $this->merge([
-                    'start_at' => $start->format('Y-m-d H:i:s'),
-                    'end_at' => $endAt,
-                ]);
             } catch (\Throwable $e) {
                 // ignore invalid date error to be caught by rules
             }

@@ -247,6 +247,8 @@
     </div>
 </div>
 
+@include('meetings.partials.reschedule-modal')
+
 <!-- External Participant Row Template (Hidden) -->
 <template id="external_participant_row_template">
     <div class="external-participant-row rounded-lg border border-bgray-200 bg-white p-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 space-y-2" data-index="{INDEX}">

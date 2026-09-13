@@ -136,6 +136,41 @@ class Meeting extends Model
         return true;
     }
 
+    /**
+     * Check if the meeting is eligible for rescheduling.
+     */
+    public function canBeRescheduled(): bool
+    {
+        if (! $this->exists || $this->trashed()) {
+            return false;
+        }
+
+        $rescheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_RESCHEDULED)
+            ->value('id');
+
+        if ($rescheduledStatusId && (int) $this->meeting_status_id === (int) $rescheduledStatusId) {
+            return false;
+        }
+
+        if ($this->rescheduledTo()->exists()) {
+            return false;
+        }
+
+        $statusCode = strtolower($this->meetingStatus?->code ?? '');
+        $statusName = strtolower($this->meetingStatus?->name ?? '');
+
+        if (
+            in_array($statusCode, [MeetingStatus::STATUS_RESCHEDULED, MeetingStatus::STATUS_COMPLETED, MeetingStatus::STATUS_CANCELLED], true) ||
+            in_array($statusName, ['rescheduled', 'completed', 'cancelled'], true) ||
+            (bool) $this->meetingStatus?->is_completed
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id')->withTrashed();
