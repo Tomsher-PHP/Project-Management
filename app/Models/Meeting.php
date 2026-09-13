@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,6 +34,8 @@ class Meeting extends Model
         'end_at',
         'url',
         'location_details',
+        'rescheduled_from_id',
+        'reschedule_reason',
         'reminder_sent_at',
         'added_by',
         'updated_by',
@@ -59,6 +62,7 @@ class Meeting extends Model
             'meeting_location_id' => 'integer',
             'meeting_status_id' => 'integer',
             'organizer_id' => 'integer',
+            'rescheduled_from_id' => 'integer',
             'start_at' => 'datetime',
             'end_at' => 'datetime',
             'reminder_sent_at' => 'datetime',
@@ -69,6 +73,12 @@ class Meeting extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Meeting $model) {
+            if (! empty($model->rescheduled_from_id) && $model->exists && (int) $model->rescheduled_from_id === (int) $model->id) {
+                throw new \InvalidArgumentException('A Meeting cannot be rescheduled from itself.');
+            }
+        });
+
         static::creating(function (Meeting $model) {
             if (Auth::check() && blank($model->added_by)) {
                 $model->added_by = Auth::id();
@@ -176,11 +186,22 @@ class Meeting extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(MeetingTag::class, 'meeting_meeting_tag', 'meeting_id', 'meeting_tag_id')
+            ->withTrashed()
             ->withTimestamps();
     }
 
     public function attachments(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Attachment::class, 'link');
+    }
+
+    public function rescheduledFrom(): BelongsTo
+    {
+        return $this->belongsTo(Meeting::class, 'rescheduled_from_id');
+    }
+
+    public function rescheduledTo(): HasOne
+    {
+        return $this->hasOne(Meeting::class, 'rescheduled_from_id');
     }
 }

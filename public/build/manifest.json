@@ -64,7 +64,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Dg1IAHyO.css",
+    "file": "assets/app-Diz90ED-.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -242,7 +242,7 @@
     "isEntry": true
   },
   "resources/js/modules/meetings/meeting-form.js": {
-    "file": "assets/meeting-form-C-fvYL4D.js",
+    "file": "assets/meeting-form-CMHT5WMR.js",
     "name": "meeting-form",
     "src": "resources/js/modules/meetings/meeting-form.js",
     "isEntry": true,

@@ -31,6 +31,23 @@ document.addEventListener("DOMContentLoaded", () => {
     let externalIndex = 0;
     let quillEditor = null;
     let pendingMeetingFiles = [];
+    let dynamicSelectOptions = [];
+
+    function trackDynamicOption(selectEl, value) {
+        const valStr = String(value);
+        if (!dynamicSelectOptions.some((item) => item.select === selectEl && item.value === valStr)) {
+            dynamicSelectOptions.push({ select: selectEl, value: valStr });
+        }
+    }
+
+    function clearDynamicOptions() {
+        dynamicSelectOptions.forEach(({ select, value }) => {
+            if (select && select.tomselect && select.tomselect.options[value]) {
+                select.tomselect.removeOption(value);
+            }
+        });
+        dynamicSelectOptions = [];
+    }
 
     // Helper: boolean filter check
     const isBool = (val) => val === true || val === 1 || val === "1" || val === "true";
@@ -201,6 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 5. Open Create Modal
     function openCreateModal() {
+        clearDynamicOptions();
+
         form.reset();
         form.action = form.dataset.createUrl;
         formMethodInput.value = "POST";
@@ -347,6 +366,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             calculateEndAt();
 
+            clearDynamicOptions();
+
             // TomSelect Fields
             const projectSelect = document.getElementById("meeting_project_id");
             if (projectSelect && projectSelect.tomselect) {
@@ -366,14 +387,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const typeSelect = document.getElementById("meeting_type_id");
             if (typeSelect && typeSelect.tomselect) {
-                if (data.meeting_type_id) typeSelect.tomselect.setValue(String(data.meeting_type_id));
-                else typeSelect.tomselect.clear();
+                if (data.meeting_type_id && data.meeting_type) {
+                    const val = String(data.meeting_type.id);
+                    if (!typeSelect.tomselect.options[val]) {
+                        typeSelect.tomselect.addOption({
+                            value: val,
+                            text: data.meeting_type.name,
+                        });
+                        trackDynamicOption(typeSelect, val);
+                    }
+                    typeSelect.tomselect.setValue(val);
+                } else if (data.meeting_type_id) {
+                    typeSelect.tomselect.setValue(String(data.meeting_type_id));
+                } else {
+                    typeSelect.tomselect.clear();
+                }
             }
 
             const locationSelect = document.getElementById("meeting_location_id");
             if (locationSelect && locationSelect.tomselect) {
-                if (data.meeting_location_id) locationSelect.tomselect.setValue(String(data.meeting_location_id));
-                else locationSelect.tomselect.clear();
+                if (data.meeting_location_id && data.meeting_location) {
+                    const val = String(data.meeting_location.id);
+                    if (!locationSelect.tomselect.options[val]) {
+                        locationSelect.tomselect.addOption({
+                            value: val,
+                            text: data.meeting_location.name,
+                        });
+                        trackDynamicOption(locationSelect, val);
+                    }
+                    locationSelect.tomselect.setValue(val);
+                } else if (data.meeting_location_id) {
+                    locationSelect.tomselect.setValue(String(data.meeting_location_id));
+                } else {
+                    locationSelect.tomselect.clear();
+                }
             }
 
             const statusSelect = document.getElementById("meeting_status_id");
@@ -390,7 +437,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const tagsSelect = document.getElementById("meeting_tag_ids");
             if (tagsSelect && tagsSelect.tomselect) {
-                const tagIds = (data.tags || []).map((t) => t.id);
+                const tagIds = [];
+                if (Array.isArray(data.tags)) {
+                    data.tags.forEach((tag) => {
+                        const val = String(tag.id);
+                        if (!tagsSelect.tomselect.options[val]) {
+                            tagsSelect.tomselect.addOption({
+                                value: val,
+                                text: tag.name,
+                            });
+                            trackDynamicOption(tagsSelect, val);
+                        }
+                        tagIds.push(val);
+                    });
+                }
                 tagsSelect.tomselect.setValue(tagIds);
             }
 
