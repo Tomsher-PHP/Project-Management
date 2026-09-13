@@ -246,13 +246,6 @@ document.addEventListener("DOMContentLoaded", () => {
             else locationSelect.tomselect.clear();
         }
 
-        const statusSelect = document.getElementById("meeting_status_id");
-        if (statusSelect && statusSelect.tomselect) {
-            const defId = statusSelect.dataset.defaultId;
-            if (defId) statusSelect.tomselect.setValue(defId);
-            else statusSelect.tomselect.clear();
-        }
-
         const organizerSelect = document.getElementById("meeting_organizer_id");
         if (organizerSelect && organizerSelect.tomselect) {
             const defId = organizerSelect.dataset.defaultId;
@@ -421,12 +414,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     locationSelect.tomselect.clear();
                 }
-            }
-
-            const statusSelect = document.getElementById("meeting_status_id");
-            if (statusSelect && statusSelect.tomselect) {
-                if (data.meeting_status_id) statusSelect.tomselect.setValue(String(data.meeting_status_id));
-                else statusSelect.tomselect.clear();
             }
 
             const organizerSelect = document.getElementById("meeting_organizer_id");

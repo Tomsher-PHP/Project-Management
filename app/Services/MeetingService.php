@@ -158,7 +158,8 @@ class MeetingService
             }
 
             if (empty($data['meeting_status_id'])) {
-                $data['meeting_status_id'] = MeetingStatus::where('code', MeetingStatus::STATUS_SCHEDULED)->value('id')
+                $data['meeting_status_id'] = MeetingStatus::query()->where('is_default', true)->value('id')
+                    ?? MeetingStatus::query()->where('code', MeetingStatus::STATUS_SCHEDULED)->value('id')
                     ?? MeetingStatus::query()->first()?->id;
             }
 

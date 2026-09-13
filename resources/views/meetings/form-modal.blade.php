@@ -150,7 +150,7 @@
                     </div>
                 </div>
 
-                <!-- 6. Location & Status -->
+                <!-- 6. Location, Location Details, Meeting URL & Tags -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     @php
                         $defaultLocationId = $meetingLocations->firstWhere('is_default', true)?->id;
@@ -167,24 +167,13 @@
                         </select>
                     </div>
 
-                    @php
-                        $defaultStatusId = $meetingStatuses->firstWhere('is_default', true)?->id;
-                    @endphp
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Status
+                            Location Details (e.g. Room Name / Address)
                         </label>
-                        <select name="meeting_status_id" id="meeting_status_id" class="tom-select w-full" data-default-id="{{ $defaultStatusId ?? '' }}">
-                            <option value="">Select Status</option>
-                            @foreach ($meetingStatuses as $status)
-                                <option value="{{ $status->id }}" {{ $defaultStatusId && $status->id == $defaultStatusId ? 'selected' : '' }}>{{ $status->name }}</option>
-                            @endforeach
-                        </select>
+                        <input type="text" name="location_details" id="meeting_location_details" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Conference Room 2B">
                     </div>
-                </div>
 
-                <!-- 7. Meeting URL & Location Details -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Meeting URL (e.g. Google Meet / Zoom Link)
@@ -194,22 +183,14 @@
 
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Location Details (e.g. Room Name / Address)
+                            Tags
                         </label>
-                        <input type="text" name="location_details" id="meeting_location_details" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Conference Room 2B">
+                        <select name="tag_ids[]" id="meeting_tag_ids" multiple class="tom-select-multiple w-full">
+                            @foreach ($meetingTags as $tag)
+                                <option value="{{ $tag->id }}">{{ $tag->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                </div>
-
-                <!-- 8. Tags -->
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                        Tags
-                    </label>
-                    <select name="tag_ids[]" id="meeting_tag_ids" multiple class="tom-select-multiple w-full">
-                        @foreach ($meetingTags as $tag)
-                            <option value="{{ $tag->id }}">{{ $tag->name }}</option>
-                        @endforeach
-                    </select>
                 </div>
 
                 <!-- 9. Description (Quill Editor) -->
