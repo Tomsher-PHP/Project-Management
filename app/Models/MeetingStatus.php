@@ -72,6 +72,11 @@ class MeetingStatus extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeNotRescheduled($query)
+    {
+        return $query->where('code', '!=', self::STATUS_RESCHEDULED);
+    }
+
     public function meetings()
     {
         return $this->hasMany(Meeting::class, 'meeting_status_id');

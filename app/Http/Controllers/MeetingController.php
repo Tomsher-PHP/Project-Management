@@ -466,7 +466,7 @@ class MeetingController extends Controller
             },
         ]);
 
-        $meetingStatuses = MeetingStatus::active()->orderBy('sort_order')->get();
+        $meetingStatuses = MeetingStatus::active()->notRescheduled()->orderBy('sort_order')->get();
 
         $html = view('meetings.partials.preview-drawer-content', [
             'meeting' => $meeting,
