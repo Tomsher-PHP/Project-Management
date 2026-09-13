@@ -81,9 +81,26 @@
             @endif
 
             @if ($meeting->project)
-                <span class="inline-flex items-center rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
-                    Project: {{ $meeting->project->name }} @if ($meeting->project->project_code)
-                        ({{ $meeting->project->project_code }})
+                @php
+                    $canViewProject = auth()->user()?->canAny(['project.view', 'project.view_all_projects']);
+                    $projectUrl = $canViewProject ? ($meeting->project->trashed() ? route('projects.restore.show', $meeting->project->id) : route('projects.edit', $meeting->project)) : null;
+                @endphp
+                <span class="inline-flex items-center gap-1 rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
+                    Project:
+                    @if ($projectUrl)
+                        <a href="{{ $projectUrl }}" class="font-semibold text-bgray-900 transition hover:text-success-400 hover:underline dark:text-white dark:hover:text-success-300">
+                            {{ $meeting->project->name }}
+                            @if ($meeting->project->project_code)
+                                ({{ $meeting->project->project_code }})
+                            @endif
+                        </a>
+                    @else
+                        <span>
+                            {{ $meeting->project->name }}
+                            @if ($meeting->project->project_code)
+                                ({{ $meeting->project->project_code }})
+                            @endif
+                        </span>
                     @endif
                 </span>
             @endif
