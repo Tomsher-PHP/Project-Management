@@ -21,6 +21,7 @@ class MeetingStatus extends Model
 
     // Status types
     public const TYPE_OPEN = 'open';
+    public const TYPE_RESCHEDULED = 'rescheduled';
     public const TYPE_IN_PROGRESS = 'in_progress';
     public const TYPE_COMPLETED = 'completed';
     public const TYPE_CANCELLED = 'cancelled';

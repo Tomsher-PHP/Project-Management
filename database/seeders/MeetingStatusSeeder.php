@@ -25,7 +25,7 @@ class MeetingStatusSeeder extends Seeder
                 'name' => 'Rescheduled',
                 'code' => MeetingStatus::STATUS_RESCHEDULED,
                 'color' => '#F59E0B',
-                'type' => MeetingStatus::TYPE_OPEN,
+                'type' => MeetingStatus::TYPE_RESCHEDULED,
                 'sort_order' => 2,
                 'is_default' => 0,
                 'is_completed' => 0,

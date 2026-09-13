@@ -28,10 +28,8 @@ class MeetingSettingsSeeder extends Seeder
 
         $locations = [
             ['name' => 'Office', 'sort_order' => 1, 'is_default' => 1, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Conference Room', 'sort_order' => 2, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Board Room', 'sort_order' => 3, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Client Office', 'sort_order' => 4, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Online', 'sort_order' => 5, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Online', 'sort_order' => 2, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Client Office', 'sort_order' => 3, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
         ];
 
         foreach ($locations as $location) {
