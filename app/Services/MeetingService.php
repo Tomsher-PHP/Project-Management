@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Mail\MeetingExternalParticipantAssignedMail;
 use App\Mail\MeetingExternalParticipantRemovedMail;
 use App\Mail\MeetingExternalParticipantRescheduledMail;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -26,6 +27,41 @@ class MeetingService
         $this->attachmentService = $attachmentService;
         $this->notificationService = $notificationService;
     }
+
+    /**
+     * Retrieve active scheduled meetings for external server-to-server integration API.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Meeting>
+     */
+    public function getActiveMeetings(): \Illuminate\Database\Eloquent\Collection
+    {
+        $timezone = config('constants.timezone') ?? 'UTC';
+        $now = Carbon::now($timezone);
+        $scheduledStatusId = MeetingStatus::query()
+            ->where('code', MeetingStatus::STATUS_SCHEDULED)
+            ->value('id');
+
+        return Meeting::query()
+            ->with([
+                'meetingStatus',
+                'meetingType',
+                'meetingLocation',
+                'project',
+                'organizer',
+                'participants.user',
+                'tags',
+            ])
+            ->when($scheduledStatusId, function (Builder $q) use ($scheduledStatusId) {
+                $q->where('meeting_status_id', $scheduledStatusId);
+            }, function (Builder $q) {
+                $q->whereHas('meetingStatus', fn(Builder $sq) => $sq->where('code', MeetingStatus::STATUS_SCHEDULED));
+            })
+            ->where('end_at', '>=', $now)
+            ->orderBy('start_at', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+    }
+
     /**
      * Retrieve paginated or query list of meetings.
      */

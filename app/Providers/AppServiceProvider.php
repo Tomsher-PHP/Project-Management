@@ -36,6 +36,21 @@ class AppServiceProvider extends ServiceProvider
         $notificationManager->extend('database', fn($app) => $app->make(AppDatabaseChannel::class));
         $notificationManager->forgetDrivers();
 
+        \Illuminate\Support\Facades\RateLimiter::for('api-client', function (\Illuminate\Http\Request $request) {
+            /** @var \App\Models\ApiClient|null $client */
+            $client = $request->attributes->get('api_client');
+
+            $key = $client ? 'api-client:' . $client->id : 'api-client-ip:' . $request->ip();
+
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by($key)->response(function (\Illuminate\Http\Request $request, array $headers) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Too Many Requests.',
+                ], 429, $headers);
+            });
+        });
+
+
         $dateFormat = config('constants.date_format');
         $timeFormat = config('constants.time_format');
         $timezone = config('app.timezone');
