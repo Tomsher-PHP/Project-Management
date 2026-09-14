@@ -23,8 +23,8 @@
                         color: rgb(74 222 128) !important;
                     }
                 </style>
-                <button type="button" class="active rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-worked-time-filter="today" aria-pressed="true">Today</button>
-                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-worked-time-filter="yesterday" aria-pressed="false">Yesterday</button>
+                <button type="button" class="active rounded-md px-3 py-1 text-xs font-semibold transition-all text-bgray-700 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-worked-time-filter="today" aria-pressed="true">Today</button>
+                <button type="button" class="rounded-md px-3 py-1 text-xs font-semibold transition-all text-bgray-700 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-worked-time-filter="yesterday" aria-pressed="false">Yesterday</button>
             </div>
 
             <!-- Custom Datepicker Input (Always visible) -->
@@ -34,7 +34,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                 </div>
-                <input type="text" id="worked-time-datepicker" class="rounded-lg border border-bgray-150 pl-9 pr-3 py-1.5 text-xs font-bold text-bgray-900 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white w-32" placeholder="Select Date" data-format="Y-m-d" value="{{ today()->toDateString() }}">
+                <input type="text" id="worked-time-datepicker" class="rounded-lg border border-bgray-300 pl-9 pr-3 py-1 text-xs font-bold text-bgray-700 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white w-32" placeholder="Select Date" data-format="Y-m-d" value="{{ today()->toDateString() }}">
             </div>
         </div>
     </div>
