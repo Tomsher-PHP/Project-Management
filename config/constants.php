@@ -87,4 +87,7 @@ return [
     'user_settings' => [
         'daily_work_hours_warning_mail' => 'Daily Work Hours Warning Email',
     ],
+
+    // Meeting reminder notification time in minutes 
+    'meeting_reminder_notification_min' => 10,
 ];

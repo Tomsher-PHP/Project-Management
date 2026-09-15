@@ -1,4 +1,8 @@
 {
+  "__commonjsHelpers-Cpj98o6Y.js": {
+    "file": "assets/_commonjsHelpers-Cpj98o6Y.js",
+    "name": "_commonjsHelpers"
+  },
   "_alert-DZ9rIzyM.js": {
     "file": "assets/alert-DZ9rIzyM.js",
     "name": "alert",
@@ -60,7 +64,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DpSWrA9A.css",
+    "file": "assets/app-Dh2_vrVA.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -96,13 +100,14 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DaFpjMVE.js",
+    "file": "assets/app-DolxHXsn.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_alert-DZ9rIzyM.js",
+      "__commonjsHelpers-Cpj98o6Y.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-C3hcVLUh.js",
       "_datepicker-DWdH-Ouy.js",
@@ -236,6 +241,34 @@
     "src": "resources/js/modules/list-notifications.js",
     "isEntry": true
   },
+  "resources/js/modules/meetings/meeting-form.js": {
+    "file": "assets/meeting-form-DzM1-FVJ.js",
+    "name": "meeting-form",
+    "src": "resources/js/modules/meetings/meeting-form.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_datepicker-DWdH-Ouy.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_timepicker-BgMmsOv3.js"
+    ]
+  },
+  "resources/js/modules/meetings/meetings.js": {
+    "file": "assets/meetings-nhNWN4Wz.js",
+    "name": "meetings",
+    "src": "resources/js/modules/meetings/meetings.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "__commonjsHelpers-Cpj98o6Y.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ],
+    "css": [
+      "assets/meetings-BB8ezBci.css"
+    ]
+  },
   "resources/js/modules/project-stage-form.js": {
     "file": "assets/project-stage-form-DaUeFapW.js",
     "name": "project-stage-form",
@@ -258,7 +291,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-Dbvzc8vQ.js",
+    "file": "assets/project-detail-whDmsL8-.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -479,7 +512,7 @@
     "isEntry": true
   },
   "resources/js/modules/users/user-shift.js": {
-    "file": "assets/user-shift-tEhc6GBY.js",
+    "file": "assets/user-shift-BzYx1tpp.js",
     "name": "user-shift",
     "src": "resources/js/modules/users/user-shift.js",
     "isEntry": true

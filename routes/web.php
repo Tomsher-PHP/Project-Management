@@ -20,6 +20,8 @@ use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
+use App\Http\Controllers\MeetingSettingsController;
+use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\NotificationController;
@@ -255,6 +257,25 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/appraisal/import-questions', [AppraisalCategoryController::class, 'importQuestions'])->middleware('permission.type:appraisal_settings.create')->name('appraisal.importQuestions');
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.delete')->only(['destroy']);
 
+        // Meeting Settings routes
+        Route::patch('/meeting-types/toggle-status', [MeetingSettingsController::class, 'toggleStatusMeetingType'])->middleware('permission.type:meeting_settings.edit')->name('meeting_type.toggleStatus');
+        Route::resource('meeting-types', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.view')->only(['index']);
+        Route::resource('meeting-types', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.create')->only(['store']);
+        Route::resource('meeting-types', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.edit')->only(['update']);
+        Route::resource('meeting-types', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.delete')->only(['destroy']);
+
+        Route::patch('/meeting-locations/toggle-status', [MeetingSettingsController::class, 'toggleStatusMeetingLocation'])->middleware('permission.type:meeting_settings.edit')->name('meeting_location.toggleStatus');
+        Route::resource('meeting-locations', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.view')->only(['index']);
+        Route::resource('meeting-locations', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.create')->only(['store']);
+        Route::resource('meeting-locations', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.edit')->only(['update']);
+        Route::resource('meeting-locations', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.delete')->only(['destroy']);
+
+        Route::patch('/meeting-tags/toggle-status', [MeetingSettingsController::class, 'toggleStatusMeetingTag'])->middleware('permission.type:meeting_settings.edit')->name('meeting_tag.toggleStatus');
+        Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.view')->only(['index']);
+        Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.create')->only(['store']);
+        Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.edit')->only(['update']);
+        Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.delete')->only(['destroy']);
+
         // Leave Type Routes
         Route::patch('/leave-types/toggle-status', [LeaveTypeController::class, 'toggleStatus'])->middleware('permission.type:leave-type.edit')->name('leave-type.toggleStatus');
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.view')->only(['index']);
@@ -358,6 +379,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('projects/{project}')->group(function () {
         Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.tasks.groups.show');
+        Route::get('meetings/groups/{group}', [ProjectController::class, 'meetingGroup'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.meetings.groups.show');
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
         Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware(['permission.type:task.create'])->name('projects.tasks.store');
@@ -380,6 +402,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('milestones/{projectMilestone}/sprints', [ProjectRestoreController::class, 'milestoneSprints'])->name('projects.restore.milestones.sprints.index');
         Route::get('tasks/groups', [ProjectRestoreController::class, 'taskGroupsPage'])->name('projects.restore.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectRestoreController::class, 'taskGroup'])->name('projects.restore.tasks.groups.show');
+        Route::get('meetings/groups/{group}', [ProjectController::class, 'meetingGroup'])->name('projects.restore.meetings.groups.show');
     });
 
     Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
@@ -728,6 +751,19 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{quickNote}/pin', [QuickNoteController::class, 'togglePin'])->name('pin');
         Route::patch('/{quickNote}/archive', [QuickNoteController::class, 'toggleArchive'])->name('archive');
     });
+
+    // Meeting Management routes
+    Route::get('/meetings/calendar-data', [MeetingController::class, 'calendarData'])->middleware('permission.type:meeting.view')->name('meetings.calendar-data');
+    Route::get('/meetings/day-meetings', [MeetingController::class, 'dayMeetings'])->middleware('permission.type:meeting.view')->name('meetings.day-meetings');
+    Route::get('/meetings/{meeting}/preview', [MeetingController::class, 'preview'])->middleware('permission.type:meeting.view')->name('meetings.preview');
+    Route::post('/meetings/{meeting}/minutes', [MeetingController::class, 'updateMinutes'])->middleware('permission.type:meeting.edit')->name('meetings.minutes');
+    Route::patch('/meetings/{meeting}/status', [MeetingController::class, 'updateStatus'])->middleware('permission.type:meeting.edit')->name('meetings.status');
+    Route::post('/meetings/{meeting}/reschedule', [MeetingController::class, 'reschedule'])->middleware('permission.type:meeting.edit')->name('meetings.reschedule');
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.view')->only(['index']);
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.create')->only(['store']);
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.edit')->only(['edit', 'update']);
+    Route::delete('/meetings/{meeting}/attachments/{attachment}', [MeetingController::class, 'deleteAttachment'])->middleware('permission.type:meeting.edit')->name('meetings.attachments.delete');
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.delete')->only(['destroy']);
 });
 
 Route::get('api-test', function () {

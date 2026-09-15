@@ -6,7 +6,7 @@
             <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Projects Bar Chart</h3>
 
             <!-- Filter Collapse Toggle Button with Count Badge -->
-            <button type="button" data-projects-count-filter-toggle aria-label="Toggle filters" aria-expanded="false" class="inline-flex items-center gap-1.5 rounded-[8px] px-2 py-1.5 text-sm font-semibold text-bgray-700 dark:text-bgray-300 border border-bgray-500 hover:border-success-300 hover:text-success-300 dark:hover:text-success-300">
+            <button type="button" data-projects-count-filter-toggle aria-label="Toggle filters" aria-expanded="false" class="inline-flex items-center gap-1.5 rounded-[8px] px-2 py-1.5 text-sm font-semibold text-bgray-700 dark:text-bgray-300 border border-bgray-300 dark:border-darkblack-400 hover:border-success-300 hover:text-success-300 dark:hover:text-success-300">
                 <span class="inline-flex items-center justify-center text-current">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18l-7 8v5.25a1.5 1.5 0 0 1-.879 1.365l-3 1.364A.75.75 0 0 1 9 19.796V12.5l-6-8Z" />

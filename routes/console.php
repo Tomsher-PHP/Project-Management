@@ -9,6 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('task:notify-start')->everyMinute()->withoutOverlapping();
+Schedule::command('meeting:notify-reminder')->everyMinute()->withoutOverlapping();
 
 // Do not need this recalculation for now
 // Schedule::command('projects:recalculate-times')->everySixHours()->withoutOverlapping();

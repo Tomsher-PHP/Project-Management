@@ -5,24 +5,23 @@
     <div class="space-y-5">
         @php
             $userSettings = $user->notificationSettings->keyBy('action');
-            $notificationGroupOrder = [
-                'Project Management',
-                'Task Management',
-                'Team & Shift',
-                'Requests & Approvals',
-            ];
+            $notificationGroupOrder = ['Project Management', 'Task Management', 'Team & Shift', 'Requests & Approvals', 'Meeting & Leaves'];
             $groupedNotificationSettings = collect($userNotificationSettings)->groupBy('group');
 
             $allActions = collect($userNotificationSettings)->pluck('action')->filter()->values();
             $totalActions = $allActions->count();
 
-            $allInAppEnabled = $totalActions > 0 && $allActions->every(function ($act) use ($userSettings) {
-                return isset($userSettings[$act]) && (bool) $userSettings[$act]->in_app;
-            });
+            $allInAppEnabled =
+                $totalActions > 0 &&
+                $allActions->every(function ($act) use ($userSettings) {
+                    return isset($userSettings[$act]) && (bool) $userSettings[$act]->in_app;
+                });
 
-            $allMailEnabled = $totalActions > 0 && $allActions->every(function ($act) use ($userSettings) {
-                return isset($userSettings[$act]) && (bool) $userSettings[$act]->mail;
-            });
+            $allMailEnabled =
+                $totalActions > 0 &&
+                $allActions->every(function ($act) use ($userSettings) {
+                    return isset($userSettings[$act]) && (bool) $userSettings[$act]->mail;
+                });
         @endphp
 
         <div class="!mb-0 grid grid-cols-12 items-center border-b px-4 py-3 font-semibold text-bgray-600 dark:text-white">
@@ -56,7 +55,7 @@
                                     {{ $setting['label'] }}
                                 </h4>
                                 @if (!empty($setting['subtitle']))
-                                    <p class="mt-1 text-sm font-normal leading-5 text-bgray-500 dark:text-bgray-300">
+                                    <p class="mt-1 text-sm font-normal leading-5 text-bgray-700 dark:text-bgray-300">
                                         {{ $setting['subtitle'] }}
                                     </p>
                                 @endif

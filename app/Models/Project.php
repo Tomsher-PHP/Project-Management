@@ -431,4 +431,9 @@ class Project extends Model
             default => $value,
         };
     }
+
+    public function meetings()
+    {
+        return $this->hasMany(Meeting::class, 'project_id');
+    }
 }

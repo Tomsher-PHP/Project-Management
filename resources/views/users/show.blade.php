@@ -6,7 +6,7 @@
 
         <div class="grid grid-cols-1 rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 xl:grid-cols-12">
             <!-- Sidebar -->
-            <aside class="col-span-3 border-r border-bgray-200 dark:border-darkblack-400">
+            <aside class="col-span-3 border-r border-bgray-200 dark:border-darkblack-400 xl:sticky xl:top-20 xl:self-start xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
                 <!-- Sidebar Tabs -->
 
                 <div class="px-4 py-6">
@@ -21,7 +21,7 @@
                     <!-- user profile -->
                     <div class="col-span-12 xl:col-span-4">
                         <div class="rounded-xl p-6 text-center">
-                            <x-user-avatar :user="$user" size="xlg" class="mx-auto mb-4 h-24 w-24 text-3xl" />
+                            <x-user-avatar :user="$user" size="3xl" shape="square-md" class="mx-auto mb-4 !h-32 !w-32" />
                             <h4 class="col-span-full text-xl font-bold text-gray-800 mb-1 dark:border-darkblack-400 dark:text-white">
                                 {{ $user->name }}
                             </h4>
@@ -42,7 +42,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 Overview
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Summary of user profile and organizational details
                             </p>
                         </div>
@@ -58,7 +58,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 Notification manager
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Manage user notifications and project-related alerts
                             </p>
                         </div>
@@ -74,7 +74,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 General Settings
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Configure user preferences and account settings
                             </p>
                         </div>
@@ -90,7 +90,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 Change Password
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Update your account password
                             </p>
                         </div>
@@ -107,7 +107,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 Shift Calendar
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 View monthly shift schedule and assignments
                             </p>
                         </div>
@@ -124,7 +124,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 KPI
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Track performance and KPI metrics
                             </p>
                         </div>

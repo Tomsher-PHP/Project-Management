@@ -280,19 +280,31 @@
                 </a>
             @endcan
 
+            @can('meeting_settings.view')
+                <a href="{{ route('settings.meeting-types.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 12.5v2.5l1.5 1.5" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Meeting Settings
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
+
             @can('leave_types.view')
                 <a href="{{ route('settings.leave-types.index') }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                         <div class="flex flex-col items-center justify-center text-center h-full">
                             <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
-                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
                                 </svg>
                             </div>
 

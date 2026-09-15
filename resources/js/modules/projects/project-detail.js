@@ -6,6 +6,7 @@ import './project-overview';
 import './project-scope-files';
 import './project-milestones';
 import './project-tasks';
+import './project-meetings';
 import './project-tabs';
 import './project-header';
 import './project-insights-modal';
