@@ -64,7 +64,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Dh2_vrVA.css",
+    "file": "assets/app-CVFRla_k.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -242,7 +242,7 @@
     "isEntry": true
   },
   "resources/js/modules/meetings/meeting-form.js": {
-    "file": "assets/meeting-form-DzM1-FVJ.js",
+    "file": "assets/meeting-form-AO0GXknX.js",
     "name": "meeting-form",
     "src": "resources/js/modules/meetings/meeting-form.js",
     "isEntry": true,
@@ -255,7 +255,7 @@
     ]
   },
   "resources/js/modules/meetings/meetings.js": {
-    "file": "assets/meetings-nhNWN4Wz.js",
+    "file": "assets/meetings-Cz9elB3-.js",
     "name": "meetings",
     "src": "resources/js/modules/meetings/meetings.js",
     "isEntry": true,
@@ -291,7 +291,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-whDmsL8-.js",
+    "file": "assets/project-detail-BarKOplk.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
