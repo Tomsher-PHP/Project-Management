@@ -105,23 +105,35 @@ return [
     ['name' => 'attendance.edit', 'label' => 'Attendance', 'sort_order' => 12040, 'default_checked' => true],
     ['name' => 'attendance.delete', 'label' => 'Attendance', 'sort_order' => 12060, 'default_checked' => false],
 
+    // HOLIDAY
+    ['name' => 'holidays.view', 'label' => 'Holiday', 'sort_order' => 13000, 'default_checked' => true],
+    ['name' => 'holidays.create', 'label' => 'Holiday', 'sort_order' => 13020, 'default_checked' => true],
+    ['name' => 'holidays.edit', 'label' => 'Holiday', 'sort_order' => 13040, 'default_checked' => true],
+    ['name' => 'holidays.delete', 'label' => 'Holiday', 'sort_order' => 13060, 'default_checked' => false],
+
+    // MEETING
+    ['name' => 'meeting.view',   'label' => 'Meeting', 'sort_order' => 14000, 'default_checked' => true],
+    ['name' => 'meeting.create', 'label' => 'Meeting', 'sort_order' => 14020, 'default_checked' => true],
+    ['name' => 'meeting.edit',   'label' => 'Meeting', 'sort_order' => 14040, 'default_checked' => true],
+    ['name' => 'meeting.delete', 'label' => 'Meeting', 'sort_order' => 14060, 'default_checked' => false],
+
     //======================================================================
     // Requests Actions Start
     //======================================================================
 
-    // TASK TIME LOG CHANGE REQUEST 
+    // TASK TIME LOG CHANGE REQUEST
     ['name' => 'task_time_log_change_request.approve_reject', 'label' => 'Requests - Task Time Log Change', 'sort_order' => 20000, 'default_checked' => false],
 
-    // HANDOFF 
+    // HANDOFF
     ['name' => 'handoff_request.view_all',     'label' => 'Requests - Handoff', 'sort_order' => 21000, 'default_checked' => false],
-    ['name' => 'handoff_request.view',         'label' => 'Requests - Handoff', 'sort_order' => 21020, 'default_checked' => false],
+    ['name' => 'handoff_request.view',         'label' => 'Requests - Handoff', 'sort_order' => 21020, 'default_checked' => true],
     ['name' => 'handoff_request.create',       'label' => 'Requests - Handoff', 'sort_order' => 21040, 'default_checked' => false],
     ['name' => 'handoff_request.note',         'label' => 'Requests - Handoff', 'sort_order' => 21060, 'default_checked' => false],
 
-    // Break Request 
+    // Break Request
     ['name' => 'break_request.approve_reject', 'label' => 'Requests - Break', 'sort_order' => 22000, 'default_checked' => false],
 
-    // Task Time Extend Request 
+    // Task Time Extend Request
     ['name' => 'task_time_extend_request.approve_reject', 'label' => 'Requests - Task Time Extend', 'sort_order' => 23000, 'default_checked' => false],
 
     //======================================================================
@@ -160,7 +172,7 @@ return [
     // Settings Modules Start
     //======================================================================
 
-    // ROLE 
+    // ROLE
     ['name' => 'role.view',   'label' => 'Settings - Role', 'sort_order' => 50000, 'default_checked' => false],
     ['name' => 'role.create', 'label' => 'Settings - Role', 'sort_order' => 50020, 'default_checked' => false],
     ['name' => 'role.edit',   'label' => 'Settings - Role', 'sort_order' => 50040, 'default_checked' => false],
@@ -226,7 +238,7 @@ return [
     ['name' => 'agile_sprint.edit',   'label' => 'Settings - Project Agile Flow', 'sort_order' => 60040, 'default_checked' => false],
     ['name' => 'agile_sprint.delete', 'label' => 'Settings - Project Agile Flow', 'sort_order' => 60060, 'default_checked' => false],
 
-    // TASK SETTINGS 
+    // TASK SETTINGS
     ['name' => 'task_settings.view',   'label' => 'Settings - Task Settings', 'sort_order' => 61000, 'default_checked' => false],
     ['name' => 'task_settings.create', 'label' => 'Settings - Task Settings', 'sort_order' => 61020, 'default_checked' => false],
     ['name' => 'task_settings.edit',   'label' => 'Settings - Task Settings', 'sort_order' => 61040, 'default_checked' => false],
@@ -250,9 +262,15 @@ return [
     ['name' => 'appraisal_settings.edit',   'label' => 'Settings - Appraisal', 'sort_order' => 64040, 'default_checked' => false],
     ['name' => 'appraisal_settings.delete', 'label' => 'Settings - Appraisal', 'sort_order' => 64060, 'default_checked' => false],
 
+    // MEETING SETTINGS
+    ['name' => 'meeting_settings.view',   'label' => 'Settings - Meeting', 'sort_order' => 65000, 'default_checked' => false],
+    ['name' => 'meeting_settings.create', 'label' => 'Settings - Meeting', 'sort_order' => 65020, 'default_checked' => false],
+    ['name' => 'meeting_settings.edit',   'label' => 'Settings - Meeting', 'sort_order' => 65040, 'default_checked' => false],
+    ['name' => 'meeting_settings.delete', 'label' => 'Settings - Meeting', 'sort_order' => 65060, 'default_checked' => false],
+
     // CONFIGURATION
-    ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 65000, 'default_checked' => false],
-    ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 65020, 'default_checked' => false],
+    ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
+    ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
 
     // LEAVE TYPES
     ['name' => 'leave_types.view',   'label' => 'Settings - Leave Types', 'sort_order' => 68000, 'default_checked' => false],

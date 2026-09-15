@@ -426,7 +426,7 @@ class AttendanceController extends Controller
             ->all();
 
         if (
-            !$loggedInUser->isSuperAdmin()
+            !$loggedInUser->is_super_admin
             && !in_array(
                 (int) $validated['user_id'],
                 $accessibleUserIds,

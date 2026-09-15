@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BreakWorkRequest;
+use App\Models\Holiday;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
@@ -279,6 +280,7 @@ class UserWorkspaceController extends Controller
         $workedTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($workedTaskSegments);
         $breakTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($breakTaskSegments);
         $workedDiffData = $this->timeLineService->getWorkedShiftDiff($assignedShift, $workedTotalSeconds);
+        $workspaceHoliday = Holiday::forUserOnDate($workspaceUser, $selectedDate->toDateString());
 
         $dateFormat = config('constants.date_format');
         return [
@@ -299,6 +301,9 @@ class UserWorkspaceController extends Controller
             'workspaceTimelineUserInitial' => Str::upper(Str::substr($workspaceUser->name ?? 'U', 0, 2)),
             'workspaceTimelineShowsUser' => ! $isOwnWorkspace,
             'workspaceTimelineUserHasRunningTimer' => $hasRunningTaskTimer,
+            'workspaceHoliday' => $workspaceHoliday,
+            'workspaceHolidayName' => $workspaceHoliday?->name,
+
         ];
     }
 

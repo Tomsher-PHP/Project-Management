@@ -238,7 +238,9 @@
         <!-- Customer -->
         <div>
             <label for="customer_id" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Customer <x-red-star /></label>
-            <select name="customer_id" id="customer_id" class="tom-select w-full">
+            <select name="customer_id" id="customer_id" class="@unless ()
+                tom-select
+            @endunless w-full">
                 <option value="">Select Customer</option>
                 @foreach ($customers as $customer)
                     <option value="{{ $customer->id }}">{{ $customer->name }}</option>

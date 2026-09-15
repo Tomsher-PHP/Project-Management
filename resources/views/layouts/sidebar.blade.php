@@ -44,9 +44,10 @@
     $canViewAppraisal = $authUser?->can('appraisal.view');
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
     $canViewAttendance = $authUser?->can('attendance.view');
+    $canViewHolidays = $authUser?->can('holidays.view');
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
@@ -542,9 +543,9 @@
                                 </a>
                             </li>
                         @endif
-                        {{-- @if ($canViewAttendance) --}}
+                        @if ($canViewHolidays)
                             <!-- Holidays -->
-                            {{-- <li class="item py-[8px]">
+                            <li class="item py-[8px]">
                                 <a href="{{ route('holidays.index') }}">
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
@@ -575,8 +576,8 @@
                                         </span>
                                     </div>
                                 </a>
-                            </li> --}}
-                        {{-- @endif --}}
+                            </li>
+                        @endif
                     </ul>
                 </div>
             @endif
