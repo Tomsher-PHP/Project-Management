@@ -17,15 +17,18 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class LeaveRequestController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
+
     protected LeaveBalanceService $leaveBalanceService;
+
     protected NotificationService $notificationService;
+
     protected UserService $userService;
 
     public function __construct(
@@ -34,7 +37,6 @@ class LeaveRequestController extends Controller
         UserService $userService
     ) {
         $this->pageTitle = 'Leave Management';
-        $this->subTitle = 'Manage and track employee leave requests.';
 
         $this->leaveBalanceService = $leaveBalanceService;
         $this->notificationService = $notificationService;
@@ -42,7 +44,6 @@ class LeaveRequestController extends Controller
 
         view()->share([
             'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
         ]);
     }
 
@@ -51,282 +52,42 @@ class LeaveRequestController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = LeaveRequest::query()
-            ->with([
-                'user',
-                'leaveType',
-                'approvedBy',
-                'rejectedBy',
-                'cancelledBy',
-                'addedBy',
-            ]);
-
-        /*
-        * Search by employee name
-        */
-        if ($request->filled('search')) {
-            $search = trim($request->search);
-
-            $query->whereHas('user', function ($userQuery) use ($search) {
-                $userQuery->where(
-                    'name',
-                    'like',
-                    "%{$search}%"
-                );
-            });
-        }
-
-        /*
-        * Employee filter
-        *
-        * Supports:
-        * user_id=1
-        * user_id[]=1&user_id[]=2
-        */
-        if ($request->filled('user_id')) {
-            $userIds = $request->input('user_id');
-
-            $userIds = is_array($userIds)
-                ? $userIds
-                : [$userIds];
-
-            $userIds = array_filter($userIds);
-
-            if (!empty($userIds)) {
-                $query->whereIn(
-                    'user_id',
-                    $userIds
-                );
-            }
-        }
-
-        /*
-        * Leave Type filter
-        *
-        * Supports multiple selected leave types.
-        */
-        if ($request->filled('leave_type_id')) {
-            $leaveTypeIds = $request->input('leave_type_id');
-
-            $leaveTypeIds = is_array($leaveTypeIds)
-                ? $leaveTypeIds
-                : [$leaveTypeIds];
-
-            $leaveTypeIds = array_filter($leaveTypeIds);
-
-            if (!empty($leaveTypeIds)) {
-                $query->whereIn(
-                    'leave_type_id',
-                    $leaveTypeIds
-                );
-            }
-        }
-
-        /*
-        * Added By filter
-        *
-        * Supports multiple selected users.
-        */
-        if ($request->filled('added_by')) {
-            $addedByIds = $request->input('added_by');
-
-            $addedByIds = is_array($addedByIds)
-                ? $addedByIds
-                : [$addedByIds];
-
-            $addedByIds = array_filter($addedByIds);
-
-            if (!empty($addedByIds)) {
-                $query->whereIn(
-                    'added_by',
-                    $addedByIds
-                );
-            }
-        }
-
-        /*
-        * Day Type filter
-        *
-        * full_day / half_day
-        */
-        if ($request->filled('type')) {
-            $types = $request->input('type');
-
-            $types = is_array($types)
-                ? $types
-                : [$types];
-
-            $types = array_filter($types);
-
-            if (!empty($types)) {
-                $query->whereIn(
-                    'type',
-                    $types
-                );
-            }
-        }
-
-        /*
-        * Status filter
-        *
-        * Supports multiple statuses.
-        */
-        if ($request->filled('status')) {
-            $statuses = $request->input('status');
-
-            $statuses = is_array($statuses)
-                ? $statuses
-                : [$statuses];
-
-            $statuses = array_filter($statuses);
-
-            if (!empty($statuses)) {
-                $query->whereIn(
-                    'status',
-                    $statuses
-                );
-            }
-        }
-
-        /*
-        * From Date filter
-        *
-        * Show requests whose requested_from_date
-        * is on or after the selected date.
-        */
-        if ($request->filled('requested_from_date')) {
-            $query->whereDate(
-                'requested_from_date',
-                '>=',
-                $request->requested_from_date
-            );
-        }
-
-        /*
-        * To Date filter
-        *
-        * Show requests whose requested_to_date
-        * is on or before the selected date.
-        */
-        if ($request->filled('requested_to_date')) {
-            $query->whereDate(
-                'requested_to_date',
-                '<=',
-                $request->requested_to_date
-            );
-        }
-
-        /*
-        * Sorting
-        */
-        $sortColumn = $request->input(
-            'sort_by',
-            'created_at'
+        $perPage = $request->input(
+            'per_page',
+            config('constants.per_page_count')
         );
 
-        $sortDirection = $request->input(
-            'direction',
-            'desc'
-        );
-
-        if (!in_array(
-            $sortDirection,
-            ['asc', 'desc'],
-            true
-        )) {
-            $sortDirection = 'desc';
-        }
-
-        $allowedSortColumns = [
-            'requested_from_date',
-            'requested_to_date',
-            'duration',
-            'status',
-            'created_at',
-        ];
+        $leaveRequests = LeaveRequest::with([
+            'user',
+            'leaveType',
+            'approvedBy',
+            'rejectedBy',
+            'cancelledBy',
+            'addedBy',
+        ])
+            ->filter($request->all())
+            ->sort($request->all())
+            ->orderBy('leave_requests.id', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
 
         /*
-        * Sort by Employee
-        */
-        if ($sortColumn === 'user.name') {
-
-            $query
-                ->join(
-                    'users',
-                    'leave_requests.user_id',
-                    '=',
-                    'users.id'
-                )
-                ->select('leave_requests.*')
-                ->orderBy(
-                    'users.name',
-                    $sortDirection
-                );
-
-        /*
-        * Sort by Leave Type
-        */
-        } elseif ($sortColumn === 'leaveType.name') {
-
-            $query
-                ->join(
-                    'leave_types',
-                    'leave_requests.leave_type_id',
-                    '=',
-                    'leave_types.id'
-                )
-                ->select('leave_requests.*')
-                ->orderBy(
-                    'leave_types.name',
-                    $sortDirection
-                );
-
-        /*
-        * Sort by Added By
-        */
-        } elseif ($sortColumn === 'addedBy.name') {
-
-            $query
-                ->join(
-                    'users as added_by_users',
-                    'leave_requests.added_by',
-                    '=',
-                    'added_by_users.id'
-                )
-                ->select('leave_requests.*')
-                ->orderBy(
-                    'added_by_users.name',
-                    $sortDirection
-                );
-
-        /*
-        * Sort by normal LeaveRequest columns
-        */
-        } elseif (in_array(
-            $sortColumn,
-            $allowedSortColumns,
-            true
-        )) {
-
-            $query->orderBy(
-                'leave_requests.' . $sortColumn,
-                $sortDirection
-            );
-
-        } else {
-
-            $query->latest(
-                'leave_requests.created_at'
-            );
-        }
-
-        /*
-        * Calendar Events
-        *
-        * Clone the filtered/sorted query before pagination
-        * so calendar events respect the selected filters.
-        */
-        $calendarLeaveRequests = (clone $query)->get();
+         * ---------------------------------------------------------
+         * Calendar Events
+         *
+         * Get the filtered leave requests for the calendar.
+         * Calendar events should respect the same filters applied
+         * to the list.
+         * ---------------------------------------------------------
+         */
+        $calendarLeaveRequests = LeaveRequest::with([
+            'user',
+            'leaveType',
+        ])
+            ->filter($request->all())
+            ->sort($request->all())
+            ->orderBy('leave_requests.id', 'desc')
+            ->get();
 
         $calendarEvents = $calendarLeaveRequests
             ->map(function ($leaveRequest) {
@@ -347,17 +108,17 @@ class LeaveRequestController extends Controller
                     'id' => $leaveRequest->id,
 
                     'title' =>
-                        ($leaveRequest->user->name ?? 'Unknown')
+                        ($leaveRequest->user?->name ?? 'Unknown')
                         . ' - '
-                        . ($leaveRequest->leaveType->name ?? 'Leave'),
+                        . ($leaveRequest->leaveType?->name ?? 'Leave'),
 
                     'start' => $calendarFromDate,
 
-                    'end' => Carbon::parse(
-                        $calendarToDate
-                    )
-                        ->addDay()
-                        ->toDateString(),
+                    'end' => $calendarToDate
+                        ? Carbon::parse($calendarToDate)
+                            ->addDay()
+                            ->toDateString()
+                        : null,
 
                     'url' => route(
                         'leave-requests.show',
@@ -365,14 +126,13 @@ class LeaveRequestController extends Controller
                     ),
 
                     'extendedProps' => [
-                        'status' =>
-                            $leaveRequest->status,
+                        'status' => $leaveRequest->status,
 
                         'employee' =>
-                            $leaveRequest->user->name ?? '-',
+                            $leaveRequest->user?->name ?? '-',
 
                         'leaveType' =>
-                            $leaveRequest->leaveType->name ?? '-',
+                            $leaveRequest->leaveType?->name ?? '-',
 
                         'duration' =>
                             $leaveRequest->status === 'approved'
@@ -391,55 +151,46 @@ class LeaveRequestController extends Controller
             ->values();
 
         /*
-        * Paginated Leave Requests
-        *
-        * withQueryString() keeps all active filters
-        * when moving between pagination pages.
-        */
-        $leaveRequests = $query
-            ->paginate(15)
-            ->withQueryString();
-
-        /*
-        * Active Leave Types
-        */
+         * ---------------------------------------------------------
+         * Active Leave Types
+         * ---------------------------------------------------------
+         */
         $leaveTypes = LeaveType::query()
             ->where('status', true)
             ->orderBy('name')
             ->get();
 
         /*
-        * Employees
-        *
-        * Used by the Employee filter.
-        */
+         * ---------------------------------------------------------
+         * Employees
+         *
+         * Used by the Employee filter.
+         * ---------------------------------------------------------
+         */
         $employees = User::query()
             ->orderBy('name')
             ->get();
 
         /*
-        * Users
-        *
-        * Used by the Added By filter.
-        */
+         * ---------------------------------------------------------
+         * Users
+         *
+         * Used by the Added By filter.
+         * ---------------------------------------------------------
+         */
         $users = User::query()
             ->orderBy('name')
             ->get();
 
-        return view('leave_requests.index', [
+        return view('leave_requests.index', compact(
+            'leaveRequests',
+            'calendarEvents',
+            'leaveTypes',
+            'employees',
+            'users',
+            'perPage'
+        ) + [
             'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
-
-            'leaveRequests' => $leaveRequests,
-
-            'calendarEvents' => $calendarEvents,
-
-            'leaveTypes' => $leaveTypes,
-
-            'employees' => $employees,
-
-            'users' => $users,
-
             'isPendingPage' => false,
         ]);
     }
@@ -478,7 +229,7 @@ class LeaveRequestController extends Controller
     public function store(
         LeaveRequestStoreRequest $request
     ): RedirectResponse {
-        $loggedInUser = auth()->user();
+        $loggedInUser = Auth::user();
 
         $createdFromAttendance =
             $request->boolean('created_from_attendance');
@@ -501,7 +252,7 @@ class LeaveRequestController extends Controller
 
             $selectedUserId = (int) $request->user_id;
 
-            if (!$loggedInUser->isSuperAdmin()) {
+            if (!$loggedInUser->is_super_admin) {
 
                 $accessibleUserIds = $this->userService
                     ->getAccessibleUsers($loggedInUser)
@@ -536,7 +287,6 @@ class LeaveRequestController extends Controller
                         'The selected user is not an active employee.'
                     );
             }
-
         } else {
 
             $leaveUser = $loggedInUser;
@@ -623,6 +373,9 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * Assign reporter + manager.
+         *
+         * If the employee has neither a reporter nor a manager,
+         * assign all active Super Admins as fallback approvers.
          * ---------------------------------------------------------
          */
         $assignedTo = array_values(
@@ -633,6 +386,27 @@ class LeaveRequestController extends Controller
                 ])
             )
         );
+
+        /*
+         * ---------------------------------------------------------
+         * Super Admin fallback.
+         *
+         * If no reporter and no manager are available, assign
+         * all active Super Admins.
+         * ---------------------------------------------------------
+         */
+        if (empty($assignedTo)) {
+
+            $assignedTo = User::query()
+                ->where('is_super_admin', true)
+                ->where('is_active', true)
+                ->where('delete_status', false)
+                ->whereNull('deleted_at')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all();
+        }
 
         /*
          * Mark Attendance = immediately approved.
@@ -693,10 +467,7 @@ class LeaveRequestController extends Controller
          * Save attachment using AttachmentService.
          *
          * AttachmentService will create the attachment record
-         * and automatically link it to this LeaveRequest:
-         *
-         * link_id   = $leaveRequest->id
-         * link_type = LeaveRequest::class
+         * and automatically link it to this LeaveRequest.
          * ---------------------------------------------------------
          */
         if (
@@ -848,7 +619,6 @@ class LeaveRequestController extends Controller
                         ]
                     );
                 });
-
             } catch (\RuntimeException $e) {
 
                 $leaveRequest->delete();
@@ -924,10 +694,14 @@ class LeaveRequestController extends Controller
         ]);
 
         return view('leave_requests.show', [
-            'pageTitle' => 'Leave Request Details',
+            'pageTitle' =>
+                'Leave Request Details',
+
             'subTitle' =>
                 'View leave request details and status.',
-            'leaveRequest' => $leaveRequest,
+
+            'leaveRequest' =>
+                $leaveRequest,
         ]);
     }
 
@@ -962,10 +736,12 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * Determine approval mode.
+         *
+         * Uses approval_mode consistently with the approval URL.
          * ---------------------------------------------------------
          */
         $approvalMode =
-            $request->boolean('approved_mode')
+            $request->boolean('approval_mode')
             || in_array(
                 $request->action,
                 [
@@ -1069,7 +845,6 @@ class LeaveRequestController extends Controller
             if (!$isApprover) {
                 abort(403);
             }
-
         } else {
 
             if (!$canEditOwnRequest) {
@@ -1206,7 +981,7 @@ class LeaveRequestController extends Controller
          * ---------------------------------------------------------
          */
         $approvalMode =
-            $request->boolean('approved_mode')
+            $request->boolean('approval_mode')
             || in_array(
                 $request->action,
                 [
@@ -1699,7 +1474,6 @@ class LeaveRequestController extends Controller
                             ]
                         );
                     });
-
                 } catch (\RuntimeException $e) {
 
                     return back()
@@ -2278,10 +2052,10 @@ class LeaveRequestController extends Controller
                         'assigned_to',
                         $userId
                     )
-                    ->orWhere(
-                        'user_id',
-                        $userId
-                    );
+                        ->orWhere(
+                            'user_id',
+                            $userId
+                        );
                 }
             );
         }
@@ -2303,16 +2077,16 @@ class LeaveRequestController extends Controller
                             );
                         }
                     )
-                    ->orWhereHas(
-                        'leaveType',
-                        function ($leaveTypeQuery) use ($search) {
-                            $leaveTypeQuery->where(
-                                'name',
-                                'like',
-                                "%{$search}%"
-                            );
-                        }
-                    );
+                        ->orWhereHas(
+                            'leaveType',
+                            function ($leaveTypeQuery) use ($search) {
+                                $leaveTypeQuery->where(
+                                    'name',
+                                    'like',
+                                    "%{$search}%"
+                                );
+                            }
+                        );
                 }
             );
         }
@@ -2598,7 +2372,6 @@ class LeaveRequestController extends Controller
                     ]
                 );
             });
-
         } catch (\RuntimeException $e) {
 
             return redirect()
@@ -2792,7 +2565,7 @@ class LeaveRequestController extends Controller
                      */
                     $balance->current_balance = round(
                         (float) $balance->current_balance
-                        + $paidDaysToRestore,
+                            + $paidDaysToRestore,
                         2
                     );
 
@@ -2803,7 +2576,7 @@ class LeaveRequestController extends Controller
                         max(
                             0,
                             (float) $balance->paid_days_used
-                            - $paidDaysToRestore
+                                - $paidDaysToRestore
                         ),
                         2
                     );
@@ -2815,7 +2588,7 @@ class LeaveRequestController extends Controller
                         max(
                             0,
                             (float) $balance->unpaid_days_used
-                            - $unpaidDaysToRestore
+                                - $unpaidDaysToRestore
                         ),
                         2
                     );
@@ -2827,7 +2600,7 @@ class LeaveRequestController extends Controller
                         (float) (
                             $balance->cancelled_days_restored ?? 0
                         )
-                        + $paidDaysToRestore,
+                            + $paidDaysToRestore,
                         2
                     );
 
@@ -2838,7 +2611,7 @@ class LeaveRequestController extends Controller
                         max(
                             0,
                             (float) $balance->used_balance
-                            - (float) $leaveRequest->approved_duration
+                                - (float) $leaveRequest->approved_duration
                         ),
                         2
                     );
@@ -2921,7 +2694,6 @@ class LeaveRequestController extends Controller
                     ]
                 );
             });
-
         } catch (\RuntimeException $e) {
 
             return redirect()
@@ -3018,6 +2790,7 @@ class LeaveRequestController extends Controller
         );
 
         $paidDays = 0;
+
         $unpaidDays = 0;
 
         $monthlyPaidAllocated = [];
@@ -3046,8 +2819,8 @@ class LeaveRequestController extends Controller
             $monthlyRemaining = max(
                 0,
                 $monthlyEntitlement
-                - $alreadyPaidThisMonth
-                - $currentRequestPaidThisMonth
+                    - $alreadyPaidThisMonth
+                    - $currentRequestPaidThisMonth
             );
 
             $dayPaid = min(
@@ -3078,7 +2851,7 @@ class LeaveRequestController extends Controller
 
             $monthlyPaidAllocated[$monthKey] = round(
                 ($monthlyPaidAllocated[$monthKey] ?? 0)
-                + $dayPaid,
+                    + $dayPaid,
                 2
             );
 
@@ -3105,19 +2878,19 @@ class LeaveRequestController extends Controller
 
         $balance->used_balance = round(
             (float) $balance->used_balance
-            + $approvedDuration,
+                + $approvedDuration,
             2
         );
 
         $balance->paid_days_used = round(
             (float) $balance->paid_days_used
-            + $paidDays,
+                + $paidDays,
             2
         );
 
         $balance->unpaid_days_used = round(
             (float) $balance->unpaid_days_used
-            + $unpaidDays,
+                + $unpaidDays,
             2
         );
 
@@ -3311,45 +3084,45 @@ class LeaveRequestController extends Controller
                                 'status',
                                 'pending'
                             )
-                            ->whereDate(
-                                'requested_from_date',
-                                '<=',
-                                $toDate->toDateString()
-                            )
-                            ->whereDate(
-                                'requested_to_date',
-                                '>=',
-                                $fromDate->toDateString()
-                            );
+                                ->whereDate(
+                                    'requested_from_date',
+                                    '<=',
+                                    $toDate->toDateString()
+                                )
+                                ->whereDate(
+                                    'requested_to_date',
+                                    '>=',
+                                    $fromDate->toDateString()
+                                );
                         }
                     )
-                    ->orWhere(
-                        function ($q) use (
-                            $fromDate,
-                            $toDate
-                        ) {
-                            $q->where(
-                                'status',
-                                'approved'
-                            )
-                            ->whereNotNull(
-                                'approved_from_date'
-                            )
-                            ->whereNotNull(
-                                'approved_to_date'
-                            )
-                            ->whereDate(
-                                'approved_from_date',
-                                '<=',
-                                $toDate->toDateString()
-                            )
-                            ->whereDate(
-                                'approved_to_date',
-                                '>=',
-                                $fromDate->toDateString()
-                            );
-                        }
-                    );
+                        ->orWhere(
+                            function ($q) use (
+                                $fromDate,
+                                $toDate
+                            ) {
+                                $q->where(
+                                    'status',
+                                    'approved'
+                                )
+                                    ->whereNotNull(
+                                        'approved_from_date'
+                                    )
+                                    ->whereNotNull(
+                                        'approved_to_date'
+                                    )
+                                    ->whereDate(
+                                        'approved_from_date',
+                                        '<=',
+                                        $toDate->toDateString()
+                                    )
+                                    ->whereDate(
+                                        'approved_to_date',
+                                        '>=',
+                                        $fromDate->toDateString()
+                                    );
+                            }
+                        );
                 }
             );
 

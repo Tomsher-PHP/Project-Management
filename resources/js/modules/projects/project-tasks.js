@@ -262,6 +262,39 @@ const syncProjectTaskPlacement = (
     });
 };
 
+const setFieldValue = (field, value = '') => {
+    if (!field) {
+        return;
+    }
+
+    const normalizedValue = value ?? '';
+
+    field.value = normalizedValue;
+
+    if (field._flatpickr) {
+        if (normalizedValue) {
+            field._flatpickr.setDate(normalizedValue, false);
+            return;
+        }
+
+        field._flatpickr.clear();
+    }
+};
+
+const getDefaultTaskDueDateTime = () => {
+    const now = new Date();
+    const target = new Date(now);
+    if (now.getHours() >= 18) {
+        target.setDate(target.getDate() + 1);
+    }
+    target.setHours(19, 0, 0, 0);
+
+    const year = target.getFullYear();
+    const month = String(target.getMonth() + 1).padStart(2, '0');
+    const day = String(target.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day} 19:00`;
+};
+
 const setTaskModalAdvancedState = (root, expanded) => {
     const modal = root?.querySelector('[data-project-task-modal]');
     const panel = root?.querySelector('[data-project-task-modal-panel]');
@@ -278,6 +311,16 @@ const setTaskModalAdvancedState = (root, expanded) => {
     panel.classList.toggle('max-w-lg', !expanded);
     panel.classList.toggle('max-w-5xl', expanded);
     toggleButton.textContent = expanded ? 'Hide Advanced' : 'Show Advanced';
+
+    // Set default due date when opening/initializing the task modal
+    const dueDateField = form.querySelector('[name="due_date_time"]');
+
+    if (dueDateField && !dueDateField.value) {
+        setFieldValue(
+            dueDateField,
+            getDefaultTaskDueDateTime()
+        );
+    }
 };
 
 const setTaskFormSprint = (form, sprintId) => {

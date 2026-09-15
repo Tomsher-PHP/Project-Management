@@ -16,42 +16,28 @@ class LeaveTypeController extends Controller
     public function __construct()
     {
         $this->pageTitle = 'Leave Types';
-        $this->subTitle = 'Manage the different types of leave available in the organization.';
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     /**
      * Display a listing of leave types.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $leaveTypes = LeaveType::query()
-            ->latest()
-            ->paginate(10);
+        $perPage = $request->input('per_page', config('constants.per_page_count'));
+        $leaveTypes = LeaveType::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
 
-        return view('settings.leave_types.index', [
-            'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
-            'leaveTypes' => $leaveTypes,
-        ]);
-    }
+        $nextSortOrder = ((int) LeaveType::max('sort_order')) + 1;
 
-    /**
-     * Show the form for creating a new leave type.
-     */
-    public function create(): View
-    {
-        return view('settings.leave_types.create', [
-            'pageTitle' => 'Create Leave Type',
-            'subTitle' => 'Add a new leave type to the system.',
-        ]);
+        return view('settings.leave_types.index', compact('leaveTypes', 'perPage', 'nextSortOrder'));
     }
 
     /**
      * Store a newly created leave type.
      */
-    public function store(LeaveTypeRequest $request): RedirectResponse
+    public function store(LeaveTypeRequest $request)
     {
-        LeaveType::create([
+        $leaveType = LeaveType::create([
             'name' => $request->name,
             'code' => strtoupper($request->code),
             'color' => $request->color,
@@ -63,9 +49,11 @@ class LeaveTypeController extends Controller
             'updated_by' => auth()->id(),
         ]);
 
-        return redirect()
-            ->route('settings.leave-types.index')
-            ->with('success', 'Leave type created successfully.');
+        return response()->json([
+            'status' => true,
+            'message' => 'Leave type created successfully.',
+            'data' => $leaveType
+        ]);
     }
 
     /**
@@ -83,28 +71,10 @@ class LeaveTypeController extends Controller
     }
 
     /**
-     * Show the form for editing the specified leave type.
-     */
-    public function edit(string $id): View
-    {
-        $leaveType = LeaveType::findOrFail($id);
-
-        return view('settings.leave_types.edit', [
-            'pageTitle' => 'Edit Leave Type',
-            'subTitle' => 'Update leave type details.',
-            'leaveType' => $leaveType,
-        ]);
-    }
-
-    /**
      * Update the specified leave type.
      */
-    public function update(
-        LeaveTypeRequest $request,
-        string $id
-    ): RedirectResponse {
-        $leaveType = LeaveType::findOrFail($id);
-
+    public function update(LeaveTypeRequest $request, LeaveType $leaveType)
+    {
         $leaveType->update([
             'name' => $request->name,
             'code' => strtoupper($request->code),
@@ -116,9 +86,11 @@ class LeaveTypeController extends Controller
             'updated_by' => auth()->id(),
         ]);
 
-        return redirect()
-            ->route('settings.leave-types.index')
-            ->with('success', 'Leave type updated successfully.');
+        return response()->json([
+            'status' => true,
+            'message' => 'Leave Type updated successfully.',
+            'data' => $leaveType
+        ]);
     }
 
     /**

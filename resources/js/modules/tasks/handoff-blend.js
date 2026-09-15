@@ -159,7 +159,7 @@ window.openHandoffViewModal = function (data) {
     document.getElementById('viewModalTargetUser').textContent = data.targetUser;
 
     const projectEl = document.getElementById('viewModalProject');
-    projectEl.innerHTML = getProjectFlowIcon(data.projectFlow) + '<span>' + data.project + '</span>';
+    projectEl.innerHTML = getProjectFlowIcon(data.projectFlow) + '<span>' +escapeHtml(data.project || '--') + '</span>';
 
     document.getElementById('viewModalMilestone').textContent = data.milestone;
     document.getElementById('viewModalSprint').textContent = data.sprint;
@@ -169,10 +169,98 @@ window.openHandoffViewModal = function (data) {
     document.getElementById('viewModalStatus').textContent = data.status;
     renderHandoffDescription(document.getElementById('viewModalDescription'), data.description);
 
+    /*
+     * Render Attachments
+     */
+    const attachmentsWrapper = document.getElementById(
+        'viewModalAttachmentsWrapper'
+    );
+
+    const attachmentsContainer = document.getElementById(
+        'viewModalAttachments'
+    );
+
+    const attachments = Array.isArray(data.attachments)
+        ? data.attachments
+        : [];
+
+    if (attachmentsWrapper && attachmentsContainer) {
+
+        if (!attachments.length) {
+
+            attachmentsContainer.innerHTML = '';
+            attachmentsWrapper.classList.add('hidden');
+
+        } else {
+
+            const validAttachments = attachments.filter(
+                (attachment) => attachment && attachment.url
+            );
+
+            if (!validAttachments.length) {
+                attachmentsContainer.innerHTML = '';
+                attachmentsWrapper.classList.add('hidden');
+            } else {
+                attachmentsWrapper.classList.remove('hidden');
+                attachmentsContainer.innerHTML = validAttachments
+                    .map((attachment) => {
+
+                        const fileName = escapeHtml(
+                            attachment.file_name || 'Attachment'
+                        );
+
+                        const url = escapeHtml(
+                            attachment.url || '#'
+                        );
+
+                        return `
+                            <div class="flex items-center justify-between gap-4 rounded-lg bg-bgray-50 p-3 dark:bg-darkblack-500">
+
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bgray-100 text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-5 w-5"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M15.172 7l-6.586 6.586a2 2 0 101.414 1.414L16.586 8.414a4 4 0 10-5.657-5.657L4.343 9.343a6 6 0 108.485 8.485L19.5 11.157"
+                                            />
+                                        </svg>
+                                    </div>
+
+                                    <p
+                                        class="min-w-0 truncate text-sm font-medium text-bgray-900 dark:text-white"
+                                        title="${fileName}"
+                                    >
+                                        ${fileName}
+                                    </p>
+                                </div>
+                                <a
+                                    href="${url}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex shrink-0 items-center rounded-lg bg-bgray-100 px-4 py-2.5 text-sm font-medium text-bgray-700 transition hover:bg-bgray-200 dark:bg-darkblack-400 dark:text-white dark:hover:bg-darkblack-300"
+                                >
+                                    View Attachment
+                                </a>
+                            </div>
+                        `;
+                    })
+                    .join('');
+            }
+        }
+    }
+
     const modal = document.getElementById('handoffViewModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-}
+};
 
 window.closeHandoffViewModal = function () {
     const modal = document.getElementById('handoffViewModal');

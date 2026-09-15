@@ -32,7 +32,11 @@ class TaskRequestServices
                 'rejectedBy:id,name',
             ])
             ->withExists([
-                'currentAssignee as is_self_requested' => fn(Builder $query) => $query->whereKey($user->id),
+                'currentAssignee as is_self_requested' => fn(Builder $query) =>
+                    $query->whereKey($user->id),
+                'timeLogs as has_started',
+                'timeLogs as is_currently_running' => fn(Builder $query) =>
+                    $query->where('is_running', true),
             ]);
 
         $this->applyFilters($query, $filters);

@@ -276,8 +276,12 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.edit')->only(['update']);
         Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.delete')->only(['destroy']);
 
-        // Leave types routes
-        Route::resource('leave-types', LeaveTypeController::class)->except(['show'])->names('leave-types');
+        // Leave Type Routes
+        Route::patch('/leave-types/toggle-status', [LeaveTypeController::class, 'toggleStatus'])->middleware('permission.type:leave-type.edit')->name('leave-type.toggleStatus');
+        Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.view')->only(['index']);
+        Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.create')->only(['store']);
+        Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.edit')->only(['update']);
+        Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.delete')->only(['destroy']);
     });
 
     // Team management Routes
@@ -693,9 +697,12 @@ Route::middleware(['auth'])->group(function () {
             ->name('update');
     });
 
-
-
-    Route::resource('holidays', HolidayController::class);
+    // Holiday Routes
+    Route::patch('/holidays/toggle-status', [HolidayController::class, 'toggleStatus'])->name('holidays.toggleStatus')->middleware('permission.type:user.edit');
+    Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.view')->only(['index']);
+    Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.create')->only(['create', 'store']);
+    Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.edit')->only(['edit', 'update']);
+    Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.delete')->only(['destroy']);
 
     Route::prefix('user-leave-balances')
         ->name('user-leave-balances.')

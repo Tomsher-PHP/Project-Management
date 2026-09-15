@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Attachment;
 use App\Models\HandoffPurpose;
 use App\Models\HandoffRequest;
 use App\Models\HandoffRequestAction;
@@ -9,14 +10,25 @@ use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\Task;
+use App\Models\TaskNote;
+use App\Models\User;
+use App\Services\AttachmentService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class HandoffServices
 {
+
+    protected string $filesystemDisk;
+
+    public function __construct()
+    {
+        $this->filesystemDisk = env('FILESYSTEM_DISK', 'public');
+    }
+
     public function visibleRequestQuery(User $user): Builder
     {
         $query = HandoffRequest::query();
@@ -195,6 +207,31 @@ class HandoffServices
                 'status' => 0, // pending
             ]);
 
+            /*
+            * Save attachments.
+            *
+            * The AttachmentService will automatically save:
+            * link_id   = handoff request ID
+            * link_type = HandoffRequest::class
+            */
+            if (! empty($data['attachments'])) {
+                $attachmentService = app(AttachmentService::class);
+
+                foreach ($data['attachments'] as $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                        $attachmentService->upload(
+                            $file,
+                            'handoff_requests',
+                            $handoffRequest,
+                            $this->filesystemDisk,
+                            'public',
+                            false,
+                            'handoff'
+                        );
+                    }
+                }
+            }
+
             HandoffRequestAction::create([
                 'handoff_request_id' => $handoffRequest->id,
                 'user_id' => $userId,
@@ -210,12 +247,14 @@ class HandoffServices
 
             app(NotificationService::class)->notifyHandoffRequestCreated($handoffRequest, $recipients, $requester);
 
-            return $handoffRequest->load('targetUser');
+            return $handoffRequest->load([
+                'targetUser',
+                'attachments',
+            ]);
         });
     }
 
-    public function updateHandoffRequest(HandoffRequest $handoffRequest, array $data, int $userId): HandoffRequest
-    {
+    public function updateHandoffRequest(HandoffRequest $handoffRequest, array $data, int $userId): HandoffRequest {
         if ((int) $handoffRequest->user_id !== $userId) {
             throw new \Exception('You can only edit your own handoff requests.');
         }
@@ -224,7 +263,11 @@ class HandoffServices
             throw new \Exception('Only pending handoff requests can be edited.');
         }
 
-        return DB::transaction(function () use ($handoffRequest, $data) {
+        return DB::transaction(function () use (
+            $handoffRequest,
+            $data,
+            $userId
+        ) {
             $milestoneId = $this->resolveMilestoneId($data);
 
             $handoffRequest->update([
@@ -241,7 +284,49 @@ class HandoffServices
                 'name' => $data['purpose'],
             ]);
 
-            return $handoffRequest->load('targetUser');
+            /*
+            * Replace existing attachments only when new files
+            * have been uploaded.
+            *
+            * Existing attachments are linked to this HandoffRequest
+            * through:
+            *   link_id   = $handoffRequest->id
+            *   link_type = HandoffRequest::class
+            */
+            if (! empty($data['attachments'])) {
+                $attachmentService = app(\App\Services\AttachmentService::class);
+
+                // Delete existing attachments and their physical files.
+                $existingAttachments = $handoffRequest->attachments()->get();
+
+                if ($existingAttachments->isNotEmpty()) {
+                    $attachmentService->delete($existingAttachments);
+                }
+
+                // Upload the newly selected attachments.
+                foreach ($data['attachments'] as $file) {
+                    if (
+                        $file instanceof \Illuminate\Http\UploadedFile
+                        && $file->isValid()
+                    ) {
+                        $attachmentService->upload(
+                        $file,
+                        'handoff_requests',
+                        $handoffRequest,
+                        $this->filesystemDisk,
+                        'public',
+                        false,
+                        'handoff'
+                        );
+
+                    }
+                }
+            }
+
+            return $handoffRequest->load([
+                'targetUser',
+                'attachments',
+            ]);
         });
     }
 
@@ -320,5 +405,80 @@ class HandoffServices
         ]);
 
         app(NotificationService::class)->notifyHandoffRequestAssigned($handoffRequest, $createdTask, $user);
+    }
+
+    /**
+     * Function to save the Task Note while converting hand off request to task.
+     */
+    public function saveHandoffDescriptionAsTaskNote(int $handoffRequestId, Task $task): ?TaskNote {
+        $handoffRequest = HandoffRequest::find($handoffRequestId);
+
+        if (!$handoffRequest || empty($handoffRequest->description)) {
+            return null;
+        }
+
+        return $task->taskNotes()->create([
+            'description' => $handoffRequest->description,
+            'is_active' => true,
+        ]);
+    }
+
+    /**
+     * Function to save the hand off request attachments as task attachments.
+     */
+    public function attachHandoffFilesToTask(
+        int $handoffRequestId,
+        TaskNote $taskNote,
+        Task $task
+    ): void {
+        $handoffAttachments = Attachment::query()
+            ->where('link_type', HandoffRequest::class)
+            ->where('link_id', $handoffRequestId)
+            ->get();
+
+        if ($handoffAttachments->isEmpty()) {
+            return;
+        }
+
+        $projectCode = $task->project?->project_code ?: 'project';
+        $taskCode = $task->code ?: ('task-' . $task->id);
+
+        $directory = 'task_files/' . $projectCode . '/' . $taskCode . '/notes';
+
+        foreach ($handoffAttachments as $handoffAttachment) {
+            if (!$handoffAttachment->file_path) {
+                continue;
+            }
+
+            $disk = $handoffAttachment->disk ?: config('filesystems.default');
+
+            $fileName = $handoffAttachment->original_name
+                ?: $handoffAttachment->file_name;
+
+            $newPath = $directory . '/' . $fileName;
+
+            if (Storage::disk($disk)->exists($handoffAttachment->file_path)) {
+                Storage::disk($disk)->copy(
+                    $handoffAttachment->file_path,
+                    $newPath
+                );
+            }
+
+            Attachment::create([
+                'link_id' => $taskNote->id,
+                'link_type' => TaskNote::class,
+                'category' => 'task_note',
+                'file_name' => basename($newPath),
+                'file_path' => $newPath,
+                'file_type' => $handoffAttachment->file_type,
+                'original_name' => $handoffAttachment->original_name,
+                'file_size' => $handoffAttachment->file_size,
+                'disk' => $disk,
+                'visibility' => $handoffAttachment->visibility ?: 'public',
+                'is_primary' => $handoffAttachment->is_primary,
+                'is_active' => $handoffAttachment->is_active,
+                'added_by' => auth()->id(),
+            ]);
+        }
     }
 }

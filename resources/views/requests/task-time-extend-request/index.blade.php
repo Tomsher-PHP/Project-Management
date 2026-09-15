@@ -35,9 +35,6 @@
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Requested By</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Requested At</span>
-                            </th>
-                            <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Project</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
@@ -70,13 +67,9 @@
                                         <x-user-avatar :user="$requestUser" :image="$requestUser?->profile_image_url" :name="$requestUser?->name ?? 'Unknown User'" size="md" />
                                         <div>
                                             <p class="font-semibold text-bgray-900 dark:text-white">{{ $requestUser?->name ?? 'Unknown User' }}</p>
+                                            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">Requested At: @appDateTime($extendRequest->created_at)</p>
                                         </div>
                                     </div>
-                                </td>
-                                <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    <span class="min-w-[170px] text-sm text-bgray-700 dark:text-bgray-300">
-                                        @appDateTime($extendRequest->created_at)
-                                    </span>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <span class="text-sm font-semibold text-bgray-900 dark:text-white">

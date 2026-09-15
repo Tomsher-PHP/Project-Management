@@ -185,7 +185,8 @@
                             Cancel
                         </button>
 
-                        <button type="submit" class="inline-flex items-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400" data-task-create-submit>
+                        <button type="submit" class="inline-flex items-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60"
+                            data-task-create-submit>
                             Save Task
                         </button>
                     </div>

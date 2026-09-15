@@ -44,10 +44,11 @@
     $canViewAppraisal = $authUser?->can('appraisal.view');
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
     $canViewAttendance = $authUser?->can('attendance.view');
+    $canViewHolidays = $authUser?->can('holidays.view');
     $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
@@ -497,31 +498,10 @@
                             </li>
                         @endif
 
-                        @if ($canViewMeetings)
-                            <!-- Meetings -->
-                            <li class="item py-[8px] {{ $isMeetingsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="{{ route('meetings.index') }}">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center">
-                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                                    <line x1="3" y1="10" x2="21" y2="10"/>
-                                                    <circle cx="12" cy="15" r="2"/>
-                                                </svg>
-                                            </span>
-                                            <span class="item-text text-base font-medium leading-none {{ $isMeetingsActive ? $sidebarItemActiveClass : '' }}">Meetings</span>
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                        @endif
 
-                        {{-- @if ($canViewAttendance) --}}
-                        <!-- Holidays -->
-                        {{-- <li class="item py-[8px]">
+                        @if ($canViewHolidays)
+                            <!-- Holidays -->
+                            <li class="item py-[8px]">
                                 <a href="{{ route('holidays.index') }}">
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
@@ -552,8 +532,30 @@
                                         </span>
                                     </div>
                                 </a>
-                            </li> --}}
-                        {{-- @endif --}}
+                            </li>
+                        @endif
+
+                        @if ($canViewMeetings)
+                            <!-- Meetings -->
+                            <li class="item py-[8px] {{ $isMeetingsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('meetings.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                                    <circle cx="12" cy="15" r="2"/>
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isMeetingsActive ? $sidebarItemActiveClass : '' }}">Meetings</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
             @endif
