@@ -45,6 +45,7 @@
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
     $canViewAttendance = $authUser?->can('attendance.view');
     $canViewHolidays = $authUser?->can('holidays.view');
+    $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
     $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays;
