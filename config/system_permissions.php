@@ -112,10 +112,10 @@ return [
     ['name' => 'holidays.delete', 'label' => 'Holiday', 'sort_order' => 13060, 'default_checked' => false],
 
     // MEETING
-    ['name' => 'meeting.view_all',   'label' => 'Meeting', 'sort_order' => 14000, 'default_checked' => true],
+    ['name' => 'meeting.view_all',   'label' => 'Meeting', 'sort_order' => 14000, 'default_checked' => false],
     ['name' => 'meeting.view',       'label' => 'Meeting', 'sort_order' => 14010, 'default_checked' => true],
-    ['name' => 'meeting.create',     'label' => 'Meeting', 'sort_order' => 14020, 'default_checked' => true],
-    ['name' => 'meeting.edit',       'label' => 'Meeting', 'sort_order' => 14040, 'default_checked' => true],
+    ['name' => 'meeting.create',     'label' => 'Meeting', 'sort_order' => 14020, 'default_checked' => false],
+    ['name' => 'meeting.edit',       'label' => 'Meeting', 'sort_order' => 14040, 'default_checked' => false],
     ['name' => 'meeting.delete',     'label' => 'Meeting', 'sort_order' => 14060, 'default_checked' => false],
 
     //======================================================================
