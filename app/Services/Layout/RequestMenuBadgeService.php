@@ -4,6 +4,7 @@ namespace App\Services\Layout;
 
 use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
+use App\Models\LeaveRequest;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\HandoffServices;
@@ -33,18 +34,29 @@ class RequestMenuBadgeService
 
         $taskTimeExtendRequests = $this->taskTimeExtendRequestCount($user);
 
+        $leaveRequests = $this->leaveRequestCount($user);
+
+
         return [
             'task_requests' => $taskRequests,
             'task_time' => $taskTime,
             'task_handoff' => $taskHandoff,
             'break_requests' => $breakRequests,
             'task_time_extend_requests' => $taskTimeExtendRequests,
-            'has_any_pending' => ($taskRequests + $taskTime + $taskHandoff + $breakRequests + $taskTimeExtendRequests) > 0,
+            'leave_requests' => $leaveRequests,
+            'has_any_pending' => (
+                $taskRequests
+                + $taskTime
+                + $taskHandoff
+                + $breakRequests
+                + $taskTimeExtendRequests
+                + $leaveRequests
+            ) > 0,
         ];
     }
 
     /**
-     * -----------------------Count methods
+     * ----------------------- Count methods
      */
     private function taskRequestCount(User $user): int
     {
@@ -81,8 +93,26 @@ class RequestMenuBadgeService
             ->count();
     }
 
+    private function leaveRequestCount(User $user): int
+    {
+        $query = LeaveRequest::query()
+            ->where('status', LeaveRequest::STATUS_PENDING);
+
+        if ($user->is_super_admin) {
+            return $query->count();
+        }
+
+        return $query
+            ->where(function (Builder $query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->orWhereJsonContains('assigned_to', $user->id)
+                    ->orWhereJsonContains('assigned_to', (string) $user->id);
+            })
+            ->count();
+    }
+
     /**
-     * -------------------------Helper Methods
+     * ------------------------- Helper Methods
      */
 
     private function visibleTaskRequestQuery(User $user): Builder
@@ -124,6 +154,7 @@ class RequestMenuBadgeService
             'task_handoff' => 0,
             'break_requests' => 0,
             'task_time_extend_requests' => 0,
+            'leave_requests' => 0,
             'has_any_pending' => false,
         ];
     }

@@ -72,13 +72,7 @@ class LeaveRequestController extends Controller
             ->withQueryString();
 
         /*
-         * ---------------------------------------------------------
-         * Calendar Events
-         *
-         * Get the filtered leave requests for the calendar.
-         * Calendar events should respect the same filters applied
-         * to the list.
-         * ---------------------------------------------------------
+         * Calendar events use the same filters as the list.
          */
         $calendarLeaveRequests = LeaveRequest::with([
             'user',
@@ -90,25 +84,23 @@ class LeaveRequestController extends Controller
             ->get();
 
         $calendarEvents = $calendarLeaveRequests
-            ->map(function ($leaveRequest) {
-
+            ->map(function (LeaveRequest $leaveRequest) {
                 $calendarFromDate =
                     $leaveRequest->status === 'approved'
                     && $leaveRequest->approved_from_date
-                        ? $leaveRequest->approved_from_date
-                        : $leaveRequest->requested_from_date;
+                    ? $leaveRequest->approved_from_date
+                    : $leaveRequest->requested_from_date;
 
                 $calendarToDate =
                     $leaveRequest->status === 'approved'
                     && $leaveRequest->approved_to_date
-                        ? $leaveRequest->approved_to_date
-                        : $leaveRequest->requested_to_date;
+                    ? $leaveRequest->approved_to_date
+                    : $leaveRequest->requested_to_date;
 
                 return [
                     'id' => $leaveRequest->id,
 
-                    'title' =>
-                        ($leaveRequest->user?->name ?? 'Unknown')
+                    'title' => ($leaveRequest->user?->name ?? 'Unknown')
                         . ' - '
                         . ($leaveRequest->leaveType?->name ?? 'Leave'),
 
@@ -116,8 +108,8 @@ class LeaveRequestController extends Controller
 
                     'end' => $calendarToDate
                         ? Carbon::parse($calendarToDate)
-                            ->addDay()
-                            ->toDateString()
+                        ->addDay()
+                        ->toDateString()
                         : null,
 
                     'url' => route(
@@ -129,55 +121,36 @@ class LeaveRequestController extends Controller
                         'status' => $leaveRequest->status,
 
                         'employee' =>
-                            $leaveRequest->user?->name ?? '-',
+                        $leaveRequest->user?->name ?? '-',
 
                         'leaveType' =>
-                            $leaveRequest->leaveType?->name ?? '-',
+                        $leaveRequest->leaveType?->name ?? '-',
 
                         'duration' =>
-                            $leaveRequest->status === 'approved'
+                        $leaveRequest->status === 'approved'
                             && $leaveRequest->approved_duration !== null
-                                ? $leaveRequest->approved_duration
-                                : $leaveRequest->duration,
+                            ? $leaveRequest->approved_duration
+                            : $leaveRequest->duration,
 
                         'type' =>
-                            $leaveRequest->type,
+                        $leaveRequest->type,
 
                         'half_day_type' =>
-                            $leaveRequest->half_day_type,
+                        $leaveRequest->half_day_type,
                     ],
                 ];
             })
             ->values();
 
-        /*
-         * ---------------------------------------------------------
-         * Active Leave Types
-         * ---------------------------------------------------------
-         */
         $leaveTypes = LeaveType::query()
             ->where('status', true)
             ->orderBy('name')
             ->get();
 
-        /*
-         * ---------------------------------------------------------
-         * Employees
-         *
-         * Used by the Employee filter.
-         * ---------------------------------------------------------
-         */
         $employees = User::query()
             ->orderBy('name')
             ->get();
 
-        /*
-         * ---------------------------------------------------------
-         * Users
-         *
-         * Used by the Added By filter.
-         * ---------------------------------------------------------
-         */
         $users = User::query()
             ->orderBy('name')
             ->get();
@@ -235,12 +208,9 @@ class LeaveRequestController extends Controller
             $request->boolean('created_from_attendance');
 
         /*
-         * ---------------------------------------------------------
          * Determine employee.
-         * ---------------------------------------------------------
          */
         if ($createdFromAttendance) {
-
             if (!$request->filled('user_id')) {
                 return back()
                     ->withInput()
@@ -253,11 +223,10 @@ class LeaveRequestController extends Controller
             $selectedUserId = (int) $request->user_id;
 
             if (!$loggedInUser->is_super_admin) {
-
                 $accessibleUserIds = $this->userService
                     ->getAccessibleUsers($loggedInUser)
                     ->pluck('id')
-                    ->map(fn ($id) => (int) $id)
+                    ->map(fn($id) => (int) $id)
                     ->all();
 
                 if (!in_array(
@@ -288,14 +257,11 @@ class LeaveRequestController extends Controller
                     );
             }
         } else {
-
             $leaveUser = $loggedInUser;
         }
 
         /*
-         * ---------------------------------------------------------
          * Parse dates.
-         * ---------------------------------------------------------
          */
         $fromDate = Carbon::parse(
             $request->requested_from_date
@@ -310,16 +276,14 @@ class LeaveRequestController extends Controller
                 ->withInput()
                 ->withErrors([
                     'requested_to_date' =>
-                        'The To Date must be after or equal to the From Date.',
+                    'The To Date must be after or equal to the From Date.',
                 ]);
         }
 
         $type = $request->type;
 
         /*
-         * ---------------------------------------------------------
-         * Duplicate / overlapping leave check.
-         * ---------------------------------------------------------
+         * Prevent overlapping pending/approved leave.
          */
         $existingLeave = $this->findOverlappingLeave(
             $leaveUser->id,
@@ -337,46 +301,35 @@ class LeaveRequestController extends Controller
         }
 
         /*
-         * ---------------------------------------------------------
-         * Calculate duration.
-         * ---------------------------------------------------------
+         * Always calculate duration on the server.
          */
         $duration =
             $this->leaveBalanceService
-                ->calculateDuration(
-                    $type,
-                    $fromDate,
-                    $toDate
-                );
+            ->calculateDuration(
+                $type,
+                $fromDate,
+                $toDate
+            );
 
         /*
-         * ---------------------------------------------------------
-         * Eligibility check.
-         *
-         * This does NOT block submission.
-         * ---------------------------------------------------------
+         * Eligibility is informational only.
          */
         $eligibility =
             $this->leaveBalanceService
-                ->checkEligibility(
-                    $leaveUser,
-                    (int) $request->leave_type_id,
-                    $type,
-                    $fromDate,
-                    $toDate
-                );
+            ->checkEligibility(
+                $leaveUser,
+                (int) $request->leave_type_id,
+                $type,
+                $fromDate,
+                $toDate
+            );
 
         $leaveType = LeaveType::findOrFail(
             $request->leave_type_id
         );
 
         /*
-         * ---------------------------------------------------------
          * Assign reporter + manager.
-         *
-         * If the employee has neither a reporter nor a manager,
-         * assign all active Super Admins as fallback approvers.
-         * ---------------------------------------------------------
          */
         $assignedTo = array_values(
             array_unique(
@@ -388,109 +341,75 @@ class LeaveRequestController extends Controller
         );
 
         /*
-         * ---------------------------------------------------------
          * Super Admin fallback.
-         *
-         * If no reporter and no manager are available, assign
-         * all active Super Admins.
-         * ---------------------------------------------------------
          */
         if (empty($assignedTo)) {
-
             $assignedTo = User::query()
                 ->where('is_super_admin', true)
                 ->where('is_active', true)
                 ->where('delete_status', false)
                 ->whereNull('deleted_at')
                 ->pluck('id')
-                ->map(fn ($id) => (int) $id)
+                ->map(fn($id) => (int) $id)
                 ->values()
                 ->all();
         }
 
-        /*
-         * Mark Attendance = immediately approved.
-         * Normal Leave = pending.
-         */
         $status =
             $createdFromAttendance
-                ? 'approved'
-                : 'pending';
+            ? 'approved'
+            : 'pending';
 
-        /*
-         * ---------------------------------------------------------
-         * Create leave request.
-         * ---------------------------------------------------------
-         */
         $leaveRequest = LeaveRequest::create([
             'user_id' =>
-                $leaveUser->id,
+            $leaveUser->id,
 
             'added_by' =>
-                $loggedInUser->id,
+            $loggedInUser->id,
 
             'leave_type_id' =>
-                $leaveType->id,
+            $leaveType->id,
 
             'type' =>
-                $type,
+            $type,
 
             'half_day_type' =>
-                $type === 'half_day'
-                    ? $request->half_day_type
-                    : null,
+            $type === 'half_day'
+                ? $request->half_day_type
+                : null,
 
             'requested_from_date' =>
-                $fromDate->toDateString(),
+            $fromDate->toDateString(),
 
             'requested_to_date' =>
-                $toDate->toDateString(),
+            $toDate->toDateString(),
 
             'duration' =>
-                $duration,
+            $duration,
 
             'reason' =>
-                $request->reason,
+            $request->reason,
 
             'status' =>
-                $status,
+            $status,
 
             'assigned_to' =>
-                $assignedTo,
+            $assignedTo,
 
             'submitted_at' =>
-                now(),
+            now(),
         ]);
 
         /*
-         * ---------------------------------------------------------
-         * Save attachment using AttachmentService.
-         *
-         * AttachmentService will create the attachment record
-         * and automatically link it to this LeaveRequest.
-         * ---------------------------------------------------------
+         * Save attachment.
          */
-        if (
-            $request->hasFile('attachment')
-            && $request->file('attachment')->isValid()
-        ) {
-            $attachmentService = app(AttachmentService::class);
-
-            $attachmentService->upload(
-                $request->file('attachment'),
-                'leave_requests',
-                $leaveRequest,
-                'public',
-                'public',
-                false,
-                'leave_request'
-            );
-        }
+        $this->saveAttachment(
+            $request,
+            $leaveRequest
+        );
 
         /*
-         * ---------------------------------------------------------
          * History: submitted.
-         * ---------------------------------------------------------
          */
         $this->logLeaveHistory(
             $leaveRequest,
@@ -504,28 +423,25 @@ class LeaveRequestController extends Controller
             $request->reason,
             [
                 'created_from_attendance' =>
-                    $createdFromAttendance,
+                $createdFromAttendance,
 
                 'duration' =>
-                    $duration,
+                $duration,
 
                 'added_by' =>
-                    $loggedInUser->id,
+                $loggedInUser->id,
 
                 'assigned_to' =>
-                    $assignedTo,
+                $assignedTo,
             ]
         );
 
         /*
-         * ---------------------------------------------------------
-         * Mark Attendance approval.
-         * ---------------------------------------------------------
+         * Mark Attendance:
+         * immediately approve and deduct balance.
          */
         if ($createdFromAttendance) {
-
             try {
-
                 DB::transaction(function () use (
                     $leaveRequest,
                     $loggedInUser,
@@ -533,7 +449,6 @@ class LeaveRequestController extends Controller
                     $toDate,
                     $duration
                 ) {
-
                     $balanceResult =
                         $this->updateLeaveBalanceAfterApproval(
                             $leaveRequest,
@@ -581,16 +496,16 @@ class LeaveRequestController extends Controller
                         'Leave approved through Mark Attendance.',
                         [
                             'approved_by' =>
-                                $loggedInUser->id,
+                            $loggedInUser->id,
 
                             'approved_duration' =>
-                                $duration,
+                            $duration,
 
                             'paid_days' =>
-                                $balanceResult['paid_days'],
+                            $balanceResult['paid_days'],
 
                             'unpaid_days' =>
-                                $balanceResult['unpaid_days'],
+                            $balanceResult['unpaid_days'],
                         ]
                     );
 
@@ -606,21 +521,20 @@ class LeaveRequestController extends Controller
                         'Leave balance deducted after approval.',
                         [
                             'approved_duration' =>
-                                $duration,
+                            $duration,
 
                             'paid_days' =>
-                                $balanceResult['paid_days'],
+                            $balanceResult['paid_days'],
 
                             'unpaid_days' =>
-                                $balanceResult['unpaid_days'],
+                            $balanceResult['unpaid_days'],
 
                             'remaining_balance' =>
-                                $balanceResult['remaining_balance'],
+                            $balanceResult['remaining_balance'],
                         ]
                     );
                 });
             } catch (\RuntimeException $e) {
-
                 $leaveRequest->delete();
 
                 return back()
@@ -636,7 +550,7 @@ class LeaveRequestController extends Controller
                     'attendance.index',
                     [
                         'date' =>
-                            $fromDate->toDateString(),
+                        $fromDate->toDateString(),
                     ]
                 )
                 ->with(
@@ -646,9 +560,7 @@ class LeaveRequestController extends Controller
         }
 
         /*
-         * ---------------------------------------------------------
          * Normal leave notification.
-         * ---------------------------------------------------------
          */
         $this->notificationService
             ->notifyLeaveRequestCreated(
@@ -695,35 +607,18 @@ class LeaveRequestController extends Controller
 
         return view('leave_requests.show', [
             'pageTitle' =>
-                'Leave Request Details',
+            'Leave Request Details',
 
             'subTitle' =>
-                'View leave request details and status.',
+            'View leave request details and status.',
 
             'leaveRequest' =>
-                $leaveRequest,
+            $leaveRequest,
         ]);
     }
 
     /**
      * Edit/review leave request.
-     *
-     * Employee rules:
-     *
-     * 1. Pending + employee-created:
-     *    Full edit is allowed.
-     *
-     * 2. Pending + added by manager/reporter/Super Admin:
-     *    Only reason and attachment can be edited.
-     *
-     * 3. Approved:
-     *    Only reason and attachment can be edited.
-     *
-     * 4. Rejected/cancelled:
-     *    Cannot be edited.
-     *
-     * Approval mode:
-     * - Only pending requests can enter approval mode.
      */
     public function edit(
         Request $request,
@@ -734,11 +629,7 @@ class LeaveRequestController extends Controller
         $authUser = auth()->user();
 
         /*
-         * ---------------------------------------------------------
-         * Determine approval mode.
-         *
-         * Uses approval_mode consistently with the approval URL.
-         * ---------------------------------------------------------
+         * Approval mode.
          */
         $approvalMode =
             $request->boolean('approval_mode')
@@ -756,7 +647,12 @@ class LeaveRequestController extends Controller
 
         if (!in_array(
             $action,
-            ['approve', 'reject'],
+            [
+                'approve',
+                'reject',
+                'update',
+                'update_and_approve',
+            ],
             true
         )) {
             $action = null;
@@ -766,11 +662,16 @@ class LeaveRequestController extends Controller
             (bool) ($authUser?->is_super_admin);
 
         /*
-         * ---------------------------------------------------------
-         * Determine whether current user is an approver.
+         * Permission allowing editing of any leave request.
          *
-         * Approval is only possible while request is pending.
-         * ---------------------------------------------------------
+         * This is intentionally separate from approval permission.
+         */
+        $canEditAll =
+            $isSuperAdmin
+            || $authUser->can('leave_requests.edit_all');
+
+        /*
+         * Approval permission.
          */
         $isApprover =
             $leaveRequest->status === 'pending'
@@ -790,9 +691,7 @@ class LeaveRequestController extends Controller
             );
 
         /*
-         * ---------------------------------------------------------
          * Employee ownership.
-         * ---------------------------------------------------------
          */
         $isOwner =
             (int) $leaveRequest->user_id
@@ -803,28 +702,39 @@ class LeaveRequestController extends Controller
             && $authUser->can('leave_request.edit');
 
         /*
-         * ---------------------------------------------------------
-         * FULL EDIT
-         * ---------------------------------------------------------
+         * Full edit:
+         *
+         * - employee can edit own employee-created pending request
+         * - user with edit_all can edit pending request
          */
         $fullEdit =
-            $canEditOwnRequest
-            && !$approvalMode
+            !$approvalMode
             && $leaveRequest->status === 'pending'
             && (
-                $leaveRequest->added_by === null
-                || (int) $leaveRequest->added_by
-                    === (int) $authUser->id
+                $canEditAll
+                || (
+                    $canEditOwnRequest
+                    && (
+                        $leaveRequest->added_by === null
+                        || (int) $leaveRequest->added_by
+                        === (int) $authUser->id
+                    )
+                )
             );
 
         /*
-         * ---------------------------------------------------------
-         * RESTRICTED EDIT
-         * ---------------------------------------------------------
+         * Restricted edit:
+         *
+         * - owner can update reason/attachment for manager-created
+         *   pending requests
+         * - owner can update reason/attachment for approved requests
+         *
+         * edit_all users receive full edit instead.
          */
         $restrictedEdit =
-            $canEditOwnRequest
-            && !$approvalMode
+            !$approvalMode
+            && !$canEditAll
+            && $canEditOwnRequest
             && !$fullEdit
             && in_array(
                 $leaveRequest->status,
@@ -836,22 +746,19 @@ class LeaveRequestController extends Controller
             );
 
         /*
-         * ---------------------------------------------------------
          * Authorization.
-         * ---------------------------------------------------------
          */
         if ($approvalMode) {
-
             if (!$isApprover) {
                 abort(403);
             }
         } else {
-
-            if (!$canEditOwnRequest) {
-
-                if (!$isApprover) {
-                    abort(403);
-                }
+            if (
+                !$canEditAll
+                && !$canEditOwnRequest
+                && !$isApprover
+            ) {
+                abort(403);
             }
 
             if (
@@ -882,87 +789,85 @@ class LeaveRequestController extends Controller
             ->orderBy('name')
             ->get();
 
-        /*
-         * ---------------------------------------------------------
-         * Approval date values.
-         * ---------------------------------------------------------
-         */
         $approvalFromDate =
             $leaveRequest->approved_from_date
-                ? Carbon::parse(
-                    $leaveRequest->approved_from_date
-                )->format('Y-m-d')
-                : Carbon::parse(
-                    $leaveRequest->requested_from_date
-                )->format('Y-m-d');
+            ? Carbon::parse(
+                $leaveRequest->approved_from_date
+            )->format('Y-m-d')
+            : Carbon::parse(
+                $leaveRequest->requested_from_date
+            )->format('Y-m-d');
 
         $approvalToDate =
             $leaveRequest->approved_to_date
-                ? Carbon::parse(
-                    $leaveRequest->approved_to_date
-                )->format('Y-m-d')
-                : Carbon::parse(
-                    $leaveRequest->requested_to_date
-                )->format('Y-m-d');
+            ? Carbon::parse(
+                $leaveRequest->approved_to_date
+            )->format('Y-m-d')
+            : Carbon::parse(
+                $leaveRequest->requested_to_date
+            )->format('Y-m-d');
 
         $approvalDuration =
             $leaveRequest->approved_duration !== null
-                ? number_format(
-                    (float) $leaveRequest->approved_duration,
-                    2,
-                    '.',
-                    ''
-                )
-                : number_format(
-                    (float) $leaveRequest->duration,
-                    2,
-                    '.',
-                    ''
-                );
+            ? number_format(
+                (float) $leaveRequest->approved_duration,
+                2,
+                '.',
+                ''
+            )
+            : number_format(
+                (float) $leaveRequest->duration,
+                2,
+                '.',
+                ''
+            );
 
         return view('leave_requests.edit', [
             'pageTitle' =>
-                $approvalMode
-                    ? 'Review Leave Request'
-                    : 'Edit Leave Request',
+            $approvalMode
+                ? 'Review Leave Request'
+                : 'Edit Leave Request',
 
             'subTitle' =>
-                $approvalMode
-                    ? 'Review and process this leave request.'
-                    : 'Update your leave request details.',
+            $approvalMode
+                ? 'Review and process this leave request.'
+                : 'Update your leave request details.',
 
             'leaveRequest' =>
-                $leaveRequest,
+            $leaveRequest,
 
             'leaveTypes' =>
-                $leaveTypes,
+            $leaveTypes,
 
             'approvalMode' =>
-                $approvalMode,
+            $approvalMode,
 
             'action' =>
-                $action,
+            $action,
 
             'isSuperAdmin' =>
-                $isSuperAdmin,
+            $isSuperAdmin,
 
             'isApprover' =>
-                $isApprover,
+            $isApprover,
+
+            'canEditAll' =>
+            $canEditAll,
 
             'fullEdit' =>
-                $fullEdit,
+            $fullEdit,
 
             'restrictedEdit' =>
-                $restrictedEdit,
+            $restrictedEdit,
 
             'approvalFromDate' =>
-                $approvalFromDate,
+            $approvalFromDate,
 
             'approvalToDate' =>
-                $approvalToDate,
+            $approvalToDate,
 
             'approvalDuration' =>
-                $approvalDuration,
+            $approvalDuration,
         ]);
     }
 
@@ -976,9 +881,7 @@ class LeaveRequestController extends Controller
         $authUser = auth()->user();
 
         /*
-         * ---------------------------------------------------------
-         * Determine approval mode first.
-         * ---------------------------------------------------------
+         * Determine approval mode.
          */
         $approvalMode =
             $request->boolean('approval_mode')
@@ -996,9 +899,14 @@ class LeaveRequestController extends Controller
             (bool) ($authUser?->is_super_admin);
 
         /*
-         * ---------------------------------------------------------
+         * edit_all is separate from approval.
+         */
+        $canEditAll =
+            $isSuperAdmin
+            || $authUser->can('leave_requests.edit_all');
+
+        /*
          * Determine approver.
-         * ---------------------------------------------------------
          */
         $isApprover =
             $leaveRequest->status === 'pending'
@@ -1018,9 +926,7 @@ class LeaveRequestController extends Controller
             );
 
         /*
-         * ---------------------------------------------------------
-         * Determine employee ownership.
-         * ---------------------------------------------------------
+         * Ownership.
          */
         $isOwner =
             (int) $leaveRequest->user_id
@@ -1031,28 +937,30 @@ class LeaveRequestController extends Controller
             && $authUser->can('leave_request.edit');
 
         /*
-         * ---------------------------------------------------------
-         * FULL EMPLOYEE EDIT
-         * ---------------------------------------------------------
+         * Full edit.
          */
         $fullEdit =
-            $canEditOwnRequest
-            && !$approvalMode
+            !$approvalMode
             && $leaveRequest->status === 'pending'
             && (
-                $leaveRequest->added_by === null
-                || (int) $leaveRequest->added_by
-                    === (int) $authUser->id
+                $canEditAll
+                || (
+                    $canEditOwnRequest
+                    && (
+                        $leaveRequest->added_by === null
+                        || (int) $leaveRequest->added_by
+                        === (int) $authUser->id
+                    )
+                )
             );
 
         /*
-         * ---------------------------------------------------------
-         * RESTRICTED EMPLOYEE EDIT
-         * ---------------------------------------------------------
+         * Restricted edit.
          */
         $restrictedEdit =
-            $canEditOwnRequest
-            && !$approvalMode
+            !$approvalMode
+            && !$canEditAll
+            && $canEditOwnRequest
             && !$fullEdit
             && in_array(
                 $leaveRequest->status,
@@ -1069,7 +977,6 @@ class LeaveRequestController extends Controller
          * =========================================================
          */
         if ($approvalMode) {
-
             if (!$isApprover) {
                 abort(403);
             }
@@ -1080,7 +987,6 @@ class LeaveRequestController extends Controller
              * -----------------------------------------------------
              */
             if ($request->action === 'update') {
-
                 $oldStatus =
                     $leaveRequest->status;
 
@@ -1113,54 +1019,38 @@ class LeaveRequestController extends Controller
 
                 $duration =
                     $this->leaveBalanceService
-                        ->calculateDuration(
-                            $type,
-                            $requestedFromDate,
-                            $requestedToDate
-                        );
+                    ->calculateDuration(
+                        $type,
+                        $requestedFromDate,
+                        $requestedToDate
+                    );
 
                 $leaveRequest->update([
                     'leave_type_id' =>
-                        $request->leave_type_id,
+                    $request->leave_type_id,
 
                     'type' =>
-                        $type,
+                    $type,
 
                     'half_day_type' =>
-                        $type === 'half_day'
-                            ? $request->half_day_type
-                            : null,
+                    $type === 'half_day'
+                        ? $request->half_day_type
+                        : null,
 
                     'duration' =>
-                        $duration,
+                    $duration,
 
                     'reason' =>
-                        $request->reason,
+                    $request->reason,
 
                     'approver_comment' =>
-                        $request->approver_comment,
+                    $request->approver_comment,
                 ]);
 
-                /*
-                 * Save attachment through AttachmentService.
-                 */
-                if (
-                    $request->hasFile('attachment')
-                    && $request->file('attachment')->isValid()
-                ) {
-                    $attachmentService =
-                        app(AttachmentService::class);
-
-                    $attachmentService->upload(
-                        $request->file('attachment'),
-                        'leave_requests',
-                        $leaveRequest,
-                        'public',
-                        'public',
-                        false,
-                        'leave_request'
-                    );
-                }
+                $this->saveAttachment(
+                    $request,
+                    $leaveRequest
+                );
 
                 $this->logLeaveHistory(
                     $leaveRequest,
@@ -1174,28 +1064,28 @@ class LeaveRequestController extends Controller
                     $request->reason,
                     [
                         'updated_by' =>
-                            $authUser->id,
+                        $authUser->id,
 
                         'updated_by_type' =>
-                            'approver',
+                        'approver',
 
                         'old_leave_type_id' =>
-                            $oldLeaveTypeId,
+                        $oldLeaveTypeId,
 
                         'new_leave_type_id' =>
-                            $leaveRequest->leave_type_id,
+                        $leaveRequest->leave_type_id,
 
                         'old_type' =>
-                            $oldType,
+                        $oldType,
 
                         'new_type' =>
-                            $leaveRequest->type,
+                        $leaveRequest->type,
 
                         'old_duration' =>
-                            $oldDuration,
+                        $oldDuration,
 
                         'new_duration' =>
-                            $duration,
+                        $duration,
                     ]
                 );
 
@@ -1223,7 +1113,6 @@ class LeaveRequestController extends Controller
              * -----------------------------------------------------
              */
             if ($request->action === 'update_and_approve') {
-
                 if (
                     !$request->filled('approved_from_date')
                     || !$request->filled('approved_to_date')
@@ -1232,10 +1121,10 @@ class LeaveRequestController extends Controller
                         ->withInput()
                         ->withErrors([
                             'approved_from_date' =>
-                                'Approval From Date is required.',
+                            'Approval From Date is required.',
 
                             'approved_to_date' =>
-                                'Approval To Date is required.',
+                            'Approval To Date is required.',
                         ]);
                 }
 
@@ -1252,7 +1141,7 @@ class LeaveRequestController extends Controller
                         ->withInput()
                         ->withErrors([
                             'approved_to_date' =>
-                                'The Approval To Date must be after or equal to the Approval From Date.',
+                            'The Approval To Date must be after or equal to the Approval From Date.',
                         ]);
                 }
 
@@ -1281,20 +1170,25 @@ class LeaveRequestController extends Controller
                 $oldToDate =
                     $leaveRequest->requested_to_date;
 
+                $oldLeaveTypeId =
+                    $leaveRequest->leave_type_id;
+
+                $oldType =
+                    $leaveRequest->type;
+
                 $type =
                     $request->type
                     ?? $leaveRequest->type;
 
                 $approvedDuration =
                     $this->leaveBalanceService
-                        ->calculateDuration(
-                            $type,
-                            $approvedFromDate,
-                            $approvedToDate
-                        );
+                    ->calculateDuration(
+                        $type,
+                        $approvedFromDate,
+                        $approvedToDate
+                    );
 
                 try {
-
                     DB::transaction(function () use (
                         $request,
                         $leaveRequest,
@@ -1305,9 +1199,10 @@ class LeaveRequestController extends Controller
                         $type,
                         $oldStatus,
                         $oldFromDate,
-                        $oldToDate
+                        $oldToDate,
+                        $oldLeaveTypeId,
+                        $oldType
                     ) {
-
                         $leaveRequest->leave_type_id =
                             $request->leave_type_id;
 
@@ -1316,8 +1211,8 @@ class LeaveRequestController extends Controller
 
                         $leaveRequest->half_day_type =
                             $type === 'half_day'
-                                ? $request->half_day_type
-                                : null;
+                            ? $request->half_day_type
+                            : null;
 
                         $leaveRequest->reason =
                             $request->reason;
@@ -1360,26 +1255,10 @@ class LeaveRequestController extends Controller
 
                         $leaveRequest->save();
 
-                        /*
-                         * Save attachment through AttachmentService.
-                         */
-                        if (
-                            $request->hasFile('attachment')
-                            && $request->file('attachment')->isValid()
-                        ) {
-                            $attachmentService =
-                                app(AttachmentService::class);
-
-                            $attachmentService->upload(
-                                $request->file('attachment'),
-                                'leave_requests',
-                                $leaveRequest,
-                                'public',
-                                'public',
-                                false,
-                                'leave_request'
-                            );
-                        }
+                        $this->saveAttachment(
+                            $request,
+                            $leaveRequest
+                        );
 
                         if (
                             $oldFromDate !== $approvedFromDate->toDateString()
@@ -1397,10 +1276,22 @@ class LeaveRequestController extends Controller
                                 $request->reason,
                                 [
                                     'changed_by' =>
-                                        $authUser->id,
+                                    $authUser->id,
+
+                                    'old_leave_type_id' =>
+                                    $oldLeaveTypeId,
+
+                                    'new_leave_type_id' =>
+                                    $leaveRequest->leave_type_id,
+
+                                    'old_type' =>
+                                    $oldType,
+
+                                    'new_type' =>
+                                    $leaveRequest->type,
 
                                     'approved_duration' =>
-                                        $approvedDuration,
+                                    $approvedDuration,
                                 ]
                             );
                         } else {
@@ -1416,10 +1307,22 @@ class LeaveRequestController extends Controller
                                 $request->reason,
                                 [
                                     'changed_by' =>
-                                        $authUser->id,
+                                    $authUser->id,
+
+                                    'old_leave_type_id' =>
+                                    $oldLeaveTypeId,
+
+                                    'new_leave_type_id' =>
+                                    $leaveRequest->leave_type_id,
+
+                                    'old_type' =>
+                                    $oldType,
+
+                                    'new_type' =>
+                                    $leaveRequest->type,
 
                                     'approved_duration' =>
-                                        $approvedDuration,
+                                    $approvedDuration,
                                 ]
                             );
                         }
@@ -1436,16 +1339,16 @@ class LeaveRequestController extends Controller
                             $request->approver_comment,
                             [
                                 'approved_by' =>
-                                    $authUser->id,
+                                $authUser->id,
 
                                 'approved_duration' =>
-                                    $approvedDuration,
+                                $approvedDuration,
 
                                 'paid_days' =>
-                                    $balanceResult['paid_days'],
+                                $balanceResult['paid_days'],
 
                                 'unpaid_days' =>
-                                    $balanceResult['unpaid_days'],
+                                $balanceResult['unpaid_days'],
                             ]
                         );
 
@@ -1461,21 +1364,20 @@ class LeaveRequestController extends Controller
                             'Leave balance deducted after approval.',
                             [
                                 'approved_duration' =>
-                                    $approvedDuration,
+                                $approvedDuration,
 
                                 'paid_days' =>
-                                    $balanceResult['paid_days'],
+                                $balanceResult['paid_days'],
 
                                 'unpaid_days' =>
-                                    $balanceResult['unpaid_days'],
+                                $balanceResult['unpaid_days'],
 
                                 'remaining_balance' =>
-                                    $balanceResult['remaining_balance'],
+                                $balanceResult['remaining_balance'],
                             ]
                         );
                     });
                 } catch (\RuntimeException $e) {
-
                     return back()
                         ->withInput()
                         ->with(
@@ -1508,7 +1410,6 @@ class LeaveRequestController extends Controller
              * -----------------------------------------------------
              */
             if ($request->action === 'reject') {
-
                 $oldStatus =
                     $leaveRequest->status;
 
@@ -1520,38 +1421,22 @@ class LeaveRequestController extends Controller
 
                 $leaveRequest->update([
                     'status' =>
-                        'rejected',
+                    'rejected',
 
                     'rejected_by' =>
-                        $authUser->id,
+                    $authUser->id,
 
                     'rejected_at' =>
-                        now(),
+                    now(),
 
                     'approver_comment' =>
-                        $request->approver_comment,
+                    $request->approver_comment,
                 ]);
 
-                /*
-                 * Save attachment through AttachmentService.
-                 */
-                if (
-                    $request->hasFile('attachment')
-                    && $request->file('attachment')->isValid()
-                ) {
-                    $attachmentService =
-                        app(AttachmentService::class);
-
-                    $attachmentService->upload(
-                        $request->file('attachment'),
-                        'leave_requests',
-                        $leaveRequest,
-                        'public',
-                        'public',
-                        false,
-                        'leave_request'
-                    );
-                }
+                $this->saveAttachment(
+                    $request,
+                    $leaveRequest
+                );
 
                 $this->logLeaveHistory(
                     $leaveRequest,
@@ -1565,7 +1450,7 @@ class LeaveRequestController extends Controller
                     $request->approver_comment,
                     [
                         'rejected_by' =>
-                            $authUser->id,
+                        $authUser->id,
                     ]
                 );
 
@@ -1600,11 +1485,11 @@ class LeaveRequestController extends Controller
 
         /*
          * =========================================================
-         * NORMAL EMPLOYEE EDIT
+         * NORMAL EMPLOYEE / EDIT-ALL EDIT
          * =========================================================
          */
 
-        if (!$canEditOwnRequest) {
+        if (!$canEditAll && !$canEditOwnRequest) {
             abort(403);
         }
 
@@ -1614,21 +1499,20 @@ class LeaveRequestController extends Controller
          * ---------------------------------------------------------
          */
         if ($restrictedEdit) {
-
             $oldStatus =
                 $leaveRequest->status;
 
             $oldFromDate =
                 $leaveRequest->status === 'approved'
                 && $leaveRequest->approved_from_date
-                    ? $leaveRequest->approved_from_date
-                    : $leaveRequest->requested_from_date;
+                ? $leaveRequest->approved_from_date
+                : $leaveRequest->requested_from_date;
 
             $oldToDate =
                 $leaveRequest->status === 'approved'
                 && $leaveRequest->approved_to_date
-                    ? $leaveRequest->approved_to_date
-                    : $leaveRequest->requested_to_date;
+                ? $leaveRequest->approved_to_date
+                : $leaveRequest->requested_to_date;
 
             $oldReason =
                 $leaveRequest->reason;
@@ -1638,29 +1522,11 @@ class LeaveRequestController extends Controller
 
             $leaveRequest->save();
 
-            /*
-             * Update attachment through AttachmentService.
-             *
-             * Existing attachments remain unchanged when
-             * no new file is supplied.
-             */
-            if (
-                $request->hasFile('attachment')
-                && $request->file('attachment')->isValid()
-            ) {
-                $attachmentService =
-                    app(AttachmentService::class);
-
-                $attachmentService->upload(
-                    $request->file('attachment'),
-                    'leave_requests',
-                    $leaveRequest,
-                    'public',
-                    'public',
-                    false,
-                    'leave_request'
+            $attachmentUpdated =
+                $this->saveAttachment(
+                    $request,
+                    $leaveRequest
                 );
-            }
 
             $this->logLeaveHistory(
                 $leaveRequest,
@@ -1674,19 +1540,16 @@ class LeaveRequestController extends Controller
                 $request->reason,
                 [
                     'changed_by' =>
-                        $authUser->id,
+                    $authUser->id,
 
                     'changed_by_type' =>
-                        'employee_restricted',
+                    'employee_restricted',
 
                     'reason_changed' =>
-                        $oldReason !== $leaveRequest->reason,
+                    $oldReason !== $leaveRequest->reason,
 
                     'attachment_updated' =>
-                        $request->hasFile('attachment')
-                        && $request
-                            ->file('attachment')
-                            ->isValid(),
+                    $attachmentUpdated,
 
                     'restricted_fields' => [
                         'reason',
@@ -1714,7 +1577,7 @@ class LeaveRequestController extends Controller
 
         /*
          * ---------------------------------------------------------
-         * FULL EMPLOYEE EDIT
+         * FULL EDIT
          * ---------------------------------------------------------
          */
         if (!$fullEdit) {
@@ -1742,7 +1605,6 @@ class LeaveRequestController extends Controller
         }
 
         if ($request->action === 'update') {
-
             if (
                 !$request->filled('requested_from_date')
                 || !$request->filled('requested_to_date')
@@ -1751,10 +1613,10 @@ class LeaveRequestController extends Controller
                     ->withInput()
                     ->withErrors([
                         'requested_from_date' =>
-                            'The requested from date is required.',
+                        'The requested from date is required.',
 
                         'requested_to_date' =>
-                            'The requested to date is required.',
+                        'The requested to date is required.',
                     ]);
             }
 
@@ -1771,7 +1633,7 @@ class LeaveRequestController extends Controller
                     ->withInput()
                     ->withErrors([
                         'requested_to_date' =>
-                            'The To Date must be after or equal to the From Date.',
+                        'The To Date must be after or equal to the From Date.',
                     ]);
             }
 
@@ -1796,15 +1658,15 @@ class LeaveRequestController extends Controller
                 ?? $leaveRequest->type;
 
             /*
-             * Always calculate duration on the server.
+             * Always calculate duration on server.
              */
             $duration =
                 $this->leaveBalanceService
-                    ->calculateDuration(
-                        $type,
-                        $fromDate,
-                        $toDate
-                    );
+                ->calculateDuration(
+                    $type,
+                    $fromDate,
+                    $toDate
+                );
 
             $oldStatus =
                 $leaveRequest->status;
@@ -1826,52 +1688,36 @@ class LeaveRequestController extends Controller
 
             $leaveRequest->update([
                 'leave_type_id' =>
-                    $request->leave_type_id,
+                $request->leave_type_id,
 
                 'type' =>
-                    $type,
+                $type,
 
                 'half_day_type' =>
-                    $type === 'half_day'
-                        ? $request->half_day_type
-                        : null,
+                $type === 'half_day'
+                    ? $request->half_day_type
+                    : null,
 
                 'requested_from_date' =>
-                    $fromDate->toDateString(),
+                $fromDate->toDateString(),
 
                 'requested_to_date' =>
-                    $toDate->toDateString(),
+                $toDate->toDateString(),
 
                 'duration' =>
-                    $duration,
+                $duration,
 
                 'reason' =>
-                    $request->reason,
+                $request->reason,
 
                 'approver_comment' =>
-                    $request->approver_comment,
+                $request->approver_comment,
             ]);
 
-            /*
-             * Save attachment through AttachmentService.
-             */
-            if (
-                $request->hasFile('attachment')
-                && $request->file('attachment')->isValid()
-            ) {
-                $attachmentService =
-                    app(AttachmentService::class);
-
-                $attachmentService->upload(
-                    $request->file('attachment'),
-                    'leave_requests',
-                    $leaveRequest,
-                    'public',
-                    'public',
-                    false,
-                    'leave_request'
-                );
-            }
+            $this->saveAttachment(
+                $request,
+                $leaveRequest
+            );
 
             if (
                 $oldFromDate !== $fromDate->toDateString()
@@ -1889,16 +1735,30 @@ class LeaveRequestController extends Controller
                     $request->reason,
                     [
                         'changed_by' =>
-                            $authUser->id,
+                        $authUser->id,
 
                         'changed_by_type' =>
-                            'employee',
+                        $canEditAll
+                            ? 'edit_all'
+                            : 'employee',
+
+                        'old_leave_type_id' =>
+                        $oldLeaveTypeId,
+
+                        'new_leave_type_id' =>
+                        $leaveRequest->leave_type_id,
+
+                        'old_type' =>
+                        $oldType,
+
+                        'new_type' =>
+                        $leaveRequest->type,
 
                         'old_duration' =>
-                            $oldDuration,
+                        $oldDuration,
 
                         'new_duration' =>
-                            $duration,
+                        $duration,
                     ]
                 );
             } else {
@@ -1914,35 +1774,34 @@ class LeaveRequestController extends Controller
                     $request->reason,
                     [
                         'changed_by' =>
-                            $authUser->id,
+                        $authUser->id,
 
                         'changed_by_type' =>
-                            'employee',
+                        $canEditAll
+                            ? 'edit_all'
+                            : 'employee',
 
                         'old_leave_type_id' =>
-                            $oldLeaveTypeId,
+                        $oldLeaveTypeId,
 
                         'new_leave_type_id' =>
-                            $leaveRequest->leave_type_id,
+                        $leaveRequest->leave_type_id,
 
                         'old_type' =>
-                            $oldType,
+                        $oldType,
 
                         'new_type' =>
-                            $leaveRequest->type,
+                        $leaveRequest->type,
 
                         'old_duration' =>
-                            $oldDuration,
+                        $oldDuration,
 
                         'new_duration' =>
-                            $duration,
+                        $duration,
                     ]
                 );
             }
 
-            /*
-             * notifyLeaveRequestUpdated() expects user ID.
-             */
             $this->notificationService
                 ->notifyLeaveRequestUpdated(
                     $leaveRequest,
@@ -2005,13 +1864,13 @@ class LeaveRequestController extends Controller
 
         $eligibility =
             $this->leaveBalanceService
-                ->checkEligibility(
-                    auth()->user(),
-                    (int) $validated['leave_type_id'],
-                    $validated['type'],
-                    $validated['requested_from_date'],
-                    $validated['requested_to_date']
-                );
+            ->checkEligibility(
+                auth()->user(),
+                (int) $validated['leave_type_id'],
+                $validated['type'],
+                $validated['requested_from_date'],
+                $validated['requested_to_date']
+            );
 
         return response()->json(
             $eligibility
@@ -2021,13 +1880,29 @@ class LeaveRequestController extends Controller
     /**
      * Pending leave requests.
      */
-    public function pending(
-        Request $request
-    ): View {
+    public function pending(Request $request): View
+    {
         $user = auth()->user();
 
         $userId = $user->id;
 
+        $isSuperAdmin = (bool) $user->is_super_admin;
+
+        /*
+    |--------------------------------------------------------------------------
+    | Per Page
+    |--------------------------------------------------------------------------
+    */
+        $perPage = $request->input(
+            'per_page',
+            config('constants.per_page_count')
+        );
+
+        /*
+    |--------------------------------------------------------------------------
+    | Pending Leave Requests
+    |--------------------------------------------------------------------------
+    */
         $query = LeaveRequest::query()
             ->with([
                 'user',
@@ -2037,43 +1912,53 @@ class LeaveRequestController extends Controller
                 'cancelledBy',
                 'addedBy',
             ])
-            ->where(
-                'status',
-                'pending'
-            );
+            ->where('status', 'pending');
 
-        $isSuperAdmin =
-            (bool) ($user?->is_super_admin);
-
+        /*
+    |--------------------------------------------------------------------------
+    | Access Control
+    |--------------------------------------------------------------------------
+    |
+    | Super Admin:
+    |     Can see all pending leave requests.
+    |
+    | Other users:
+    |     Can see their own pending requests OR requests
+    |     assigned to them for approval.
+    |
+    */
         if (!$isSuperAdmin) {
-            $query->where(
-                function ($q) use ($userId) {
-                    $q->whereJsonContains(
-                        'assigned_to',
+            $query->where(function ($q) use ($userId) {
+                $q->whereJsonContains(
+                    'assigned_to',
+                    $userId
+                )
+                    ->orWhere(
+                        'user_id',
                         $userId
-                    )
-                        ->orWhere(
-                            'user_id',
-                            $userId
-                        );
-                }
-            );
+                    );
+            });
         }
 
+        /*
+    |--------------------------------------------------------------------------
+    | Search
+    |--------------------------------------------------------------------------
+    */
         if ($request->filled('search')) {
             $search = trim(
-                $request->search
+                $request->input('search')
             );
 
-            $query->where(
-                function ($q) use ($search) {
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
                     $q->whereHas(
                         'user',
                         function ($userQuery) use ($search) {
                             $userQuery->where(
                                 'name',
                                 'like',
-                                "%{$search}%"
+                                '%' . $search . '%'
                             );
                         }
                     )
@@ -2083,22 +1968,29 @@ class LeaveRequestController extends Controller
                                 $leaveTypeQuery->where(
                                     'name',
                                     'like',
-                                    "%{$search}%"
+                                    '%' . $search . '%'
                                 );
                             }
                         );
-                }
-            );
+                });
+            }
         }
 
+        /*
+    |--------------------------------------------------------------------------
+    | Sorting
+    |--------------------------------------------------------------------------
+    */
         $sortColumn = $request->input(
             'sort',
             'created_at'
         );
 
-        $sortDirection = $request->input(
-            'direction',
-            'desc'
+        $sortDirection = strtolower(
+            $request->input(
+                'direction',
+                'desc'
+            )
         );
 
         if (!in_array(
@@ -2118,31 +2010,27 @@ class LeaveRequestController extends Controller
         ];
 
         if ($sortColumn === 'user.name') {
-            $query
-                ->join(
-                    'users',
-                    'leave_requests.user_id',
-                    '=',
-                    'users.id'
-                )
-                ->select('leave_requests.*')
-                ->orderBy(
-                    'users.name',
-                    $sortDirection
-                );
+            $query->orderBy(
+                User::query()
+                    ->select('name')
+                    ->whereColumn(
+                        'users.id',
+                        'leave_requests.user_id'
+                    )
+                    ->limit(1),
+                $sortDirection
+            );
         } elseif ($sortColumn === 'leaveType.name') {
-            $query
-                ->join(
-                    'leave_types',
-                    'leave_requests.leave_type_id',
-                    '=',
-                    'leave_types.id'
-                )
-                ->select('leave_requests.*')
-                ->orderBy(
-                    'leave_types.name',
-                    $sortDirection
-                );
+            $query->orderBy(
+                LeaveType::query()
+                    ->select('name')
+                    ->whereColumn(
+                        'leave_types.id',
+                        'leave_requests.leave_type_id'
+                    )
+                    ->limit(1),
+                $sortDirection
+            );
         } elseif (in_array(
             $sortColumn,
             $allowedSortColumns,
@@ -2153,37 +2041,57 @@ class LeaveRequestController extends Controller
                 $sortDirection
             );
         } else {
-            $query->latest(
-                'leave_requests.created_at'
+            $query->orderBy(
+                'leave_requests.created_at',
+                'desc'
             );
         }
 
+        /*
+    |--------------------------------------------------------------------------
+    | Pagination
+    |--------------------------------------------------------------------------
+    */
         $leaveRequests = $query
-            ->paginate(15)
+            ->paginate($perPage)
             ->withQueryString();
 
+        /*
+    |--------------------------------------------------------------------------
+    | Leave Types
+    |--------------------------------------------------------------------------
+    */
         $leaveTypes = LeaveType::query()
             ->where('status', true)
             ->orderBy('name')
             ->get();
 
+        /*
+    |--------------------------------------------------------------------------
+    | View
+    |--------------------------------------------------------------------------
+    */
         return view('leave_requests.index', [
             'pageTitle' =>
-                'Leave Requests Management',
+            'Leave Requests Management',
 
             'subTitle' =>
-                'Leave requests awaiting your approval or rejection.',
+            'Leave requests awaiting your approval or rejection.',
 
             'leaveRequests' =>
-                $leaveRequests,
+            $leaveRequests,
 
             'leaveTypes' =>
-                $leaveTypes,
+            $leaveTypes,
+
+            'perPage' =>
+            $perPage,
 
             'isPendingPage' =>
-                true,
+            true,
         ]);
     }
+
 
     /**
      * Direct approve.
@@ -2194,7 +2102,6 @@ class LeaveRequestController extends Controller
         Request $request,
         string $id
     ): RedirectResponse {
-
         $leaveRequest =
             LeaveRequest::findOrFail($id);
 
@@ -2259,11 +2166,11 @@ class LeaveRequestController extends Controller
 
         $approvedDuration =
             $this->leaveBalanceService
-                ->calculateDuration(
-                    $leaveRequest->type,
-                    $approvedFromDate,
-                    $approvedToDate
-                );
+            ->calculateDuration(
+                $leaveRequest->type,
+                $approvedFromDate,
+                $approvedToDate
+            );
 
         $oldStatus =
             $leaveRequest->status;
@@ -2275,7 +2182,6 @@ class LeaveRequestController extends Controller
             $leaveRequest->requested_to_date;
 
         try {
-
             DB::transaction(function () use (
                 $leaveRequest,
                 $authUser,
@@ -2286,7 +2192,6 @@ class LeaveRequestController extends Controller
                 $oldFromDate,
                 $oldToDate
             ) {
-
                 $balanceResult =
                     $this->updateLeaveBalanceAfterApproval(
                         $leaveRequest,
@@ -2334,16 +2239,16 @@ class LeaveRequestController extends Controller
                     null,
                     [
                         'approved_by' =>
-                            $authUser->id,
+                        $authUser->id,
 
                         'approved_duration' =>
-                            $approvedDuration,
+                        $approvedDuration,
 
                         'paid_days' =>
-                            $balanceResult['paid_days'],
+                        $balanceResult['paid_days'],
 
                         'unpaid_days' =>
-                            $balanceResult['unpaid_days'],
+                        $balanceResult['unpaid_days'],
                     ]
                 );
 
@@ -2359,21 +2264,20 @@ class LeaveRequestController extends Controller
                     'Leave balance deducted after approval.',
                     [
                         'approved_duration' =>
-                            $approvedDuration,
+                        $approvedDuration,
 
                         'paid_days' =>
-                            $balanceResult['paid_days'],
+                        $balanceResult['paid_days'],
 
                         'unpaid_days' =>
-                            $balanceResult['unpaid_days'],
+                        $balanceResult['unpaid_days'],
 
                         'remaining_balance' =>
-                            $balanceResult['remaining_balance'],
+                        $balanceResult['remaining_balance'],
                     ]
                 );
             });
         } catch (\RuntimeException $e) {
-
             return redirect()
                 ->route(
                     'leave-requests.show',
@@ -2405,16 +2309,6 @@ class LeaveRequestController extends Controller
 
     /**
      * Cancel leave request.
-     *
-     * If an approved leave is cancelled:
-     *
-     * - paid_days are restored to current_balance
-     * - paid_days_used is reduced
-     * - unpaid_days_used is reduced
-     * - used_balance is reduced by approved_duration
-     * - cancelled_days_restored records the restored paid days
-     *
-     * Pending cancellation does not affect balance.
      */
     public function cancel(
         Request $request,
@@ -2461,17 +2355,16 @@ class LeaveRequestController extends Controller
         $oldFromDate =
             $leaveRequest->status === 'approved'
             && $leaveRequest->approved_from_date
-                ? $leaveRequest->approved_from_date
-                : $leaveRequest->requested_from_date;
+            ? $leaveRequest->approved_from_date
+            : $leaveRequest->requested_from_date;
 
         $oldToDate =
             $leaveRequest->status === 'approved'
             && $leaveRequest->approved_to_date
-                ? $leaveRequest->approved_to_date
-                : $leaveRequest->requested_to_date;
+            ? $leaveRequest->approved_to_date
+            : $leaveRequest->requested_to_date;
 
         try {
-
             DB::transaction(function () use (
                 $leaveRequest,
                 $authUser,
@@ -2480,10 +2373,6 @@ class LeaveRequestController extends Controller
                 $oldFromDate,
                 $oldToDate
             ) {
-
-                /*
-                 * Re-check the status inside the transaction.
-                 */
                 $leaveRequest->refresh();
 
                 if (
@@ -2499,12 +2388,9 @@ class LeaveRequestController extends Controller
                 }
 
                 /*
-                 * -------------------------------------------------
-                 * APPROVED LEAVE
-                 * -------------------------------------------------
+                 * Restore balance for approved leave.
                  */
                 if ($leaveRequest->status === 'approved') {
-
                     if (
                         !$leaveRequest->approved_from_date
                         || !$leaveRequest->approved_to_date
@@ -2560,18 +2446,12 @@ class LeaveRequestController extends Controller
                         2
                     );
 
-                    /*
-                     * Restore paid balance.
-                     */
                     $balance->current_balance = round(
                         (float) $balance->current_balance
                             + $paidDaysToRestore,
                         2
                     );
 
-                    /*
-                     * Reverse paid usage.
-                     */
                     $balance->paid_days_used = round(
                         max(
                             0,
@@ -2581,9 +2461,6 @@ class LeaveRequestController extends Controller
                         2
                     );
 
-                    /*
-                     * Reverse unpaid usage.
-                     */
                     $balance->unpaid_days_used = round(
                         max(
                             0,
@@ -2593,9 +2470,6 @@ class LeaveRequestController extends Controller
                         2
                     );
 
-                    /*
-                     * Track restored paid days.
-                     */
                     $balance->cancelled_days_restored = round(
                         (float) (
                             $balance->cancelled_days_restored ?? 0
@@ -2604,9 +2478,6 @@ class LeaveRequestController extends Controller
                         2
                     );
 
-                    /*
-                     * Reverse complete approved duration.
-                     */
                     $balance->used_balance = round(
                         max(
                             0,
@@ -2621,9 +2492,6 @@ class LeaveRequestController extends Controller
 
                     $balance->save();
 
-                    /*
-                     * History: balance restored.
-                     */
                     $this->logLeaveHistory(
                         $leaveRequest,
                         'balance_restored',
@@ -2636,28 +2504,23 @@ class LeaveRequestController extends Controller
                         'Leave balance restored after cancellation.',
                         [
                             'cancelled_by' =>
-                                $authUser->id,
+                            $authUser->id,
 
                             'approved_duration' =>
-                                (float) $leaveRequest->approved_duration,
+                            (float) $leaveRequest->approved_duration,
 
                             'paid_days_restored' =>
-                                $paidDaysToRestore,
+                            $paidDaysToRestore,
 
                             'unpaid_days_reversed' =>
-                                $unpaidDaysToRestore,
+                            $unpaidDaysToRestore,
 
                             'remaining_balance' =>
-                                (float) $balance->current_balance,
+                            (float) $balance->current_balance,
                         ]
                     );
                 }
 
-                /*
-                 * -------------------------------------------------
-                 * Mark leave as cancelled.
-                 * -------------------------------------------------
-                 */
                 $leaveRequest->status =
                     'cancelled';
 
@@ -2672,9 +2535,6 @@ class LeaveRequestController extends Controller
 
                 $leaveRequest->save();
 
-                /*
-                 * History: cancelled.
-                 */
                 $this->logLeaveHistory(
                     $leaveRequest,
                     'cancelled',
@@ -2687,15 +2547,14 @@ class LeaveRequestController extends Controller
                     $validated['cancellation_reason'],
                     [
                         'cancelled_by' =>
-                            $authUser->id,
+                        $authUser->id,
 
                         'balance_restored' =>
-                            $oldStatus === 'approved',
+                        $oldStatus === 'approved',
                     ]
                 );
             });
         } catch (\RuntimeException $e) {
-
             return redirect()
                 ->route(
                     'leave-requests.show',
@@ -2731,13 +2590,12 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * Apply an approved leave to the user's leave balance.
+     * Apply approved leave to the user's leave balance.
      *
      * Rules:
-     *
-     * - yearly/current balance controls paid leave.
+     * - current/yearly balance controls paid leave.
      * - monthly entitlement controls paid leave per month.
-     * - excess monthly/yearly leave becomes unpaid.
+     * - excess becomes unpaid.
      * - complete approved duration is added to used_balance.
      */
     private function updateLeaveBalanceAfterApproval(
@@ -2798,11 +2656,10 @@ class LeaveRequestController extends Controller
         $date = $approvedFromDate->copy();
 
         while ($date->lte($approvedToDate)) {
-
             $dayDuration =
                 $leaveRequest->type === 'half_day'
-                    ? 0.5
-                    : 1.0;
+                ? 0.5
+                : 1.0;
 
             $monthKey =
                 $date->format('Y-m');
@@ -2904,16 +2761,16 @@ class LeaveRequestController extends Controller
 
         return [
             'paid_days' =>
-                $paidDays,
+            $paidDays,
 
             'unpaid_days' =>
-                $unpaidDays,
+            $unpaidDays,
 
             'approved_duration' =>
-                $approvedDuration,
+            $approvedDuration,
 
             'remaining_balance' =>
-                $currentBalance,
+            $currentBalance,
         ];
     }
 
@@ -2971,7 +2828,6 @@ class LeaveRequestController extends Controller
         $monthlyPaidUsage = 0;
 
         foreach ($approvedLeaves as $leave) {
-
             $leaveFrom = Carbon::parse(
                 $leave->approved_from_date
             )->startOfDay();
@@ -2982,13 +2838,13 @@ class LeaveRequestController extends Controller
 
             $overlapFrom =
                 $leaveFrom->greaterThan($monthStart)
-                    ? $leaveFrom
-                    : $monthStart;
+                ? $leaveFrom
+                : $monthStart;
 
             $overlapTo =
                 $leaveTo->lessThan($monthEnd)
-                    ? $leaveTo
-                    : $monthEnd;
+                ? $leaveTo
+                : $monthEnd;
 
             if ($overlapTo->lt($overlapFrom)) {
                 continue;
@@ -3020,16 +2876,15 @@ class LeaveRequestController extends Controller
 
             $totalDuration =
                 $leave->type === 'half_day'
-                    ? $totalDays * 0.5
-                    : $totalDays;
+                ? $totalDays * 0.5
+                : $totalDays;
 
             $overlapDuration =
                 $leave->type === 'half_day'
-                    ? $overlapDays * 0.5
-                    : $overlapDays;
+                ? $overlapDays * 0.5
+                : $overlapDays;
 
             if ($totalDuration > 0) {
-
                 $paidRatio =
                     (float) $leave->paid_days
                     / $totalDuration;
@@ -3056,7 +2911,6 @@ class LeaveRequestController extends Controller
         Carbon $toDate,
         ?int $ignoreLeaveRequestId = null
     ): ?LeaveRequest {
-
         $query = LeaveRequest::query()
             ->where(
                 'user_id',
@@ -3074,7 +2928,6 @@ class LeaveRequestController extends Controller
                     $fromDate,
                     $toDate
                 ) {
-
                     $query->where(
                         function ($q) use (
                             $fromDate,
@@ -3138,6 +2991,38 @@ class LeaveRequestController extends Controller
     }
 
     /**
+     * Save leave request attachment.
+     *
+     * Returns true when a new attachment was uploaded.
+     */
+    private function saveAttachment(
+        Request $request,
+        LeaveRequest $leaveRequest
+    ): bool {
+        if (
+            !$request->hasFile('attachment')
+            || !$request->file('attachment')->isValid()
+        ) {
+            return false;
+        }
+
+        $attachmentService =
+            app(AttachmentService::class);
+
+        $attachmentService->upload(
+            $request->file('attachment'),
+            'leave_requests',
+            $leaveRequest,
+            'public',
+            'public',
+            false,
+            'leave_request'
+        );
+
+        return true;
+    }
+
+    /**
      * Store a leave request history entry.
      */
     private function logLeaveHistory(
@@ -3154,53 +3039,53 @@ class LeaveRequestController extends Controller
     ): void {
         LeaveRequestHistory::create([
             'leave_request_id' =>
-                $leaveRequest->id,
+            $leaveRequest->id,
 
             'user_id' =>
-                auth()->id(),
+            auth()->id(),
 
             'action' =>
-                $action,
+            $action,
 
             'old_status' =>
-                $oldStatus,
+            $oldStatus,
 
             'new_status' =>
-                $newStatus,
+            $newStatus,
 
             'old_from_date' =>
-                $oldFromDate
-                    ? Carbon::parse(
-                        $oldFromDate
-                    )->toDateString()
-                    : null,
+            $oldFromDate
+                ? Carbon::parse(
+                    $oldFromDate
+                )->toDateString()
+                : null,
 
             'old_to_date' =>
-                $oldToDate
-                    ? Carbon::parse(
-                        $oldToDate
-                    )->toDateString()
-                    : null,
+            $oldToDate
+                ? Carbon::parse(
+                    $oldToDate
+                )->toDateString()
+                : null,
 
             'new_from_date' =>
-                $newFromDate
-                    ? Carbon::parse(
-                        $newFromDate
-                    )->toDateString()
-                    : null,
+            $newFromDate
+                ? Carbon::parse(
+                    $newFromDate
+                )->toDateString()
+                : null,
 
             'new_to_date' =>
-                $newToDate
-                    ? Carbon::parse(
-                        $newToDate
-                    )->toDateString()
-                    : null,
+            $newToDate
+                ? Carbon::parse(
+                    $newToDate
+                )->toDateString()
+                : null,
 
             'reason' =>
-                $reason,
+            $reason,
 
             'metadata' =>
-                $metadata,
+            $metadata,
         ]);
     }
 }

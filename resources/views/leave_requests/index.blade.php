@@ -275,32 +275,6 @@
 
                                         $isOwnRequest = (int) $leaveRequest->user_id === $authUserId;
 
-                                        /*
-                                         * ============================================
-                                         * ASSIGNED USERS
-                                         * ============================================
-                                         *
-                                         * assigned_to is stored as JSON.
-                                         *
-                                         * Supported examples:
-                                         *
-                                         * [39, 40]
-                                         *
-                                         * OR
-                                         *
-                                         * [
-                                         *     ['id' => 39],
-                                         *     ['id' => 40]
-                                         * ]
-                                         *
-                                         * OR
-                                         *
-                                         * [
-                                         *     ['user_id' => 39],
-                                         *     ['user_id' => 40]
-                                         * ]
-                                         */
-
                                         $assignedTo = $leaveRequest->assigned_to ?? [];
 
                                         if (is_string($assignedTo)) {
@@ -544,16 +518,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                              ===================================================== --}}
 
                                                 @if ($isPendingPage)
-                                                    /*
-                                                    * APPROVE / REJECT
-                                                    *
-                                                    * Visible to:
-                                                    * - Super Admin
-                                                    * - Assigned user
-                                                    *
-                                                    * NOT visible to:
-                                                    * - Requester themselves
-                                                    */
                                                     @if ($canApproveReject)
                                                         {{-- Approve --}}
                                                         @can('leave_request.edit')
@@ -588,9 +552,10 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                     {{-- View --}}
                                                     @if ($canManageLeave)
                                                         @can('leave_request.view')
-                                                            <x-view-button :href="route('leave-requests.show', $leaveRequest->id)" />
+                                                            <x-view-button :action="route('leave-requests.show', $leaveRequest->id)" />
                                                         @endcan
                                                     @endif
+
 
 
                                                     {{-- =====================================================
@@ -600,13 +565,13 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                     @if ($canManageLeave)
                                                         {{-- View --}}
                                                         @can('leave_request.view')
-                                                            <x-view-button :href="route('leave-requests.show', $leaveRequest->id)" />
+                                                            <x-view-button :action="route('leave-requests.show', $leaveRequest->id)" />
                                                         @endcan
 
 
                                                         {{-- Edit --}}
                                                         @can('leave_request.edit')
-                                                            <x-edit-button :href="route('leave-requests.edit', $leaveRequest->id)" />
+                                                            <x-edit-button :action="route('leave-requests.edit', $leaveRequest->id)" />
                                                         @endcan
 
 
