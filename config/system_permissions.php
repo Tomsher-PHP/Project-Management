@@ -269,14 +269,21 @@ return [
     ['name' => 'meeting_settings.edit',   'label' => 'Settings - Meeting', 'sort_order' => 65040, 'default_checked' => false],
     ['name' => 'meeting_settings.delete', 'label' => 'Settings - Meeting', 'sort_order' => 65060, 'default_checked' => false],
 
-    // CONFIGURATION
-    ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
-    ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
-
     // LEAVE TYPES
     ['name' => 'leave_types.view',   'label' => 'Settings - Leave Types', 'sort_order' => 68000, 'default_checked' => false],
     ['name' => 'leave_types.create', 'label' => 'Settings - Leave Types', 'sort_order' => 68020, 'default_checked' => false],
     ['name' => 'leave_types.edit',   'label' => 'Settings - Leave Types', 'sort_order' => 68040, 'default_checked' => false],
     ['name' => 'leave_types.delete', 'label' => 'Settings - Leave Types', 'sort_order' => 68060, 'default_checked' => false],
+
+    // Company Expenses
+    ['name' => 'company_expenses.view',   'label' => 'Settings - Company Expenses', 'sort_order' => 69000, 'default_checked' => false],
+    ['name' => 'company_expenses.create', 'label' => 'Settings - Company Expenses', 'sort_order' => 69020, 'default_checked' => false],
+    ['name' => 'company_expenses.edit',   'label' => 'Settings - Company Expenses', 'sort_order' => 69040, 'default_checked' => false],
+    ['name' => 'company_expenses.delete', 'label' => 'Settings - Company Expenses', 'sort_order' => 69060, 'default_checked' => false],
+
+    // ---------------------------------------------------------------------------------------------------------------------------------
+    // CONFIGURATION  -- Last Settings Module
+    ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
+    ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
 
 ];
