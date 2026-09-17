@@ -17,6 +17,7 @@ use App\Http\Controllers\CustomerRestoreController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\IndustryController;
@@ -521,6 +522,12 @@ Route::middleware(['auth'])->group(function () {
             ->middleware('permission.type:task_time_extend_request.approve_reject')
             ->name('tasks.extend-time-requests.reject');
     });
+
+    // Expense Transaction Routes
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.view')->only(['index']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.create')->only(['store']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.edit')->only(['update']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.delete')->only(['destroy']);
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');

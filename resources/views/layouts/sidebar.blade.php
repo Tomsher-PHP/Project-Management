@@ -545,7 +545,7 @@
                         @if ($canViewExpenses)
                             <!-- Company Expenses -->
                             <li class="item py-[8px] {{ $isExpensesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="{{ \Illuminate\Support\Facades\Route::has('expenses.index') ? route('expenses.index') : 'javascript:void(0)' }}">
+                                <a href="{{ route('expenses.index') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
