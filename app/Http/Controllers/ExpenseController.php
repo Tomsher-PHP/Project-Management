@@ -59,6 +59,34 @@ class ExpenseController extends Controller
             ->with('success', 'Expense recorded successfully.');
     }
 
+    public function edit(Expense $expense): JsonResponse
+    {
+        $expense->load(['paymentMode', 'serviceProvider', 'category', 'customer']);
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'id' => $expense->id,
+                'payment_mode_id' => $expense->payment_mode_id,
+                'vat_payment' => $expense->vat_payment,
+                'local_intl_payment' => $expense->local_intl_payment,
+                'paid_date' => $expense->paid_date ? $expense->paid_date->format('Y-m-d') : null,
+                'invoice_date' => $expense->invoice_date ? $expense->invoice_date->format('Y-m-d') : null,
+                'payment_currency' => $expense->payment_currency,
+                'other_currency' => $expense->other_currency,
+                'payment_amount' => $expense->payment_amount,
+                'vat_amount' => $expense->vat_amount,
+                'bank_charges' => $expense->bank_charges,
+                'invoice_number' => $expense->invoice_number,
+                'service_provider_id' => $expense->service_provider_id,
+                'category_id' => $expense->category_id,
+                'service_product' => $expense->service_product,
+                'customer_id' => $expense->customer_id,
+                'comment' => $expense->comment,
+            ],
+        ]);
+    }
+
     public function update(ExpenseUpdateRequest $request, Expense $expense): JsonResponse|RedirectResponse
     {
         $updatedExpense = $this->expenseService->updateExpense($expense, $request->validated());
