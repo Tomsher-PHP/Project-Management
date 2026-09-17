@@ -183,7 +183,7 @@ export function initTomSelect(root = document) {
                 badge.className = badgeClass;
                 badge.setAttribute('aria-haspopup', 'dialog');
                 badge.setAttribute('aria-expanded', 'false');
-                badge.addEventListener('mousedown', (event) => event.preventDefault());
+                badge.addEventListener('mousedown', (event) => {event.preventDefault();});
                 badge.addEventListener('click', (event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -206,21 +206,33 @@ export function initTomSelect(root = document) {
             renderSelectedItemsPopover();
         };
 
-        instance.on('item_add', syncSelectedItems);
-        instance.on('item_remove', syncSelectedItems);
+        instance.on('item_add',syncSelectedItems);
+        instance.on('item_remove',syncSelectedItems);
         instance.on('change', syncSelectedItems);
         instance.control.addEventListener('mousedown', handleControlMouseDown);
         instance.on('destroy', () => {
-            instance.control.removeEventListener('mousedown', handleControlMouseDown);
+            instance.control.removeEventListener(
+                'mousedown',
+                handleControlMouseDown
+            );
+
             closeSelectedItemsPopover();
         });
+
         syncSelectedItems();
     };
 
     const applyDisabledStyles = (instance, el) => {
-        if (!instance?.wrapper || !instance?.control || !el.disabled) return;
+        if (
+            !instance?.wrapper
+            || !instance?.control
+            || !el.disabled
+        ) {
+            return;
+        }
 
         instance.wrapper.classList.add('opacity-100');
+
         instance.control.classList.add(
             'border-bgray-200',
             'bg-bgray-50',
@@ -229,23 +241,164 @@ export function initTomSelect(root = document) {
             'dark:bg-darkblack-500',
             'dark:text-bgray-300'
         );
+
         instance.control.classList.remove('bg-white');
 
-        instance.control.querySelectorAll('.item, input, .ts-control > div').forEach(node => {
-            node.classList.add('text-bgray-600', 'dark:text-bgray-300');
-        });
+        instance.control
+            .querySelectorAll(
+                '.item, input, .ts-control > div'
+            )
+            .forEach(node => {
+                node.classList.add(
+                    'text-bgray-600',
+                    'dark:text-bgray-300'
+                );
+            });
     };
 
-    // Standard Select
+    /*
+     * ==========================================================
+     * Restore selected values from the original SELECT
+     * ==========================================================
+     *
+     * Important:
+     *
+     * Tom Select can sometimes initialize while the native
+     * SELECT still contains a selected option that is not yet
+     * present in instance.options.
+     *
+     * In that case:
+     *
+     *     <option value="63" selected>
+     *
+     * exists in the DOM, but:
+     *
+     *     instance.options['63']
+     *
+     * does not exist.
+     *
+     * Calling setValue(['63']) alone will therefore not reliably
+     * restore the selection.
+     *
+     * This helper makes sure the selected native options exist
+     * inside Tom Select before setting them.
+     */
+    const restoreSelectedValues = (instance, el) => {
+        if (
+            !el
+            || el.tagName !== 'SELECT'
+            || !el.multiple
+        ) {
+            return;
+        }
+
+        const selectedOptions = Array.from(
+            el.options
+        ).filter(option =>
+            option.selected
+            && String(option.value ?? '') !== ''
+        );
+
+        if (!selectedOptions.length) {
+            return;
+        }
+
+        const selectedValues = selectedOptions.map(
+            option => String(option.value)
+        );
+
+        /*
+         * Make sure every selected native option exists in
+         * Tom Select's internal options collection.
+         */
+        selectedOptions.forEach(option => {
+            const value = String(option.value);
+
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    instance.options,
+                    value
+                )
+            ) {
+                let subtype = option.dataset.subtype || '';
+                let email = option.dataset.email || '';
+
+                if (option.dataset.data) {
+                    try {
+                        const parsedData = JSON.parse(
+                            option.dataset.data
+                        );
+
+                        if (
+                            !subtype
+                            && parsedData?.subtype
+                        ) {
+                            subtype = parsedData.subtype;
+                        }
+
+                        if (
+                            !subtype
+                            && parsedData?.email
+                        ) {
+                            subtype = parsedData.email;
+                        }
+
+                        if (
+                            !email
+                            && parsedData?.email
+                        ) {
+                            email = parsedData.email;
+                        }
+                    } catch (error) {
+                        // Ignore invalid JSON.
+                    }
+                }
+
+                instance.addOption({
+                    value,
+                    text: option.textContent.trim(),
+                    subtype: subtype || email,
+                    email: email || subtype,
+                });
+            }
+        });
+
+        /*
+         * Now that the options definitely exist inside
+         * Tom Select, restore their selected state.
+         */
+        instance.setValue(
+            selectedValues,
+            true
+        );
+    };
+
+    /*
+     * ==========================================================
+     * Standard Select - subtype synchronization
+     * ==========================================================
+     */
     const syncOptionSubtypes = (instance, el) => {
-        if (!el || el.tagName !== 'SELECT') return;
+        if (
+            !el
+            || el.tagName !== 'SELECT'
+        ) {
+            return;
+        }
 
         let hasSubtype = false;
 
         Array.from(el.options).forEach((option) => {
-            const optionValue = String(option.value ?? '');
+            const optionValue = String(
+                option.value ?? ''
+            );
 
-            if (!Object.prototype.hasOwnProperty.call(instance.options, optionValue)) {
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    instance.options,
+                    optionValue
+                )
+            ) {
                 return;
             }
 
@@ -254,17 +407,38 @@ export function initTomSelect(root = document) {
 
             if (option.dataset.data) {
                 try {
-                    const parsedData = JSON.parse(option.dataset.data);
-                    if (!subtype && parsedData?.subtype) subtype = parsedData.subtype;
-                    if (!subtype && parsedData?.email) subtype = parsedData.email;
-                    if (!email && parsedData?.email) email = parsedData.email;
+                    const parsedData = JSON.parse(
+                        option.dataset.data
+                    );
+
+                    if (
+                        !subtype
+                        && parsedData?.subtype
+                    ) {
+                        subtype = parsedData.subtype;
+                    }
+
+                    if (
+                        !subtype
+                        && parsedData?.email
+                    ) {
+                        subtype = parsedData.email;
+                    }
+
+                    if (
+                        !email
+                        && parsedData?.email
+                    ) {
+                        email = parsedData.email;
+                    }
                 } catch (error) {
-                    // ignore JSON error
+                    // Ignore invalid JSON.
                 }
             }
 
             if (subtype || email) {
                 hasSubtype = true;
+
                 instance.options[optionValue] = {
                     ...instance.options[optionValue],
                     subtype: subtype || email,
@@ -279,16 +453,34 @@ export function initTomSelect(root = document) {
 
             const currentValue = instance.getValue();
 
-            if (currentValue !== undefined && currentValue !== null && currentValue !== '' && (Array.isArray(currentValue) ? currentValue.length > 0 : true)) {
-                instance.setValue(currentValue, true);
+            if (
+                currentValue !== undefined
+                && currentValue !== null
+                && currentValue !== ''
+                && (
+                    Array.isArray(currentValue)
+                        ? currentValue.length > 0
+                        : true
+                )
+            ) {
+                instance.setValue(
+                    currentValue,
+                    true
+                );
             }
         }
     };
 
-    // Standard Select
-    root.querySelectorAll('select.tom-select-no-search, input.tom-select-no-search').forEach(el => {
+    /*
+     * ==========================================================
+     * Standard Select - no search
+     * ==========================================================
+     */
+    root.querySelectorAll(
+        'select.tom-select-no-search, input.tom-select-no-search'
+    ).forEach(el => {
 
-        if (el.tomselect) return; // Prevent double init
+        if (el.tomselect) return;
 
         const config = {
             create: false,
@@ -298,42 +490,93 @@ export function initTomSelect(root = document) {
             dropdownParent: 'body',
         };
 
-        if (el.dataset.renderSubtype === 'true') {
+        if (
+            el.dataset.renderSubtype === 'true'
+        ) {
             config.render = {
                 option: function (data, escape) {
-                    const sub = data.subtype || data.email || '';
+                    const sub =
+                        data.subtype
+                        || data.email
+                        || '';
+
                     return `
                         <div>
-                            <div class="font-medium">${escape(data.text)}</div>
-                            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400">${escape(sub)}</div>` : ''}
+                            <div class="font-medium">
+                                ${escape(data.text)}
+                            </div>
+
+                            ${
+                                sub
+                                    ? `
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            ${escape(sub)}
+                                        </div>
+                                    `
+                                    : ''
+                            }
                         </div>
                     `;
                 },
+
                 item: function (data, escape) {
-                    const sub = data.subtype || data.email || '';
+                    const sub =
+                        data.subtype
+                        || data.email
+                        || '';
+
                     return `
                         <div class="flex items-center justify-between gap-3">
-                            <span class="font-medium">${escape(data.text)}</span>
-                            ${sub ? `<span class="text-sm text-gray-600 dark:text-gray-400 ml-2">${escape(sub)}</span>` : ''}
+                            <span class="font-medium">
+                                ${escape(data.text)}
+                            </span>
+
+                            ${
+                                sub
+                                    ? `
+                                        <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">
+                                            ${escape(sub)}
+                                        </span>
+                                    `
+                                    : ''
+                            }
                         </div>
                     `;
                 }
             };
         }
 
-        const instance = new TomSelect(el, config);
+        const instance = new TomSelect(
+            el,
+            config
+        );
 
-        if (el.dataset.renderSubtype === 'true' && el.tagName === 'SELECT') {
-            syncOptionSubtypes(instance, el);
+        if (
+            el.dataset.renderSubtype === 'true'
+            && el.tagName === 'SELECT'
+        ) {
+            syncOptionSubtypes(
+                instance,
+                el
+            );
         }
 
-        applyDisabledStyles(instance, el);
+        applyDisabledStyles(
+            instance,
+            el
+        );
     });
 
-    // Standard Select
-    root.querySelectorAll('select.tom-select, input.tom-select').forEach(el => {
+    /*
+     * ==========================================================
+     * Standard Select
+     * ==========================================================
+     */
+    root.querySelectorAll(
+        'select.tom-select, input.tom-select'
+    ).forEach(el => {
 
-        if (el.tomselect) return; // Prevent double init
+        if (el.tomselect) return;
 
         const sort = el.dataset.sort != "0";
 
@@ -341,25 +584,64 @@ export function initTomSelect(root = document) {
             create: false,
             persist: false,
             hideDropdownArrow: false,
-            plugins: ['dropdown_input', 'remove_button'],
-            searchField: ['text', 'subtype', 'email'],
+            plugins: [
+                'dropdown_input',
+                'remove_button'
+            ],
+            searchField: [
+                'text',
+                'subtype',
+                'email'
+            ],
             dropdownParent: 'body',
+
             render: {
                 option: function (data, escape) {
-                    const sub = data.subtype || data.email || '';
+                    const sub =
+                        data.subtype
+                        || data.email
+                        || '';
+
                     return `
                         <div>
-                            <div class="font-medium">${escape(data.text)}</div>
-                            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400">${escape(sub)}</div>` : ''}
+                            <div class="font-medium">
+                                ${escape(data.text)}
+                            </div>
+
+                            ${
+                                sub
+                                    ? `
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            ${escape(sub)}
+                                        </div>
+                                    `
+                                    : ''
+                            }
                         </div>
                     `;
                 },
+
                 item: function (data, escape) {
-                    const sub = data.subtype || data.email || '';
+                    const sub =
+                        data.subtype
+                        || data.email
+                        || '';
+
                     return `
                         <div>
-                            <span class="font-medium">${escape(data.text)}</span>
-                            ${sub ? `<span class="text-sm text-gray-600 dark:text-gray-400 ml-2">${escape(sub)}</span>` : ''}
+                            <span class="font-medium">
+                                ${escape(data.text)}
+                            </span>
+
+                            ${
+                                sub
+                                    ? `
+                                        <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">
+                                            ${escape(sub)}
+                                        </span>
+                                    `
+                                    : ''
+                            }
                         </div>
                     `;
                 }
@@ -367,127 +649,404 @@ export function initTomSelect(root = document) {
         };
 
         if (sort) {
-            config.sortField = { field: "text", direction: "asc" };
+            config.sortField = {
+                field: "text",
+                direction: "asc"
+            };
         }
 
-        const instance = new TomSelect(el, config);
-        syncOptionSubtypes(instance, el);
+        const instance = new TomSelect(
+            el,
+            config
+        );
+
+        syncOptionSubtypes(
+            instance,
+            el
+        );
+
         if (el.multiple) {
-            enableCompactMultipleDisplay(instance);
+            restoreSelectedValues(
+                instance,
+                el
+            );
+
+            enableCompactMultipleDisplay(
+                instance
+            );
         }
-        applyDisabledStyles(instance, el);
+
+        applyDisabledStyles(
+            instance,
+            el
+        );
     });
 
-    root.querySelectorAll('select.tom-select-tags, input.tom-select-tags, select.tom-select-add').forEach(el => {
+    /*
+     * ==========================================================
+     * Tags
+     * ==========================================================
+     */
+    root.querySelectorAll(
+        'select.tom-select-tags, input.tom-select-tags, select.tom-select-add'
+    ).forEach(el => {
+
         if (el.tomselect) return;
 
-        const placeholder = el.dataset.placeholder || 'Search or add tags';
-        const maxItems = el.dataset.maxItems || null;
+        const placeholder =
+            el.dataset.placeholder
+            || 'Search or add tags';
 
-        const instance = new TomSelect(el, {
-            plugins: ['remove_button'],
-            maxItems: maxItems,
-            persist: false,
-            dropdownParent: 'body',
-            createOnBlur: true,
-            hideSelected: true,
-            closeAfterSelect: false,
-            placeholder: placeholder,
-            create: el.disabled ? false : (input) => {
-                const text = String(input || '').trim();
+        const maxItems =
+            el.dataset.maxItems
+            || null;
 
-                return {
-                    value: text,
-                    text,
-                };
-            },
-            createFilter(input) {
-                const normalizedInput = normalizeText(input);
+        const instance = new TomSelect(
+            el,
+            {
+                plugins: ['remove_button'],
+                maxItems: maxItems,
+                persist: false,
+                dropdownParent: 'body',
+                createOnBlur: true,
+                hideSelected: true,
+                closeAfterSelect: false,
+                placeholder: placeholder,
 
-                if (!normalizedInput) {
-                    return false;
-                }
+                create: el.disabled
+                    ? false
+                    : (input) => {
+                        const text = String(
+                            input || ''
+                        ).trim();
 
-                return !Object.values(this.options).some((option) => {
-                    const optionText = normalizeText(option?.text ?? option?.value ?? '');
-                    return optionText === normalizedInput;
-                });
-            },
-            score(search) {
-                const normalizedSearch = normalizeText(search);
+                        return {
+                            value: text,
+                            text,
+                        };
+                    },
 
-                return function (item) {
-                    const text = normalizeText(item.text);
+                createFilter(input) {
+                    const normalizedInput =
+                        normalizeText(input);
 
-                    if (!normalizedSearch) {
-                        return 1;
+                    if (!normalizedInput) {
+                        return false;
                     }
 
-                    if (text === normalizedSearch) {
-                        return 2;
-                    }
+                    return !Object.values(
+                        this.options
+                    ).some((option) => {
+                        const optionText =
+                            normalizeText(
+                                option?.text
+                                ?? option?.value
+                                ?? ''
+                            );
 
-                    return text.includes(normalizedSearch) ? 1 : 0;
-                };
-            },
-            render: {
-                option(data, escape) {
-                    return `
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="font-medium">${escape(data.text)}</span>
-                            ${data.$option ? '' : '<span class="text-xs font-semibold text-success-400">Create</span>'}
-                        </div>
-                    `;
+                        return optionText === normalizedInput;
+                    });
                 },
-                item(data, escape) {
-                    return `<div class="font-medium">${escape(data.text)}</div>`;
-                },
-            },
-        });
 
-        applyDisabledStyles(instance, el);
+                score(search) {
+                    const normalizedSearch =
+                        normalizeText(search);
+
+                    return function (item) {
+                        const text =
+                            normalizeText(
+                                item.text
+                            );
+
+                        if (!normalizedSearch) {
+                            return 1;
+                        }
+
+                        if (
+                            text === normalizedSearch
+                        ) {
+                            return 2;
+                        }
+
+                        return text.includes(
+                            normalizedSearch
+                        )
+                            ? 1
+                            : 0;
+                    };
+                },
+
+                render: {
+                    option(data, escape) {
+                        return `
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="font-medium">
+                                    ${escape(data.text)}
+                                </span>
+
+                                ${
+                                    data.$option
+                                        ? ''
+                                        : `
+                                            <span class="text-xs font-semibold text-success-400">
+                                                Create
+                                            </span>
+                                        `
+                                }
+                            </div>
+                        `;
+                    },
+
+                    item(data, escape) {
+                        return `
+                            <div class="font-medium">
+                                ${escape(data.text)}
+                            </div>
+                        `;
+                    },
+                },
+            }
+        );
+
+        applyDisabledStyles(
+            instance,
+            el
+        );
     });
 
-    // Multiple select
-    root.querySelectorAll('select.tom-select-multiple, input.tom-select-multiple').forEach(el => {
+    /*
+     * ==========================================================
+     * Multiple Select
+     * ==========================================================
+     */
+        // Multiple select
+    root.querySelectorAll(
+        'select.tom-select-multiple, input.tom-select-multiple'
+    ).forEach(el => {
 
-        if (el.tomselect) return; // Prevent double init
+        if (el.tomselect) return;
+
+        /*
+         * Capture the selected values BEFORE Tom Select touches
+         * the element.
+         */
+        const getSelectedValues = () => {
+            if (
+                !el
+                || el.tagName !== 'SELECT'
+            ) {
+                return [];
+            }
+
+            return Array.from(el.options)
+                .filter(option =>
+                    option.selected
+                    && String(option.value ?? '') !== ''
+                )
+                .map(option => String(option.value));
+        };
+
+        const initialSelectedValues = getSelectedValues();
+
+        console.log(
+            '[TomSelect] BEFORE INIT',
+            el.name,
+            initialSelectedValues
+        );
 
         const instance = new TomSelect(el, {
-            plugins: ['remove_button', 'dropdown_input'],
+            plugins: [
+                'remove_button',
+                'dropdown_input'
+            ],
+
             maxItems: null,
-            searchField: ['text', 'subtype', 'email'],
+
+            searchField: [
+                'text',
+                'subtype',
+                'email'
+            ],
+
             dropdownParent: 'body',
+
             render: {
                 option: function (data, escape) {
-                    const sub = data.subtype || data.email || '';
+                    const sub =
+                        data.subtype
+                        || data.email
+                        || '';
+
                     return `
                         <div>
-                            <div class="font-medium">${escape(data.text)}</div>
-                            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400">${escape(sub)}</div>` : ''}
+                            <div class="font-medium">
+                                ${escape(data.text)}
+                            </div>
+
+                            ${
+                                sub
+                                    ? `
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            ${escape(sub)}
+                                        </div>
+                                    `
+                                    : ''
+                            }
                         </div>
                     `;
                 },
+
                 item: function (data, escape) {
-                    const sub = data.subtype || data.email || '';
+                    const sub =
+                        data.subtype
+                        || data.email
+                        || '';
+
                     return `
                         <div class="flex items-center justify-between gap-3">
-                            <span class="font-medium">${escape(data.text)}</span>
-                            ${sub ? `<span class="text-sm text-gray-600 dark:text-gray-400 ml-2">${escape(sub)}</span>` : ''}
+                            <span class="font-medium">
+                                ${escape(data.text)}
+                            </span>
+
+                            ${
+                                sub
+                                    ? `
+                                        <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">
+                                            ${escape(sub)}
+                                        </span>
+                                    `
+                                    : ''
+                            }
                         </div>
                     `;
                 }
             }
         });
 
-        syncOptionSubtypes(instance, el);
-        enableCompactMultipleDisplay(instance);
-        applyDisabledStyles(instance, el);
+        console.log(
+            '[TomSelect] AFTER INIT',
+            el.name,
+            {
+                nativeSelected: getSelectedValues(),
+                tomSelectItems: instance.items,
+                tomSelectValue: instance.getValue(),
+            }
+        );
+
+        /*
+         * Sync subtype/email information.
+         */
+        syncOptionSubtypes(
+            instance,
+            el
+        );
+
+        /*
+         * ------------------------------------------------------
+         * Restore the original selected values.
+         * ------------------------------------------------------
+         */
+        const restoreSelection = () => {
+            /*
+             * Prefer the values captured before initialization.
+             *
+             * This is important because another Tom Select
+             * operation may change the native selected state.
+             */
+            if (!initialSelectedValues.length) {
+                return;
+            }
+
+            const validValues = initialSelectedValues.filter(
+                value =>
+                    Object.prototype.hasOwnProperty.call(
+                        instance.options,
+                        value
+                    )
+            );
+
+            console.log(
+                '[TomSelect] RESTORE',
+                el.name,
+                {
+                    initialSelectedValues,
+                    validValues,
+                    options: Object.keys(instance.options),
+                    before: instance.items,
+                }
+            );
+
+            if (!validValues.length) {
+                console.warn(
+                    '[TomSelect] Selected values are missing from Tom Select options',
+                    {
+                        name: el.name,
+                        initialSelectedValues,
+                        options: instance.options,
+                    }
+                );
+
+                return;
+            }
+
+            instance.setValue(
+                validValues,
+                true
+            );
+
+            console.log(
+                '[TomSelect] RESTORED',
+                el.name,
+                {
+                    items: instance.items,
+                    value: instance.getValue(),
+                }
+            );
+        };
+
+        /*
+         * Restore immediately.
+         */
+        restoreSelection();
+
+        /*
+         * Restore again on the next event loop.
+         *
+         * This catches code that modifies the select immediately
+         * after Tom Select initialization.
+         */
+        setTimeout(() => {
+            restoreSelection();
+        }, 0);
+
+        /*
+         * Restore once more after the browser has completed
+         * the current rendering cycle.
+         */
+        requestAnimationFrame(() => {
+            restoreSelection();
+        });
+
+        enableCompactMultipleDisplay(
+            instance
+        );
+
+        applyDisabledStyles(
+            instance,
+            el
+        );
     });
 
-    // Lazy load tom select
-    root.querySelectorAll('select.tom-select-lazy, input.tom-select-lazy').forEach(el => {
-        if (el.tomselect) return; // Prevent double init
+    /*
+     * ==========================================================
+     * Lazy Load Tom Select
+     * ==========================================================
+     */
+    root.querySelectorAll(
+        'select.tom-select-lazy, input.tom-select-lazy'
+    ).forEach(el => {
+
+        if (el.tomselect) return;
 
         const sort = el.dataset.sort != "0";
         const route = el.dataset.route;
@@ -496,69 +1055,169 @@ export function initTomSelect(root = document) {
             create: false,
             persist: false,
             hideDropdownArrow: false,
-            plugins: ['dropdown_input', 'remove_button'],
-            searchField: ['text', 'subtype', 'email'],
-            sortField: sort ? { field: "text", direction: "asc" } : null,
+
+            plugins: [
+                'dropdown_input',
+                'remove_button'
+            ],
+
+            searchField: [
+                'text',
+                'subtype',
+                'email'
+            ],
+
+            sortField: sort
+                ? {
+                    field: "text",
+                    direction: "asc"
+                }
+                : null,
+
             dropdownParent: 'body',
 
             render: {
                 option: function (data, escape) {
-                    const sub = data.subtype || data.email || data.project_code || '';
+                    const sub =
+                        data.subtype
+                        || data.email
+                        || data.project_code
+                        || '';
+
                     return `
                         <div>
-                            <div class="font-medium">${escape(data.text || data.name)}</div>
-                            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400">${escape(sub)}</div>` : ''}
+                            <div class="font-medium">
+                                ${escape(
+                                    data.text
+                                    || data.name
+                                )}
+                            </div>
+
+                            ${
+                                sub
+                                    ? `
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            ${escape(sub)}
+                                        </div>
+                                    `
+                                    : ''
+                            }
                         </div>
                     `;
                 },
+
                 item: function (data, escape) {
-                    const sub = data.subtype || data.email || data.project_code || '';
+                    const sub =
+                        data.subtype
+                        || data.email
+                        || data.project_code
+                        || '';
+
                     return `
                         <div>
-                            <span class="font-medium">${escape(data.text || data.name)}</span>
-                            ${sub ? `<span class="text-sm text-gray-600 dark:text-gray-400 ml-2">${escape(sub)}</span>` : ''}
+                            <span class="font-medium">
+                                ${escape(
+                                    data.text
+                                    || data.name
+                                )}
+                            </span>
+
+                            ${
+                                sub
+                                    ? `
+                                        <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">
+                                            ${escape(sub)}
+                                        </span>
+                                    `
+                                    : ''
+                            }
                         </div>
                     `;
                 }
             },
 
-            // Lazy load items via AJAX
             load: function (query, callback) {
-                if (!route) return callback();
+                if (!route) {
+                    return callback();
+                }
 
-                const sep = route.includes('?') ? '&' : '?';
-                let fetchUrl = `${route}${sep}q=${encodeURIComponent(query || '')}`;
+                const sep =
+                    route.includes('?')
+                        ? '&'
+                        : '?';
+
+                let fetchUrl =
+                    `${route}${sep}q=${encodeURIComponent(
+                        query || ''
+                    )}`;
+
                 if (el.dataset.excludeId) {
-                    fetchUrl += `&exclude_id=${encodeURIComponent(el.dataset.excludeId)}`;
+                    fetchUrl +=
+                        `&exclude_id=${encodeURIComponent(
+                            el.dataset.excludeId
+                        )}`;
                 }
 
                 fetch(fetchUrl)
                     .then(res => res.json())
                     .then(json => {
-                        // Expect JSON array [{id: 1, name: '...', subtype: '...'}, ...]
-                        callback(json.map(c => ({
-                            value: String(c.value ?? c.id),
-                            text: c.text ?? c.name,
-                            subtype: c.subtype ?? c.project_code ?? '',
-                        })));
+                        callback(
+                            json.map(c => ({
+                                value: String(
+                                    c.value
+                                    ?? c.id
+                                ),
+
+                                text:
+                                    c.text
+                                    ?? c.name,
+
+                                subtype:
+                                    c.subtype
+                                    ?? c.project_code
+                                    ?? '',
+                            }))
+                        );
                     })
                     .catch(() => callback());
             }
         };
 
-        const instance = new TomSelect(el, config);
-        syncOptionSubtypes(instance, el);
-        applyDisabledStyles(instance, el);
+        const instance = new TomSelect(
+            el,
+            config
+        );
+
+        syncOptionSubtypes(
+            instance,
+            el
+        );
+
+        applyDisabledStyles(
+            instance,
+            el
+        );
     });
 
-    document.dispatchEvent(new Event('tomselect:ready'));
+    document.dispatchEvent(
+        new Event('tomselect:ready')
+    );
 }
 
-//make auto select for dropdown input
+/*
+ * ==========================================================
+ * Auto select for dropdown input
+ * ==========================================================
+ */
 export const autoTomSelect = (el, value) => {
     const select = document.getElementById(el);
 
-    if (!select || !select.tomselect) return;
+    if (
+        !select
+        || !select.tomselect
+    ) {
+        return;
+    }
 
     if (value) {
         select.tomselect.setValue(value);
