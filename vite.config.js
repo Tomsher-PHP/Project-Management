@@ -8,7 +8,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
-                
+
                 'resources/js/modules/team.js',
                 'resources/js/modules/schedule-shift.js',
                 'resources/js/modules/create-schedule.js',
@@ -60,6 +60,7 @@ export default defineConfig({
                 'resources/js/modules/meetings/meetings.js',
                 'resources/js/modules/meetings/meeting-form.js',
                 'resources/js/login/login.js',
+                'resources/js/modules/attendance/attendance.js',
 
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',

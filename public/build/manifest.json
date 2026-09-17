@@ -33,6 +33,21 @@
       "assets/flatpickr-CksuuEqD.css"
     ]
   },
+  "_monthpicker-BB8ezBci.css": {
+    "file": "assets/monthpicker-BB8ezBci.css",
+    "src": "_monthpicker-BB8ezBci.css"
+  },
+  "_monthpicker-DWQROgmQ.js": {
+    "file": "assets/monthpicker-DWQROgmQ.js",
+    "name": "monthpicker",
+    "imports": [
+      "_flatpickr.min-Cc3t1Oke.js",
+      "__commonjsHelpers-Cpj98o6Y.js"
+    ],
+    "css": [
+      "assets/monthpicker-BB8ezBci.css"
+    ]
+  },
   "_note-files-modal-BGduGZXA.js": {
     "file": "assets/note-files-modal-BGduGZXA.js",
     "name": "note-files-modal"
@@ -188,6 +203,17 @@
       "_tom-select-BVFa0WBV.js"
     ]
   },
+  "resources/js/modules/attendance/attendance.js": {
+    "file": "assets/attendance-BnXJBICJ.js",
+    "name": "attendance",
+    "src": "resources/js/modules/attendance/attendance.js",
+    "isEntry": true,
+    "imports": [
+      "_monthpicker-DWQROgmQ.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "__commonjsHelpers-Cpj98o6Y.js"
+    ]
+  },
   "resources/js/modules/checklist-template-form.js": {
     "file": "assets/checklist-template-form-Cqw0kBkE.js",
     "name": "checklist-template-form",
@@ -255,18 +281,16 @@
     ]
   },
   "resources/js/modules/meetings/meetings.js": {
-    "file": "assets/meetings-Cz9elB3-.js",
+    "file": "assets/meetings-Da9P-bAA.js",
     "name": "meetings",
     "src": "resources/js/modules/meetings/meetings.js",
     "isEntry": true,
     "imports": [
       "_alert-DZ9rIzyM.js",
+      "_monthpicker-DWQROgmQ.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js",
-      "__commonjsHelpers-Cpj98o6Y.js",
-      "_sweetalert2.esm.all-YZDMVk0e.js"
-    ],
-    "css": [
-      "assets/meetings-BB8ezBci.css"
+      "__commonjsHelpers-Cpj98o6Y.js"
     ]
   },
   "resources/js/modules/project-stage-form.js": {
