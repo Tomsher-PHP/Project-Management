@@ -2621,4 +2621,47 @@ class NotificationService
 
         return true;
     }
+
+
+    /**
+     * Notify the employee when an approver reviews their leave request.
+     *
+     * Supported actions:
+     * - update
+     * - approve
+     * - reject
+     */
+    public function notifyLeaveRequestReviewed(
+        LeaveRequest $leaveRequest,
+        User $reviewer,
+        string $action
+    ): void {
+        switch ($action) {
+            case 'update':
+                $this->notifyLeaveRequestReviewUpdated(
+                    $leaveRequest,
+                    $reviewer
+                );
+                break;
+
+            case 'approve':
+                $this->notifyLeaveRequestApproved(
+                    $leaveRequest,
+                    $reviewer
+                );
+                break;
+
+            case 'reject':
+                $this->notifyLeaveRequestRejected(
+                    $leaveRequest,
+                    $reviewer
+                );
+                break;
+
+            default:
+                throw new \InvalidArgumentException(
+                    "Unsupported leave request review action: {$action}"
+                );
+        }
+    }
 }

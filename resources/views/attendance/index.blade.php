@@ -20,43 +20,124 @@
         {{-- Header --}}
 
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-
-                <h2 class="text-xl font-semibold text-bgray-900 dark:text-white">
-                    Attendance
-                </h2>
-
-                <p class="text-sm text-bgray-500 dark:text-bgray-300">
-                    View employee attendance and leaves by month.
-                </p>
-
-            </div>
+            {{-- Add Attendance --}}
+            @can('attendance.create')
+                <x-button.create-button type="button" id="open_mark_attendance_modal_btn" label="Attendance" />
+            @endcan
 
 
             {{-- Month Navigation --}}
-            <div class="flex items-center gap-2">
+            <!-- Month Navigation (Right Aligned) -->
+            <div class="flex flex-wrap items-center justify-center gap-1.5 rounded-lg border border-bgray-300 bg-white p-1 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 sm:ml-auto">
 
-                {{-- Previous Month --}}
-                <a href="{{ route('attendance.index', [
-                    'date' => $selectedDate->copy()->subMonth()->toDateString(),
-                ]) }}" class="flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                    &larr;
+<!-- Previous Month -->
+<a
+    href="{{ route('attendance.index', array_merge(
+        request()->except('calendar_date'),
+        [
+            'calendar_date' => $selectedDate
+                ->copy()
+                ->subMonth()
+                ->startOfMonth()
+                ->toDateString()
+        ]
+    )) }}"
+    class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400"
+    title="Previous Month"
+    aria-label="Previous Month"
+>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path
+            fill-rule="evenodd"
+            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+            clip-rule="evenodd"
+        />
+    </svg>
+</a>
+
+<!-- Month Picker -->
+<div
+    class="relative flex cursor-pointer items-center gap-1"
+    id="attendance_month_picker_wrapper"
+>
+    <button
+        type="button"
+        id="attendance_month_picker_btn"
+        class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400"
+        title="Select Month"
+        aria-label="Select Month"
+    >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4.5 w-4.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"
+            />
+        </svg>
+    </button>
+
+    <span
+        class="min-w-[130px] px-1 text-center text-sm font-bold text-bgray-800 dark:text-bgray-50"
+        id="attendance_month_label"
+    >
+        {{ $selectedDate->format('F Y') }}
+    </span>
+
+    <input
+        type="text"
+        id="attendance_month_picker"
+        value="{{ $selectedDate->format('Y-m') }}"
+        class="monthpicker pointer-events-none absolute left-0 top-0 h-0 w-0 opacity-0"
+        data-open-to-date="{{ $selectedDate->format('Y-m-d') }}"
+        aria-label="Select attendance month"
+        readonly
+    >
+</div>
+
+<!-- Next Month -->
+<a
+    href="{{ route('attendance.index', array_merge(
+        request()->except('calendar_date'),
+        [
+            'calendar_date' => $selectedDate
+                ->copy()
+                ->addMonth()
+                ->startOfMonth()
+                ->toDateString()
+        ]
+    )) }}"
+    class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400"
+    title="Next Month"
+    aria-label="Next Month"
+>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path
+            fill-rule="evenodd"
+            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+            clip-rule="evenodd"
+        />
+    </svg>
+</a>
+
+
+
+                <div class="mx-1 h-5 w-px bg-bgray-300 dark:bg-darkblack-400"></div>
+
+                <!-- Today Button -->
+                @php
+                    $todayDateStr = today()->toDateString();
+                    $isCurrentSelectedTodayMonth = $selectedDate->isSameMonth(today());
+                @endphp
+                <a href="{{ route('attendance.index', array_merge(request()->except('calendar_date'), ['calendar_date' => $todayDateStr])) }}" class="rounded-md px-3 py-1.5 text-sm font-semibold transition {{ $isCurrentSelectedTodayMonth ? 'bg-success-50 text-success-600 hover:bg-success-100 dark:bg-success-300 dark:text-bgray-900' : 'text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400' }}" title="Today">
+                    Today
                 </a>
-
-
-                {{-- Current Month --}}
-                <div class="min-w-[180px] rounded-lg border border-bgray-300 bg-white px-4 py-2 text-center text-sm font-semibold text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                    {{ $selectedDate->format('F Y') }}
-                </div>
-
-
-                {{-- Next Month --}}
-                <a href="{{ route('attendance.index', [
-                    'date' => $selectedDate->copy()->addMonth()->toDateString(),
-                ]) }}" class="flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                    &rarr;
-                </a>
-
             </div>
 
         </div>
@@ -85,39 +166,25 @@
         {{-- ========================================================= --}}
 
         <div class="mb-4 rounded-xl bg-white p-4 shadow-sm dark:bg-darkblack-600">
-
-            <div class="mb-3 text-sm font-semibold text-bgray-900 dark:text-white">
-                Leave Types
-            </div>
-
             <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
-
                 @forelse($leaveTypes as $leaveType)
                     @php
                         $color = $leaveType->color ?: '#3B82F6';
                     @endphp
 
                     <div class="flex items-center gap-2">
-
                         <span class="h-3 w-3 rounded-full" style="background-color: {{ $color }};"></span>
-
                         <span class="text-xs text-bgray-600 dark:text-bgray-300">
                             {{ $leaveType->name }}
                         </span>
-
                     </div>
-
                 @empty
-
                     <span class="text-xs text-bgray-500 dark:text-bgray-400">
                         No active leave types found.
                     </span>
                 @endforelse
-
             </div>
-
         </div>
-
 
         {{-- ========================================================= --}}
         {{-- Calendar --}}
@@ -293,7 +360,7 @@
                                 @if ($date->isToday() || $date->isFuture())
                                     @can('attendance.create')
                                         <button type="button" onclick="openDateAttendance('{{ $dateKey }}')" class="mt-3 w-full rounded-md border border-dashed border-bgray-300 px-2 py-1.5 text-[11px] font-medium text-bgray-500 transition hover:border-success-500 hover:text-success-500 dark:border-darkblack-400">
-                                            + Mark Attendance
+                                            + Mark
                                         </button>
                                     @endcan
                                 @endif
@@ -312,15 +379,11 @@
 
     </div>
 
-    {{-- ========================================================= --}}
     {{-- Leave Details Modal --}}
-    {{-- ========================================================= --}}
 
     <div id="dayLeavesModal" class="fixed inset-0 z-[90] hidden overflow-y-auto">
-
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-gray-900/60" onclick="closeDayLeaves()"></div>
-
         {{-- Modal --}}
         <div class="relative flex min-h-full items-center justify-center p-4">
             <div class="relative z-10 w-full max-w-lg rounded-xl bg-white shadow-xl dark:bg-darkblack-600">
@@ -362,59 +425,42 @@
         </div>
     </div>
 
-    {{-- ========================================================= --}}
     {{-- Mark Attendance / Add Leave Modal --}}
-    {{-- ========================================================= --}}
 
     <div id="markAttendanceModal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
-
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-gray-900/60" onclick="closeMarkAttendance()"></div>
 
-
         {{-- Modal --}}
         <div class="relative flex min-h-full items-center justify-center p-4">
-
             <div class="relative z-10 w-full max-w-5xl rounded-xl bg-white shadow-xl dark:bg-darkblack-600">
-
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
-
                     <div>
-
                         <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
                             Mark Attendance / Add Leave
                         </h3>
-
                         <p class="text-xs text-bgray-500 dark:text-bgray-300">
                             Add a leave directly for an employee.
                         </p>
-
                     </div>
-
 
                     <button type="button" onclick="closeMarkAttendance()" class="text-2xl leading-none text-bgray-500 transition hover:text-bgray-900 dark:hover:text-white">
                         &times;
                     </button>
-
                 </div>
-
 
                 {{-- Form --}}
                 <form id="markAttendanceForm" action="{{ route('leave-requests.store') }}" method="POST" enctype="multipart/form-data">
-
                     @csrf
-
                     {{-- This identifies that the request came from Mark Attendance --}}
                     <input type="hidden" name="created_from_attendance" value="1">
-
 
                     <div class="max-h-[75vh] overflow-y-auto p-6">
 
                         <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
 
 
-                            {{-- ================================================= --}}
                             {{-- User --}}
                             {{-- ================================================= --}}
 
@@ -1096,5 +1142,5 @@
             }
         }
     </script>
-
+    @vite(['resources\js\modules\attendance\attendance.js'])
 @endsection

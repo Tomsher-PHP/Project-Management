@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class LeaveRequest extends Model
 {
     use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
+    const STATUS_PENDING = 'pending';
 
     protected $fillable = [
         'user_id',

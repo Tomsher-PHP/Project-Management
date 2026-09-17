@@ -17,7 +17,7 @@ class AttendanceController extends Controller
     protected string $pageTitle = 'Attendance';
 
     protected string $subTitle =
-        'Manage and track employee attendance.';
+    'Manage and track employee attendance.';
 
     protected UserService $userService;
 
@@ -29,43 +29,45 @@ class AttendanceController extends Controller
     /**
      * Attendance index.
      */
+
     public function index(
         Request $request
     ): View {
-        $date = $request->filled('date')
-            ? Carbon::parse($request->date)
+        /*
+     * ==========================================================
+     * Selected Calendar Date
+     * ==========================================================
+     *
+     * The month picker uses "calendar_date".
+     *
+     * Example:
+     * ?calendar_date=2026-10-01
+     *
+     * This date controls which month is displayed in the
+     * attendance calendar.
+     */
+        $selectedDate = $request->filled('calendar_date')
+            ? Carbon::parse($request->calendar_date)
             : today();
 
         /*
-         * ==========================================================
-         * All users
-         * ==========================================================
-         *
-         * This list is used for the attendance listing/calendar.
-         *
-         * Keep this separate from $attendanceUsers because the
-         * Mark Attendance modal has its own access restrictions.
-         */
+     * ==========================================================
+     * All Users
+     * ==========================================================
+     *
+     * Used for the attendance listing/calendar and filters.
+     */
         $users = User::query()
             ->orderBy('name')
             ->get();
 
         /*
-         * ==========================================================
-         * Users available for Mark Attendance
-         * ==========================================================
-         *
-         * Uses the existing UserService logic.
-         *
-         * Super Admin:
-         *     All active users.
-         *
-         * Other users:
-         *     Only users returned by User::accessibleBy($authUser).
-         *
-         * The same access logic should therefore be used everywhere
-         * instead of maintaining separate reporting/manager queries.
-         */
+     * ==========================================================
+     * Users Available for Mark Attendance
+     * ==========================================================
+     *
+     * Uses the existing UserService access logic.
+     */
         $loggedInUser = auth()->user();
 
         $attendanceUsers = $this->userService
@@ -73,8 +75,36 @@ class AttendanceController extends Controller
             ->values();
 
         /*
-         * Attendance records for selected date.
-         */
+     * ==========================================================
+     * Calendar Boundaries
+     * ==========================================================
+     *
+     * Monday -> Sunday calendar.
+     */
+        $calendarStart = $selectedDate
+            ->copy()
+            ->startOfMonth()
+            ->startOfWeek(Carbon::MONDAY);
+
+        $calendarEnd = $selectedDate
+            ->copy()
+            ->endOfMonth()
+            ->endOfWeek(Carbon::SUNDAY);
+
+        $totalDays = (int) $calendarStart->diffInDays(
+            $calendarEnd
+        ) + 1;
+
+        /*
+     * ==========================================================
+     * Attendance Records
+     * ==========================================================
+     *
+     * Attendance for the currently selected calendar date.
+     *
+     * This keeps the selected date functionality separate from
+     * the month navigation.
+     */
         $attendances = Attendance::query()
             ->with([
                 'user',
@@ -83,20 +113,21 @@ class AttendanceController extends Controller
             ])
             ->whereDate(
                 'attendance_date',
-                $date->toDateString()
+                $selectedDate->toDateString()
             )
             ->get()
             ->keyBy('user_id');
 
         /*
-         * IMPORTANT:
-         *
-         * Approved leave must use approved_from_date and
-         * approved_to_date.
-         *
-         * Do NOT use requested dates here because the approver
-         * may have changed the dates.
-         */
+     * ==========================================================
+     * Approved Leaves for Selected Date
+     * ==========================================================
+     *
+     * IMPORTANT:
+     *
+     * Always use approved_from_date / approved_to_date.
+     * The approver may have changed the requested dates.
+     */
         $approvedLeaves = LeaveRequest::query()
             ->with([
                 'user',
@@ -115,100 +146,76 @@ class AttendanceController extends Controller
             ->whereDate(
                 'approved_from_date',
                 '<=',
-                $date->toDateString()
+                $selectedDate->toDateString()
             )
             ->whereDate(
                 'approved_to_date',
                 '>=',
-                $date->toDateString()
+                $selectedDate->toDateString()
             )
             ->get()
             ->keyBy('user_id');
 
         /*
-         * Calendar boundaries.
-         */
-        $calendarStart = $date->copy()
-            ->startOfMonth()
-            ->startOfWeek(
-                Carbon::MONDAY
-            );
-
-        $calendarEnd = $date->copy()
-            ->endOfMonth()
-            ->endOfWeek(
-                Carbon::SUNDAY
-            );
+     * ==========================================================
+     * Approved Leaves Overlapping Calendar
+     * ==========================================================
+     */
+        $calendarLeaveRequests = LeaveRequest::query()
+            ->with([
+                'user',
+                'leaveType',
+            ])
+            ->where(
+                'status',
+                'approved'
+            )
+            ->whereNotNull(
+                'approved_from_date'
+            )
+            ->whereNotNull(
+                'approved_to_date'
+            )
+            ->whereDate(
+                'approved_from_date',
+                '<=',
+                $calendarEnd->toDateString()
+            )
+            ->whereDate(
+                'approved_to_date',
+                '>=',
+                $calendarStart->toDateString()
+            )
+            ->get();
 
         /*
-         * Get approved leaves overlapping calendar.
-         *
-         * Again, use APPROVED dates.
-         */
-        $calendarLeaveRequests =
-            LeaveRequest::query()
-                ->with([
-                    'user',
-                    'leaveType',
-                ])
-                ->where(
-                    'status',
-                    'approved'
-                )
-                ->whereNotNull(
-                    'approved_from_date'
-                )
-                ->whereNotNull(
-                    'approved_to_date'
-                )
-                ->whereDate(
-                    'approved_from_date',
-                    '<=',
-                    $calendarEnd->toDateString()
-                )
-                ->whereDate(
-                    'approved_to_date',
-                    '>=',
-                    $calendarStart->toDateString()
-                )
-                ->get();
-
+     * ==========================================================
+     * Build Calendar Leaves
+     * ==========================================================
+     *
+     * Creates an entry for every date covered by an approved
+     * leave.
+     */
         $calendarLeaves = collect();
 
-        /*
-         * Create calendar leave entries date by date.
-         *
-         * This is important for multi-day half-day leaves.
+        foreach ($calendarLeaveRequests as $leave) {
+            $leaveStart = Carbon::parse(
+                $leave->approved_from_date
+            );
+
+            $leaveEnd = Carbon::parse(
+                $leave->approved_to_date
+            );
+
+            /*
+         * Limit leave range to the visible calendar range.
          */
-        foreach (
-            $calendarLeaveRequests as $leave
-        ) {
-            $leaveStart =
-                Carbon::parse(
-                    $leave->approved_from_date
-                );
-
-            $leaveEnd =
-                Carbon::parse(
-                    $leave->approved_to_date
-                );
-
-            if (
-                $leaveStart->lt(
-                    $calendarStart
-                )
-            ) {
-                $leaveStart =
-                    $calendarStart->copy();
+            if ($leaveStart->lt($calendarStart)) {
+                $leaveStart = $calendarStart->copy();
             }
 
-            if (
-                $leaveEnd->gt(
-                    $calendarEnd
-                )
-            ) {
-                $leaveEnd =
-                    $calendarEnd->copy();
+            if ($leaveEnd->gt($calendarEnd)) {
+                $leaveEnd = $calendarEnd->copy();
             }
 
             for (
@@ -216,16 +223,9 @@ class AttendanceController extends Controller
                 $leaveDate->lte($leaveEnd);
                 $leaveDate->addDay()
             ) {
-                $dateKey =
-                    $leaveDate->format(
-                        'Y-m-d'
-                    );
+                $dateKey = $leaveDate->format('Y-m-d');
 
-                if (
-                    !$calendarLeaves->has(
-                        $dateKey
-                    )
-                ) {
+                if (!$calendarLeaves->has($dateKey)) {
                     $calendarLeaves->put(
                         $dateKey,
                         collect()
@@ -239,122 +239,141 @@ class AttendanceController extends Controller
         }
 
         /*
-         * Prepare calendar data for JavaScript.
-         */
-        $calendarLeavesForJs =
-            $calendarLeaves
-                ->map(function ($leaves) {
-                    return $leaves
-                        ->map(function ($leave) {
-                            return [
-                                'employee' =>
-                                    $leave->user->name
-                                    ?? 'Employee',
+     * ==========================================================
+     * Prepare Calendar Leave Data for JavaScript
+     * ==========================================================
+     */
+        $calendarLeavesForJs = $calendarLeaves
+            ->map(function ($leaves) {
+                return $leaves
+                    ->map(function ($leave) {
+                        return [
+                            'employee' =>
+                            $leave->user?->name
+                                ?? 'Employee',
 
-                                'leave_type' =>
-                                    $leave->leaveType->name
-                                    ?? 'Leave',
+                            'leave_type' =>
+                            $leave->leaveType?->name
+                                ?? 'Leave',
 
-                                'color' =>
-                                    $leave->leaveType->color
-                                    ?? '#3B82F6',
+                            'color' =>
+                            $leave->leaveType?->color
+                                ?? '#3B82F6',
 
-                                /*
-                                 * Use APPROVED dates.
-                                 */
-                                'from_date' =>
+                            /*
+                         * Use approved dates.
+                         */
+                            'from_date' =>
+                            $leave->approved_from_date
+                                ? Carbon::parse(
                                     $leave->approved_from_date
-                                        ? Carbon::parse(
-                                            $leave->approved_from_date
-                                        )->format(
-                                            'd M Y'
-                                        )
-                                        : '',
+                                )->format('d M Y')
+                                : '',
 
-                                'to_date' =>
+                            'to_date' =>
+                            $leave->approved_to_date
+                                ? Carbon::parse(
                                     $leave->approved_to_date
-                                        ? Carbon::parse(
-                                            $leave->approved_to_date
-                                        )->format(
-                                            'd M Y'
-                                        )
-                                        : '',
+                                )->format('d M Y')
+                                : '',
 
-                                'reason' =>
-                                    $leave->reason ?? '',
+                            'reason' =>
+                            $leave->reason ?? '',
 
-                                'type' =>
-                                    $leave->type,
+                            'type' =>
+                            $leave->type,
 
-                                'leave_period' =>
-                                    $leave->leave_period,
+                            'leave_period' =>
+                            $leave->leave_period,
 
-                                'approved_duration' =>
-                                    $leave->approved_duration,
-                            ];
-                        })
-                        ->values();
-                })
-                ->toArray();
+                            'approved_duration' =>
+                            $leave->approved_duration,
+                        ];
+                    })
+                    ->values();
+            })
+            ->toArray();
 
-        $calendarEvents =
-            $this->getCalendarEvents();
+        /*
+     * ==========================================================
+     * Calendar Events
+     * ==========================================================
+     */
+        $calendarEvents = $this->getCalendarEvents();
 
+        /*
+     * ==========================================================
+     * Active Leave Types
+     * ==========================================================
+     */
         $leaveTypes = LeaveType::query()
             ->where('status', true)
             ->orderBy('name')
             ->get();
 
+        /*
+     * ==========================================================
+     * Attendance View
+     * ==========================================================
+     */
         return view(
             'attendance.index',
             [
                 'pageTitle' =>
-                    $this->pageTitle,
+                $this->pageTitle,
 
                 'subTitle' =>
-                    $this->subTitle,
+                $this->subTitle,
 
                 /*
-                 * All users used by attendance listing/calendar.
-                 */
+             * All users used by attendance listing/calendar.
+             */
                 'users' =>
-                    $users,
+                $users,
 
                 /*
-                 * Users allowed in Mark Attendance modal.
-                 */
+             * Users allowed in Mark Attendance modal.
+             */
                 'attendanceUsers' =>
-                    $attendanceUsers,
+                $attendanceUsers,
 
                 'attendances' =>
-                    $attendances,
+                $attendances,
 
                 'approvedLeaves' =>
-                    $approvedLeaves,
+                $approvedLeaves,
 
+                /*
+             * Selected month/date.
+             */
                 'selectedDate' =>
-                    $date,
+                $selectedDate,
 
                 'calendarEvents' =>
-                    $calendarEvents,
+                $calendarEvents,
 
                 'calendarStart' =>
-                    $calendarStart,
+                $calendarStart,
 
                 'calendarEnd' =>
-                    $calendarEnd,
+                $calendarEnd,
+
+                'totalDays' =>
+                $totalDays,
 
                 'calendarLeaves' =>
-                    $calendarLeaves,
+                $calendarLeaves,
 
                 'calendarLeavesForJs' =>
-                    $calendarLeavesForJs,
+                $calendarLeavesForJs,
 
                 'leaveTypes' =>
-                    $leaveTypes,
+                $leaveTypes,
             ]
         );
     }
+
+
 
     /**
      * Store attendance.
@@ -421,7 +440,7 @@ class AttendanceController extends Controller
             ->getAccessibleUsers($loggedInUser)
             ->pluck('id')
             ->map(
-                fn ($id) => (int) $id
+                fn($id) => (int) $id
             )
             ->all();
 
@@ -476,9 +495,7 @@ class AttendanceController extends Controller
             $validated['status'] === 'leave'
         ) {
             if (
-                empty(
-                    $validated['leave_source']
-                )
+                empty($validated['leave_source'])
             ) {
                 $validated['leave_source'] =
                     'reported';
@@ -509,10 +526,10 @@ class AttendanceController extends Controller
         Attendance::updateOrCreate(
             [
                 'user_id' =>
-                    $validated['user_id'],
+                $validated['user_id'],
 
                 'attendance_date' =>
-                    $validated['attendance_date'],
+                $validated['attendance_date'],
             ],
             $validated
         );
@@ -522,9 +539,7 @@ class AttendanceController extends Controller
                 'attendance.index',
                 [
                     'date' =>
-                        $validated[
-                            'attendance_date'
-                        ],
+                    $validated['attendance_date'],
                 ]
             )
             ->with(
@@ -610,9 +625,9 @@ class AttendanceController extends Controller
                 'attendance.index',
                 [
                     'date' =>
-                        $attendance
-                            ->attendance_date
-                            ->toDateString(),
+                    $attendance
+                        ->attendance_date
+                        ->toDateString(),
                 ]
             )
             ->with(
@@ -642,12 +657,11 @@ class AttendanceController extends Controller
             ->map(function ($attendance) {
                 return [
                     'id' =>
-                        'attendance-'
+                    'attendance-'
                         . $attendance->id,
 
-                    'title' =>
-                        ($attendance->user->name
-                            ?? 'Employee')
+                    'title' => ($attendance->user->name
+                        ?? 'Employee')
                         . ' - '
                         . ucfirst(
                             str_replace(
@@ -658,39 +672,39 @@ class AttendanceController extends Controller
                         ),
 
                     'start' =>
-                        $attendance
-                            ->attendance_date
-                            ->toDateString(),
+                    $attendance
+                        ->attendance_date
+                        ->toDateString(),
 
                     'allDay' => true,
 
                     'url' =>
-                        route(
-                            'attendance.index',
-                            [
-                                'date' =>
-                                    $attendance
-                                        ->attendance_date
-                                        ->toDateString(),
-                            ]
-                        ),
+                    route(
+                        'attendance.index',
+                        [
+                            'date' =>
+                            $attendance
+                                ->attendance_date
+                                ->toDateString(),
+                        ]
+                    ),
 
                     'extendedProps' => [
                         'employee' =>
-                            $attendance
-                                ->user
-                                ->name
-                                ?? '-',
+                        $attendance
+                            ->user
+                            ->name
+                            ?? '-',
 
                         'status' =>
-                            $attendance->status,
+                        $attendance->status,
 
                         'leave_source' =>
-                            $attendance
-                                ->leave_source,
+                        $attendance
+                            ->leave_source,
 
                         'remarks' =>
-                            $attendance->remarks,
+                        $attendance->remarks,
                     ],
                 ];
             });
@@ -706,21 +720,21 @@ class AttendanceController extends Controller
          */
         $approvedLeaves =
             LeaveRequest::query()
-                ->with([
-                    'user',
-                    'leaveType',
-                ])
-                ->where(
-                    'status',
-                    'approved'
-                )
-                ->whereNotNull(
-                    'approved_from_date'
-                )
-                ->whereNotNull(
-                    'approved_to_date'
-                )
-                ->get();
+            ->with([
+                'user',
+                'leaveType',
+            ])
+            ->where(
+                'status',
+                'approved'
+            )
+            ->whereNotNull(
+                'approved_from_date'
+            )
+            ->whereNotNull(
+                'approved_to_date'
+            )
+            ->get();
 
         foreach (
             $approvedLeaves as $leave
@@ -748,60 +762,59 @@ class AttendanceController extends Controller
             ) {
                 $events->push([
                     'id' =>
-                        'leave-'
+                    'leave-'
                         . $leave->id,
 
-                    'title' =>
-                        ($leave->user->name
-                            ?? 'Employee')
+                    'title' => ($leave->user->name
+                        ?? 'Employee')
                         . ' - Approved Leave',
 
                     'start' =>
-                        $approvedFromDate
-                            ->toDateString(),
+                    $approvedFromDate
+                        ->toDateString(),
 
                     'end' =>
-                        $approvedToDate
-                            ->copy()
-                            ->addDay()
-                            ->toDateString(),
+                    $approvedToDate
+                        ->copy()
+                        ->addDay()
+                        ->toDateString(),
 
                     'allDay' => true,
 
                     'url' =>
-                        route(
-                            'leave-requests.show',
-                            $leave->id
-                        ),
+                    route(
+                        'leave-requests.show',
+                        $leave->id
+                    ),
 
                     'extendedProps' => [
                         'status' =>
-                            'approved',
+                        'approved',
 
                         'employee' =>
-                            $leave
-                                ->user
-                                ->name
-                                ?? '-',
+                        $leave
+                            ->user
+                            ->name
+                            ?? '-',
 
                         'leaveType' =>
-                            $leave
-                                ->leaveType
-                                ->name
-                                ?? 'Leave',
+                        $leave
+                            ->leaveType
+                            ->name
+                            ?? 'Leave',
 
                         'source' =>
-                            'leave_request',
+                        'leave_request',
 
                         'type' =>
-                            $leave->type,
+                        $leave->type,
 
                         'leave_period' =>
-                            $leave->leave_period,
+                        $leave->leave_period,
 
                         'approved_duration' =>
-                            $leave
-                                ->approved_duration,
+                        $leave
+                            ->approved_duration,
                     ],
                 ]);
 
@@ -834,70 +847,69 @@ class AttendanceController extends Controller
             ) {
                 $events->push([
                     'id' =>
-                        'leave-'
+                    'leave-'
                         . $leave->id
                         . '-'
                         . $leaveDate
-                            ->format('Y-m-d'),
+                        ->format('Y-m-d'),
 
-                    'title' =>
-                        ($leave->user->name
-                            ?? 'Employee')
+                    'title' => ($leave->user->name
+                        ?? 'Employee')
                         . ' - Approved Half Day',
 
                     'start' =>
-                        $leaveDate
-                            ->toDateString(),
+                    $leaveDate
+                        ->toDateString(),
 
                     /*
                      * One day event.
                      */
                     'end' =>
-                        $leaveDate
-                            ->copy()
-                            ->addDay()
-                            ->toDateString(),
+                    $leaveDate
+                        ->copy()
+                        ->addDay()
+                        ->toDateString(),
 
                     'allDay' => true,
 
                     'url' =>
-                        route(
-                            'leave-requests.show',
-                            $leave->id
-                        ),
+                    route(
+                        'leave-requests.show',
+                        $leave->id
+                    ),
 
                     'extendedProps' => [
                         'status' =>
-                            'approved',
+                        'approved',
 
                         'employee' =>
-                            $leave
-                                ->user
-                                ->name
-                                ?? '-',
+                        $leave
+                            ->user
+                            ->name
+                            ?? '-',
 
                         'leaveType' =>
-                            $leave
-                                ->leaveType
-                                ->name
-                                ?? 'Leave',
+                        $leave
+                            ->leaveType
+                            ->name
+                            ?? 'Leave',
 
                         'source' =>
-                            'leave_request',
+                        'leave_request',
 
                         'type' =>
-                            $leave->type,
+                        $leave->type,
 
                         'leave_period' =>
-                            $leave->leave_period,
+                        $leave->leave_period,
 
                         'approved_duration' =>
-                            $leave
-                                ->approved_duration,
+                        $leave
+                            ->approved_duration,
 
                         'approved_date' =>
-                            $leaveDate
-                                ->toDateString(),
+                        $leaveDate
+                            ->toDateString(),
                     ],
                 ]);
             }
@@ -940,7 +952,7 @@ class AttendanceController extends Controller
 
         return round(
             $start->diffInMinutes($end)
-            / 60,
+                / 60,
             2
         );
     }

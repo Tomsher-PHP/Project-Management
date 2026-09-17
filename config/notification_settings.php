@@ -101,13 +101,13 @@ return [
         'icon' => '
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="30" cy="30" r="30" fill="#2DD4BF"/>
-                
+
                 <!-- clipboard -->
                 <rect x="22" y="20" width="16" height="20" rx="2" fill="white"/>
 
                 <!-- lines -->
                 <path d="M25 26h10M25 30h10M25 34h7" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round"/>
-                
+
                 <!-- small plus badge (new task) -->
                 <circle cx="40" cy="22" r="6" fill="#0F766E"/>
                 <path d="M40 19v6M37 22h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -410,6 +410,42 @@ return [
         'in_app' => true,
         'email' => true,
         'sort_order' => 3
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Leave Management
+    |--------------------------------------------------------------------------
+    */
+    'leave_request' => [
+        'label' => 'Leave Request',
+        'subtitle' => 'Leave requests are submitted, updated, approved, rejected, or cancelled.',
+        'group' => 'Meeting & Leaves',
+        'action' => 'leave_request',
+        'icon_bg' => '#22C55E',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#22C55E"/>
+
+                <!-- Calendar -->
+                <rect x="18" y="19" width="24" height="22" rx="3" fill="white"/>
+                <path d="M18 26h24" stroke="#22C55E" stroke-width="2"/>
+                <path d="M24 16v6M36 16v6"
+                      stroke="white"
+                      stroke-width="2.5"
+                      stroke-linecap="round"/>
+
+                <!-- Leave/check mark -->
+                <path d="M24 32l4 4 8-8"
+                      stroke="#22C55E"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+            </svg>
+        ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 4
     ],
 
 ];
