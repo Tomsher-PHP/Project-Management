@@ -111,7 +111,7 @@
                     name="from_date"
                     id="from_date"
                     value="{{ old('from_date', isset($holiday) && $holiday->from_date ? $holiday->from_date->format('Y-m-d') : '') }}"
-                    class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error('from_date') border-red-500 focus:border-red-500 @enderror"
+                    class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white flatpickr-input active @error('from_date') border-red-500 focus:border-red-500 @enderror"
                 >
 
                 @error('from_date')
@@ -135,7 +135,7 @@
                     name="to_date"
                     id="to_date"
                     value="{{ old('to_date', isset($holiday) && $holiday->to_date ? $holiday->to_date->format('Y-m-d') : '') }}"
-                    class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error('to_date') border-red-500 focus:border-red-500 @enderror"
+                    class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white flatpickr-input active @error('to_date') border-red-500 focus:border-red-500 @enderror"
                 >
 
                 @error('to_date')
