@@ -96,7 +96,7 @@
                                         Type <x-red-star />
                                     </label>
 
-                                    <select name="type" id="type" required class="tom-select w-full">
+                                    <select name="type" id="type" required class="tom-select-no-search w-full">
                                         <option value="">Select Type</option>
 
                                         <option

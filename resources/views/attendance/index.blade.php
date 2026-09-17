@@ -663,7 +663,7 @@
                                     name="type"
                                     id="attendance_type"
                                     required
-                                    class="tom-select w-full"
+                                    class="tom-select-no-search w-full"
                                 >
 
                                     <option value="full_day" selected>
