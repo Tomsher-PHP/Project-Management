@@ -255,6 +255,12 @@
     "src": "resources/js/modules/help-center.js",
     "isEntry": true
   },
+  "resources/js/modules/holiday.js": {
+    "file": "assets/holiday-C__aq6DS.js",
+    "name": "holiday",
+    "src": "resources/js/modules/holiday.js",
+    "isEntry": true
+  },
   "resources/js/modules/kpi-form.js": {
     "file": "assets/kpi-form-BL6DO7iw.js",
     "name": "kpi-form",

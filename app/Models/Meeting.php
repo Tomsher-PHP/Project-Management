@@ -98,7 +98,7 @@ class Meeting extends Model
             return $query;
         }
 
-        if ($user->is_super_admin || $user->can('meeting.view_all_meetings') || $user->can('meeting.view_all')) {
+        if ($user->is_super_admin || $user->can('meeting.view_all')) {
             return $query;
         }
 

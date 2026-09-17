@@ -115,43 +115,7 @@
         && $selectedLeaveType->is_file_upload_required;
 @endphp
 
-<div class="px-4 py-6 sm:px-6 lg:px-8">
-
-    {{-- Header --}}
-    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">
-                {{ $approvalMode ? 'Review Leave Request' : 'Edit Leave Request' }}
-            </h1>
-
-            <p class="mt-1 text-sm text-gray-500">
-
-                @if($approvalMode)
-
-                    Review the leave request and update, approve or reject it.
-
-                @elseif($restrictedEdit)
-
-                    Update the reason or attachment for this leave request.
-
-                @else
-
-                    Update your leave request details.
-
-                @endif
-
-            </p>
-        </div>
-
-        <a
-            href="{{ route('leave-requests.index') }}"
-            class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50">
-            Back
-        </a>
-
-    </div>
-
+<div>
     {{-- Validation Errors --}}
     @if ($errors->any())
 
