@@ -1347,6 +1347,6 @@
         });
     </script>
 
-    @vite(['resources\js\modules\attendance\attendance.js'])
+    @vite(['resources/js/modules/attendance/attendance.js'])
 
 @endsection
