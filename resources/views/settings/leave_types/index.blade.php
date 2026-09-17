@@ -372,7 +372,7 @@
                 Status
             </label>
 
-            <select id="leave-type-status" name="status" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+            <select id="leave-type-status" name="status" class="tom-select w-full">
                 <option value="1" selected>
                     Active
                 </option>

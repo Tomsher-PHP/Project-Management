@@ -70,8 +70,8 @@
     $isBreakRequestsActive = request()->routeIs('break-requests.*');
     $isTaskTimeExtendRequestsActive = request()->routeIs('tasks.extend-time-requests.*');
     $isLeaveRequestsActive = request()->routeIs('leave-requests.*');
-    $isLeaveApprovalRequestsActive = request()->routeIs('leave-requests.approval*');
-    $isLeavesActive = request()->routeIs('leaves.*');
+    $isLeaveApprovalRequestsActive = request()->routeIs('leave-requests.pending');
+    $isLeavesActive = request()->routeIs('leave-requests.index');
 
     $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive || $isLeaveApprovalRequestsActive;
     $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive && !$isTaskTimeExtendRequestsActive;
@@ -501,7 +501,7 @@
 
                         @if ($canViewHolidays)
                             <!-- Holidays -->
-                            <li class="item py-[8px]">
+                            <li class="item py-[8px] {{ request()->routeIs('holidays.*') ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('holidays.index') }}">
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">

@@ -82,4 +82,10 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
     }
+
+    const openCreateBtn = document.getElementById("open_create_meeting_modal_btn");
+
+    if (openCreateBtn) {
+        openCreateBtn.addEventListener("click", openCreateModal);
+    }
 });
