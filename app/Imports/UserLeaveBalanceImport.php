@@ -5,10 +5,12 @@ namespace App\Imports;
 use App\Models\LeaveType;
 use App\Models\User;
 use App\Models\UserLeaveBalance;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class UserLeaveBalanceImport implements ToCollection, WithHeadingRow
 {
@@ -56,13 +58,23 @@ class UserLeaveBalanceImport implements ToCollection, WithHeadingRow
              */
             $rowNumber = $index + 2;
 
+            /*
+             * Convert the row to a normal array.
+             */
+            $data = $row->toArray();
+
+            /*
+             * Skip completely empty rows.
+             *
+             * This allows users to leave blank rows anywhere
+             * in the uploaded Excel/CSV file.
+             */
+            if ($this->isEmptyRow($data)) {
+                continue;
+            }
+
             try {
                 DB::beginTransaction();
-
-                /*
-                 * Convert the row to a normal array.
-                 */
-                $data = $row->toArray();
 
                 /*
                  * Clean values.
@@ -90,9 +102,7 @@ class UserLeaveBalanceImport implements ToCollection, WithHeadingRow
                     );
                 }
 
-                if (
-                    !filter_var($email, FILTER_VALIDATE_EMAIL)
-                ) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     throw new \Exception(
                         'Invalid Employee Email.'
                     );
@@ -144,6 +154,8 @@ class UserLeaveBalanceImport implements ToCollection, WithHeadingRow
 
                 /*
                  * Dates.
+                 *
+                 * parseDate() always returns Carbon.
                  */
                 $validFrom = $this->parseDate(
                     $data['valid_from'] ?? null
@@ -278,6 +290,26 @@ class UserLeaveBalanceImport implements ToCollection, WithHeadingRow
     }
 
     /**
+     * Determine whether the entire row is empty.
+     *
+     * Completely blank rows are ignored during import.
+     */
+    protected function isEmptyRow(array $data): bool
+    {
+        foreach ($data as $value) {
+            if ($value instanceof \DateTimeInterface) {
+                return false;
+            }
+
+            if ($value !== null && trim((string) $value) !== '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Convert value to decimal.
      */
     protected function decimal($value): float
@@ -313,8 +345,11 @@ class UserLeaveBalanceImport implements ToCollection, WithHeadingRow
 
     /**
      * Parse Excel date.
+     *
+     * Always returns Carbon so Carbon methods such as
+     * lt(), gt(), lte(), gte(), etc. can safely be used.
      */
-    protected function parseDate($value)
+    protected function parseDate($value): ?Carbon
     {
         if ($value === null || trim((string) $value) === '') {
             return null;
@@ -322,15 +357,33 @@ class UserLeaveBalanceImport implements ToCollection, WithHeadingRow
 
         try {
             /*
-             * Handle Excel serial dates.
+             * Excel serial date.
+             *
+             * PhpSpreadsheet returns a native DateTime object,
+             * so explicitly convert it to Carbon.
              */
             if (is_numeric($value)) {
-                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject(
-                    $value
+                $dateTime = ExcelDate::excelToDateTimeObject(
+                    (float) $value
+                );
+
+                return Carbon::instance($dateTime);
+            }
+
+            /*
+             * If PhpSpreadsheet already returned a DateTime object,
+             * convert it to Carbon.
+             */
+            if ($value instanceof \DateTimeInterface) {
+                return Carbon::instance(
+                    \DateTime::createFromInterface($value)
                 );
             }
 
-            return \Carbon\Carbon::parse($value);
+            /*
+             * Normal string date.
+             */
+            return Carbon::parse($value);
         } catch (\Throwable $e) {
             return null;
         }
