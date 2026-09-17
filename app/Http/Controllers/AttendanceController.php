@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Database\Eloquent\Builder;
 
 class AttendanceController extends Controller
 {
@@ -27,353 +28,329 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Attendance index.
+ * Attendance index.
+ */
+public function index(Request $request): View
+{
+    $selectedDate = $request->filled('calendar_date')
+        ? Carbon::parse($request->calendar_date)
+        : today();
+
+    $loggedInUser = auth()->user();
+
+    /*
+     * ==========================================================
+     * Users
+     * ==========================================================
+     *
+     * Keep all users for the filter dropdown.
      */
+    $users = User::query()
+        ->orderBy('name')
+        ->get();
 
-    public function index(
-        Request $request
-    ): View {
-        /*
-     * ==========================================================
-     * Selected Calendar Date
-     * ==========================================================
-     *
-     * The month picker uses "calendar_date".
-     *
-     * Example:
-     * ?calendar_date=2026-10-01
-     *
-     * This date controls which month is displayed in the
-     * attendance calendar.
+    /*
+     * Users that the logged-in user is allowed to manage/mark
+     * attendance for.
      */
-        $selectedDate = $request->filled('calendar_date')
-            ? Carbon::parse($request->calendar_date)
-            : today();
+    $attendanceUsers = $this->userService
+        ->getAccessibleUsers($loggedInUser)
+        ->values();
 
-        /*
+    /*
      * ==========================================================
-     * All Users
-     * ==========================================================
-     *
-     * Used for the attendance listing/calendar and filters.
-     */
-        $users = User::query()
-            ->orderBy('name')
-            ->get();
-
-        /*
-     * ==========================================================
-     * Users Available for Mark Attendance
-     * ==========================================================
-     *
-     * Uses the existing UserService access logic.
-     */
-        $loggedInUser = auth()->user();
-
-        $attendanceUsers = $this->userService
-            ->getAccessibleUsers($loggedInUser)
-            ->values();
-
-        /*
-     * ==========================================================
-     * Calendar Boundaries
-     * ==========================================================
-     *
-     * Monday -> Sunday calendar.
-     */
-        $calendarStart = $selectedDate
-            ->copy()
-            ->startOfMonth()
-            ->startOfWeek(Carbon::MONDAY);
-
-        $calendarEnd = $selectedDate
-            ->copy()
-            ->endOfMonth()
-            ->endOfWeek(Carbon::SUNDAY);
-
-        $totalDays = (int) $calendarStart->diffInDays(
-            $calendarEnd
-        ) + 1;
-
-        /*
-     * ==========================================================
-     * Attendance Records
-     * ==========================================================
-     *
-     * Attendance for the currently selected calendar date.
-     *
-     * This keeps the selected date functionality separate from
-     * the month navigation.
-     */
-        $attendances = Attendance::query()
-            ->with([
-                'user',
-                'markedBy',
-                'leaveRequest.leaveType',
-            ])
-            ->whereDate(
-                'attendance_date',
-                $selectedDate->toDateString()
-            )
-            ->get()
-            ->keyBy('user_id');
-
-        /*
-     * ==========================================================
-     * Approved Leaves for Selected Date
-     * ==========================================================
-     *
-     * IMPORTANT:
-     *
-     * Always use approved_from_date / approved_to_date.
-     * The approver may have changed the requested dates.
-     */
-        $approvedLeaves = LeaveRequest::query()
-            ->with([
-                'user',
-                'leaveType',
-            ])
-            ->where(
-                'status',
-                'approved'
-            )
-            ->whereNotNull(
-                'approved_from_date'
-            )
-            ->whereNotNull(
-                'approved_to_date'
-            )
-            ->whereDate(
-                'approved_from_date',
-                '<=',
-                $selectedDate->toDateString()
-            )
-            ->whereDate(
-                'approved_to_date',
-                '>=',
-                $selectedDate->toDateString()
-            )
-            ->get()
-            ->keyBy('user_id');
-
-        /*
-     * ==========================================================
-     * Approved Leaves Overlapping Calendar
+     * Calendar Range
      * ==========================================================
      */
-        $calendarLeaveRequests = LeaveRequest::query()
-            ->with([
-                'user',
-                'leaveType',
-            ])
-            ->where(
-                'status',
-                'approved'
-            )
-            ->whereNotNull(
-                'approved_from_date'
-            )
-            ->whereNotNull(
-                'approved_to_date'
-            )
-            ->whereDate(
-                'approved_from_date',
-                '<=',
-                $calendarEnd->toDateString()
-            )
-            ->whereDate(
-                'approved_to_date',
-                '>=',
-                $calendarStart->toDateString()
-            )
-            ->get();
+    $calendarStart = $selectedDate
+        ->copy()
+        ->startOfMonth()
+        ->startOfWeek(Carbon::MONDAY);
 
-        /*
+    $calendarEnd = $selectedDate
+        ->copy()
+        ->endOfMonth()
+        ->endOfWeek(Carbon::SUNDAY);
+
+    $totalDays = (int) $calendarStart->diffInDays(
+        $calendarEnd
+    ) + 1;
+
+    /*
+     * ==========================================================
+     * Common Filters
+     * ==========================================================
+     */
+    $userId = $request->input('user_id');
+    $leaveTypeId = $request->input('leave_type_id');
+    $search = trim((string) $request->input('search'));
+
+    /*
+     * ==========================================================
+     * Attendance
+     * ==========================================================
+     *
+     * Attendance is still loaded for the selected date.
+     */
+    $attendances = Attendance::query()
+        ->with([
+            'user',
+            'markedBy',
+            'leaveRequest.leaveType',
+        ])
+        ->when(! empty($userId), function (Builder $query) use ($userId) {
+            $value = $userId;
+
+            is_array($value)
+                ? $query->whereIn('user_id', array_filter($value))
+                : $query->where('user_id', $value);
+        })
+        ->when(! empty($search), function (Builder $query) use ($search) {
+            $query->whereHas('user', function (Builder $userQuery) use ($search) {
+                $userQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        })
+        ->whereDate(
+            'attendance_date',
+            $selectedDate->toDateString()
+        )
+        ->get()
+        ->keyBy('user_id');
+
+    /*
+     * ==========================================================
+     * Approved Leaves - Selected Date
+     * ==========================================================
+     */
+    $approvedLeaves = LeaveRequest::query()
+        ->with([
+            'user',
+            'leaveType',
+        ])
+        ->where('status', 'approved')
+        ->whereNotNull('approved_from_date')
+        ->whereNotNull('approved_to_date')
+        ->when(! empty($userId), function (Builder $query) use ($userId) {
+            $value = $userId;
+
+            is_array($value)
+                ? $query->whereIn('user_id', array_filter($value))
+                : $query->where('user_id', $value);
+        })
+        ->when(! empty($leaveTypeId), function (Builder $query) use ($leaveTypeId) {
+            $value = $leaveTypeId;
+
+            is_array($value)
+                ? $query->whereIn('leave_type_id', array_filter($value))
+                : $query->where('leave_type_id', $value);
+        })
+        ->when(! empty($search), function (Builder $query) use ($search) {
+            $query->whereHas('user', function (Builder $userQuery) use ($search) {
+                $userQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        })
+        ->whereDate(
+            'approved_from_date',
+            '<=',
+            $selectedDate->toDateString()
+        )
+        ->whereDate(
+            'approved_to_date',
+            '>=',
+            $selectedDate->toDateString()
+        )
+        ->get()
+        ->keyBy('user_id');
+
+    /*
+     * ==========================================================
+     * Calendar Leave Requests
+     * ==========================================================
+     *
+     * These are used to display leaves across the complete
+     * Monday -> Sunday calendar range.
+     */
+    $calendarLeaveRequests = LeaveRequest::query()
+        ->with([
+            'user',
+            'leaveType',
+        ])
+        ->where('status', 'approved')
+        ->whereNotNull('approved_from_date')
+        ->whereNotNull('approved_to_date')
+        ->when(! empty($userId), function (Builder $query) use ($userId) {
+            $value = $userId;
+
+            is_array($value)
+                ? $query->whereIn('user_id', array_filter($value))
+                : $query->where('user_id', $value);
+        })
+        ->when(! empty($leaveTypeId), function (Builder $query) use ($leaveTypeId) {
+            $value = $leaveTypeId;
+
+            is_array($value)
+                ? $query->whereIn('leave_type_id', array_filter($value))
+                : $query->where('leave_type_id', $value);
+        })
+        ->when(! empty($search), function (Builder $query) use ($search) {
+            $query->whereHas('user', function (Builder $userQuery) use ($search) {
+                $userQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        })
+        ->whereDate(
+            'approved_from_date',
+            '<=',
+            $calendarEnd->toDateString()
+        )
+        ->whereDate(
+            'approved_to_date',
+            '>=',
+            $calendarStart->toDateString()
+        )
+        ->get();
+
+    /*
      * ==========================================================
      * Build Calendar Leaves
      * ==========================================================
-     *
-     * Creates an entry for every date covered by an approved
-     * leave.
      */
-        $calendarLeaves = collect();
+    $calendarLeaves = collect();
 
-        foreach ($calendarLeaveRequests as $leave) {
-            $leaveStart = Carbon::parse(
-                $leave->approved_from_date
-            );
+    foreach ($calendarLeaveRequests as $leave) {
 
-            $leaveEnd = Carbon::parse(
-                $leave->approved_to_date
-            );
+        $leaveStart = Carbon::parse(
+            $leave->approved_from_date
+        );
 
-            /*
-         * Limit leave range to the visible calendar range.
-         */
-            if ($leaveStart->lt($calendarStart)) {
-                $leaveStart = $calendarStart->copy();
-            }
+        $leaveEnd = Carbon::parse(
+            $leave->approved_to_date
+        );
 
-            if ($leaveEnd->gt($calendarEnd)) {
-                $leaveEnd = $calendarEnd->copy();
-            }
-
-            for (
-                $leaveDate = $leaveStart->copy();
-                $leaveDate->lte($leaveEnd);
-                $leaveDate->addDay()
-            ) {
-                $dateKey = $leaveDate->format('Y-m-d');
-
-                if (!$calendarLeaves->has($dateKey)) {
-                    $calendarLeaves->put(
-                        $dateKey,
-                        collect()
-                    );
-                }
-
-                $calendarLeaves
-                    ->get($dateKey)
-                    ->push($leave);
-            }
+        if ($leaveStart->lt($calendarStart)) {
+            $leaveStart = $calendarStart->copy();
         }
 
-        /*
+        if ($leaveEnd->gt($calendarEnd)) {
+            $leaveEnd = $calendarEnd->copy();
+        }
+
+        for (
+            $leaveDate = $leaveStart->copy();
+            $leaveDate->lte($leaveEnd);
+            $leaveDate->addDay()
+        ) {
+
+            $dateKey = $leaveDate->format('Y-m-d');
+
+            if (! $calendarLeaves->has($dateKey)) {
+                $calendarLeaves->put(
+                    $dateKey,
+                    collect()
+                );
+            }
+
+            $calendarLeaves
+                ->get($dateKey)
+                ->push($leave);
+        }
+    }
+
+    /*
      * ==========================================================
-     * Prepare Calendar Leave Data for JavaScript
+     * Calendar Leaves For JavaScript
      * ==========================================================
      */
-        $calendarLeavesForJs = $calendarLeaves
-            ->map(function ($leaves) {
-                return $leaves
-                    ->map(function ($leave) {
-                        return [
-                            'employee' =>
-                            $leave->user?->name
-                                ?? 'Employee',
+    $calendarLeavesForJs = $calendarLeaves
+        ->map(function ($leaves) {
 
-                            'leave_type' =>
-                            $leave->leaveType?->name
-                                ?? 'Leave',
+            return $leaves
+                ->map(function ($leave) {
 
-                            'color' =>
-                            $leave->leaveType?->color
-                                ?? '#3B82F6',
+                    return [
+                        'employee' => $leave->user?->name ?? 'Employee',
 
-                            /*
-                         * Use approved dates.
-                         */
-                            'from_date' =>
-                            $leave->approved_from_date
-                                ? Carbon::parse(
-                                    $leave->approved_from_date
-                                )->format('d M Y')
-                                : '',
+                        'leave_type' => $leave->leaveType?->name ?? 'Leave',
 
-                            'to_date' =>
-                            $leave->approved_to_date
-                                ? Carbon::parse(
-                                    $leave->approved_to_date
-                                )->format('d M Y')
-                                : '',
+                        'color' => $leave->leaveType?->color
+                            ?? '#3B82F6',
 
-                            'reason' =>
-                            $leave->reason ?? '',
+                        'from_date' => $leave->approved_from_date
+                            ? Carbon::parse(
+                                $leave->approved_from_date
+                            )->format('d M Y')
+                            : '',
 
-                            'type' =>
-                            $leave->type,
+                        'to_date' => $leave->approved_to_date
+                            ? Carbon::parse(
+                                $leave->approved_to_date
+                            )->format('d M Y')
+                            : '',
 
-                            'leave_period' =>
-                            $leave->leave_period,
+                        'reason' => $leave->reason ?? '',
 
-                            'approved_duration' =>
-                            $leave->approved_duration,
-                        ];
-                    })
-                    ->values();
-            })
-            ->toArray();
+                        'type' => $leave->type,
 
-        /*
+                        'leave_period' => $leave->leave_period,
+
+                        'approved_duration' => $leave->approved_duration,
+                    ];
+                })
+                ->values();
+        })
+        ->toArray();
+
+    /*
      * ==========================================================
      * Calendar Events
      * ==========================================================
      */
-        $calendarEvents = $this->getCalendarEvents();
+    $calendarEvents = $this->getCalendarEvents();
 
-        /*
+    /*
      * ==========================================================
-     * Active Leave Types
-     * ==========================================================
-     */
-        $leaveTypes = LeaveType::query()
-            ->where('status', true)
-            ->orderBy('name')
-            ->get();
-
-        /*
-     * ==========================================================
-     * Attendance View
+     * Leave Types
      * ==========================================================
      */
-        return view(
-            'attendance.index',
-            [
-                'pageTitle' =>
-                $this->pageTitle,
+    $leaveTypes = LeaveType::query()
+        ->where('status', true)
+        ->orderBy('name')
+        ->get();
 
-                'subTitle' =>
-                $this->subTitle,
+    /*
+     * ==========================================================
+     * View
+     * ==========================================================
+     */
+    return view(
+        'attendance.index',
+        [
+            'pageTitle' => $this->pageTitle,
+            'subTitle' => $this->subTitle,
 
-                /*
-             * All users used by attendance listing/calendar.
-             */
-                'users' =>
-                $users,
+            'users' => $users,
+            'attendanceUsers' => $attendanceUsers,
 
-                /*
-             * Users allowed in Mark Attendance modal.
-             */
-                'attendanceUsers' =>
-                $attendanceUsers,
+            'attendances' => $attendances,
+            'approvedLeaves' => $approvedLeaves,
 
-                'attendances' =>
-                $attendances,
+            'selectedDate' => $selectedDate,
 
-                'approvedLeaves' =>
-                $approvedLeaves,
+            'calendarEvents' => $calendarEvents,
 
-                /*
-             * Selected month/date.
-             */
-                'selectedDate' =>
-                $selectedDate,
+            'calendarStart' => $calendarStart,
+            'calendarEnd' => $calendarEnd,
+            'totalDays' => $totalDays,
 
-                'calendarEvents' =>
-                $calendarEvents,
+            'calendarLeaves' => $calendarLeaves,
+            'calendarLeavesForJs' => $calendarLeavesForJs,
 
-                'calendarStart' =>
-                $calendarStart,
-
-                'calendarEnd' =>
-                $calendarEnd,
-
-                'totalDays' =>
-                $totalDays,
-
-                'calendarLeaves' =>
-                $calendarLeaves,
-
-                'calendarLeavesForJs' =>
-                $calendarLeavesForJs,
-
-                'leaveTypes' =>
-                $leaveTypes,
-            ]
-        );
-    }
-
-
+            'leaveTypes' => $leaveTypes,
+        ]
+    );
+}
 
     /**
      * Store attendance.
