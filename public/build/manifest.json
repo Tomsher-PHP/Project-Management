@@ -79,7 +79,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-L0gxWzOD.css",
+    "file": "assets/app-LFwIy6CA.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -253,6 +253,12 @@
     "file": "assets/help-center-M0La-rnH.js",
     "name": "help-center",
     "src": "resources/js/modules/help-center.js",
+    "isEntry": true
+  },
+  "resources/js/modules/holiday.js": {
+    "file": "assets/holiday-C__aq6DS.js",
+    "name": "holiday",
+    "src": "resources/js/modules/holiday.js",
     "isEntry": true
   },
   "resources/js/modules/kpi-form.js": {

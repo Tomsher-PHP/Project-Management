@@ -18,16 +18,6 @@
 
         {{-- Header --}}
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold text-bgray-900 dark:text-white">
-                    Leave Request Details
-                </h2>
-
-                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-400">
-                    View complete details of this leave request.
-                </p>
-            </div>
-
             <div class="flex flex-wrap gap-2">
                 {{-- Edit --}}
                 @if ($leaveRequest->status === 'pending')
@@ -60,26 +50,29 @@
             ];
         @endphp
 
-        <div class="mb-6 rounded-xl bg-white p-5 shadow-sm dark:bg-darkblack-600">
+        <div class="mb-6 rounded-xl bg-white p-3 shadow-sm dark:bg-darkblack-600">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-xs font-medium uppercase text-bgray-500">
-                        Request Status
-                    </p>
+                <div class="flex items-center gap-3">
+                    <div class="shrink-0">
+                        <x-back-button />
+                    </div>
 
-                    <span
-                        class="mt-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $statusClasses[$leaveRequest->status] ?? 'bg-gray-100 text-gray-700' }}">
-                        {{ ucfirst($leaveRequest->status) }}
-                    </span>
+                    <div class="h-8 w-1 rounded bg-success-400"></div>
+                    <div>
+                        <span
+                            class="inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $statusClasses[$leaveRequest->status] ?? 'bg-gray-100 text-gray-700' }}">
+                            {{ ucfirst($leaveRequest->status) }}
+                        </span>
+                    </div>
                 </div>
 
                 @if ($leaveRequest->created_at)
-                    <div class="text-left sm:text-right">
+                    <div class="flex items-center justify-end gap-2 text-right">
                         <p class="text-xs font-medium uppercase text-bgray-500">
-                            Submitted On
+                            Submitted On:
                         </p>
 
-                        <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">
+                        <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold text-bgray-900 dark:text-white">
                             {{ $leaveRequest->created_at->format('d M Y h:i A') }}
                         </p>
                     </div>

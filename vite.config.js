@@ -61,6 +61,7 @@ export default defineConfig({
                 'resources/js/modules/meetings/meeting-form.js',
                 'resources/js/login/login.js',
                 'resources/js/modules/attendance/attendance.js',
+                'resources/js/modules/holiday.js',
 
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',
