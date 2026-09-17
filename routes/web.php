@@ -10,6 +10,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\CompanyExpensesSettingsController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerRestoreController;
@@ -282,6 +283,25 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.create')->only(['store']);
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.edit')->only(['update']);
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.delete')->only(['destroy']);
+
+        // Company Expenses Settings Routes
+        Route::patch('/expense-payment-modes/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusPaymentMode'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_payment_mode.toggleStatus');
+        Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
+        Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
+        Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
+        Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
+
+        Route::patch('/expense-service-providers/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusServiceProvider'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_service_provider.toggleStatus');
+        Route::resource('expense-service-providers', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
+        Route::resource('expense-service-providers', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
+        Route::resource('expense-service-providers', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
+        Route::resource('expense-service-providers', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
+
+        Route::patch('/expense-categories/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusCategory'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_category.toggleStatus');
+        Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
+        Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
+        Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
+        Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
     });
 
     // Team management Routes
