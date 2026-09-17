@@ -77,6 +77,9 @@ return [
         'kpi.view',
         'checklist_template.view',
         'appraisal_settings.view',
+        'meeting_settings.view',
+        'leave_types.view',
+        'company_expenses.view',
         'configuration.view',
     ],
 

@@ -118,6 +118,13 @@ return [
     ['name' => 'meeting.edit',       'label' => 'Meeting', 'sort_order' => 14040, 'default_checked' => false],
     ['name' => 'meeting.delete',     'label' => 'Meeting', 'sort_order' => 14060, 'default_checked' => false],
 
+    // EXPENSE
+    ['name' => 'expense.view_all',   'label' => 'Expense', 'sort_order' => 15000, 'default_checked' => false],
+    ['name' => 'expense.view',       'label' => 'Expense', 'sort_order' => 15010, 'default_checked' => false],
+    ['name' => 'expense.create',     'label' => 'Expense', 'sort_order' => 15020, 'default_checked' => false],
+    ['name' => 'expense.edit',       'label' => 'Expense', 'sort_order' => 15030, 'default_checked' => false],
+    ['name' => 'expense.delete',     'label' => 'Expense', 'sort_order' => 15040, 'default_checked' => false],
+
     //======================================================================
     // Requests Actions Start
     //======================================================================
