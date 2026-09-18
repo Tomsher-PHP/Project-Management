@@ -106,20 +106,12 @@
                     </div>
                 </div>
 
-                <!-- Row 4: Payment Currency & Payment Amount -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Payment Currency <x-red-star />
-                        </label>
-                        <input type="text" name="payment_currency" id="expense_payment_currency" value="AED" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. AED, USD, EUR">
-                    </div>
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Payment Amount <x-red-star />
-                        </label>
-                        <input type="number" step="0.01" min="0" name="payment_amount" id="expense_payment_amount" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
-                    </div>
+                <!-- Row 4: Payment Amount -->
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                        Payment Amount <x-red-star />
+                    </label>
+                    <input type="number" step="0.01" min="0" name="payment_amount" id="expense_payment_amount" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
                 </div>
 
                 <!-- Row 5: Other Currency & Other Amount -->

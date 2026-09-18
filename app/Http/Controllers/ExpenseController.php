@@ -72,7 +72,6 @@ class ExpenseController extends Controller
                 'local_intl_payment' => $expense->local_intl_payment,
                 'paid_date' => $expense->paid_date ? $expense->paid_date->format('Y-m-d') : null,
                 'invoice_date' => $expense->invoice_date ? $expense->invoice_date->format('Y-m-d') : null,
-                'payment_currency' => $expense->payment_currency,
                 'other_currency' => $expense->other_currency,
                 'other_amount' => $expense->other_amount,
                 'payment_amount' => $expense->payment_amount,

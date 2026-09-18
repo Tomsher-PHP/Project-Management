@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('vat_payment', 20)->default('No VAT');
             $table->string('local_intl_payment', 20)->default('Local');
 
-            $table->string('payment_currency', 10);
             $table->decimal('payment_amount', 15, 2);
 
             $table->string('other_currency', 10)->nullable();

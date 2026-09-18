@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const localIntlSelect = document.getElementById("expense_local_intl_payment");
     const paidDateInput = document.getElementById("expense_paid_date");
     const invoiceDateInput = document.getElementById("expense_invoice_date");
-    const paymentCurrencyInput = document.getElementById("expense_payment_currency");
     const otherCurrencyInput = document.getElementById("expense_other_currency");
     const otherAmountInput = document.getElementById("expense_other_amount");
     const paymentAmountInput = document.getElementById("expense_payment_amount");
@@ -134,7 +133,6 @@ document.addEventListener("DOMContentLoaded", () => {
         setDatepickerValue(invoiceDateInput, todayStr);
 
         // Reset defaults
-        if (paymentCurrencyInput) paymentCurrencyInput.value = "AED";
         if (otherCurrencyInput) otherCurrencyInput.value = "";
         if (otherAmountInput) otherAmountInput.value = "";
         if (paymentAmountInput) paymentAmountInput.value = "";
@@ -240,7 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
         setDatepickerValue(paidDateInput, data.paid_date || getTodayDateString());
         setDatepickerValue(invoiceDateInput, data.invoice_date || getTodayDateString());
 
-        if (paymentCurrencyInput) paymentCurrencyInput.value = data.payment_currency || "AED";
         if (otherCurrencyInput) otherCurrencyInput.value = data.other_currency || "";
         if (otherAmountInput) otherAmountInput.value = data.other_amount !== null && data.other_amount !== undefined ? data.other_amount : "";
         if (paymentAmountInput) paymentAmountInput.value = data.payment_amount !== null && data.payment_amount !== undefined ? data.payment_amount : "";

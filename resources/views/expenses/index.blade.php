@@ -119,7 +119,7 @@
                                         <td class="px-4 py-4">
                                             <div class="flex flex-col">
                                                 <span class="text-sm font-bold text-bgray-900 dark:text-white">
-                                                    {{ $expense->payment_currency ?? 'AED' }} {{ number_format($expense->payment_amount, 2) }}
+                                                    AED {{ number_format($expense->payment_amount, 2) }}
                                                 </span>
                                                 @if ($expense->vat_amount > 0 || $expense->bank_charges > 0)
                                                     <div class="flex items-center gap-2 text-xs text-bgray-500 dark:text-bgray-400">

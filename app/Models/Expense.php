@@ -39,7 +39,6 @@ class Expense extends Model
         'local_intl_payment',
         'paid_date',
         'invoice_date',
-        'payment_currency',
         'payment_amount',
         'other_currency',
         'other_amount',
