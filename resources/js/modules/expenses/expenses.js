@@ -117,11 +117,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Reset TomSelects
-        setSelectValue(paymentModeSelect, "");
+        const defaultPaymentMode = paymentModeSelect?.dataset?.defaultValue || paymentModeSelect?.querySelector('option[selected]')?.value || "";
+        const defaultServiceProvider = serviceProviderSelect?.dataset?.defaultValue || serviceProviderSelect?.querySelector('option[selected]')?.value || "";
+        const defaultCategory = categorySelect?.dataset?.defaultValue || categorySelect?.querySelector('option[selected]')?.value || "";
+
+        setSelectValue(paymentModeSelect, defaultPaymentMode);
         setSelectValue(vatPaymentSelect, "");
         setSelectValue(localIntlSelect, "");
-        setSelectValue(serviceProviderSelect, "");
-        setSelectValue(categorySelect, "");
+        setSelectValue(serviceProviderSelect, defaultServiceProvider);
+        setSelectValue(categorySelect, defaultCategory);
         setSelectValue(customerSelect, "");
 
         // Set Today Date for Datepickers

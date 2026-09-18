@@ -184,8 +184,8 @@
         <x-filters.select name="service_provider_id" label="Service Provider" :options="$service_providers->pluck('name', 'id')->toArray()" />
         <x-filters.select name="category_id" label="Category" :options="$categories->pluck('name', 'id')->toArray()" />
         <x-filters.select name="customer_id" label="Customer" :options="$customers->pluck('name', 'id')->toArray()" />
-        <x-filters.select name="vat_payment" label="VAT Payment" :options="$vat_payment_options" />
-        <x-filters.select name="local_intl_payment" label="Local / Intl" :options="$local_intl_options" />
+        <x-filters.select name="vat_payment" label="VAT Payment" class="tom-select-no-search w-full" :options="$vat_payment_options" />
+        <x-filters.select name="local_intl_payment" label="Local / Intl" class="tom-select-no-search w-full" :options="$local_intl_options" />
     </x-filters.drawer>
 
     <!-- Create/Edit Form Modal -->

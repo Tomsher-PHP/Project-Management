@@ -5,6 +5,10 @@
     $customers = $customers ?? \App\Models\Customer::where('is_active', true)->orderBy('name')->get();
     $vat_payment_options = $vat_payment_options ?? \App\Models\Expense::VAT_PAYMENT_OPTIONS;
     $local_intl_options = $local_intl_options ?? \App\Models\Expense::LOCAL_INTL_OPTIONS;
+
+    $default_payment_mode_id = $payment_modes->firstWhere('is_default', true)?->id ?? '';
+    $default_service_provider_id = $service_providers->firstWhere('is_default', true)?->id ?? '';
+    $default_category_id = $categories->firstWhere('is_default', true)?->id ?? '';
 @endphp
 
 <div id="expense_modal" class="fixed inset-0 z-50 {{ $errors->any() ? '' : 'hidden' }} overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-6 md:p-10 flex items-center justify-center">
@@ -52,10 +56,10 @@
                     <label class="block text-sm font-semibold text-bgray-900 dark:text-white">
                         Payment Mode <x-red-star />
                     </label>
-                    <select name="payment_mode_id" id="expense_payment_mode_id" required class="tom-select w-full">
+                    <select name="payment_mode_id" id="expense_payment_mode_id" required class="tom-select w-full" data-default-value="{{ $default_payment_mode_id }}">
                         <option value="">Select Payment Mode</option>
                         @foreach ($payment_modes as $mode)
-                            <option value="{{ $mode->id }}">{{ $mode->name }}</option>
+                            <option value="{{ $mode->id }}" {{ (string) $mode->id === (string) $default_payment_mode_id ? 'selected' : '' }}>{{ $mode->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -82,7 +86,7 @@
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             VAT Payment <x-red-star />
                         </label>
-                        <select name="vat_payment" id="expense_vat_payment" required class="tom-select w-full">
+                        <select name="vat_payment" id="expense_vat_payment" required class="tom-select-no-search w-full">
                             <option value="">Select VAT Payment</option>
                             @foreach ($vat_payment_options as $val => $lbl)
                                 <option value="{{ $val }}">{{ $lbl }}</option>
@@ -93,7 +97,7 @@
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Local/Intl Payment <x-red-star />
                         </label>
-                        <select name="local_intl_payment" id="expense_local_intl_payment" required class="tom-select w-full">
+                        <select name="local_intl_payment" id="expense_local_intl_payment" required class="tom-select-no-search w-full">
                             <option value="">Select Local/Intl</option>
                             @foreach ($local_intl_options as $val => $lbl)
                                 <option value="{{ $val }}">{{ $lbl }}</option>
@@ -162,10 +166,10 @@
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Service Provider
                         </label>
-                        <select name="service_provider_id" id="expense_service_provider_id" class="tom-select w-full">
+                        <select name="service_provider_id" id="expense_service_provider_id" class="tom-select w-full" data-default-value="{{ $default_service_provider_id }}">
                             <option value="">Select Service Provider</option>
                             @foreach ($service_providers as $provider)
-                                <option value="{{ $provider->id }}">{{ $provider->name }}</option>
+                                <option value="{{ $provider->id }}" {{ (string) $provider->id === (string) $default_service_provider_id ? 'selected' : '' }}>{{ $provider->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -173,10 +177,10 @@
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Category
                         </label>
-                        <select name="category_id" id="expense_category_id" class="tom-select w-full">
+                        <select name="category_id" id="expense_category_id" class="tom-select w-full" data-default-value="{{ $default_category_id }}">
                             <option value="">Select Category</option>
                             @foreach ($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                <option value="{{ $cat->id }}" {{ (string) $cat->id === (string) $default_category_id ? 'selected' : '' }}>{{ $cat->name }}</option>
                             @endforeach
                         </select>
                     </div>

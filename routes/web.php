@@ -531,12 +531,6 @@ Route::middleware(['auth'])->group(function () {
             ->name('tasks.extend-time-requests.reject');
     });
 
-    // Expense Transaction Routes
-    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.view')->only(['index']);
-    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.create')->only(['store']);
-    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.edit')->only(['edit', 'update']);
-    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.delete')->only(['destroy']);
-
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
     Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
@@ -799,6 +793,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.edit')->only(['edit', 'update']);
     Route::delete('/meetings/{meeting}/attachments/{attachment}', [MeetingController::class, 'deleteAttachment'])->middleware('permission.type:meeting.edit')->name('meetings.attachments.delete');
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.delete')->only(['destroy']);
+
+    // Expense Transaction Routes
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.view')->only(['index']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.create')->only(['store']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.edit')->only(['edit', 'update']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.delete')->only(['destroy']);
 });
 
 Route::get('api-test', function () {

@@ -1,9 +1,15 @@
+@props([
+    'name',
+    'label' => '',
+    'options' => [],
+])
+
 <div class="flex flex-col gap-2">
     <label class="text-sm font-medium text-bgray-700 dark:text-bgray-50">
         {{ $label }}
     </label>
 
-    <select name="{{ $name }}" class="tom-select w-full" data-sort="0">
+    <select name="{{ $name }}" {{ $attributes->merge(['class' => 'tom-select w-full']) }} data-sort="0">
         <option value="" {{ request()->filled($name) ? '' : 'selected' }}>All</option>
         @foreach ($options as $value => $text)
             <option value="{{ $value }}" {{ request($name) == (string) $value ? 'selected' : '' }}>{{ $text }}</option>
