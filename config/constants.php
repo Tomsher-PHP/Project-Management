@@ -19,6 +19,12 @@ return [
     // Time format    
     'time_format' => 'H:i',
 
+    // Timezone
+    'timezone' => 'UTC',
+
+    // Currency
+    'currency' => 'AED',
+
     // Constant color code
     'soft_colors' => [
         '#f3f4f6',
