@@ -110,7 +110,7 @@
                                         </div>
                                     </td>
                                     <td class="pl-6 py-5 whitespace-nowrap text-right">
-                                        <div class="flex items-center justify-end space-x-3">
+                                        <div class="flex items-center justify-end space-x-1">
                                             @can($editPermission)
                                                 @php
                                                     $editData = [
