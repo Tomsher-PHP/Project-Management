@@ -631,7 +631,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Pending requests for approval/rejection
         Route::get('/pending', [LeaveRequestController::class, 'pending'])
-            ->middleware('permission.type:leave_request.approve')
+            // ->middleware('permission.type:leave_request.approve')
             ->name('pending');
 
         // Balance check

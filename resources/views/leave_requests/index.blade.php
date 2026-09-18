@@ -125,7 +125,7 @@
     <!-- Success message -->
 
     @if (session('success'))
-        <div class="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+        <div class="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             {{ session('success') }} </div>
     @endif
 
@@ -350,13 +350,13 @@ $canApproveReject = $isSuperAdmin || ($isAssignedToMe && !$isOwnRequest);
 $status = strtolower($leaveRequest->status ?? '');
 
 $statusClasses = match ($status) {
-    'approved' => 'bg-green-100 text-green-700',
+    'approved' => 'text-green-700',
 
-    'rejected' => 'bg-red-100 text-red-700',
+    'rejected' => 'text-red-700',
 
-    'cancelled' => 'bg-gray-100 text-gray-700',
+    'cancelled' => 'text-gray-700',
 
-    default => 'bg-yellow-100 text-yellow-700',
+    default => 'text-red-700',
 };
 
 /*
@@ -523,7 +523,7 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                         @can('leave_request.edit')
                                                             <a href="{{ route('leave-requests.edit', [
                                                                 'leaveRequest' => $leaveRequest->id,
-                                                                'approval_mode' => 1,
+                                                                'approved_mode' => 1,
                                                                 'action' => 'approve',
                                                             ]) }}" class="inline-flex items-center rounded-lg bg-green-100 px-3 py-2 text-xs font-medium text-green-700 transition hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
                                                                 Approve
@@ -535,7 +535,7 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                         @can('leave_request.edit')
                                                             <a href="{{ route('leave-requests.edit', [
                                                                 'leaveRequest' => $leaveRequest->id,
-                                                                'approval_mode' => 1,
+                                                                'approved_mode' => 1,
                                                                 'action' => 'reject',
                                                             ]) }}" class="inline-flex items-center rounded-lg bg-red-100 px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-900/50 dark:bg-red-900/30 dark:text-red-400">
                                                                 Reject

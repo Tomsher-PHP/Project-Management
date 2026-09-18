@@ -59,7 +59,7 @@ class LeaveRequestUpdateRequest extends FormRequest
     /**
      * Determine whether this request is approval/rejection mode.
      *
-     * approval_mode has been renamed to approved_mode.
+     * approved_mode has been renamed to approved_mode.
      */
     protected function isApprovalMode(): bool
     {
