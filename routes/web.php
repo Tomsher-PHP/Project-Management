@@ -303,6 +303,12 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
         Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
         Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
+
+        Route::patch('/vendors/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusVendor'])->middleware('permission.type:company_expenses.edit')->name('vendor.toggleStatus');
+        Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
+        Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
+        Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
+        Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
     });
 
     // Team management Routes

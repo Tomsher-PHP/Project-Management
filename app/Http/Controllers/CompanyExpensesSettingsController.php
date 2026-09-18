@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ExpenseCategory;
 use App\Models\ExpensePaymentMode;
 use App\Models\ExpenseServiceProvider;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,7 @@ class CompanyExpensesSettingsController extends Controller
         $editPermission = 'company_expenses.edit';
         $deletePermission = 'company_expenses.delete';
         $togglePermission = 'company_expenses.edit';
+        $showDefault = true;
 
         if ($request->routeIs('settings.expense-payment-modes.index')) {
             $records = ExpensePaymentMode::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
@@ -58,6 +60,17 @@ class CompanyExpensesSettingsController extends Controller
             $updateRouteName = 'settings.expense-categories.update';
             $destroyRouteName = 'settings.expense-categories.destroy';
             $toggleRoute = 'settings.company_expenses_category.toggleStatus';
+        } elseif ($request->routeIs('settings.vendors.index')) {
+            $records = Vendor::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+            $nextSortOrder = 1;
+            $currentTab = 'vendors';
+            $entityLabel = 'Vendor';
+            $entityPluralLabel = 'Vendors';
+            $storeRoute = route('settings.vendors.store');
+            $updateRouteName = 'settings.vendors.update';
+            $destroyRouteName = 'settings.vendors.destroy';
+            $toggleRoute = 'settings.vendor.toggleStatus';
+            $showDefault = false;
         } else {
             abort(403);
         }
@@ -77,6 +90,7 @@ class CompanyExpensesSettingsController extends Controller
             'updateRouteName' => $updateRouteName,
             'destroyRouteName' => $destroyRouteName,
             'toggleRoute' => $toggleRoute,
+            'showDefault' => $showDefault,
         ]);
     }
 
@@ -131,6 +145,15 @@ class CompanyExpensesSettingsController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Expense category created successfully.',
+                'data' => $record,
+            ]);
+        } elseif ($request->routeIs('settings.vendors.store')) {
+            $data = app(\App\Http\Requests\VendorRequest::class)->validated();
+            $record = Vendor::create($data);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Vendor created successfully.',
                 'data' => $record,
             ]);
         }
@@ -200,6 +223,16 @@ class CompanyExpensesSettingsController extends Controller
                 'message' => 'Expense category updated successfully.',
                 'data' => $record,
             ]);
+        } elseif ($request->routeIs('settings.vendors.update')) {
+            $data = app(\App\Http\Requests\VendorRequest::class)->validated();
+            $record = Vendor::findOrFail($id);
+            $record->update($data);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Vendor updated successfully.',
+                'data' => $record->refresh(),
+            ]);
         }
 
         abort(403);
@@ -219,11 +252,15 @@ class CompanyExpensesSettingsController extends Controller
             $record = ExpenseCategory::findOrFail($id);
             $routeName = 'settings.expense-categories.index';
             $entityName = 'Expense category';
+        } elseif ($request->routeIs('settings.vendors.destroy')) {
+            $record = Vendor::findOrFail($id);
+            $routeName = 'settings.vendors.index';
+            $entityName = 'Vendor';
         } else {
             abort(403);
         }
 
-        if ($record->is_system) {
+        if (!empty($record->is_system)) {
             return redirect()
                 ->route($routeName)
                 ->with('error', "System {$entityName} cannot be deleted.");
@@ -265,6 +302,19 @@ class CompanyExpensesSettingsController extends Controller
     public function toggleStatusCategory(Request $request)
     {
         $record = ExpenseCategory::findOrFail($request->id);
+        $record->is_active = ! $record->is_active;
+        $record->save();
+
+        return response()->json([
+            'success' => true,
+            'is_active' => $record->is_active,
+            'message' => 'Status updated successfully',
+        ], Response::HTTP_OK);
+    }
+
+    public function toggleStatusVendor(Request $request)
+    {
+        $record = Vendor::findOrFail($request->id);
         $record->is_active = ! $record->is_active;
         $record->save();
 

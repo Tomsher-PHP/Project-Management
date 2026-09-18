@@ -20,6 +20,12 @@
             'url' => route('settings.expense-categories.index'),
             'permission' => 'company_expenses.view',
         ],
+        [
+            'key' => 'vendors',
+            'label' => 'Vendors',
+            'url' => route('settings.vendors.index'),
+            'permission' => 'company_expenses.view',
+        ],
     ];
 @endphp
 
@@ -83,12 +89,12 @@
                                                     <p class="text-base font-semibold text-bgray-900 dark:text-white">
                                                         {{ $record->name }}
                                                     </p>
-                                                    @if ($record->is_system)
+                                                    @if (!empty($record->is_system))
                                                         <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
                                                             System
                                                         </span>
                                                     @endif
-                                                    @if ($record->is_default)
+                                                    @if (!empty($record->is_default))
                                                         <span class="inline-flex rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-600 dark:bg-success-900/30 dark:text-success-300">
                                                             Default
                                                         </span>
@@ -109,15 +115,15 @@
                                                 @php
                                                     $editData = [
                                                         'data-name' => $record->name,
-                                                        'data-is_system' => (int) $record->is_system,
-                                                        'data-is_default' => (int) $record->is_default,
+                                                        'data-is_system' => (int) ($record->is_system ?? 0),
+                                                        'data-is_default' => (int) ($record->is_default ?? 0),
                                                     ];
                                                 @endphp
                                                 <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" :attributes="new \Illuminate\View\ComponentAttributeBag($editData)" data-method="PUT" data-module="{{ $entityLabel }}" title="Edit {{ $entityLabel }}" />
                                             @endcan
 
                                             @can($deletePermission)
-                                                @if (!$record->is_system)
+                                                @if (empty($record->is_system))
                                                     <x-delete-form :action="route($destroyRouteName, $record->id)" />
                                                 @endif
                                             @endcan
@@ -142,20 +148,22 @@
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required>
         </div>
 
-        <label for="is_default" class="flex cursor-pointer items-center gap-2">
-            <input type="checkbox" name="is_default" id="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-            <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
-                <span>Is Default</span>
-                <span class="group relative inline-flex cursor-help">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                    </svg>
-                    <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
-                        The default option is preselected when creating a new expense.
+        @if ($showDefault ?? true)
+            <label for="is_default" class="flex cursor-pointer items-center gap-2">
+                <input type="checkbox" name="is_default" id="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+                <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                    <span>Is Default</span>
+                    <span class="group relative inline-flex cursor-help">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                            The default option is preselected when creating a new expense.
+                        </span>
                     </span>
                 </span>
-            </span>
-        </label>
+            </label>
+        @endif
     </x-form-modal>
 
     <x-filters.drawer>
