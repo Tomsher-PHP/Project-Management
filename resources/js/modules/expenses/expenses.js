@@ -95,6 +95,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function getTodayDateString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
     function resetForm() {
         clearErrors();
         if (form) form.reset();
@@ -116,9 +124,10 @@ document.addEventListener("DOMContentLoaded", () => {
         setSelectValue(categorySelect, "");
         setSelectValue(customerSelect, "");
 
-        // Reset Datepickers
-        setDatepickerValue(paidDateInput, "");
-        setDatepickerValue(invoiceDateInput, "");
+        // Set Today Date for Datepickers
+        const todayStr = getTodayDateString();
+        setDatepickerValue(paidDateInput, todayStr);
+        setDatepickerValue(invoiceDateInput, todayStr);
 
         // Reset defaults
         if (paymentCurrencyInput) paymentCurrencyInput.value = "AED";
@@ -224,8 +233,8 @@ document.addEventListener("DOMContentLoaded", () => {
         setSelectValue(categorySelect, data.category_id);
         setSelectValue(customerSelect, data.customer_id);
 
-        setDatepickerValue(paidDateInput, data.paid_date);
-        setDatepickerValue(invoiceDateInput, data.invoice_date);
+        setDatepickerValue(paidDateInput, data.paid_date || getTodayDateString());
+        setDatepickerValue(invoiceDateInput, data.invoice_date || getTodayDateString());
 
         if (paymentCurrencyInput) paymentCurrencyInput.value = data.payment_currency || "AED";
         if (otherCurrencyInput) otherCurrencyInput.value = data.other_currency || "";

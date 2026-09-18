@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('invoice_number', 255)->nullable();
             $table->foreignId('service_provider_id')->nullable()->constrained('expense_service_providers')->nullOnDelete();
             $table->foreignId('category_id')->nullable()->constrained('expense_categories')->nullOnDelete();
-            $table->text('service_product');
+            $table->text('service_product')->nullable();
 
             // Customer & comment
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();

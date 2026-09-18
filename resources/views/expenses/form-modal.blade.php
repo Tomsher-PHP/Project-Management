@@ -61,23 +61,23 @@
                 </div>
 
                 <!-- Row 2: Paid Date & Invoice Date -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Paid Date <x-red-star />
                         </label>
-                        <input type="text" name="paid_date" id="expense_paid_date" required class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD">
+                        <input type="text" name="paid_date" id="expense_paid_date" value="{{ now()->format('Y-m-d') }}" required class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD">
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Invoice Date
                         </label>
-                        <input type="text" name="invoice_date" id="expense_invoice_date" class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD">
+                        <input type="text" name="invoice_date" id="expense_invoice_date" value="{{ now()->format('Y-m-d') }}" class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD">
                     </div>
                 </div>
 
                 <!-- Row 3: VAT payment & Local/Intl Payment -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             VAT Payment <x-red-star />
@@ -103,12 +103,12 @@
                 </div>
 
                 <!-- Row 4: Payment Currency & Payment Amount -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Payment Currency
+                            Payment Currency <x-red-star />
                         </label>
-                        <input type="text" name="payment_currency" id="expense_payment_currency" value="AED" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. AED, USD, EUR">
+                        <input type="text" name="payment_currency" id="expense_payment_currency" value="AED" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. AED, USD, EUR">
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -119,7 +119,7 @@
                 </div>
 
                 <!-- Row 5: Other Currency & Other Amount -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Other Currency
@@ -135,7 +135,7 @@
                 </div>
 
                 <!-- Row 6: VAT Amount & Bank Charges / Fees -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             VAT Amount
@@ -151,7 +151,7 @@
                 </div>
 
                 <!-- Row 7: Invoice #, Service Provider, Category -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Invoice #
@@ -183,7 +183,7 @@
                 </div>
 
                 <!-- Row 8: Customer & Service / Product -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Customer
@@ -197,9 +197,9 @@
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Service / Product <x-red-star />
+                            Service / Product
                         </label>
-                        <input type="text" name="service_product" id="expense_service_product" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Describe the service or product">
+                        <input type="text" name="service_product" id="expense_service_product" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Describe the service or product">
                     </div>
                 </div>
 
