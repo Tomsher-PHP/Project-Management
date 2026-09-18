@@ -95,20 +95,20 @@ return [
     ['name' => 'leave_request.create', 'label' => 'Leave Request', 'sort_order' => 11020, 'default_checked' => true],
     ['name' => 'leave_request.edit', 'label' => 'Leave Request', 'sort_order' => 11030, 'default_checked' => true],
     ['name' => 'leave_request.delete', 'label' => 'Leave Request', 'sort_order' => 11040, 'default_checked' => false],
-    ['name' => 'leave_request.approve', 'label' => 'Leave Request', 'sort_order' => 11050, 'default_checked' => true],
-    ['name' => 'leave_request.reject', 'label' => 'Leave Request', 'sort_order' => 11070, 'default_checked' => true],
+    ['name' => 'leave_request.approve', 'label' => 'Leave Request', 'sort_order' => 11050, 'default_checked' => false],
+    ['name' => 'leave_request.reject', 'label' => 'Leave Request', 'sort_order' => 11070, 'default_checked' => false],
     ['name' => 'leave_request.cancel', 'label' => 'Leave Request', 'sort_order' => 11090, 'default_checked' => true],
 
     // ATTENDANCE
     ['name' => 'attendance.view', 'label' => 'Attendance', 'sort_order' => 12000, 'default_checked' => true],
-    ['name' => 'attendance.create', 'label' => 'Attendance', 'sort_order' => 12020, 'default_checked' => true],
-    ['name' => 'attendance.edit', 'label' => 'Attendance', 'sort_order' => 12040, 'default_checked' => true],
+    ['name' => 'attendance.create', 'label' => 'Attendance', 'sort_order' => 12020, 'default_checked' => false],
+    ['name' => 'attendance.edit', 'label' => 'Attendance', 'sort_order' => 12040, 'default_checked' => false],
     ['name' => 'attendance.delete', 'label' => 'Attendance', 'sort_order' => 12060, 'default_checked' => false],
 
     // HOLIDAY
     ['name' => 'holidays.view', 'label' => 'Holiday', 'sort_order' => 13000, 'default_checked' => true],
-    ['name' => 'holidays.create', 'label' => 'Holiday', 'sort_order' => 13020, 'default_checked' => true],
-    ['name' => 'holidays.edit', 'label' => 'Holiday', 'sort_order' => 13040, 'default_checked' => true],
+    ['name' => 'holidays.create', 'label' => 'Holiday', 'sort_order' => 13020, 'default_checked' => false],
+    ['name' => 'holidays.edit', 'label' => 'Holiday', 'sort_order' => 13040, 'default_checked' => false],
     ['name' => 'holidays.delete', 'label' => 'Holiday', 'sort_order' => 13060, 'default_checked' => false],
 
     // MEETING
