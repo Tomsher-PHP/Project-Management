@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ConfigurationRequest;
 use App\Models\Configuration;
-use App\Models\CountryTimezones;
 use App\Services\AttachmentService;
 use Illuminate\Support\Facades\Cache;
 
@@ -27,20 +26,8 @@ class ConfigurationController extends Controller
         $config = $this->getConfiguration();
         $dateFormats = config('constants.date_formats');
         $timeFormats = config('constants.time_formats');
-        $timezones = CountryTimezones::select('zone_name')
-            ->distinct()
-            ->orderBy('zone_name')
-            ->get();
 
-        if (! $timezones->contains(function ($timezone) {
-            return strtoupper((string) $timezone->zone_name) === 'UTC';
-        })) {
-            $timezones->prepend((object) [
-                'zone_name' => 'UTC',
-            ]);
-        }
-
-        return view('settings.configurations.page', compact('config', 'dateFormats', 'timeFormats', 'timezones'));
+        return view('settings.configurations.page', compact('config', 'dateFormats', 'timeFormats'));
     }
 
     public function update(ConfigurationRequest $request, AttachmentService $attachmentService)
@@ -56,6 +43,7 @@ class ConfigurationController extends Controller
             'company_phone',
             'company_address',
             'timezone',
+            'currency',
             'date_format',
             'time_format',
         ]));

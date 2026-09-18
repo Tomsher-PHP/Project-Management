@@ -17,6 +17,7 @@ class Configuration extends Model
         'company_phone',
         'company_address',
         'timezone',
+        'currency',
         'date_format',
         'time_format',
     ];

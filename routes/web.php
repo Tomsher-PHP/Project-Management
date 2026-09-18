@@ -342,6 +342,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Common Routes
     Route::get('/countries/search', [CommonController::class, 'search'])->name('countries.search');
+    Route::get('/timezones/search', [CommonController::class, 'searchTimezones'])->name('timezones.search');
+    Route::get('/currencies/search', [CommonController::class, 'searchCurrencies'])->name('currencies.search');
 
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {

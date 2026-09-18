@@ -45,6 +45,7 @@ class ConfigurationRequest extends FormRequest
             'company_address' => 'nullable|string|max:500',
 
             'timezone' => 'required|string|max:50',
+            'currency' => 'nullable|string|max:20',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
 
             'date_format' => 'nullable|string|max:20',
