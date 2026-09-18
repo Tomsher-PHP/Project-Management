@@ -49,6 +49,11 @@ class ExpenseStoreRequest extends FormRequest
                 'integer',
                 Rule::exists('expense_categories', 'id')->whereNull('deleted_at'),
             ],
+            'vendor_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('vendors', 'id')->whereNull('deleted_at'),
+            ],
             'service_product' => ['nullable', 'string'],
             'customer_id' => [
                 'nullable',

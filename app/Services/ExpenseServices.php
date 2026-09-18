@@ -7,6 +7,7 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\ExpensePaymentMode;
 use App\Models\ExpenseServiceProvider;
+use App\Models\Vendor;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -21,6 +22,7 @@ class ExpenseServices
                 'paymentMode',
                 'serviceProvider',
                 'category',
+                'vendor',
                 'customer',
                 'addedBy',
                 'updatedBy',
@@ -66,6 +68,7 @@ class ExpenseServices
             'payment_modes' => ExpensePaymentMode::query()->active()->orderBy('sort_order')->get(),
             'service_providers' => ExpenseServiceProvider::query()->active()->orderBy('sort_order')->get(),
             'categories' => ExpenseCategory::query()->active()->orderBy('sort_order')->get(),
+            'vendors' => Vendor::query()->active()->orderBy('name')->get(['id', 'name']),
             'customers' => Customer::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'customer_code']),
             'vat_payment_options' => Expense::VAT_PAYMENT_OPTIONS,
             'local_intl_options' => Expense::LOCAL_INTL_OPTIONS,

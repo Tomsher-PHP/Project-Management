@@ -61,7 +61,7 @@ class ExpenseController extends Controller
 
     public function edit(Expense $expense): JsonResponse
     {
-        $expense->load(['paymentMode', 'serviceProvider', 'category', 'customer']);
+        $expense->load(['paymentMode', 'serviceProvider', 'category', 'vendor', 'customer']);
 
         return response()->json([
             'status' => true,
@@ -80,6 +80,7 @@ class ExpenseController extends Controller
                 'invoice_number' => $expense->invoice_number,
                 'service_provider_id' => $expense->service_provider_id,
                 'category_id' => $expense->category_id,
+                'vendor_id' => $expense->vendor_id,
                 'service_product' => $expense->service_product,
                 'customer_id' => $expense->customer_id,
                 'comment' => $expense->comment,

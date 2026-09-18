@@ -31,6 +31,7 @@ return new class extends Migration
             $table->string('invoice_number', 255)->nullable();
             $table->foreignId('service_provider_id')->nullable()->constrained('expense_service_providers')->nullOnDelete();
             $table->foreignId('category_id')->nullable()->constrained('expense_categories')->nullOnDelete();
+            $table->foreignId('vendor_id')->nullable()->constrained('vendors')->nullOnDelete();
             $table->text('service_product')->nullable();
 
             // Customer & comment
@@ -47,6 +48,7 @@ return new class extends Migration
             $table->index('payment_mode_id');
             $table->index('service_provider_id');
             $table->index('category_id');
+            $table->index('vendor_id');
             $table->index('customer_id');
             $table->index('paid_date');
             $table->index('invoice_date');

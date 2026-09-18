@@ -47,6 +47,7 @@ class Expense extends Model
         'invoice_number',
         'service_provider_id',
         'category_id',
+        'vendor_id',
         'service_product',
         'customer_id',
         'comment',
@@ -113,6 +114,11 @@ class Expense extends Model
     public function category()
     {
         return $this->belongsTo(ExpenseCategory::class, 'category_id');
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class, 'vendor_id');
     }
 
     public function customer()

@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const localIntlSelect = document.getElementById("expense_local_intl_payment");
     const paidDateInput = document.getElementById("expense_paid_date");
     const invoiceDateInput = document.getElementById("expense_invoice_date");
-    const otherCurrencyInput = document.getElementById("expense_other_currency");
+    const otherCurrencySelect = document.getElementById("expense_other_currency");
     const otherAmountInput = document.getElementById("expense_other_amount");
     const paymentAmountInput = document.getElementById("expense_payment_amount");
     const vatAmountInput = document.getElementById("expense_vat_amount");
@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const invoiceNumberInput = document.getElementById("expense_invoice_number");
     const serviceProviderSelect = document.getElementById("expense_service_provider_id");
     const categorySelect = document.getElementById("expense_category_id");
+    const vendorSelect = document.getElementById("expense_vendor_id");
     const serviceProductInput = document.getElementById("expense_service_product");
     const customerSelect = document.getElementById("expense_customer_id");
     const commentInput = document.getElementById("expense_comment");
@@ -75,10 +76,35 @@ document.addEventListener("DOMContentLoaded", () => {
         const valStr = value !== null && value !== undefined ? String(value) : "";
 
         if (selectEl.tomselect) {
+            if (valStr && !selectEl.tomselect.options[valStr]) {
+                selectEl.tomselect.addOption({ value: valStr, text: valStr });
+            }
             selectEl.tomselect.setValue(valStr, true);
         } else {
             selectEl.value = valStr;
         }
+    }
+
+    function updateVatAmount() {
+        if (!vatPaymentSelect || !vatAmountInput || !paymentAmountInput) return;
+        const vatPaymentVal = vatPaymentSelect.value;
+        const paymentAmount = parseFloat(paymentAmountInput.value) || 0;
+        const defaultVatPct = parseFloat(form?.dataset?.defaultVatPercentage || 5);
+        const vatPaymentVatVal = form?.dataset?.vatPaymentVat || "vat";
+
+        if (vatPaymentVal === vatPaymentVatVal) {
+            const calculatedVat = (paymentAmount * defaultVatPct) / 100;
+            vatAmountInput.value = calculatedVat > 0 ? calculatedVat.toFixed(2) : "0.00";
+        } else {
+            vatAmountInput.value = "0.00";
+        }
+    }
+
+    if (vatPaymentSelect) {
+        vatPaymentSelect.addEventListener("change", updateVatAmount);
+    }
+    if (paymentAmountInput) {
+        paymentAmountInput.addEventListener("input", updateVatAmount);
     }
 
     function setDatepickerValue(inputEl, value) {
@@ -125,7 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
         setSelectValue(localIntlSelect, "");
         setSelectValue(serviceProviderSelect, defaultServiceProvider);
         setSelectValue(categorySelect, defaultCategory);
+        setSelectValue(vendorSelect, "");
         setSelectValue(customerSelect, "");
+        setSelectValue(otherCurrencySelect, "");
 
         // Set Today Date for Datepickers
         const todayStr = getTodayDateString();
@@ -133,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
         setDatepickerValue(invoiceDateInput, todayStr);
 
         // Reset defaults
-        if (otherCurrencyInput) otherCurrencyInput.value = "";
         if (otherAmountInput) otherAmountInput.value = "";
         if (paymentAmountInput) paymentAmountInput.value = "";
         if (vatAmountInput) vatAmountInput.value = "";
@@ -233,12 +260,13 @@ document.addEventListener("DOMContentLoaded", () => {
         setSelectValue(localIntlSelect, data.local_intl_payment);
         setSelectValue(serviceProviderSelect, data.service_provider_id);
         setSelectValue(categorySelect, data.category_id);
+        setSelectValue(vendorSelect, data.vendor_id);
         setSelectValue(customerSelect, data.customer_id);
+        setSelectValue(otherCurrencySelect, data.other_currency);
 
         setDatepickerValue(paidDateInput, data.paid_date || getTodayDateString());
         setDatepickerValue(invoiceDateInput, data.invoice_date || getTodayDateString());
 
-        if (otherCurrencyInput) otherCurrencyInput.value = data.other_currency || "";
         if (otherAmountInput) otherAmountInput.value = data.other_amount !== null && data.other_amount !== undefined ? data.other_amount : "";
         if (paymentAmountInput) paymentAmountInput.value = data.payment_amount !== null && data.payment_amount !== undefined ? data.payment_amount : "";
         if (vatAmountInput) vatAmountInput.value = data.vat_amount !== null && data.vat_amount !== undefined ? data.vat_amount : "";

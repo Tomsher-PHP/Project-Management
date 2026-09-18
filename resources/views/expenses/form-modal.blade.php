@@ -2,6 +2,7 @@
     $payment_modes = $payment_modes ?? \App\Models\ExpensePaymentMode::active()->orderBy('sort_order')->get();
     $service_providers = $service_providers ?? \App\Models\ExpenseServiceProvider::active()->orderBy('sort_order')->get();
     $categories = $categories ?? \App\Models\ExpenseCategory::active()->orderBy('sort_order')->get();
+    $vendors = $vendors ?? \App\Models\Vendor::active()->orderBy('name')->get();
     $customers = $customers ?? \App\Models\Customer::where('is_active', true)->orderBy('name')->get();
     $vat_payment_options = $vat_payment_options ?? \App\Models\Expense::VAT_PAYMENT_OPTIONS;
     $local_intl_options = $local_intl_options ?? \App\Models\Expense::LOCAL_INTL_OPTIONS;
@@ -27,7 +28,7 @@
         </div>
 
         <!-- Modal Body / Form -->
-        <form id="expense_form" method="POST" action="{{ route('expenses.store') }}" data-create-url="{{ route('expenses.store') }}">
+        <form id="expense_form" method="POST" action="{{ route('expenses.store') }}" data-create-url="{{ route('expenses.store') }}" data-default-vat-percentage="{{ \App\Models\Expense::DEFAULT_VAT_PERCENTAGE }}" data-vat-payment-vat="{{ \App\Models\Expense::VAT_PAYMENT_VAT }}">
             @csrf
             <input type="hidden" name="_method" id="expense_form_method" value="POST">
             <input type="hidden" name="expense_id" id="expense_id_input" value="">
@@ -109,7 +110,7 @@
                 <!-- Row 4: Payment Amount -->
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                        Payment Amount <x-red-star />
+                        Payment Amount ({{ $globalCompanyCurrency ?? 'AED' }}) <x-red-star />
                     </label>
                     <input type="number" step="0.01" min="0" name="payment_amount" id="expense_payment_amount" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
                 </div>
@@ -120,7 +121,9 @@
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Other Currency
                         </label>
-                        <input type="text" name="other_currency" id="expense_other_currency" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Specify if applicable">
+                        <select name="other_currency" id="expense_other_currency" class="tom-select-lazy w-full" data-route="{{ route('currencies.search') }}" data-placeholder="Select Currency">
+                            <option value="">Select Currency</option>
+                        </select>
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -178,8 +181,19 @@
                     </div>
                 </div>
 
-                <!-- Row 8: Customer & Service / Product -->
+                <!-- Row 8: Vendor & Customer -->
                 <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Vendor
+                        </label>
+                        <select name="vendor_id" id="expense_vendor_id" class="tom-select w-full">
+                            <option value="">Select Vendor</option>
+                            @foreach ($vendors as $vendor)
+                                <option value="{{ $vendor->id }}">{{ $vendor->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Customer
@@ -191,12 +205,14 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Service / Product
-                        </label>
-                        <input type="text" name="service_product" id="expense_service_product" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Describe the service or product">
-                    </div>
+                </div>
+
+                <!-- Row 9: Service / Product -->
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                        Service / Product
+                    </label>
+                    <input type="text" name="service_product" id="expense_service_product" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Describe the service or product">
                 </div>
 
                 <!-- Row 9: Comment -->
