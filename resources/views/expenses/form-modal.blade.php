@@ -28,7 +28,7 @@
             <input type="hidden" name="_method" id="expense_form_method" value="POST">
             <input type="hidden" name="expense_id" id="expense_id_input" value="">
 
-            <div class="max-h-[75vh] overflow-y-auto p-6 space-y-1">
+            <div class="max-h-[75vh] overflow-y-auto pl-6 pr-6 pt-2 pb-6 space-y-2">
 
                 <!-- Dynamic Error Container -->
                 <div id="expense_form_errors" class="hidden rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-darkblack-500 dark:text-red-400 border border-red-200 dark:border-red-800">
@@ -47,157 +47,155 @@
                     </div>
                 @endif
 
-                <!-- SECTION 1: Payment Information -->
+                <!-- Row 1: Payment Mode (single element in a row) -->
                 <div>
+                    <label class="block text-sm font-semibold text-bgray-900 dark:text-white">
+                        Payment Mode <x-red-star />
+                    </label>
+                    <select name="payment_mode_id" id="expense_payment_mode_id" required class="tom-select w-full">
+                        <option value="">Select Payment Mode</option>
+                        @foreach ($payment_modes as $mode)
+                            <option value="{{ $mode->id }}">{{ $mode->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <!-- Payment Mode -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Payment Mode <x-red-star />
-                            </label>
-                            <select name="payment_mode_id" id="expense_payment_mode_id" required class="tom-select w-full">
-                                <option value="">Select Payment Mode</option>
-                                @foreach ($payment_modes as $mode)
-                                    <option value="{{ $mode->id }}">{{ $mode->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- VAT Payment -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                VAT Payment <x-red-star />
-                            </label>
-                            <select name="vat_payment" id="expense_vat_payment" required class="tom-select w-full">
-                                <option value="">Select VAT Payment</option>
-                                @foreach ($vat_payment_options as $val => $lbl)
-                                    <option value="{{ $val }}">{{ $lbl }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Local / Intl Payment -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Local/Intl Payment <x-red-star />
-                            </label>
-                            <select name="local_intl_payment" id="expense_local_intl_payment" required class="tom-select w-full">
-                                <option value="">Select Local/Intl</option>
-                                @foreach ($local_intl_options as $val => $lbl)
-                                    <option value="{{ $val }}">{{ $lbl }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                <!-- Row 2: Paid Date & Invoice Date -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Paid Date <x-red-star />
+                        </label>
+                        <input type="text" name="paid_date" id="expense_paid_date" required class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD">
                     </div>
-
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
-                        <!-- Paid Date -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Paid Date <x-red-star />
-                            </label>
-                            <input type="text" name="paid_date" id="expense_paid_date" required class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD">
-                        </div>
-
-                        <!-- Invoice Date -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Invoice Date
-                            </label>
-                            <input type="text" name="invoice_date" id="expense_invoice_date" class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
-                        <!-- Payment Currency -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Payment Currency
-                            </label>
-                            <input type="text" name="payment_currency" id="expense_payment_currency" value="AED" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. AED, USD, EUR">
-                        </div>
-
-                        <!-- Other Currency -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Other Currency
-                            </label>
-                            <input type="text" name="other_currency" id="expense_other_currency" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Specify if applicable">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mt-4">
-                        <!-- Payment Amount -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Payment Amount <x-red-star />
-                            </label>
-                            <input type="number" step="0.01" min="0" name="payment_amount" id="expense_payment_amount" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
-                        </div>
-
-                        <!-- VAT Amount -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                VAT Amount
-                            </label>
-                            <input type="number" step="0.01" min="0" name="vat_amount" id="expense_vat_amount" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
-                        </div>
-
-                        <!-- Bank Charges / Fees -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Bank Charges / Fees
-                            </label>
-                            <input type="number" step="0.01" min="0" name="bank_charges" id="expense_bank_charges" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
-                        </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Invoice Date
+                        </label>
+                        <input type="text" name="invoice_date" id="expense_invoice_date" class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD">
                     </div>
                 </div>
 
-                <!-- SECTION 2: Invoice / Provider Information -->
-                <div>
-                    <h4 class="text-sm font-bold text-bgray-900 dark:text-white mb-4 pb-1 border-b border-bgray-200 dark:border-darkblack-400">
-                        Invoice / Provider Information
-                    </h4>
-
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <!-- Invoice # -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Invoice #
-                            </label>
-                            <input type="text" name="invoice_number" id="expense_invoice_number" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. INV-10023">
-                        </div>
-
-                        <!-- Service Provider -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Service Provider
-                            </label>
-                            <select name="service_provider_id" id="expense_service_provider_id" class="tom-select w-full">
-                                <option value="">Select Service Provider</option>
-                                @foreach ($service_providers as $provider)
-                                    <option value="{{ $provider->id }}">{{ $provider->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Category -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Category
-                            </label>
-                            <select name="category_id" id="expense_category_id" class="tom-select w-full">
-                                <option value="">Select Category</option>
-                                @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                <!-- Row 3: VAT payment & Local/Intl Payment -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            VAT Payment <x-red-star />
+                        </label>
+                        <select name="vat_payment" id="expense_vat_payment" required class="tom-select w-full">
+                            <option value="">Select VAT Payment</option>
+                            @foreach ($vat_payment_options as $val => $lbl)
+                                <option value="{{ $val }}">{{ $lbl }}</option>
+                            @endforeach
+                        </select>
                     </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Local/Intl Payment <x-red-star />
+                        </label>
+                        <select name="local_intl_payment" id="expense_local_intl_payment" required class="tom-select w-full">
+                            <option value="">Select Local/Intl</option>
+                            @foreach ($local_intl_options as $val => $lbl)
+                                <option value="{{ $val }}">{{ $lbl }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
 
-                    <!-- Service / Product -->
-                    <div class="mt-4">
+                <!-- Row 4: Payment Currency & Payment Amount -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Payment Currency
+                        </label>
+                        <input type="text" name="payment_currency" id="expense_payment_currency" value="AED" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. AED, USD, EUR">
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Payment Amount <x-red-star />
+                        </label>
+                        <input type="number" step="0.01" min="0" name="payment_amount" id="expense_payment_amount" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Row 5: Other Currency & Other Amount -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Other Currency
+                        </label>
+                        <input type="text" name="other_currency" id="expense_other_currency" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Specify if applicable">
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Other Amount
+                        </label>
+                        <input type="number" step="0.01" min="0" name="other_amount" id="expense_other_amount" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Row 6: VAT Amount & Bank Charges / Fees -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            VAT Amount
+                        </label>
+                        <input type="number" step="0.01" min="0" name="vat_amount" id="expense_vat_amount" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Bank Charges / Fees
+                        </label>
+                        <input type="number" step="0.01" min="0" name="bank_charges" id="expense_bank_charges" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Row 7: Invoice #, Service Provider, Category -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Invoice #
+                        </label>
+                        <input type="text" name="invoice_number" id="expense_invoice_number" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. INV-10023">
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Service Provider
+                        </label>
+                        <select name="service_provider_id" id="expense_service_provider_id" class="tom-select w-full">
+                            <option value="">Select Service Provider</option>
+                            @foreach ($service_providers as $provider)
+                                <option value="{{ $provider->id }}">{{ $provider->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Category
+                        </label>
+                        <select name="category_id" id="expense_category_id" class="tom-select w-full">
+                            <option value="">Select Category</option>
+                            @foreach ($categories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 8: Customer & Service / Product -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Customer
+                        </label>
+                        <select name="customer_id" id="expense_customer_id" class="tom-select w-full">
+                            <option value="">Select Customer</option>
+                            @foreach ($customers as $cust)
+                                <option value="{{ $cust->id }}">{{ $cust->name }} ({{ $cust->customer_code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Service / Product <x-red-star />
                         </label>
@@ -205,34 +203,12 @@
                     </div>
                 </div>
 
-                <!-- SECTION 3: Customer / Comment -->
+                <!-- Row 9: Comment -->
                 <div>
-                    <h4 class="text-sm font-bold text-bgray-900 dark:text-white mb-4 pb-1 border-b border-bgray-200 dark:border-darkblack-400">
-                        Customer & Additional Details
-                    </h4>
-
-                    <div class="grid grid-cols-1 gap-4">
-                        <!-- Customer Field (User facing label: Customer) -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Customer
-                            </label>
-                            <select name="customer_id" id="expense_customer_id" class="tom-select w-full">
-                                <option value="">Select Customer</option>
-                                @foreach ($customers as $cust)
-                                    <option value="{{ $cust->id }}">{{ $cust->name }} ({{ $cust->customer_code }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Comment -->
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                                Comment
-                            </label>
-                            <textarea name="comment" id="expense_comment" rows="3" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add any comments or notes..."></textarea>
-                        </div>
-                    </div>
+                    <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                        Comment
+                    </label>
+                    <textarea name="comment" id="expense_comment" rows="3" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add any comments or notes..."></textarea>
                 </div>
 
             </div>

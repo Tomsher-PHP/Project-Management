@@ -74,6 +74,7 @@ class ExpenseController extends Controller
                 'invoice_date' => $expense->invoice_date ? $expense->invoice_date->format('Y-m-d') : null,
                 'payment_currency' => $expense->payment_currency,
                 'other_currency' => $expense->other_currency,
+                'other_amount' => $expense->other_amount,
                 'payment_amount' => $expense->payment_amount,
                 'vat_amount' => $expense->vat_amount,
                 'bank_charges' => $expense->bank_charges,

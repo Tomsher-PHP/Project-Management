@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const invoiceDateInput = document.getElementById("expense_invoice_date");
     const paymentCurrencyInput = document.getElementById("expense_payment_currency");
     const otherCurrencyInput = document.getElementById("expense_other_currency");
+    const otherAmountInput = document.getElementById("expense_other_amount");
     const paymentAmountInput = document.getElementById("expense_payment_amount");
     const vatAmountInput = document.getElementById("expense_vat_amount");
     const bankChargesInput = document.getElementById("expense_bank_charges");
@@ -122,6 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Reset defaults
         if (paymentCurrencyInput) paymentCurrencyInput.value = "AED";
         if (otherCurrencyInput) otherCurrencyInput.value = "";
+        if (otherAmountInput) otherAmountInput.value = "";
         if (paymentAmountInput) paymentAmountInput.value = "";
         if (vatAmountInput) vatAmountInput.value = "";
         if (bankChargesInput) bankChargesInput.value = "";
@@ -227,6 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (paymentCurrencyInput) paymentCurrencyInput.value = data.payment_currency || "AED";
         if (otherCurrencyInput) otherCurrencyInput.value = data.other_currency || "";
+        if (otherAmountInput) otherAmountInput.value = data.other_amount !== null && data.other_amount !== undefined ? data.other_amount : "";
         if (paymentAmountInput) paymentAmountInput.value = data.payment_amount !== null && data.payment_amount !== undefined ? data.payment_amount : "";
         if (vatAmountInput) vatAmountInput.value = data.vat_amount !== null && data.vat_amount !== undefined ? data.vat_amount : "";
         if (bankChargesInput) bankChargesInput.value = data.bank_charges !== null && data.bank_charges !== undefined ? data.bank_charges : "";

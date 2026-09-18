@@ -13,16 +13,20 @@ class Expense extends Model
 {
     use SoftDeletes, Filterable, Sortable, HasFormOptions;
 
-    public const VAT_PAYMENT_VAT = 'VAT';
-    public const VAT_PAYMENT_NO_VAT = 'No VAT';
+    public const VAT_PAYMENT_VAT = 'vat';
+    public const VAT_PAYMENT_NO_VAT = 'no_vat';
+    public const VAT_PAYMENT_RCM = 'rcm';
 
     public const VAT_PAYMENT_OPTIONS = [
         self::VAT_PAYMENT_VAT => 'VAT',
         self::VAT_PAYMENT_NO_VAT => 'No VAT',
+        self::VAT_PAYMENT_RCM => 'RCM',
     ];
 
-    public const LOCAL_INTL_LOCAL = 'Local';
-    public const LOCAL_INTL_INTERNATIONAL = 'International';
+    public const DEFAULT_VAT_PERCENTAGE = 5;
+
+    public const LOCAL_INTL_LOCAL = 'local';
+    public const LOCAL_INTL_INTERNATIONAL = 'international';
 
     public const LOCAL_INTL_OPTIONS = [
         self::LOCAL_INTL_LOCAL => 'Local',
@@ -36,8 +40,9 @@ class Expense extends Model
         'paid_date',
         'invoice_date',
         'payment_currency',
-        'other_currency',
         'payment_amount',
+        'other_currency',
+        'other_amount',
         'vat_amount',
         'bank_charges',
         'invoice_number',
@@ -69,6 +74,7 @@ class Expense extends Model
             'paid_date' => 'date',
             'invoice_date' => 'date',
             'payment_amount' => 'decimal:2',
+            'other_amount' => 'decimal:2',
             'vat_amount' => 'decimal:2',
             'bank_charges' => 'decimal:2',
             'payment_mode_id' => 'integer',

@@ -35,6 +35,7 @@ class ExpenseUpdateRequest extends FormRequest
             'invoice_date' => ['nullable', 'date'],
             'payment_currency' => ['required', 'string', 'max:10'],
             'other_currency' => ['nullable', 'string', 'max:10'],
+            'other_amount' => ['nullable', 'numeric', 'min:0'],
             'payment_amount' => ['required', 'numeric', 'min:0'],
             'vat_amount' => ['nullable', 'numeric', 'min:0'],
             'bank_charges' => ['nullable', 'numeric', 'min:0'],

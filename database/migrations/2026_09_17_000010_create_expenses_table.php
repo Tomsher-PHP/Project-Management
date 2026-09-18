@@ -13,13 +13,18 @@ return new class extends Migration
 
             // Payment information
             $table->foreignId('payment_mode_id')->nullable()->constrained('expense_payment_modes')->nullOnDelete();
-            $table->string('vat_payment', 20)->default('No VAT');
-            $table->string('local_intl_payment', 20)->default('Local');
             $table->date('paid_date');
             $table->date('invoice_date')->nullable();
-            $table->string('payment_currency', 10)->default('AED');
-            $table->string('other_currency', 10)->nullable();
+
+            $table->string('vat_payment', 20)->default('No VAT');
+            $table->string('local_intl_payment', 20)->default('Local');
+
+            $table->string('payment_currency', 10);
             $table->decimal('payment_amount', 15, 2);
+
+            $table->string('other_currency', 10)->nullable();
+            $table->decimal('other_amount', 15, 2)->nullable();
+
             $table->decimal('vat_amount', 15, 2)->default(0.00);
             $table->decimal('bank_charges', 15, 2)->default(0.00);
 
@@ -31,7 +36,7 @@ return new class extends Migration
 
             // Customer & comment
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
-            $table->text('comment')->nullable();
+            $table->mediumText('comment')->nullable();
 
             // Audit & status fields
             $table->foreignId('added_by')->nullable()->constrained('users')->nullOnDelete();
