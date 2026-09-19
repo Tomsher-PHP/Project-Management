@@ -38,6 +38,10 @@ class ExpenseServices
         return DB::transaction(function () use ($data) {
             $data['vat_amount'] = $data['vat_amount'] ?? 0.00;
             $data['bank_charges'] = $data['bank_charges'] ?? 0.00;
+            $data['vat_percentage'] = $this->calculateVatPercentage(
+                $data['payment_amount'] ?? 0,
+                $data['vat_amount']
+            );
 
             return Expense::create($data);
         });
@@ -46,13 +50,30 @@ class ExpenseServices
     public function updateExpense(Expense $expense, array $data): Expense
     {
         return DB::transaction(function () use ($expense, $data) {
-            $data['vat_amount'] = $data['vat_amount'] ?? 0.00;
-            $data['bank_charges'] = $data['bank_charges'] ?? 0.00;
+            $data['vat_amount'] = $data['vat_amount'] ?? $expense->vat_amount ?? 0.00;
+            $data['bank_charges'] = $data['bank_charges'] ?? $expense->bank_charges ?? 0.00;
+
+            $paymentAmount = $data['payment_amount'] ?? $expense->payment_amount ?? 0;
+            $vatAmount = $data['vat_amount'];
+
+            $data['vat_percentage'] = $this->calculateVatPercentage($paymentAmount, $vatAmount);
 
             $expense->update($data);
 
             return $expense->refresh();
         });
+    }
+
+    private function calculateVatPercentage(float|int|string $paymentAmount, float|int|string $vatAmount): float
+    {
+        $payment = (float) $paymentAmount;
+        $vat = (float) $vatAmount;
+
+        if ($payment > 0 && $vat > 0) {
+            return round(($vat / $payment) * 100, 2);
+        }
+
+        return 0.00;
     }
 
     public function deleteExpense(Expense $expense): bool

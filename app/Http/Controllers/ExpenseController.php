@@ -75,6 +75,7 @@ class ExpenseController extends Controller
                 'other_currency' => $expense->other_currency,
                 'other_amount' => $expense->other_amount,
                 'payment_amount' => $expense->payment_amount,
+                'vat_percentage' => $expense->vat_percentage,
                 'vat_amount' => $expense->vat_amount,
                 'bank_charges' => $expense->bank_charges,
                 'invoice_number' => $expense->invoice_number,

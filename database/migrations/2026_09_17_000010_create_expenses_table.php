@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('other_currency', 10)->nullable();
             $table->decimal('other_amount', 15, 2)->nullable();
 
+            $table->decimal('vat_percentage', 5, 2)->nullable();
             $table->decimal('vat_amount', 15, 2)->default(0.00);
             $table->decimal('bank_charges', 15, 2)->default(0.00);
 
