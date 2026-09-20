@@ -33,6 +33,19 @@ class ExpenseServices
             ->withQueryString();
     }
 
+    public function getExpenseDetails(Expense $expense): Expense
+    {
+        return $expense->load([
+            'paymentMode',
+            'serviceProvider',
+            'category',
+            'vendor',
+            'customer',
+            'addedBy',
+            'updatedBy',
+        ]);
+    }
+
     public function createExpense(array $data): Expense
     {
         return DB::transaction(function () use ($data) {

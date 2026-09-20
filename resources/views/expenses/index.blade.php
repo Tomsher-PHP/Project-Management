@@ -201,14 +201,12 @@
 
                                         <!-- Actions -->
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <div class="flex items-center space-x-2">
+                                            <div class="flex items-center space-x-1">
+                                                @can('expense.view')
+                                                    <x-view-button action="javascript:void(0)" class="open-show-expense-modal-btn" data-expense-id="{{ $expense->id }}" data-show-url="{{ route('expenses.show', $expense->id) }}" title="View Expense Details" />
+                                                @endcan
                                                 @can('expense.edit')
-                                                    <button type="button" class="open-edit-expense-modal-btn inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-expense-id="{{ $expense->id }}" data-update-url="{{ route('expenses.update', $expense->id) }}" data-fetch-url="{{ route('expenses.edit', $expense->id) }}" data-expense='@json($expense)'>
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-5" />
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1-1-4 9.5-9.5z" />
-                                                        </svg>
-                                                    </button>
+                                                    <x-edit-button action="javascript:void(0)" class="open-edit-expense-modal-btn" data-expense-id="{{ $expense->id }}" data-update-url="{{ route('expenses.update', $expense->id) }}" data-fetch-url="{{ route('expenses.edit', $expense->id) }}" data-expense='@json($expense)' title="Edit Expense" />
                                                 @endcan
                                                 @can('expense.delete')
                                                     <x-delete-form :action="route('expenses.destroy', $expense->id)" />
@@ -241,6 +239,9 @@
         <x-filters.select name="vat_payment" label="VAT Payment" class="tom-select-no-search w-full" :options="$vat_payment_options" />
         <x-filters.select name="local_intl_payment" label="Local / Intl" class="tom-select-no-search w-full" :options="$local_intl_options" />
     </x-filters.drawer>
+
+    <!-- Show Details Modal -->
+    @include('expenses.show-modal')
 
     <!-- Create/Edit Form Modal -->
     @include('expenses.form-modal')

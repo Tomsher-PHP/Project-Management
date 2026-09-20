@@ -203,8 +203,68 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Open Edit Modal
+    // Show Modal elements
+    const showModal = document.getElementById("expense_show_modal");
+    const showModalContent = document.getElementById("expense_show_modal_content");
+    const closeShowBtns = document.querySelectorAll("[data-expense-show-modal-close]");
+
+    function openShowModal() {
+        if (!showModal) return;
+        showModal.classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+    }
+
+    function closeShowModal() {
+        if (!showModal) return;
+        showModal.classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
+        if (showModalContent) {
+            showModalContent.innerHTML = `<div class="flex items-center justify-center py-12 text-bgray-500"><svg class="animate-spin h-8 w-8 text-success-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
+        }
+    }
+
+    closeShowBtns.forEach((btn) => {
+        btn.addEventListener("click", closeShowModal);
+    });
+
+    if (showModal) {
+        showModal.addEventListener("click", (e) => {
+            if (e.target === showModal) {
+                closeShowModal();
+            }
+        });
+    }
+
+    // Open Show or Edit Modal
     document.addEventListener("click", async (e) => {
+        const showBtn = e.target.closest(".open-show-expense-modal-btn");
+        if (showBtn) {
+            e.preventDefault();
+            const showUrl = showBtn.dataset.showUrl;
+            if (!showUrl) return;
+
+            openShowModal();
+
+            try {
+                const response = await fetch(showUrl, {
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        Accept: "application/json",
+                    },
+                });
+                const resJson = await response.json();
+                if (resJson.status && resJson.html && showModalContent) {
+                    showModalContent.innerHTML = resJson.html;
+                }
+            } catch (err) {
+                console.error("Failed to fetch expense details:", err);
+                if (showModalContent) {
+                    showModalContent.innerHTML = `<div class="p-6 text-center text-red-600">Failed to load expense details. Please try again.</div>`;
+                }
+            }
+            return;
+        }
+
         const editBtn = e.target.closest(".open-edit-expense-modal-btn");
         if (!editBtn) return;
 

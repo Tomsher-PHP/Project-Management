@@ -42,6 +42,23 @@ class ExpenseController extends Controller
         ], $options));
     }
 
+    public function show(Expense $expense, Request $request): View|JsonResponse
+    {
+        $expense = $this->expenseService->getExpenseDetails($expense);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            $html = view('expenses.show-modal-content', compact('expense'))->render();
+
+            return response()->json([
+                'status' => true,
+                'data' => $expense,
+                'html' => $html,
+            ]);
+        }
+
+        return view('expenses.show-modal-content', compact('expense'));
+    }
+
     public function store(ExpenseStoreRequest $request): JsonResponse|RedirectResponse
     {
         $expense = $this->expenseService->createExpense($request->validated());

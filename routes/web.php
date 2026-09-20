@@ -795,7 +795,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.delete')->only(['destroy']);
 
     // Expense Transaction Routes
-    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.view')->only(['index']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.view')->only(['index', 'show']);
     Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.create')->only(['store']);
     Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.edit')->only(['edit', 'update']);
     Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.delete')->only(['destroy']);
