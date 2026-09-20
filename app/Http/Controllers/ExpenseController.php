@@ -68,6 +68,7 @@ class ExpenseController extends Controller
             'data' => [
                 'id' => $expense->id,
                 'payment_mode_id' => $expense->payment_mode_id,
+                'payment_mode_name' => $expense->paymentMode?->name,
                 'vat_payment' => $expense->vat_payment,
                 'local_intl_payment' => $expense->local_intl_payment,
                 'paid_date' => $expense->paid_date ? $expense->paid_date->format('Y-m-d') : null,
@@ -80,10 +81,14 @@ class ExpenseController extends Controller
                 'bank_charges' => $expense->bank_charges,
                 'invoice_number' => $expense->invoice_number,
                 'service_provider_id' => $expense->service_provider_id,
+                'service_provider_name' => $expense->serviceProvider?->name,
                 'category_id' => $expense->category_id,
+                'category_name' => $expense->category?->name,
                 'vendor_id' => $expense->vendor_id,
+                'vendor_name' => $expense->vendor?->name,
                 'service_product' => $expense->service_product,
                 'customer_id' => $expense->customer_id,
+                'customer_name' => $expense->customer?->name,
                 'comment' => $expense->comment,
             ],
         ]);

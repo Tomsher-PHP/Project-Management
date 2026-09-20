@@ -108,27 +108,27 @@ class Expense extends Model
 
     public function paymentMode()
     {
-        return $this->belongsTo(ExpensePaymentMode::class, 'payment_mode_id');
+        return $this->belongsTo(ExpensePaymentMode::class, 'payment_mode_id')->withTrashed();
     }
 
     public function serviceProvider()
     {
-        return $this->belongsTo(ExpenseServiceProvider::class, 'service_provider_id');
+        return $this->belongsTo(ExpenseServiceProvider::class, 'service_provider_id')->withTrashed();
     }
 
     public function category()
     {
-        return $this->belongsTo(ExpenseCategory::class, 'category_id');
+        return $this->belongsTo(ExpenseCategory::class, 'category_id')->withTrashed();
     }
 
     public function vendor()
     {
-        return $this->belongsTo(Vendor::class, 'vendor_id');
+        return $this->belongsTo(Vendor::class, 'vendor_id')->withTrashed();
     }
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id')->withTrashed();
     }
 
     public function addedBy()

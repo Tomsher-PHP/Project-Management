@@ -71,13 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
         errorContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
-    function setSelectValue(selectEl, value) {
+    function setSelectValue(selectEl, value, label = null) {
         if (!selectEl) return;
         const valStr = value !== null && value !== undefined ? String(value) : "";
 
         if (selectEl.tomselect) {
             if (valStr && !selectEl.tomselect.options[valStr]) {
-                selectEl.tomselect.addOption({ value: valStr, text: valStr });
+                const optText = label || valStr;
+                selectEl.tomselect.addOption({ value: valStr, text: optText });
             }
             selectEl.tomselect.setValue(valStr, true);
         } else {
@@ -257,13 +258,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function populateForm(data) {
         if (expenseIdInput) expenseIdInput.value = data.id || "";
-        setSelectValue(paymentModeSelect, data.payment_mode_id);
+
+        const paymentModeName = data.payment_mode_name || data.payment_mode?.name || null;
+        const serviceProviderName = data.service_provider_name || data.service_provider?.name || null;
+        const categoryName = data.category_name || data.category?.name || null;
+        const vendorName = data.vendor_name || data.vendor?.name || null;
+        const customerName = data.customer_name || data.customer?.name || null;
+
+        setSelectValue(paymentModeSelect, data.payment_mode_id, paymentModeName);
         setSelectValue(vatPaymentSelect, data.vat_payment);
         setSelectValue(localIntlSelect, data.local_intl_payment);
-        setSelectValue(serviceProviderSelect, data.service_provider_id);
-        setSelectValue(categorySelect, data.category_id);
-        setSelectValue(vendorSelect, data.vendor_id);
-        setSelectValue(customerSelect, data.customer_id);
+        setSelectValue(serviceProviderSelect, data.service_provider_id, serviceProviderName);
+        setSelectValue(categorySelect, data.category_id, categoryName);
+        setSelectValue(vendorSelect, data.vendor_id, vendorName);
+        setSelectValue(customerSelect, data.customer_id, customerName);
         setSelectValue(otherCurrencySelect, data.other_currency);
 
         setDatepickerValue(paidDateInput, data.paid_date || getTodayDateString());

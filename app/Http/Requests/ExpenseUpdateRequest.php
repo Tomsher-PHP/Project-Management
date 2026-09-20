@@ -19,7 +19,7 @@ class ExpenseUpdateRequest extends FormRequest
             'payment_mode_id' => [
                 'required',
                 'integer',
-                Rule::exists('expense_payment_modes', 'id')->whereNull('deleted_at'),
+                Rule::exists('expense_payment_modes', 'id'),
             ],
             'vat_payment' => [
                 'required',
@@ -42,23 +42,23 @@ class ExpenseUpdateRequest extends FormRequest
             'service_provider_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('expense_service_providers', 'id')->whereNull('deleted_at'),
+                Rule::exists('expense_service_providers', 'id'),
             ],
             'category_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('expense_categories', 'id')->whereNull('deleted_at'),
+                Rule::exists('expense_categories', 'id'),
             ],
             'vendor_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('vendors', 'id')->whereNull('deleted_at'),
+                Rule::exists('vendors', 'id'),
             ],
             'service_product' => ['nullable', 'string'],
             'customer_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('customers', 'id')->whereNull('deleted_at'),
+                Rule::exists('customers', 'id'),
             ],
             'comment' => ['nullable', 'string'],
         ];
