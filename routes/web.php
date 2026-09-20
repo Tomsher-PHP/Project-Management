@@ -9,6 +9,7 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
 use App\Http\Controllers\ChecklistController;
+use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\CompanyExpensesSettingsController;
 use App\Http\Controllers\ConfigurationController;
@@ -799,6 +800,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.create')->only(['store']);
     Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.edit')->only(['edit', 'update']);
     Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.delete')->only(['destroy']);
+
+    // Cheque Expense Routes
+    Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.view')->only(['index', 'show']);
+    Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.create')->only(['store']);
+    Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.edit')->only(['edit', 'update']);
+    Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.delete')->only(['destroy']);
 });
 
 Route::get('api-test', function () {

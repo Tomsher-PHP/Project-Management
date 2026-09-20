@@ -125,6 +125,13 @@ return [
     ['name' => 'expense.edit',       'label' => 'Expense', 'sort_order' => 15030, 'default_checked' => false],
     ['name' => 'expense.delete',     'label' => 'Expense', 'sort_order' => 15040, 'default_checked' => false],
 
+    // CHECK EXPENSE
+    ['name' => 'check_expense.view_all',   'label' => 'Check Expense', 'sort_order' => 15050, 'default_checked' => false],
+    ['name' => 'check_expense.view',       'label' => 'Check Expense', 'sort_order' => 15060, 'default_checked' => false],
+    ['name' => 'check_expense.create',     'label' => 'Check Expense', 'sort_order' => 15070, 'default_checked' => false],
+    ['name' => 'check_expense.edit',       'label' => 'Check Expense', 'sort_order' => 15080, 'default_checked' => false],
+    ['name' => 'check_expense.delete',     'label' => 'Check Expense', 'sort_order' => 15090, 'default_checked' => false],
+
     //======================================================================
     // Requests Actions Start
     //======================================================================
