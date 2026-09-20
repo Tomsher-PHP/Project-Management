@@ -23,6 +23,7 @@ class Expense extends Model
         self::VAT_PAYMENT_RCM => 'RCM',
     ];
 
+    public const DEFAULT_VAT_PAYMENT = self::VAT_PAYMENT_VAT;
     public const DEFAULT_VAT_PERCENTAGE = 5;
 
     public const LOCAL_INTL_LOCAL = 'local';
@@ -32,6 +33,8 @@ class Expense extends Model
         self::LOCAL_INTL_LOCAL => 'Local',
         self::LOCAL_INTL_INTERNATIONAL => 'International',
     ];
+
+    public const DEFAULT_LOCAL_INTL_PAYMENT = self::LOCAL_INTL_LOCAL;
 
     protected $fillable = [
         'payment_mode_id',

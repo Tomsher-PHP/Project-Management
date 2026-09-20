@@ -143,12 +143,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Reset TomSelects
         const defaultPaymentMode = paymentModeSelect?.dataset?.defaultValue || paymentModeSelect?.querySelector('option[selected]')?.value || "";
+        const defaultVatPayment = vatPaymentSelect?.dataset?.defaultValue || vatPaymentSelect?.querySelector('option[selected]')?.value || "";
+        const defaultLocalIntl = localIntlSelect?.dataset?.defaultValue || localIntlSelect?.querySelector('option[selected]')?.value || "";
         const defaultServiceProvider = serviceProviderSelect?.dataset?.defaultValue || serviceProviderSelect?.querySelector('option[selected]')?.value || "";
         const defaultCategory = categorySelect?.dataset?.defaultValue || categorySelect?.querySelector('option[selected]')?.value || "";
 
         setSelectValue(paymentModeSelect, defaultPaymentMode);
-        setSelectValue(vatPaymentSelect, "");
-        setSelectValue(localIntlSelect, "");
+        setSelectValue(vatPaymentSelect, defaultVatPayment);
+        setSelectValue(localIntlSelect, defaultLocalIntl);
         setSelectValue(serviceProviderSelect, defaultServiceProvider);
         setSelectValue(categorySelect, defaultCategory);
         setSelectValue(vendorSelect, "");

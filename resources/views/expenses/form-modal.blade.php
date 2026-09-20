@@ -1,17 +1,3 @@
-@php
-    $payment_modes = $payment_modes ?? \App\Models\ExpensePaymentMode::active()->orderBy('sort_order')->get();
-    $service_providers = $service_providers ?? \App\Models\ExpenseServiceProvider::active()->orderBy('sort_order')->get();
-    $categories = $categories ?? \App\Models\ExpenseCategory::active()->orderBy('sort_order')->get();
-    $vendors = $vendors ?? \App\Models\Vendor::active()->orderBy('name')->get();
-    $customers = $customers ?? \App\Models\Customer::where('is_active', true)->orderBy('name')->get();
-    $vat_payment_options = $vat_payment_options ?? \App\Models\Expense::VAT_PAYMENT_OPTIONS;
-    $local_intl_options = $local_intl_options ?? \App\Models\Expense::LOCAL_INTL_OPTIONS;
-
-    $default_payment_mode_id = $payment_modes->firstWhere('is_default', true)?->id ?? '';
-    $default_service_provider_id = $service_providers->firstWhere('is_default', true)?->id ?? '';
-    $default_category_id = $categories->firstWhere('is_default', true)?->id ?? '';
-@endphp
-
 <div id="expense_modal" class="fixed inset-0 z-50 {{ $errors->any() ? '' : 'hidden' }} overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-6 md:p-10 flex items-center justify-center">
     <div class="relative w-full max-w-4xl rounded-[8px] bg-white shadow-xl dark:bg-darkblack-600 my-8">
 
@@ -87,10 +73,10 @@
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             VAT Payment <x-red-star />
                         </label>
-                        <select name="vat_payment" id="expense_vat_payment" required class="tom-select-no-search w-full">
+                        <select name="vat_payment" id="expense_vat_payment" required class="tom-select-no-search w-full" data-default-value="{{ \App\Models\Expense::DEFAULT_VAT_PAYMENT }}">
                             <option value="">Select VAT Payment</option>
                             @foreach ($vat_payment_options as $val => $lbl)
-                                <option value="{{ $val }}">{{ $lbl }}</option>
+                                <option value="{{ $val }}" {{ $val === \App\Models\Expense::DEFAULT_VAT_PAYMENT ? 'selected' : '' }}>{{ $lbl }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -98,10 +84,10 @@
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Local/Intl Payment <x-red-star />
                         </label>
-                        <select name="local_intl_payment" id="expense_local_intl_payment" required class="tom-select-no-search w-full">
+                        <select name="local_intl_payment" id="expense_local_intl_payment" required class="tom-select-no-search w-full" data-default-value="{{ \App\Models\Expense::DEFAULT_LOCAL_INTL_PAYMENT }}">
                             <option value="">Select Local/Intl</option>
                             @foreach ($local_intl_options as $val => $lbl)
-                                <option value="{{ $val }}">{{ $lbl }}</option>
+                                <option value="{{ $val }}" {{ $val === \App\Models\Expense::DEFAULT_LOCAL_INTL_PAYMENT ? 'selected' : '' }}>{{ $lbl }}</option>
                             @endforeach
                         </select>
                     </div>

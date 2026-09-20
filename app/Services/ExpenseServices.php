@@ -85,14 +85,21 @@ class ExpenseServices
 
     public function getFormOptions(): array
     {
+        $paymentModes = ExpensePaymentMode::query()->active()->orderBy('sort_order')->get();
+        $serviceProviders = ExpenseServiceProvider::query()->active()->orderBy('sort_order')->get();
+        $categories = ExpenseCategory::query()->active()->orderBy('sort_order')->get();
+
         return [
-            'payment_modes' => ExpensePaymentMode::query()->active()->orderBy('sort_order')->get(),
-            'service_providers' => ExpenseServiceProvider::query()->active()->orderBy('sort_order')->get(),
-            'categories' => ExpenseCategory::query()->active()->orderBy('sort_order')->get(),
+            'payment_modes' => $paymentModes,
+            'service_providers' => $serviceProviders,
+            'categories' => $categories,
             'vendors' => Vendor::query()->active()->orderBy('name')->get(['id', 'name']),
             'customers' => Customer::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'customer_code']),
             'vat_payment_options' => Expense::VAT_PAYMENT_OPTIONS,
             'local_intl_options' => Expense::LOCAL_INTL_OPTIONS,
+            'default_payment_mode_id' => $paymentModes->firstWhere('is_default', true)?->id ?? '',
+            'default_service_provider_id' => $serviceProviders->firstWhere('is_default', true)?->id ?? '',
+            'default_category_id' => $categories->firstWhere('is_default', true)?->id ?? '',
         ];
     }
 }
