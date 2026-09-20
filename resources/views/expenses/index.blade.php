@@ -86,14 +86,14 @@
 
                                         <!-- 4. VAT Payment -->
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium {{ $expense->vat_payment === \App\Models\Expense::VAT_PAYMENT_VAT ? 'bg-success-50 text-success-300 dark:bg-darkblack-500 dark:text-success-600' : 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300' }}">
+                                            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold {{ $expense->vat_payment === \App\Models\Expense::VAT_PAYMENT_VAT ? 'bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-600' : 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300' }}">
                                                 {{ strtoupper($expense->vat_payment) }}
                                             </span>
                                         </td>
 
                                         <!-- 5. Local/Intl Payment -->
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium {{ $expense->local_intl_payment === \App\Models\Expense::LOCAL_INTL_INTERNATIONAL ? 'bg-purple-500 text-white dark:bg-darkblack-500 dark:text-purple-500' : 'bg-blue-500 text-white dark:bg-darkblack-500 dark:text-blue-500' }}">
+                                            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold {{ $expense->local_intl_payment === \App\Models\Expense::LOCAL_INTL_INTERNATIONAL ? 'bg-purple-500 text-white dark:bg-darkblack-500 dark:text-purple-500' : 'bg-blue-500 text-white dark:bg-darkblack-500 dark:text-blue-500' }}">
                                                 {{ strtoupper($expense->local_intl_payment) }}
                                             </span>
                                         </td>
@@ -230,12 +230,11 @@
 
     <!-- Filter Drawer -->
     <x-filters.drawer>
-        <x-filters.input-search name="invoice_number" label="Invoice Number" />
-        <x-filters.select name="payment_mode_id" label="Payment Mode" :options="$payment_modes->pluck('name', 'id')->toArray()" />
-        <x-filters.select name="service_provider_id" label="Service Provider" :options="$service_providers->pluck('name', 'id')->toArray()" />
-        <x-filters.select name="category_id" label="Category" :options="$categories->pluck('name', 'id')->toArray()" />
-        <x-filters.select name="vendor_id" label="Vendor" :options="$vendors->pluck('name', 'id')->toArray()" />
-        <x-filters.select name="customer_id" label="Customer" :options="$customers->pluck('name', 'id')->toArray()" />
+        <x-filters.multi-select name="payment_mode_id" label="Payment Mode" :options="$payment_modes" />
+        <x-filters.multi-select name="service_provider_id" label="Service Provider" :options="$service_providers" />
+        <x-filters.multi-select name="category_id" label="Category" :options="$categories" />
+        <x-filters.multi-select name="vendor_id" label="Vendor" :options="$vendors" />
+        <x-filters.multi-select name="customer_id" label="Customer" :options="$customers" />
         <x-filters.select name="vat_payment" label="VAT Payment" class="tom-select-no-search w-full" :options="$vat_payment_options" />
         <x-filters.select name="local_intl_payment" label="Local / Intl" class="tom-select-no-search w-full" :options="$local_intl_options" />
     </x-filters.drawer>
