@@ -73,27 +73,27 @@
                                         <!-- 2. Paid Date -->
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <span class="text-sm font-semibold text-bgray-900 dark:text-white">
-                                                {{ $expense->paid_date ? $expense->paid_date->format('d M Y') : '--' }}
+                                                @appDate($expense->paid_date)
                                             </span>
                                         </td>
 
                                         <!-- 3. Invoice Date -->
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <span class="text-sm text-bgray-700 dark:text-bgray-300">
-                                                {{ $expense->invoice_date ? $expense->invoice_date->format('d M Y') : '--' }}
+                                                @appDate($expense->invoice_date)
                                             </span>
                                         </td>
 
                                         <!-- 4. VAT Payment -->
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium {{ $expense->vat_payment === \App\Models\Expense::VAT_PAYMENT_VAT ? 'bg-success-50 text-success-600 dark:bg-darkblack-500 dark:text-success-300' : 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-400' }}">
+                                            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium {{ $expense->vat_payment === \App\Models\Expense::VAT_PAYMENT_VAT ? 'bg-success-50 text-success-300 dark:bg-darkblack-500 dark:text-success-600' : 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300' }}">
                                                 {{ strtoupper($expense->vat_payment) }}
                                             </span>
                                         </td>
 
                                         <!-- 5. Local/Intl Payment -->
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium {{ $expense->local_intl_payment === \App\Models\Expense::LOCAL_INTL_INTERNATIONAL ? 'bg-purple-500 text-white dark:bg-darkblack-500 dark:text-purple-300' : 'bg-blue-500 text-white dark:bg-darkblack-500 dark:text-blue-300' }}">
+                                            <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium {{ $expense->local_intl_payment === \App\Models\Expense::LOCAL_INTL_INTERNATIONAL ? 'bg-purple-500 text-white dark:bg-darkblack-500 dark:text-purple-500' : 'bg-blue-500 text-white dark:bg-darkblack-500 dark:text-blue-500' }}">
                                                 {{ strtoupper($expense->local_intl_payment) }}
                                             </span>
                                         </td>
@@ -147,14 +147,14 @@
 
                                         <!-- 12. Service Provider -->
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="text-sm font-semibold text-bgray-800 dark:text-bgray-100">
+                                            <span class="text-sm font-semibold text-bgray-800 dark:text-bgray-300">
                                                 {{ $expense->serviceProvider?->name ?: '--' }}
                                             </span>
                                         </td>
 
                                         <!-- 13. Category -->
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="text-sm text-bgray-700 dark:text-bgray-400">
+                                            <span class="text-sm text-bgray-700 dark:text-bgray-300">
                                                 {{ $expense->category?->name ?: '--' }}
                                             </span>
                                         </td>
@@ -168,7 +168,7 @@
 
                                         <!-- 15. Customer -->
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="text-sm font-medium text-bgray-800 dark:text-bgray-100">
+                                            <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                                 {{ $expense->customer?->name ?: '--' }}
                                             </span>
                                         </td>
@@ -190,11 +190,11 @@
                                         <!-- 18. Created (username and date below) -->
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <div class="flex flex-col">
-                                                <span class="text-sm font-medium text-bgray-900 dark:text-white">
+                                                <span class="text-sm font-medium text-bgray-800 dark:text-bgray-300">
                                                     {{ $expense->addedBy?->name ?: '--' }}
                                                 </span>
-                                                <span class="text-xs text-bgray-700 dark:text-bgray-400">
-                                                    {{ $expense->created_at ? $expense->created_at->format('d M Y, h:i A') : '--' }}
+                                                <span class="text-xs text-bgray-700 dark:text-bgray-300">
+                                                    @appDate($expense->created_at)
                                                 </span>
                                             </div>
                                         </td>
