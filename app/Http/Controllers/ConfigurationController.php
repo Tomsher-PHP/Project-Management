@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ConfigurationRequest;
 use App\Models\Configuration;
+use App\Models\Country;
 use App\Services\AttachmentService;
 use Illuminate\Support\Facades\Cache;
 
@@ -24,10 +25,28 @@ class ConfigurationController extends Controller
     public function edit()
     {
         $config = $this->getConfiguration();
+
+        if (blank($config->currency)) {
+            $config->currency = config('constants.currency', 'AED');
+        }
+
+        $currencyOption = null;
+        if (!blank($config->currency)) {
+            $country = Country::where('currency', $config->currency)->first();
+            $label = $country && $country->currency_symbol
+                ? "{$config->currency} ({$country->currency_symbol})"
+                : $config->currency;
+
+            $currencyOption = [
+                'id' => $config->currency,
+                'name' => $label,
+            ];
+        }
+
         $dateFormats = config('constants.date_formats');
         $timeFormats = config('constants.time_formats');
 
-        return view('settings.configurations.page', compact('config', 'dateFormats', 'timeFormats'));
+        return view('settings.configurations.page', compact('config', 'dateFormats', 'timeFormats', 'currencyOption'));
     }
 
     public function update(ConfigurationRequest $request, AttachmentService $attachmentService)

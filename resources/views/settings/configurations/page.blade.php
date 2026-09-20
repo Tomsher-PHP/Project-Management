@@ -202,11 +202,17 @@
                                         </span>
                                     </span>
                                 </label>
+                                @php
+                                    $selectedCurrency = old('currency', $config->currency ?? config('constants.currency', 'AED'));
+                                    $selectedCurrencyLabel = isset($currencyOption) && $currencyOption['id'] === $selectedCurrency
+                                        ? $currencyOption['name']
+                                        : $selectedCurrency;
+                                @endphp
                                 <select name="currency" id="currency" class="tom-select-lazy w-full" data-route="{{ route('currencies.search') }}" data-placeholder="Start typing to search currency...">
                                     <option value="">Select Currency</option>
-                                    @if (old('currency', $config->currency ?? false))
-                                        <option value="{{ old('currency', $config->currency) }}" selected>
-                                            {{ old('currency', $config->currency) }}
+                                    @if ($selectedCurrency)
+                                        <option value="{{ $selectedCurrency }}" selected>
+                                            {{ $selectedCurrencyLabel }}
                                         </option>
                                     @endif
                                 </select>
