@@ -93,6 +93,7 @@
                                 $requestUser = $changeRequest->user;
                                 $timeLog = $changeRequest->timeLog;
                                 $task = $timeLog?->task;
+                                $project = $task?->project;
                                 $isStartChanged = optional($changeRequest->old_started_at)?->equalTo($changeRequest->new_started_at) === false;
                                 $isEndChanged = optional($changeRequest->old_ended_at)?->equalTo($changeRequest->new_ended_at) === false;
                                 $statusClasses = $changeRequest->status === 'approved' ? 'bg-success-50 text-success-300' : ($changeRequest->status === 'rejected' ? 'bg-error-50 text-error-300' : 'bg-warning-50 text-warning-300');
@@ -171,7 +172,7 @@
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     @if ($changeRequest->isPending() && (!$changeRequest->is_self_requested || auth()->user()->is_super_admin))
                                         <div class="flex min-w-[190px] flex-wrap items-center gap-2">
-                                            <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-time-log-change-request-approve-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-reason="{{ $changeRequest->reason ?? '--' }}" data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}" data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}">
+                                            <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-time-log-change-request-approve-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-project-name="{{ $project?->name ?? 'Unknown Project' }}" data-reason="{{ $changeRequest->reason ?? '--' }}" data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}" data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}">
                                                 Approve
                                             </button>
 
@@ -232,11 +233,15 @@
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">User</span>
                             <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-user-name>--</span>
                         </div>
-                        <div>
+                        <div class="break-word">
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">Task</span>
                             <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-task-name>--</span>
                         </div>
-                        <div class="sm:col-span-2">
+                        <div class="break-word">
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">Project</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-project-name>--</span>
+                        </div>
+                        <div class="break-word">
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">Reason</span>
                             <p class="whitespace-pre-wrap text-bgray-900 dark:text-white" data-time-log-change-request-approve-reason>--</p>
                         </div>

@@ -645,6 +645,16 @@ class LeaveRequestController extends Controller
                     );
             }
 
+            /*
+            * Notify the selected employee when leave is
+            * marked from the attendance sheet.
+            */
+            $this->notificationService
+                ->notifyLeaveMarkedFromAttendance(
+                    $leaveRequest,
+                    $loggedInUser
+                );
+
             return redirect()
                 ->route(
                     'attendance.index',
@@ -2666,17 +2676,18 @@ class LeaveRequestController extends Controller
                 );
         }
 
-        /*
-         * Notify assigned approvers when employee cancels
-         * their own request.
-         */
-        if ($leaveRequest->user_id === $authUser->id) {
-            $this->notificationService
-                ->notifyLeaveRequestUpdated(
-                    $leaveRequest,
-                    $authUser->id
-                );
-        }
+       /*
+        * Notify the appropriate users when the leave
+        * request is cancelled.
+        *
+        * The notification service determines whether
+        * to notify approvers or the requester.
+        */
+        $this->notificationService
+            ->notifyLeaveRequestCancelled(
+                $leaveRequest,
+                (int) $authUser->id
+            );
 
         return redirect()
             ->route(

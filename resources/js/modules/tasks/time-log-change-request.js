@@ -347,6 +347,7 @@ const approvalModalSelectors = {
     submit: '[data-time-log-change-request-approve-submit]',
     userName: '[data-time-log-change-request-approve-user-name]',
     taskName: '[data-time-log-change-request-approve-task-name]',
+    projectName: '[data-time-log-change-request-approve-project-name]',
     reason: '[data-time-log-change-request-approve-reason]',
     currentStart: '[data-time-log-change-request-current-start]',
     currentEnd: '[data-time-log-change-request-current-end]',
@@ -397,6 +398,7 @@ const openApprovalModal = (trigger) => {
 
     modal.querySelector(approvalModalSelectors.userName).textContent = trigger.dataset.userName || 'Unknown User';
     modal.querySelector(approvalModalSelectors.taskName).textContent = trigger.dataset.taskName || 'Unknown Task';
+    modal.querySelector(approvalModalSelectors.projectName).textContent = 'dsgdfgfdgdfgfgdgfasgfaggbfd' + trigger.dataset.projectName || 'Unknown Project';
     modal.querySelector(approvalModalSelectors.reason).textContent = trigger.dataset.reason || '--';
     modal.querySelector(approvalModalSelectors.currentStart).textContent = trigger.dataset.currentStart || '--';
     modal.querySelector(approvalModalSelectors.currentEnd).textContent = trigger.dataset.currentEnd || '--';

@@ -3,30 +3,17 @@
     <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
         {{-- Header --}}
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h2 class="text-2xl font-semibold text-bgray-900 dark:text-white">
-                    Leave Details
-                </h2>
-                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                    Leave entitlement and balance details for
-                    <span class="font-semibold">
-                        {{ $user->name }}
-                    </span>
-                </p>
-            </div>
 
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('users.index') }}"
-                    class="inline-flex items-center rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-medium text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                    Back
-                </a>
+                <x-back-button />
+
                 @can('user.leave_details.create')
                     <a href="{{ route('users.leave-details', ['user' => $user->id, 'add' => 1]) }}"
-                        class="inline-flex items-center rounded-lg bg-success-300 px-5 py-2.5 text-sm font-semibold text-white hover:bg-success-400">
-                        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        class="inline-flex items-center gap-1 rounded-md border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
                         </svg>
-                        Add New Leave Year
+                        <span>Add New Leave Year</span>
                     </a>
                 @endcan
             </div>
