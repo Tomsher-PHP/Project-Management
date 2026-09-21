@@ -23,7 +23,8 @@ class TaskTimeLogChangeRequestService
                 'user:id,name',
                 'user.primaryAttachment',
                 'timeLog:id,task_id,user_id,started_at,ended_at,duration_seconds,is_running',
-                'timeLog.task:id,name',
+                'timeLog.task:id,name,project_id',
+                'timeLog.task.project',
                 'approver:id,name',
                 'rejector:id,name',
             ])

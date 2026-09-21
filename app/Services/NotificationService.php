@@ -2196,28 +2196,62 @@ class NotificationService
 
     /**
      * Notify relevant users when a leave request is cancelled.
+     *
+     * Rules:
+     * - If the requester cancels their own leave:
+     *   Notify assigned approvers/reporting persons.
+     *
+     * - If an approver, manager, or Super Admin cancels the leave:
+     *   Notify the employee who requested the leave.
      */
-    public function notifyLeaveRequestCancelled(LeaveRequest $leaveRequest, ?int $actorUserId = null): void
-    {
+    public function notifyLeaveRequestCancelled(
+        LeaveRequest $leaveRequest,
+        ?int $actorUserId = null
+    ): void {
         $leaveRequest->loadMissing([
             'user:id,name',
             'leaveType:id,name',
         ]);
 
-        $recipientIds = collect(
-            $leaveRequest->assigned_to ?? []
-        )
-            ->filter()
-            ->map(fn($userId) => (int) $userId)
-            ->push(
-                $leaveRequest->user_id
-                    ? (int) $leaveRequest->user_id
-                    : null
+        $requesterId = (int) $leaveRequest->user_id;
+
+        if (!$requesterId) {
+            return;
+        }
+
+        $actorId = (int) ($actorUserId ?? 0);
+
+        /*
+        * Determine the recipient based on
+        * who cancelled the leave request.
+        */
+        if ($actorId === $requesterId) {
+            /*
+            * Employee cancelled their own leave.
+            *
+            * Notify assigned reporting persons,
+            * managers, or approvers.
+            */
+            $recipientIds = collect(
+                $leaveRequest->assigned_to ?? []
             )
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+                ->filter()
+                ->map(fn($userId) => (int) $userId)
+                ->reject(
+                    fn($userId) => $userId === $actorId
+                )
+                ->unique()
+                ->values()
+                ->all();
+        } else {
+            /*
+            * Manager, reporting person, or Super Admin
+            * cancelled the employee's leave.
+            *
+            * Notify only the employee who requested it.
+            */
+            $recipientIds = [$requesterId];
+        }
 
         if ($recipientIds === []) {
             return;
@@ -2229,13 +2263,35 @@ class NotificationService
         $leaveTypeName =
             $leaveRequest->leaveType?->name ?? 'Leave';
 
-        $message =
-            "{$requesterName} cancelled their {$leaveTypeName} leave request.";
+        /*
+        * Get the name of the person who cancelled
+        * the leave request.
+        */
+        $actor = $actorId
+            ? User::query()
+            ->select(['id', 'name'])
+            ->find($actorId)
+            : null;
+
+        $actorName =
+            $actor?->name ?? $requesterName;
+
+        /*
+        * Create a different message depending
+        * on who cancelled the request.
+        */
+        if ($actorId === $requesterId) {
+            $message =
+                "{$requesterName} cancelled their {$leaveTypeName} leave request.";
+        } else {
+            $message =
+                "{$actorName} cancelled {$requesterName}'s {$leaveTypeName} leave request.";
+        }
 
         $emailSubjectContext = [
             'type' => 'leave_request_cancelled',
-            'actor_id' => $actorUserId,
-            'actor_name' => $requesterName,
+            'actor_id' => $actorId ?: null,
+            'actor_name' => $actorName,
         ];
 
         $this->sendToMany(
@@ -2247,7 +2303,7 @@ class NotificationService
                 $leaveRequest
             ),
             UserNotificationSetting::LEAVE_REQUEST,
-            $actorUserId,
+            $actorId ?: null,
             null,
             $this->leaveEmailDetails($leaveRequest),
             $emailSubjectContext
@@ -2325,6 +2381,152 @@ class NotificationService
         }
 
         return $details;
+    }
+
+    /**
+     * Notify the employee when an approver reviews their leave request.
+     *
+     * Supported actions:
+     * - update
+     * - approve
+     * - reject
+     */
+    public function notifyLeaveRequestReviewed(
+        LeaveRequest $leaveRequest,
+        User $reviewer,
+        string $action
+    ): void {
+        switch ($action) {
+            case 'update':
+                $this->notifyLeaveRequestReviewUpdated(
+                    $leaveRequest,
+                    $reviewer
+                );
+                break;
+
+            case 'approve':
+                $this->notifyLeaveRequestApproved(
+                    $leaveRequest,
+                    $reviewer
+                );
+                break;
+
+            case 'reject':
+                $this->notifyLeaveRequestRejected(
+                    $leaveRequest,
+                    $reviewer
+                );
+                break;
+
+            default:
+                throw new \InvalidArgumentException(
+                    "Unsupported leave request review action: {$action}"
+                );
+        }
+    }
+
+    /**
+     * Notify an employee when leave is marked for them
+     * from the Attendance Sheet.
+     *
+     * The leave is created and approved by a manager,
+     * reporting person, or Super Admin.
+     *
+     * For leave types that require supporting documents,
+     * the employee is informed that the documents must
+     * be provided after the leave is marked.
+     */
+    public function notifyLeaveMarkedFromAttendance(
+        LeaveRequest $leaveRequest,
+        User $actor
+    ): void {
+        $leaveRequest->loadMissing([
+            'user:id,name',
+            'leaveType:id,name,is_file_upload_required',
+        ]);
+
+        if (!$leaveRequest->user_id) {
+            return;
+        }
+
+        $employee = $leaveRequest->user;
+
+        if (!$employee) {
+            return;
+        }
+
+        $actorName =
+            $actor->name ?? 'The administrator';
+
+        $leaveTypeName =
+            $leaveRequest->leaveType?->name ?? 'Leave';
+
+        $fromDate =
+            $leaveRequest->requested_from_date?->format('d M Y');
+
+        $toDate =
+            $leaveRequest->requested_to_date?->format('d M Y');
+
+        /*
+        * Base notification message.
+        */
+        $message =
+            "{$actorName} marked {$leaveTypeName} leave for you "
+            . "from {$fromDate} to {$toDate}.";
+
+        /*
+        * Check whether the leave type requires
+        * a supporting document.
+        *
+        * Attachment is not required when the leave
+        * is initially marked from the Attendance Sheet.
+        * The employee is informed to provide it later.
+        */
+        if (
+            $leaveRequest->leaveType?->is_file_upload_required
+        ) {
+            $message .=
+                " Please provide the required supporting "
+                . "documents for {$leaveTypeName} by uploading "
+                . "them to the leave request.";
+        }
+
+        /*
+        * Set the email subject context.
+        */
+        $emailSubjectContext = [
+            'type' => 'leave_marked_from_attendance',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actorName,
+        ];
+
+        /*
+        * Use a different notification title when
+        * supporting documents are required.
+        */
+        $notificationTitle =
+            $leaveRequest->leaveType?->is_file_upload_required
+            ? 'Leave Marked - Supporting Documents Required'
+            : 'Leave Marked from Attendance';
+
+        /*
+        * Send the notification and email to the
+        * employee for whom the leave was marked.
+        */
+        $this->sendToMany(
+            [(int) $leaveRequest->user_id],
+            $notificationTitle,
+            $message,
+            route(
+                'leave-requests.show',
+                $leaveRequest
+            ),
+            UserNotificationSetting::LEAVE_REQUEST,
+            (int) $actor->id,
+            null,
+            $this->leaveEmailDetails($leaveRequest),
+            $emailSubjectContext
+        );
     }
 
     public function getMeetingInvolvedRecipientIds(Meeting $meeting): array
@@ -2620,48 +2822,5 @@ class NotificationService
         );
 
         return true;
-    }
-
-
-    /**
-     * Notify the employee when an approver reviews their leave request.
-     *
-     * Supported actions:
-     * - update
-     * - approve
-     * - reject
-     */
-    public function notifyLeaveRequestReviewed(
-        LeaveRequest $leaveRequest,
-        User $reviewer,
-        string $action
-    ): void {
-        switch ($action) {
-            case 'update':
-                $this->notifyLeaveRequestReviewUpdated(
-                    $leaveRequest,
-                    $reviewer
-                );
-                break;
-
-            case 'approve':
-                $this->notifyLeaveRequestApproved(
-                    $leaveRequest,
-                    $reviewer
-                );
-                break;
-
-            case 'reject':
-                $this->notifyLeaveRequestRejected(
-                    $leaveRequest,
-                    $reviewer
-                );
-                break;
-
-            default:
-                throw new \InvalidArgumentException(
-                    "Unsupported leave request review action: {$action}"
-                );
-        }
     }
 }

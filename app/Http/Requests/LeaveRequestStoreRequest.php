@@ -41,12 +41,7 @@ class LeaveRequestStoreRequest extends FormRequest
             /*
              * Required only for half-day leave.
              *
-             * The selected period applies to every date
-             * in the requested date range.
-             *
-             * Example:
-             * 04 Sep - 09 Sep + Morning
-             * = 0.5 day for each date.
+             * Multi-day half-day leave is allowed.
              */
             'half_day_type' => [
                 'nullable',
@@ -63,6 +58,12 @@ class LeaveRequestStoreRequest extends FormRequest
                 'max:2000',
             ],
 
+            /*
+             * Attachment is optional at the base validation level.
+             *
+             * The conditional requirement for leave types such as
+             * Sick Leave is handled in withValidator().
+             */
             'attachment' => [
                 'nullable',
                 'file',
@@ -75,44 +76,60 @@ class LeaveRequestStoreRequest extends FormRequest
         Validator $validator
     ): void {
         $validator->after(
-            function (Validator $validator) {
-
-                /*
-                 * ------------------------------------------------------
-                 * DO NOT restrict half-day to a single date.
-                 * ------------------------------------------------------
-                 *
-                 * Multi-day half-day is allowed.
-                 *
-                 * Example:
-                 *
-                 * 04 Sep - 09 Sep
-                 * Morning
-                 * = 6 × 0.5
-                 * = 3.00 days
-                 */
-
+            function (Validator $validator): void {
                 /*
                  * ------------------------------------------------------
                  * Attachment validation
                  * ------------------------------------------------------
+                 *
+                 * For normal Leave Management applications:
+                 * - Attachment is required when the leave type requires it.
+                 *
+                 * For Attendance Sheet applications:
+                 * - Attachment is not required initially.
+                 * - The employee can provide the supporting document later.
                  */
-                if ($this->leave_type_id) {
 
-                    $leaveType = LeaveType::find(
-                        $this->leave_type_id
+                $leaveTypeId = $this->input('leave_type_id');
+
+                if (!$leaveTypeId) {
+                    return;
+                }
+
+                $leaveType = LeaveType::find($leaveTypeId);
+
+                if (!$leaveType) {
+                    return;
+                }
+
+                /*
+                 * Check whether this request was created from
+                 * the Attendance Sheet.
+                 */
+                $createdFromAttendance = $this->boolean(
+                    'created_from_attendance'
+                );
+
+                /*
+                 * Skip the attachment requirement when a manager
+                 * or reporting person marks the leave from Attendance.
+                 */
+                if ($createdFromAttendance) {
+                    return;
+                }
+
+                /*
+                 * For normal leave applications, require an attachment
+                 * when the selected leave type requires supporting documents.
+                 */
+                if (
+                    $leaveType->is_file_upload_required
+                    && !$this->hasFile('attachment')
+                ) {
+                    $validator->errors()->add(
+                        'attachment',
+                        'A supporting document is required for this leave type.'
                     );
-
-                    if (
-                        $leaveType
-                        && $leaveType->is_file_upload_required
-                        && !$this->hasFile('attachment')
-                    ) {
-                        $validator->errors()->add(
-                            'attachment',
-                            'A supporting document is required for this leave type.'
-                        );
-                    }
                 }
             }
         );

@@ -42,7 +42,7 @@
 
         <div class="modal-content relative z-10 w-full max-w-5xl">
 
-            <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
 
                 {{-- Header --}}
                 <div
