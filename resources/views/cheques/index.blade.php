@@ -161,6 +161,9 @@
 
     <!-- Filter Drawer -->
     <x-filters.drawer>
+        <x-filters.date-range label="Cheque Date" startName="cheque_date_from" endName="cheque_date_to" />
+        <x-filters.date-range label="Cheque Given" startName="cheque_given_from" endName="cheque_given_to" />
+        <x-filters.date-range label="Debit Date" startName="debited_date_from" endName="debited_date_to" />
         <x-filters.select name="cheque_status" label="Cheque Status" class="tom-select-no-search w-full" :options="$status_options" />
     </x-filters.drawer>
 
