@@ -455,8 +455,16 @@ class LeaveRequestController extends Controller
                 ->all();
         }
 
-        $status =
-            $createdFromAttendance
+    /*
+     * Super Admin created leave should be approved directly.
+     *
+     * Leave created from Attendance is also approved directly.
+     */
+        $autoApprove =
+            $createdFromAttendance ||
+            $loggedInUser->is_super_admin;
+
+        $status = $autoApprove
             ? 'approved'
             : 'pending';
 
@@ -525,6 +533,9 @@ class LeaveRequestController extends Controller
                 'created_from_attendance' =>
                 $createdFromAttendance,
 
+                'auto_approved' =>
+                $autoApprove,
+
                 'duration' =>
                 $duration,
 
@@ -537,17 +548,20 @@ class LeaveRequestController extends Controller
         );
 
         /*
-         * Mark Attendance:
-         * immediately approve and deduct balance.
-         */
-        if ($createdFromAttendance) {
+     * Immediately approve and deduct balance when:
+     *
+     * 1. Leave is created from Attendance.
+     * 2. Leave is created by Super Admin.
+     */
+        if ($autoApprove) {
             try {
                 DB::transaction(function () use (
                     $leaveRequest,
                     $loggedInUser,
                     $fromDate,
                     $toDate,
-                    $duration
+                    $duration,
+                    $createdFromAttendance
                 ) {
                     $balanceResult =
                         $this->updateLeaveBalanceAfterApproval(
@@ -584,6 +598,13 @@ class LeaveRequestController extends Controller
 
                     $leaveRequest->save();
 
+                    /*
+                 * Approval history.
+                 */
+                    $approvalReason = $createdFromAttendance
+                        ? 'Leave approved through Mark Attendance.'
+                        : 'Leave automatically approved because it was created by a Super Admin.';
+
                     $this->logLeaveHistory(
                         $leaveRequest,
                         'approved',
@@ -593,7 +614,7 @@ class LeaveRequestController extends Controller
                         $toDate,
                         $fromDate,
                         $toDate,
-                        'Leave approved through Mark Attendance.',
+                        $approvalReason,
                         [
                             'approved_by' =>
                             $loggedInUser->id,
@@ -606,9 +627,15 @@ class LeaveRequestController extends Controller
 
                             'unpaid_days' =>
                             $balanceResult['unpaid_days'],
+
+                            'created_from_attendance' =>
+                            $createdFromAttendance,
                         ]
                     );
 
+                    /*
+                 * Balance deduction history.
+                 */
                     $this->logLeaveHistory(
                         $leaveRequest,
                         'balance_deducted',
@@ -644,11 +671,16 @@ class LeaveRequestController extends Controller
                         $e->getMessage()
                     );
             }
+        }
 
+        /*
+     * Mark Attendance.
+     */
+        if ($createdFromAttendance) {
             /*
-            * Notify the selected employee when leave is
-            * marked from the attendance sheet.
-            */
+         * Notify the selected employee when leave is
+         * marked from the attendance sheet.
+         */
             $this->notificationService
                 ->notifyLeaveMarkedFromAttendance(
                     $leaveRequest,
@@ -670,8 +702,22 @@ class LeaveRequestController extends Controller
         }
 
         /*
-         * Normal leave notification.
-         */
+     * Super Admin created leave.
+     */
+        if ($loggedInUser->is_super_admin) {
+            return redirect()
+                ->route(
+                    'leave-requests.index'
+                )
+                ->with(
+                    'success',
+                    'Leave request created and approved successfully.'
+                );
+        }
+
+        /*
+     * Normal leave notification.
+     */
         $this->notificationService
             ->notifyLeaveRequestCreated(
                 $leaveRequest
@@ -698,6 +744,7 @@ class LeaveRequestController extends Controller
                 'Leave request submitted successfully.'
             );
     }
+
 
     /**
      * Show leave request details.

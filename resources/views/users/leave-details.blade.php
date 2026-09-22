@@ -118,38 +118,21 @@
 
                     <div class="flex gap-2">
                         @can('user.leave_details.edit')
-                            <a href="{{ route('users.leave-details', [
-                                'user' => $user->id,
-                                'edit_year' => $year,
-                            ]) }}"
-                                class="inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
-                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.5-8.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 7.5-7.5z" />
-                                </svg>
-                                Edit
-                            </a>
+                            <x-edit-button
+                                :action="route('users.leave-details', [
+                                    'user' => $user->id,
+                                    'edit_year' => $year,
+                                ])"
+                            />
                         @endcan
 
                         @can('user.leave_details.delete')
-                            <form
-                                action="{{ route('users.leave-details.destroy', [
+                            <x-delete-form
+                                :action="route('users.leave-details.destroy', [
                                     'user' => $user->id,
                                     'year' => $year,
-                                ]) }}"
-                                method="POST"
-                                onsubmit="return confirm('Are you sure you want to delete the {{ $year }} leave assignment? This will remove all leave balances for this period.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                    class="inline-flex items-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
-                                    <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 7h12M9 7V4h6v3m-8 0l1 13h8l1-13M10 11v6M14 11v6" />
-                                    </svg>
-                                    Delete
-                                </button>
-                            </form>
+                                ])"
+                            />
                         @endcan
                     </div>
                 </div>
