@@ -14,19 +14,19 @@
         </div>
 
         <!-- Tab Navigation (Right Aligned) -->
-        <div class="flex items-center rounded-lg border border-bgray-300 bg-white p-1 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 sm:ml-auto">
+        <div class="inline-flex overflow-hidden rounded-lg border border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600 sm:ml-auto">
             @can('expense.view')
-                <a href="{{ route('expenses.index') }}" class="rounded-md px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('expenses.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-600 dark:text-success-600' : 'text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white' }}">
+                <a href="{{ route('expenses.index') }}" class="px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('expenses.*') ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-300 dark:hover:bg-darkblack-500' }}">
                     Expenses
                 </a>
             @endcan
             @can('check_expense.view')
-                <a href="{{ route('cheques.index') }}" class="rounded-md px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('cheques.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-600 dark:text-success-600' : 'text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white' }}">
+                <a href="{{ route('cheques.index') }}" class="px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('cheques.*') ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-300 dark:hover:bg-darkblack-500' }}">
                     Cheque Expenses
                 </a>
             @endcan
             @can('reimbursement.view')
-                <a href="{{ route('reimbursements.index') }}" class="rounded-md px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('reimbursements.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-600 dark:text-success-600' : 'text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white' }}">
+                <a href="{{ route('reimbursements.index') }}" class="px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('reimbursements.*') ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-300 dark:hover:bg-darkblack-500' }}">
                     Reimbursements
                 </a>
             @endcan
