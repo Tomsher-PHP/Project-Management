@@ -181,27 +181,9 @@
                                                 @endcan
                                             @endif
                                             @can('user.leave_details.view')
-                                                <a href="{{ route('users.leave-details', $user->id) }}"
-                                                class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 transition hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300"
-                                                title="Leave Details">
-
-                                                    <svg class="h-4 w-4"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.8"
-                                                        viewBox="0 0 24 24">
-
-                                                        <path stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z"/>
-
-                                                        <path stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            d="M8 13H10M14 13H16M8 17H10M14 17H16"/>
-
-                                                    </svg>
-
-                                                </a>
+                                                <x-calendar-button
+                                                    :action="route('users.leave-details', $user->id)"
+                                                />
                                             @endcan
                                         </div>
                                     </td>
