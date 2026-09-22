@@ -990,45 +990,37 @@ class LeaveRequestUpdateRequest extends FormRequest
         Validator $validator,
         ?LeaveRequest $leaveRequest
     ): void {
-
         /*
-         * If leave_type_id is submitted, use it.
-         *
-         * Otherwise use the existing leave request's leave type.
-         */
-        $leaveTypeId =
-            $this->input(
-                'leave_type_id'
-            );
+        * If leave_type_id is submitted, use it.
+        *
+        * Otherwise use the existing leave request's leave type.
+        */
+        $leaveTypeId = $this->input('leave_type_id');
 
         if (!$leaveTypeId && $leaveRequest) {
-            $leaveTypeId =
-                $leaveRequest->leave_type_id;
+            $leaveTypeId = $leaveRequest->leave_type_id;
         }
 
         if (!$leaveTypeId) {
             return;
         }
 
-        $leaveType =
-            LeaveType::find(
-                $leaveTypeId
-            );
+        $leaveType = LeaveType::find($leaveTypeId);
 
         if (!$leaveType) {
             return;
         }
 
         /*
-         * This leave type does not require an attachment.
-         */
+        * This leave type does not require an attachment.
+        */
         if (!$leaveType->is_file_upload_required) {
             return;
         }
 
         /*
-         * A new uploaded attachment satisfies the requirement.
-         */
+        * A new uploaded attachment satisfies the requirement.
+        */
         if (
             $this->hasFile('attachment')
             && $this->file('attachment')->isValid()
@@ -1037,18 +1029,24 @@ class LeaveRequestUpdateRequest extends FormRequest
         }
 
         /*
-         * Existing attachment satisfies the requirement.
-         */
+        * An existing attachment satisfies the requirement.
+        *
+        * LeaveRequest uses a polymorphic attachments relationship.
+        *
+        * Only active attachments are considered.
+        */
         if (
             $leaveRequest
-            && $leaveRequest->attachment
+            && $leaveRequest->attachments()
+                ->where('is_active', 1)
+                ->exists()
         ) {
             return;
         }
 
         /*
-         * Otherwise attachment is required.
-         */
+        * Otherwise attachment is required.
+        */
         $validator->errors()->add(
             'attachment',
             'A supporting document is required for this leave type.'
