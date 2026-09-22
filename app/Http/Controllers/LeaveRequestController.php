@@ -14,11 +14,13 @@ use App\Services\LeaveBalanceService;
 use App\Services\NotificationService;
 use App\Services\UserService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class LeaveRequestController extends Controller
@@ -47,127 +49,225 @@ class LeaveRequestController extends Controller
         ]);
     }
 
-    /**
-     * Display leave requests.
-     */
-    public function index(Request $request): View
-    {
-        $perPage = $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
+   /**
+  * Display leave requests.
+  */
+ public function index(Request $request): View
+ {
+     $perPage = $request->input(
+         'per_page',
+         config('constants.per_page_count')
+     );
 
-        $leaveRequests = LeaveRequest::with([
-            'user',
-            'leaveType',
-            'approvedBy',
-            'rejectedBy',
-            'cancelledBy',
-            'addedBy',
-        ])
-            ->filter($request->all())
-            ->sort($request->all())
-            ->orderBy('leave_requests.id', 'desc')
-            ->paginate($perPage)
-            ->withQueryString();
+     $loggedInUser = auth()->user();
 
-        /*
-         * Calendar events use the same filters as the list.
-         */
-        $calendarLeaveRequests = LeaveRequest::with([
-            'user',
-            'leaveType',
-        ])
-            ->filter($request->all())
-            ->sort($request->all())
-            ->orderBy('leave_requests.id', 'desc')
-            ->get();
+     /*
+      * ==========================================================
+      * Leave Request Access
+      * ==========================================================
+      *
+      * Super Admin can see all leave requests.
+      *
+      * Other users can see:
+      *
+      * 1. Leave requests belonging to themselves.
+      * 2. Leave requests assigned to them as an approver.
+      */
+     $applyLeaveAccessFilter = function (Builder $query) use ($loggedInUser) {
 
-        $calendarEvents = $calendarLeaveRequests
-            ->map(function (LeaveRequest $leaveRequest) {
-                $calendarFromDate =
-                    $leaveRequest->status === 'approved'
-                    && $leaveRequest->approved_from_date
-                    ? $leaveRequest->approved_from_date
-                    : $leaveRequest->requested_from_date;
+         /*
+          * Super Admin can see everything.
+          */
+         if ($loggedInUser->is_super_admin) {
+             return $query;
+         }
 
-                $calendarToDate =
-                    $leaveRequest->status === 'approved'
-                    && $leaveRequest->approved_to_date
-                    ? $leaveRequest->approved_to_date
-                    : $leaveRequest->requested_to_date;
+         /*
+          * Normal users can only see:
+          *
+          * - Their own leave requests
+          * - Leave requests assigned to them
+          */
+         return $query->where(function (Builder $accessQuery) use ($loggedInUser) {
 
-                return [
-                    'id' => $leaveRequest->id,
+             $accessQuery
+                 ->where(
+                     'leave_requests.user_id',
+                     $loggedInUser->id
+                 )
+                 ->orWhereJsonContains(
+                     'leave_requests.assigned_to',
+                     $loggedInUser->id
+                 );
+         });
+     };
 
-                    'title' => ($leaveRequest->user?->name ?? 'Unknown')
-                        . ' - '
-                        . ($leaveRequest->leaveType?->name ?? 'Leave'),
+     /*
+      * ==========================================================
+      * Leave Request Listing
+      * ==========================================================
+      */
+     $leaveRequests = LeaveRequest::with([
+         'user',
+         'leaveType',
+         'approvedBy',
+         'rejectedBy',
+         'cancelledBy',
+         'addedBy',
+     ])
+         ->where(function (Builder $query) use ($applyLeaveAccessFilter) {
+             $applyLeaveAccessFilter($query);
+         })
+         ->filter($request->all())
+         ->sort($request->all())
+         ->orderBy('leave_requests.id', 'desc')
+         ->paginate($perPage)
+         ->withQueryString();
 
-                    'start' => $calendarFromDate,
+     /*
+      * ==========================================================
+      * Calendar Events
+      * ==========================================================
+      *
+      * Calendar uses the SAME access restriction as the list.
+      */
+     $calendarLeaveRequests = LeaveRequest::with([
+         'user',
+         'leaveType',
+     ])
+         ->where(function (Builder $query) use ($applyLeaveAccessFilter) {
+             $applyLeaveAccessFilter($query);
+         })
+         ->filter($request->all())
+         ->sort($request->all())
+         ->orderBy('leave_requests.id', 'desc')
+         ->get();
 
-                    'end' => $calendarToDate
-                        ? Carbon::parse($calendarToDate)
-                        ->addDay()
-                        ->toDateString()
-                        : null,
+     /*
+      * ==========================================================
+      * Build Calendar Events
+      * ==========================================================
+      */
+     $calendarEvents = $calendarLeaveRequests
+         ->map(function (LeaveRequest $leaveRequest) {
 
-                    'url' => route(
-                        'leave-requests.show',
-                        $leaveRequest->id
-                    ),
+             /*
+              * Approved leave should use the approved dates.
+              *
+              * Pending/rejected/cancelled leaves use the
+              * originally requested dates.
+              */
+             $calendarFromDate =
+                 $leaveRequest->status === 'approved'
+                 && $leaveRequest->approved_from_date
+                     ? $leaveRequest->approved_from_date
+                     : $leaveRequest->requested_from_date;
 
-                    'extendedProps' => [
-                        'status' => $leaveRequest->status,
+             $calendarToDate =
+                 $leaveRequest->status === 'approved'
+                 && $leaveRequest->approved_to_date
+                     ? $leaveRequest->approved_to_date
+                     : $leaveRequest->requested_to_date;
 
-                        'employee' =>
-                        $leaveRequest->user?->name ?? '-',
+             return [
+                 'id' => $leaveRequest->id,
 
-                        'leaveType' =>
-                        $leaveRequest->leaveType?->name ?? '-',
+                 'title' => ($leaveRequest->user?->name ?? 'Unknown')
+                     . ' - '
+                     . ($leaveRequest->leaveType?->name ?? 'Leave'),
 
-                        'duration' =>
-                        $leaveRequest->status === 'approved'
-                            && $leaveRequest->approved_duration !== null
-                            ? $leaveRequest->approved_duration
-                            : $leaveRequest->duration,
+                 'start' => $calendarFromDate,
 
-                        'type' =>
-                        $leaveRequest->type,
+                 /*
+                  * FullCalendar uses an exclusive end date.
+                  *
+                  * Therefore add one day so the leave's final
+                  * date is displayed correctly.
+                  */
+                 'end' => $calendarToDate
+                     ? Carbon::parse($calendarToDate)
+                         ->addDay()
+                         ->toDateString()
+                     : null,
 
-                        'half_day_type' =>
-                        $leaveRequest->half_day_type,
-                    ],
-                ];
-            })
-            ->values();
+                 'url' => route(
+                     'leave-requests.show',
+                     $leaveRequest->id
+                 ),
 
-        $leaveTypes = LeaveType::query()
-            ->where('status', true)
-            ->orderBy('name')
-            ->get();
+                 'extendedProps' => [
+                     'status' => $leaveRequest->status,
 
-        $employees = User::query()
-            ->orderBy('name')
-            ->get();
+                     'employee' =>
+                         $leaveRequest->user?->name ?? '-',
 
-        $users = User::query()
-            ->orderBy('name')
-            ->get();
+                     'leaveType' =>
+                         $leaveRequest->leaveType?->name ?? '-',
 
-        return view('leave_requests.index', compact(
-            'leaveRequests',
-            'calendarEvents',
-            'leaveTypes',
-            'employees',
-            'users',
-            'perPage'
-        ) + [
-            'pageTitle' => $this->pageTitle,
-            'isPendingPage' => false,
-        ]);
-    }
+                     'duration' =>
+                         $leaveRequest->status === 'approved'
+                         && $leaveRequest->approved_duration !== null
+                             ? $leaveRequest->approved_duration
+                             : $leaveRequest->duration,
 
+                     'type' =>
+                         $leaveRequest->type,
+
+                     'half_day_type' =>
+                         $leaveRequest->half_day_type,
+                 ],
+             ];
+         })
+         ->values();
+
+     /*
+      * ==========================================================
+      * Leave Types
+      * ==========================================================
+      */
+     $leaveTypes = LeaveType::query()
+         ->where('status', true)
+         ->orderBy('name')
+         ->get();
+
+     /*
+      * ==========================================================
+      * Employees
+      * ==========================================================
+      */
+     $employees = User::query()
+         ->orderBy('name')
+         ->get();
+
+     /*
+      * ==========================================================
+      * Users
+      * ==========================================================
+      */
+     $users = User::query()
+         ->orderBy('name')
+         ->get();
+
+     /*
+      * ==========================================================
+      * View
+      * ==========================================================
+      */
+     return view(
+         'leave_requests.index',
+         compact(
+             'leaveRequests',
+             'calendarEvents',
+             'leaveTypes',
+             'employees',
+             'users',
+             'perPage'
+         ) + [
+             'pageTitle' => $this->pageTitle,
+             'isPendingPage' => false,
+         ]
+     );
+ }
     /**
      * Show leave application form.
      */
@@ -545,6 +645,16 @@ class LeaveRequestController extends Controller
                     );
             }
 
+            /*
+            * Notify the selected employee when leave is
+            * marked from the attendance sheet.
+            */
+            $this->notificationService
+                ->notifyLeaveMarkedFromAttendance(
+                    $leaveRequest,
+                    $loggedInUser
+                );
+
             return redirect()
                 ->route(
                     'attendance.index',
@@ -632,7 +742,7 @@ class LeaveRequestController extends Controller
          * Approval mode.
          */
         $approvalMode =
-            $request->boolean('approval_mode')
+            $request->boolean('approved_mode')
             || in_array(
                 $request->action,
                 [
@@ -884,7 +994,7 @@ class LeaveRequestController extends Controller
          * Determine approval mode.
          */
         $approvalMode =
-            $request->boolean('approval_mode')
+            $request->boolean('approved_mode')
             || in_array(
                 $request->action,
                 [
@@ -2566,17 +2676,18 @@ class LeaveRequestController extends Controller
                 );
         }
 
-        /*
-         * Notify assigned approvers when employee cancels
-         * their own request.
-         */
-        if ($leaveRequest->user_id === $authUser->id) {
-            $this->notificationService
-                ->notifyLeaveRequestUpdated(
-                    $leaveRequest,
-                    $authUser->id
-                );
-        }
+       /*
+        * Notify the appropriate users when the leave
+        * request is cancelled.
+        *
+        * The notification service determines whether
+        * to notify approvers or the requester.
+        */
+        $this->notificationService
+            ->notifyLeaveRequestCancelled(
+                $leaveRequest,
+                (int) $authUser->id
+            );
 
         return redirect()
             ->route(

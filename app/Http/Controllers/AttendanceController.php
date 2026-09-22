@@ -177,9 +177,10 @@ public function index(Request $request): View
             'user',
             'leaveType',
         ])
-        ->where('status', 'approved')
-        ->whereNotNull('approved_from_date')
-        ->whereNotNull('approved_to_date')
+        ->whereIn('status', [
+            'approved',
+            'pending',
+        ])
         ->when(! empty($userId), function (Builder $query) use ($userId) {
             $value = $userId;
 
@@ -200,35 +201,107 @@ public function index(Request $request): View
                     ->orWhere('email', 'like', "%{$search}%");
             });
         })
-        ->whereDate(
-            'approved_from_date',
-            '<=',
-            $calendarEnd->toDateString()
-        )
-        ->whereDate(
-            'approved_to_date',
-            '>=',
-            $calendarStart->toDateString()
-        )
+        ->where(function (Builder $query) use (
+            $calendarStart,
+            $calendarEnd
+        ) {
+
+            /*
+            * ======================================================
+            * Approved Leave
+            * ======================================================
+            */
+            $query->where(function (Builder $approvedQuery) use (
+                $calendarStart,
+                $calendarEnd
+            ) {
+                $approvedQuery
+                    ->where('status', 'approved')
+                    ->whereNotNull('approved_from_date')
+                    ->whereNotNull('approved_to_date')
+                    ->whereDate(
+                        'approved_from_date',
+                        '<=',
+                        $calendarEnd->toDateString()
+                    )
+                    ->whereDate(
+                        'approved_to_date',
+                        '>=',
+                        $calendarStart->toDateString()
+                    );
+            })
+
+            /*
+            * ======================================================
+            * Pending Leave
+            * ======================================================
+            */
+            ->orWhere(function (Builder $pendingQuery) use (
+                $calendarStart,
+                $calendarEnd
+            ) {
+                $pendingQuery
+                    ->where('status', 'pending')
+                    ->whereNotNull('requested_from_date')
+                    ->whereNotNull('requested_to_date')
+                    ->whereDate(
+                        'requested_from_date',
+                        '<=',
+                        $calendarEnd->toDateString()
+                    )
+                    ->whereDate(
+                        'requested_to_date',
+                        '>=',
+                        $calendarStart->toDateString()
+                    );
+            });
+        })
         ->get();
 
     /*
-     * ==========================================================
-     * Build Calendar Leaves
-     * ==========================================================
-     */
+    * ==========================================================
+    * Build Calendar Leaves
+    * ==========================================================
+    */
     $calendarLeaves = collect();
 
     foreach ($calendarLeaveRequests as $leave) {
 
-        $leaveStart = Carbon::parse(
-            $leave->approved_from_date
-        );
+        /*
+        * ----------------------------------------------------------
+        * Determine the correct date range.
+        * ----------------------------------------------------------
+        *
+        * Approved:
+        *   approved_from_date -> approved_to_date
+        *
+        * Pending:
+        *   requested_from_date -> requested_to_date
+        */
+        if ($leave->status === 'approved') {
+            $leaveStartDate = $leave->approved_from_date;
+            $leaveEndDate = $leave->approved_to_date;
+        } else {
+            $leaveStartDate = $leave->requested_from_date;
+            $leaveEndDate = $leave->requested_to_date;
+        }
 
-        $leaveEnd = Carbon::parse(
-            $leave->approved_to_date
-        );
+        /*
+        * Skip if the leave does not have valid dates.
+        */
+        if (
+            empty($leaveStartDate)
+            || empty($leaveEndDate)
+        ) {
+            continue;
+        }
 
+        $leaveStart = Carbon::parse($leaveStartDate);
+        $leaveEnd = Carbon::parse($leaveEndDate);
+
+        /*
+        * Restrict the leave to the visible calendar range.
+        */
         if ($leaveStart->lt($calendarStart)) {
             $leaveStart = $calendarStart->copy();
         }
@@ -237,6 +310,9 @@ public function index(Request $request): View
             $leaveEnd = $calendarEnd->copy();
         }
 
+        /*
+        * Add the leave to every date covered by the request.
+        */
         for (
             $leaveDate = $leaveStart->copy();
             $leaveDate->lte($leaveEnd);
@@ -259,43 +335,61 @@ public function index(Request $request): View
     }
 
     /*
-     * ==========================================================
-     * Calendar Leaves For JavaScript
-     * ==========================================================
-     */
+    * ==========================================================
+    * Calendar Leaves For JavaScript
+    * ==========================================================
+    */
     $calendarLeavesForJs = $calendarLeaves
         ->map(function ($leaves) {
 
             return $leaves
                 ->map(function ($leave) {
 
-                    return [
-                        'employee' => $leave->user?->name ?? 'Employee',
+                    /*
+                    * Use requested dates for pending leaves
+                    * and approved dates for approved leaves.
+                    */
+                    if ($leave->status === 'approved') {
+                        $fromDate = $leave->approved_from_date;
+                        $toDate = $leave->approved_to_date;
+                    } else {
+                        $fromDate = $leave->requested_from_date;
+                        $toDate = $leave->requested_to_date;
+                    }
 
-                        'leave_type' => $leave->leaveType?->name ?? 'Leave',
+                    return [
+                        'employee' => $leave->user?->name
+                            ?? 'Employee',
+
+                        'leave_type' => $leave->leaveType?->name
+                            ?? 'Leave',
 
                         'color' => $leave->leaveType?->color
                             ?? '#3B82F6',
 
-                        'from_date' => $leave->approved_from_date
-                            ? Carbon::parse(
-                                $leave->approved_from_date
-                            )->format('d M Y')
+                        'from_date' => $fromDate
+                            ? Carbon::parse($fromDate)->format('d M Y')
                             : '',
 
-                        'to_date' => $leave->approved_to_date
-                            ? Carbon::parse(
-                                $leave->approved_to_date
-                            )->format('d M Y')
+                        'to_date' => $toDate
+                            ? Carbon::parse($toDate)->format('d M Y')
                             : '',
 
                         'reason' => $leave->reason ?? '',
 
                         'type' => $leave->type,
 
-                        'leave_period' => $leave->leave_period,
+                        'half_day_type' => $leave->half_day_type,
 
                         'approved_duration' => $leave->approved_duration,
+
+                        'duration' => $leave->duration,
+
+                        /*
+                        * Useful for distinguishing pending
+                        * and approved leaves in JavaScript.
+                        */
+                        'status' => $leave->status,
                     ];
                 })
                 ->values();
@@ -303,27 +397,27 @@ public function index(Request $request): View
         ->toArray();
 
     /*
-     * ==========================================================
-     * Calendar Events
-     * ==========================================================
-     */
+    * ==========================================================
+    * Calendar Events
+    * ==========================================================
+    */
     $calendarEvents = $this->getCalendarEvents();
 
     /*
-     * ==========================================================
-     * Leave Types
-     * ==========================================================
-     */
+    * ==========================================================
+    * Leave Types
+    * ==========================================================
+    */
     $leaveTypes = LeaveType::query()
         ->where('status', true)
         ->orderBy('name')
         ->get();
 
     /*
-     * ==========================================================
-     * View
-     * ==========================================================
-     */
+    * ==========================================================
+    * View
+    * ==========================================================
+    */
     return view(
         'attendance.index',
         [

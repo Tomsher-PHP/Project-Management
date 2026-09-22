@@ -114,6 +114,39 @@
             </a>
         @endif
 
+        <!-- Notification: Leave Requests -->
+        @if ($leave_request_count > 0)
+            <a href="{{ route('leave-requests.pending') }}"
+                class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-indigo-200 bg-slate-200/10 hover:bg-indigo-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-indigo-900/50 dark:bg-darkblack-500/20 dark:hover:bg-indigo-950/10">
+                <div class="flex space-x-3">
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-indigo-500 dark:text-indigo-400">
+                        <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M8 13L10 15L14 11" />
+                        </svg>
+                    </div>
+
+                    <div class="flex-1 space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span
+                                class="text-xs font-bold text-bgray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                                Leave Requests
+                            </span>
+
+                            <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+                        </div>
+
+                        <p class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">
+                            {{ $leave_request_count }} pending leave requests
+                        </p>
+                    </div>
+                </div>
+            </a>
+        @endif
+
         @if ($total_request_count === 0)
             <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-success-50 text-success-300 dark:bg-success-950/30 dark:text-success-300 mb-3">

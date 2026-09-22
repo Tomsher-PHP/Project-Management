@@ -47,7 +47,7 @@
     $canViewHolidays = $authUser?->can('holidays.view');
     $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
     $canViewExpenses = $authUser?->canAny(['expense.view', 'expense.view_all', 'check_expense.view', 'check_expense.view_all', 'reimbursement.view', 'reimbursement.view_all']);
- 
+
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
     $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
@@ -439,24 +439,36 @@
                             </li>
                         @endif
 
-                        @if ($canViewAppraisal)
-                            <!-- Appraisal -->
-                            <li class="item py-[8px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="{{ route('appraisal.index') }}">
+                        @if ($canViewMeetings)
+                            <!-- Meetings -->
+                            <li class="item py-[8px] {{ $isMeetingsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('meetings.index') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                                    <circle cx="12" cy="15" r="2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-base font-medium leading-none {{ $isAppraisalActive ? $sidebarItemActiveClass : '' }}">Appraisal</span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isMeetingsActive ? $sidebarItemActiveClass : '' }}">Meetings</span>
                                         </div>
                                     </div>
                                 </a>
                             </li>
                         @endif
 
+
+                    </ul>
+                </div>
+                <div class="item-wrapper mb-5">
+                    <h4 class="border-b border-bgray-200 text-xs font-medium leading-6 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
+                        HR Management
+                    </h4>
+                    <ul class="mt-2.5">
                         @if ($canViewLeaveRequests)
                             <!-- Leave Requests -->
                             <li class="item py-[8px] {{ $isLeavesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
@@ -520,22 +532,18 @@
                             </li>
                         @endif
 
-                        @if ($canViewMeetings)
-                            <!-- Meetings -->
-                            <li class="item py-[8px] {{ $isMeetingsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="{{ route('meetings.index') }}">
+                        @if ($canViewAppraisal)
+                            <!-- Appraisal -->
+                            <li class="item py-[8px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('appraisal.index') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                                    <circle cx="12" cy="15" r="2" />
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-base font-medium leading-none {{ $isMeetingsActive ? $sidebarItemActiveClass : '' }}">Meetings</span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isAppraisalActive ? $sidebarItemActiveClass : '' }}">Appraisal</span>
                                         </div>
                                     </div>
                                 </a>

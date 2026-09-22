@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
+use App\Models\LeaveRequest;
 use App\Models\Project;
 use App\Models\ProjectStatus;
 use App\Models\Task;
@@ -73,6 +74,7 @@ class DashboardServices
     public function getRequestNotificationCounts(User $user): array
     {
         $taskRequests = 0;
+
         if ($user->canAny(['task.view', 'task.view_all_tasks'])) {
             $taskRequests = $this->visibleTaskRequestQuery($user)
                 ->where('request_status', 'pending')
@@ -80,6 +82,7 @@ class DashboardServices
         }
 
         $taskTime = 0;
+
         if ($user->can('task_time_log_change_request.approve_reject')) {
             $taskTime = $this->visibleTaskTimeChangeRequestQuery($user)
                 ->where('status', 'pending')
@@ -87,7 +90,11 @@ class DashboardServices
         }
 
         $taskHandoff = 0;
-        if ($user->canAny(['handoff_request.view', 'handoff_request.view_all'])) {
+
+        if ($user->canAny([
+            'handoff_request.view',
+            'handoff_request.view_all',
+        ])) {
             $taskHandoff = $this->visibleHandoffRequestQuery($user)
                 ->where('status', 0) // HandoffRequest::STATUS_PENDING is 0
                 ->count();
@@ -98,13 +105,38 @@ class DashboardServices
             ->count();
 
         $taskTimeExtendRequests = 0;
+
         if ($user->can('task_time_extend_request.approve_reject')) {
             $taskTimeExtendRequests = $this->visibleTaskTimeExtendRequestQuery($user)
                 ->where('status', 'pending')
                 ->count();
         }
 
-        $totalRequestCount = $taskRequests + $taskTime + $taskHandoff + $breakRequests + $taskTimeExtendRequests;
+        /*
+        * Pending Leave Requests
+        *
+        * Only count pending leave requests where the logged-in
+        * user is one of the assigned approvers.
+        */
+        $leaveRequests = 0;
+
+        if ($user->can('leave_request.approve_reject')) {
+            $leaveRequests = LeaveRequest::query()
+                ->where('status', 'pending')
+                ->whereJsonContains('assigned_to', $user->id)
+                ->count();
+        }
+
+        /*
+        * Total pending request count.
+        */
+        $totalRequestCount =
+            $taskRequests
+            + $taskTime
+            + $taskHandoff
+            + $breakRequests
+            + $taskTimeExtendRequests
+            + $leaveRequests;
 
         return [
             'task_request_count' => $taskRequests,
@@ -112,6 +144,7 @@ class DashboardServices
             'handoff_request_count' => $taskHandoff,
             'break_request_count' => $breakRequests,
             'task_time_extend_request_count' => $taskTimeExtendRequests,
+            'leave_request_count' => $leaveRequests,
             'total_request_count' => $totalRequestCount,
         ];
     }
