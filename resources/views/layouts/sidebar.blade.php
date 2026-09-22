@@ -46,7 +46,18 @@
     $canViewAttendance = $authUser?->can('attendance.view');
     $canViewHolidays = $authUser?->can('holidays.view');
     $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
-    $canViewExpenses = $authUser?->canAny(['expense.view', 'expense.view_all', 'check_expense.view', 'check_expense.view_all', 'reimbursement.view', 'reimbursement.view_all']);
+    $canViewCompanyExpenses = $authUser?->canAny(['expense.view', 'expense.view_all']) ?? false;
+    $canViewChequeExpenses = $authUser?->canAny(['check_expense.view', 'check_expense.view_all']) ?? false;
+    $canViewReimbursements = $authUser?->canAny(['reimbursement.view', 'reimbursement.view_all']) ?? false;
+
+    $canViewExpenses = $canViewCompanyExpenses || $canViewChequeExpenses || $canViewReimbursements;
+
+    $expensesRoute = match (true) {
+        $canViewCompanyExpenses => route('expenses.index'),
+        $canViewChequeExpenses => route('cheques.index'),
+        $canViewReimbursements => route('reimbursements.index'),
+        default => route('expenses.index'),
+    };
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
     $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses;
@@ -553,7 +564,7 @@
                         @if ($canViewExpenses)
                             <!-- Company Expenses -->
                             <li class="item py-[8px] {{ $isExpensesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="{{ route('expenses.index') }}">
+                                <a href="{{ $expensesRoute }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
