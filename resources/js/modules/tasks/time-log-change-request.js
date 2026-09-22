@@ -398,7 +398,7 @@ const openApprovalModal = (trigger) => {
 
     modal.querySelector(approvalModalSelectors.userName).textContent = trigger.dataset.userName || 'Unknown User';
     modal.querySelector(approvalModalSelectors.taskName).textContent = trigger.dataset.taskName || 'Unknown Task';
-    modal.querySelector(approvalModalSelectors.projectName).textContent = 'dsgdfgfdgdfgfgdgfasgfaggbfd' + trigger.dataset.projectName || 'Unknown Project';
+    modal.querySelector(approvalModalSelectors.projectName).textContent = trigger.dataset.projectName || 'Unknown Project';
     modal.querySelector(approvalModalSelectors.reason).textContent = trigger.dataset.reason || '--';
     modal.querySelector(approvalModalSelectors.currentStart).textContent = trigger.dataset.currentStart || '--';
     modal.querySelector(approvalModalSelectors.currentEnd).textContent = trigger.dataset.currentEnd || '--';

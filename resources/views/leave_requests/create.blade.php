@@ -63,7 +63,7 @@
 
                                 <div class="flex flex-col gap-2">
                                     <label for="leave_type_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        leave Type <x-red-star />
+                                        Leave Type <x-red-star />
                                     </label>
 
                                     <select name="leave_type_id" id="leave_type_id" class="tom-select w-full">
@@ -231,14 +231,14 @@
                                 </div>
 
 
-                                {{-- Duration --}}
+                                {{-- Number of Days --}}
                                 <div class="flex flex-col gap-2">
 
                                     <label
                                         for="duration_display"
                                         class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">
 
-                                        Duration
+                                        Number of Days
 
                                     </label>
 
