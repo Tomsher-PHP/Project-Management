@@ -132,6 +132,14 @@ return [
     ['name' => 'check_expense.edit',       'label' => 'Check Expense', 'sort_order' => 15080, 'default_checked' => false],
     ['name' => 'check_expense.delete',     'label' => 'Check Expense', 'sort_order' => 15090, 'default_checked' => false],
 
+    // REIMBURSEMENT
+    ['name' => 'reimbursement.view_all',   'label' => 'Reimbursement', 'sort_order' => 15100, 'default_checked' => false],
+    ['name' => 'reimbursement.view',       'label' => 'Reimbursement', 'sort_order' => 15110, 'default_checked' => false],
+    ['name' => 'reimbursement.create',     'label' => 'Reimbursement', 'sort_order' => 15120, 'default_checked' => false],
+    ['name' => 'reimbursement.edit',       'label' => 'Reimbursement', 'sort_order' => 15130, 'default_checked' => false],
+    ['name' => 'reimbursement.status_change',       'label' => 'Reimbursement', 'sort_order' => 15140, 'default_checked' => false],
+    ['name' => 'reimbursement.delete',     'label' => 'Reimbursement', 'sort_order' => 15150, 'default_checked' => false],
+
     //======================================================================
     // Requests Actions Start
     //======================================================================

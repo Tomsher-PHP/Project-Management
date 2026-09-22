@@ -21,6 +21,7 @@ import './modules/tasks/task-running-timer'
 import './modules/quick-notes-drawer';
 import './modules/expenses/expenses';
 import './modules/cheques/cheques';
+import './modules/reimbursements/reimbursements';
 import './components/calendar';
 
 import "tom-select/dist/css/tom-select.css";

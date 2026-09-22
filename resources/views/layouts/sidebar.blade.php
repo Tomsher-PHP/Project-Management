@@ -46,8 +46,8 @@
     $canViewAttendance = $authUser?->can('attendance.view');
     $canViewHolidays = $authUser?->can('holidays.view');
     $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
-    $canViewExpenses = $authUser?->canAny(['expense.view', 'expense.view_all']);
-
+    $canViewExpenses = $authUser?->canAny(['expense.view', 'expense.view_all', 'check_expense.view', 'check_expense.view_all', 'reimbursement.view', 'reimbursement.view_all']);
+ 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
     $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
@@ -62,7 +62,7 @@
     $isCustomersActive = request()->routeIs('customers.*');
     $isProjectsActive = request()->routeIs('projects.*');
     $isMeetingsActive = request()->routeIs('meetings.*');
-    $isExpensesActive = request()->routeIs('expenses.*');
+    $isExpensesActive = request()->routeIs('expenses.*', 'cheques.*', 'reimbursements.*');
     $isKanbanActive = request()->routeIs('tasks.kanban.view', 'tasks.kanbanMode');
     $isScheduleTasksActive = request()->routeIs('schedule-tasks.*');
 

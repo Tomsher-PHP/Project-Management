@@ -19,6 +19,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ReimbursementController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\IndustryController;
@@ -806,6 +807,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.create')->only(['store']);
     Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.edit')->only(['edit', 'update']);
     Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.delete')->only(['destroy']);
+
+    // Reimbursement Routes
+    Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.view')->only(['index', 'show']);
+    Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.create')->only(['store']);
+    Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.edit')->only(['edit', 'update']);
+    Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.delete')->only(['destroy']);
 });
 
 Route::get('api-test', function () {
