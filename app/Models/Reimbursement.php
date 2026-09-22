@@ -160,6 +160,21 @@ class Reimbursement extends Model
         });
     }
 
+    public function scopeAccessibleBy($query, ?User $user = null)
+    {
+        $user = $user ?? Auth::user();
+
+        if (!$user) {
+            return $query;
+        }
+
+        if ($user->is_super_admin || $user->can('reimbursement.view_all')) {
+            return $query;
+        }
+
+        return $query->where('reimbursements.added_by', $user->id);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

@@ -9,6 +9,7 @@ use App\Services\ReimbursementServices;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ReimbursementController extends Controller
@@ -21,6 +22,23 @@ class ReimbursementController extends Controller
         $this->reimbursementService = $reimbursementService;
         $this->pageTitle = 'Reimbursements';
         view()->share(['pageTitle' => $this->pageTitle]);
+    }
+
+    protected function authorizeAccess(Reimbursement $reimbursement): void
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(401);
+        }
+
+        if ($user->is_super_admin || $user->can('reimbursement.view_all')) {
+            return;
+        }
+
+        if ((int) $reimbursement->added_by !== (int) $user->id) {
+            abort(403, 'Unauthorized access to this reimbursement.');
+        }
     }
 
     public function index(Request $request): View|JsonResponse
@@ -44,6 +62,8 @@ class ReimbursementController extends Controller
 
     public function show(Reimbursement $reimbursement, Request $request): View|JsonResponse
     {
+        $this->authorizeAccess($reimbursement);
+
         $reimbursement = $this->reimbursementService->getReimbursementDetails($reimbursement);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -80,6 +100,8 @@ class ReimbursementController extends Controller
 
     public function edit(Reimbursement $reimbursement): JsonResponse
     {
+        $this->authorizeAccess($reimbursement);
+
         $reimbursement->load(['user', 'paymentMode', 'serviceProvider', 'category', 'vendor', 'customer']);
 
         return response()->json([
@@ -121,6 +143,8 @@ class ReimbursementController extends Controller
 
     public function update(ReimbursementUpdateRequest $request, Reimbursement $reimbursement): JsonResponse|RedirectResponse
     {
+        $this->authorizeAccess($reimbursement);
+
         $updatedReimbursement = $this->reimbursementService->updateReimbursement($reimbursement, $request->validated());
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -138,6 +162,8 @@ class ReimbursementController extends Controller
 
     public function destroy(Request $request, Reimbursement $reimbursement): JsonResponse|RedirectResponse
     {
+        $this->authorizeAccess($reimbursement);
+
         $this->reimbursementService->deleteReimbursement($reimbursement);
 
         if ($request->wantsJson() || $request->ajax()) {

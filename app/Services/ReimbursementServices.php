@@ -20,6 +20,7 @@ class ReimbursementServices
         $perPage = $perPage ?? (int) ($filters['per_page'] ?? config('constants.per_page_count', 20));
 
         $query = Reimbursement::query()
+            ->accessibleBy(Auth::user())
             ->with([
                 'user',
                 'paymentMode',
