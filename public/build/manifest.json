@@ -79,7 +79,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-5n2ypqJP.css",
+    "file": "assets/app-CQqiWGL4.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -380,7 +380,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-D5kcvWWo.js",
+    "file": "assets/task-detail-CbNrmwKB.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -485,7 +485,7 @@
     ]
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-DrRDUK_w.js",
+    "file": "assets/time-log-change-request-Nw0E2vj7.js",
     "name": "time-log-change-request",
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
@@ -560,7 +560,7 @@
     ]
   },
   "resources/js/modules/workspace/user-timeline.js": {
-    "file": "assets/user-timeline-B2R1ZTrZ.js",
+    "file": "assets/user-timeline-DjbLEo2Z.js",
     "name": "user-timeline",
     "src": "resources/js/modules/workspace/user-timeline.js",
     "isEntry": true,
