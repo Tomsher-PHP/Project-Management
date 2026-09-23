@@ -141,12 +141,18 @@
                         $hasPendingTimeLogChangeRequest = !empty($segment['has_pending_time_log_change_request']);
                         $canRequestOwnTimeLogChange = empty($workspaceTimelineShowsUser) && !empty($segment['can_request_time_log_change']);
                         $workSegmentClasses = trim('daily-timeline__segment daily-timeline__segment--work' . ($hasPendingTimeLogChangeRequest ? ' daily-timeline__segment--work-request-pending' : '') . ($canRequestOwnTimeLogChange ? ' modal-open' : ''));
+                        $currentUser = auth()->user();
+                        $canViewTask = $currentUser && ($currentUser->can('task.view_all_tasks') || $currentUser->can('task.view'));
+                        $canViewProject = $currentUser && ($currentUser->can('project.view_all_projects') || $currentUser->can('project.view'));
                     @endphp
                     <button type="button" class="{{ $workSegmentClasses }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $hasPendingTimeLogChangeRequest ? 'Pending time change request | ' : '' }}{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}{{ $hasPendingTimeLogChangeRequest ? ' pending time change request' : '' }}"
                         @if ($canRequestOwnTimeLogChange) data-target="#timeLogChangeRequestModal"
                             data-time-log-change-request-open
                             data-task_id="{{ $segment['task_id'] }}"
                             data-task_name="{{ $segment['task_name'] }}"
+                            data-task_url="{{ $canViewTask && !empty($segment['task_id']) ? route('tasks.edit', $segment['task_id']) : '' }}"
+                            data-project_name="{{ $segment['project_name'] ?? '' }}"
+                            data-project_url="{{ $canViewProject && !empty($segment['project_id']) ? route('projects.edit', $segment['project_id']) : '' }}"
                             data-task_time_log_id="{{ $segment['task_time_log_id'] }}"
                             data-new_started_at="{{ $hasPendingTimeLogChangeRequest ? $segment['pending_new_started_at'] : $segment['original_started_at'] }}"
                             data-new_ended_at="{{ $hasPendingTimeLogChangeRequest ? $segment['pending_new_ended_at'] : $segment['original_ended_at'] }}"

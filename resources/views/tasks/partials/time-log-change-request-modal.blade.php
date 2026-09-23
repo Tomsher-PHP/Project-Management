@@ -23,15 +23,50 @@
                     <input type="hidden" id="timeLogChangeRequestOriginalStartedAt" name="original_started_at" value="" data-time-log-change-request-original-started-at>
                     <input type="hidden" id="timeLogChangeRequestOriginalEndedAt" name="original_ended_at" value="" data-time-log-change-request-original-ended-at>
 
+                    @php
+                        $currentUser = auth()->user();
+                        $canViewTask = $currentUser && ($currentUser->can('task.view_all_tasks') || $currentUser->can('task.view'));
+                        $canViewProject = $currentUser && ($currentUser->can('project.view_all_projects') || $currentUser->can('project.view'));
+
+                        $taskNameText = isset($task) ? $task->name : $taskName ?? '--';
+                        $projectNameText = isset($task) && $task->project ? $task->project->name : $projectName ?? '--';
+
+                        $taskUrl = isset($task) && $canViewTask ? route('tasks.edit', $task) : null;
+                        $projectUrl = isset($task) && $task->project && $canViewProject ? route('projects.edit', $task->project) : null;
+                    @endphp
+
                     <div class="max-h-[80vh] overflow-y-auto px-6 py-6 sm:px-7">
                         <div class="space-y-6">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                    Task Name
-                                </label>
-                                <p id="timeLogChangeRequestTaskName" class="text-base font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-task-name>
-                                    {{ isset($task) ? $task->name : $taskName ?? '--' }}
-                                </p>
+                            <div class="grid gap-5 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
+                                        Task Name
+                                    </label>
+                                    <p id="timeLogChangeRequestTaskName" class="text-base font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-task-name data-default-url="{{ $taskUrl }}">
+                                        @if ($taskUrl)
+                                            <a href="{{ $taskUrl }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300 underline-offset-2 hover:underline">
+                                                {{ $taskNameText }}
+                                            </a>
+                                        @else
+                                            <span>{{ $taskNameText }}</span>
+                                        @endif
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
+                                        Project Name
+                                    </label>
+                                    <p id="timeLogChangeRequestProjectName" class="text-base font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-project-name data-default-url="{{ $projectUrl }}">
+                                        @if ($projectUrl)
+                                            <a href="{{ $projectUrl }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300 underline-offset-2 hover:underline">
+                                                {{ $projectNameText }}
+                                            </a>
+                                        @else
+                                            <span>{{ $projectNameText }}</span>
+                                        @endif
+                                    </p>
+                                </div>
                             </div>
 
                             <div class="grid gap-5 md:grid-cols-2">

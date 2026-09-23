@@ -19,10 +19,24 @@ const readTriggerData = (trigger, key) => {
     return trigger.getAttribute(`data-${key}`) || '';
 };
 
+const escapeHtml = (str) => {
+    if (!str) {
+        return '';
+    }
+
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 const fieldSelectors = {
     taskTimeLogId: '#timeLogChangeRequestTaskTimeLogId',
     taskId: '#timeLogChangeRequestTaskId',
     taskName: '[data-time-log-change-request-task-name]',
+    projectName: '[data-time-log-change-request-project-name]',
     originalStartedAt: '#timeLogChangeRequestOriginalStartedAt',
     originalEndedAt: '#timeLogChangeRequestOriginalEndedAt',
     newStartedAt: '#timeLogChangeRequestNewStartedAt',
@@ -163,6 +177,7 @@ const populateFromTrigger = (trigger) => {
 
     const userNameNode = document.querySelector(fieldSelectors.userName);
     const taskNameNode = document.querySelector(fieldSelectors.taskName);
+    const projectNameNode = document.querySelector(fieldSelectors.projectName);
     const taskTimeLogIdField = document.querySelector(fieldSelectors.taskTimeLogId);
     const taskIdField = document.querySelector(fieldSelectors.taskId);
     const originalStartedAtField = document.querySelector(fieldSelectors.originalStartedAt);
@@ -195,8 +210,23 @@ const populateFromTrigger = (trigger) => {
     }
 
     const taskName = readTriggerData(trigger, 'task_name');
+    const taskUrl = readTriggerData(trigger, 'task_url') || readTriggerData(trigger, 'task-url') || taskNameNode?.dataset.defaultUrl || '';
     if (taskNameNode && taskName) {
-        taskNameNode.textContent = taskName;
+        if (taskUrl) {
+            taskNameNode.innerHTML = `<a href="${taskUrl}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300 underline-offset-2 hover:underline">${escapeHtml(taskName)}</a>`;
+        } else {
+            taskNameNode.textContent = taskName;
+        }
+    }
+
+    const projectName = readTriggerData(trigger, 'project_name') || readTriggerData(trigger, 'project-name');
+    const projectUrl = readTriggerData(trigger, 'project_url') || readTriggerData(trigger, 'project-url') || projectNameNode?.dataset.defaultUrl || '';
+    if (projectNameNode && projectName) {
+        if (projectUrl) {
+            projectNameNode.innerHTML = `<a href="${projectUrl}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300 underline-offset-2 hover:underline">${escapeHtml(projectName)}</a>`;
+        } else {
+            projectNameNode.textContent = projectName;
+        }
     }
 
     setFieldValue(taskTimeLogIdField, readTriggerData(trigger, 'task_time_log_id'));
