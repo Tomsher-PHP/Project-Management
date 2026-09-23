@@ -49,9 +49,21 @@
     $canViewAttendance = $authUser?->can('attendance.view');
     $canViewHolidays = $authUser?->can('holidays.view');
     $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
+    $canViewCompanyExpenses = $authUser?->canAny(['expense.view', 'expense.view_all']) ?? false;
+    $canViewChequeExpenses = $authUser?->canAny(['check_expense.view', 'check_expense.view_all']) ?? false;
+    $canViewReimbursements = $authUser?->canAny(['reimbursement.view', 'reimbursement.view_all']) ?? false;
+
+    $canViewExpenses = $canViewCompanyExpenses || $canViewChequeExpenses || $canViewReimbursements;
+
+    $expensesRoute = match (true) {
+        $canViewCompanyExpenses => route('expenses.index'),
+        $canViewChequeExpenses => route('cheques.index'),
+        $canViewReimbursements => route('reimbursements.index'),
+        default => route('expenses.index'),
+    };
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAttendance || $canViewAppraisal || $canViewHolidays || $canViewSprintReports || $canViewMilestoneReports || $canViewShiftScheduleReports || $canViewProductivityReports || $canViewLeaveReports;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAttendance || $canViewAppraisal || $canViewHolidays || $canViewExpenses;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports || $canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports || $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports;
 
@@ -64,6 +76,7 @@
     $isCustomersActive = request()->routeIs('customers.*');
     $isProjectsActive = request()->routeIs('projects.*');
     $isMeetingsActive = request()->routeIs('meetings.*');
+    $isExpensesActive = request()->routeIs('expenses.*', 'cheques.*', 'reimbursements.*');
     $isKanbanActive = request()->routeIs('tasks.kanban.view', 'tasks.kanbanMode');
     $isScheduleTasksActive = request()->routeIs('schedule-tasks.*');
 
@@ -434,6 +447,18 @@
                                     </li>
                                 @endif
 
+                                @if ($canViewExpenses)
+                                    <li class="item px-[43px] py-[11px] {{ $isExpensesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                        <a href="{{ $expensesRoute }}">
+                                            <span class="item-ico">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                                                </svg>
+                                            </span>
+                                        </a>
+                                        <span class="sidebar-tooltip">Expenses</span>
+                                    </li>
+                                @endif
                                 @if ($canViewAppraisal)
                                     <li class="item px-[43px] py-[11px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                         <a href="{{ route('appraisal.index') }}">

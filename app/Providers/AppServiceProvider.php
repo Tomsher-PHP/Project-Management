@@ -50,12 +50,12 @@ class AppServiceProvider extends ServiceProvider
             });
         });
 
-
         $dateFormat = config('constants.date_format');
         $timeFormat = config('constants.time_format');
-        $timezone = config('app.timezone');
+        $timezone = config('constants.timezone');
         $companyWebsite = null;
         $emailSuffix = '@gmail.com';
+        $companyCurrency = config('constants.currency');
 
         if (Schema::hasTable('configurations')) {
             $selectColumns = ['date_format', 'time_format', 'timezone'];
@@ -66,6 +66,10 @@ class AppServiceProvider extends ServiceProvider
 
             if (Schema::hasColumn('configurations', 'email_suffix')) {
                 $selectColumns[] = 'email_suffix';
+            }
+
+            if (Schema::hasColumn('configurations', 'currency')) {
+                $selectColumns[] = 'currency';
             }
 
             $configuration = Configuration::query()->select($selectColumns)->first();
@@ -91,12 +95,19 @@ class AppServiceProvider extends ServiceProvider
                     ? $configuration->email_suffix
                     : $emailSuffix;
             }
+
+            if ($configuration && in_array('currency', $selectColumns, true)) {
+                $companyCurrency = ! empty($configuration->currency)
+                    ? $configuration->currency
+                    : $companyCurrency;
+            }
         }
 
         config([
             'constants.date_format' => $dateFormat,
             'constants.time_format' => $timeFormat,
             'constants.timezone' => $timezone,
+            'constants.currency' => $companyCurrency,
         ]);
 
         view()->share([
@@ -105,6 +116,7 @@ class AppServiceProvider extends ServiceProvider
             'globalTimezone' => $timezone,
             'globalCompanyWebsite' => $companyWebsite,
             'globalEmailSuffix' => $emailSuffix,
+            'globalCompanyCurrency' => $companyCurrency,
         ]);
 
         View::composer('*', function ($view) {

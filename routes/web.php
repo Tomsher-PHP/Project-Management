@@ -9,13 +9,17 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
 use App\Http\Controllers\ChecklistController;
+use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\CompanyExpensesSettingsController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerRestoreController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ReimbursementController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\IndustryController;
@@ -282,6 +286,31 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.create')->only(['store']);
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.edit')->only(['update']);
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.delete')->only(['destroy']);
+
+        // Company Expenses Settings Routes
+        Route::patch('/expense-payment-modes/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusPaymentMode'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_payment_mode.toggleStatus');
+        Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
+        Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
+        Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
+        Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
+
+        Route::patch('/expense-service-providers/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusServiceProvider'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_service_provider.toggleStatus');
+        Route::resource('expense-service-providers', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
+        Route::resource('expense-service-providers', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
+        Route::resource('expense-service-providers', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
+        Route::resource('expense-service-providers', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
+
+        Route::patch('/expense-categories/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusCategory'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_category.toggleStatus');
+        Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
+        Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
+        Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
+        Route::resource('expense-categories', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
+
+        Route::patch('/vendors/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusVendor'])->middleware('permission.type:company_expenses.edit')->name('vendor.toggleStatus');
+        Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
+        Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
+        Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
+        Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
     });
 
     // Team management Routes
@@ -321,6 +350,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Common Routes
     Route::get('/countries/search', [CommonController::class, 'search'])->name('countries.search');
+    Route::get('/timezones/search', [CommonController::class, 'searchTimezones'])->name('timezones.search');
+    Route::get('/currencies/search', [CommonController::class, 'searchCurrencies'])->name('currencies.search');
 
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
@@ -764,6 +795,24 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.edit')->only(['edit', 'update']);
     Route::delete('/meetings/{meeting}/attachments/{attachment}', [MeetingController::class, 'deleteAttachment'])->middleware('permission.type:meeting.edit')->name('meetings.attachments.delete');
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.delete')->only(['destroy']);
+
+    // Expense Transaction Routes
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.view')->only(['index', 'show']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.create')->only(['store']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.edit')->only(['edit', 'update']);
+    Route::resource('expenses', ExpenseController::class)->middleware('permission.type:expense.delete')->only(['destroy']);
+
+    // Cheque Expense Routes
+    Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.view')->only(['index', 'show']);
+    Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.create')->only(['store']);
+    Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.edit')->only(['edit', 'update']);
+    Route::resource('cheques', ChequeController::class)->middleware('permission.type:check_expense.delete')->only(['destroy']);
+
+    // Reimbursement Routes
+    Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.view')->only(['index', 'show']);
+    Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.create')->only(['store']);
+    Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.edit')->only(['edit', 'update']);
+    Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.delete')->only(['destroy']);
 });
 
 Route::get('api-test', function () {

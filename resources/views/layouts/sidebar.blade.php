@@ -46,9 +46,21 @@
     $canViewAttendance = $authUser?->can('attendance.view');
     $canViewHolidays = $authUser?->can('holidays.view');
     $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
+    $canViewCompanyExpenses = $authUser?->canAny(['expense.view', 'expense.view_all']) ?? false;
+    $canViewChequeExpenses = $authUser?->canAny(['check_expense.view', 'check_expense.view_all']) ?? false;
+    $canViewReimbursements = $authUser?->canAny(['reimbursement.view', 'reimbursement.view_all']) ?? false;
+
+    $canViewExpenses = $canViewCompanyExpenses || $canViewChequeExpenses || $canViewReimbursements;
+
+    $expensesRoute = match (true) {
+        $canViewCompanyExpenses => route('expenses.index'),
+        $canViewChequeExpenses => route('cheques.index'),
+        $canViewReimbursements => route('reimbursements.index'),
+        default => route('expenses.index'),
+    };
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
@@ -61,6 +73,7 @@
     $isCustomersActive = request()->routeIs('customers.*');
     $isProjectsActive = request()->routeIs('projects.*');
     $isMeetingsActive = request()->routeIs('meetings.*');
+    $isExpensesActive = request()->routeIs('expenses.*', 'cheques.*', 'reimbursements.*');
     $isKanbanActive = request()->routeIs('tasks.kanban.view', 'tasks.kanbanMode');
     $isScheduleTasksActive = request()->routeIs('schedule-tasks.*');
 
@@ -131,8 +144,8 @@
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M3 9.75L12 3l9 6.75V21a1 1 0 01-1 1H4a1 1 0 01-1-1V9.75z"/>
-                                                <path d="M9 22V12h6v10"/>
+                                                <path d="M3 9.75L12 3l9 6.75V21a1 1 0 01-1 1H4a1 1 0 01-1-1V9.75z" />
+                                                <path d="M9 22V12h6v10" />
                                             </svg>
                                         </span>
                                         <span class="item-text text-base font-medium leading-none {{ $isDashboardActive ? $sidebarItemActiveClass : '' }}">Dashboard</span>
@@ -147,10 +160,10 @@
                                 <div class="flex items-center">
                                     <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                                            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                                            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                                            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
                                         </svg>
                                     </span>
                                     <span class="item-text text-base font-medium leading-none {{ $isWorkspaceActive ? $sidebarItemActiveClass : '' }}">Workspace</span>
@@ -164,9 +177,9 @@
                                 <div class="flex items-center">
                                     <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="18" y1="20" x2="18" y2="10"/>
-                                            <line x1="12" y1="20" x2="12" y2="4"/>
-                                            <line x1="6" y1="20" x2="6" y2="14"/>
+                                            <line x1="18" y1="20" x2="18" y2="10" />
+                                            <line x1="12" y1="20" x2="12" y2="4" />
+                                            <line x1="6" y1="20" x2="6" y2="14" />
                                         </svg>
                                     </span>
                                     <span class="item-text text-base font-medium leading-none {{ $isAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
@@ -190,8 +203,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                                                    <circle cx="12" cy="7" r="4"/>
+                                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                                    <circle cx="12" cy="7" r="4" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isUsersActive ? $sidebarItemActiveClass : '' }}">Users</span>
@@ -207,11 +220,11 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M17 21v-2a4 4 0 00-3-3.87"/>
-                                                    <path d="M9 21v-2a4 4 0 00-4-4H3a4 4 0 00-4 4v2"/>
-                                                    <circle cx="9" cy="7" r="4"/>
-                                                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                                                    <path d="M16 3.13a4 4 0 010 7.75"/>
+                                                    <path d="M17 21v-2a4 4 0 00-3-3.87" />
+                                                    <path d="M9 21v-2a4 4 0 00-4-4H3a4 4 0 00-4 4v2" />
+                                                    <circle cx="9" cy="7" r="4" />
+                                                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                                                    <path d="M16 3.13a4 4 0 010 7.75" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isTeamsActive ? $sidebarItemActiveClass : '' }}">Teams</span>
@@ -227,9 +240,9 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                                                    <circle cx="8.5" cy="7" r="4"/>
-                                                    <polyline points="17 11 19 13 23 9"/>
+                                                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                                    <circle cx="8.5" cy="7" r="4" />
+                                                    <polyline points="17 11 19 13 23 9" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isCustomersActive ? $sidebarItemActiveClass : '' }}">Customers</span>
@@ -256,8 +269,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                                                    <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                                                    <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isProjectsActive ? $sidebarItemActiveClass : '' }}">Projects</span>
@@ -275,8 +288,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M9 11l3 3L22 4"/>
-                                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                                                    <path d="M9 11l3 3L22 4" />
+                                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isTasksActive ? $sidebarItemActiveClass : '' }}">Tasks</span>
@@ -294,9 +307,9 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="3" width="5" height="18" rx="1"/>
-                                                    <rect x="10" y="3" width="5" height="12" rx="1"/>
-                                                    <rect x="17" y="3" width="4" height="7" rx="1"/>
+                                                    <rect x="3" y="3" width="5" height="18" rx="1" />
+                                                    <rect x="10" y="3" width="5" height="12" rx="1" />
+                                                    <rect x="17" y="3" width="4" height="7" rx="1" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isKanbanActive ? $sidebarItemActiveClass : '' }}">Kanban</span>
@@ -313,11 +326,11 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                                    <line x1="3" y1="10" x2="21" y2="10"/>
-                                                    <polyline points="12 14 12 17 14 17"/>
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                                    <polyline points="12 14 12 17 14 17" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isScheduleTasksActive ? $sidebarItemActiveClass : '' }}">Schedule Tasks</span>
@@ -335,8 +348,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                                    <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                                                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                                    <path d="M13.73 21a2 2 0 01-3.46 0" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isRequestsMenuActive ? $sidebarItemActiveClass : '' }}">Requests</span>
@@ -445,11 +458,11 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                                    <line x1="3" y1="10" x2="21" y2="10"/>
-                                                    <circle cx="12" cy="15" r="2"/>
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                                    <circle cx="12" cy="15" r="2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isMeetingsActive ? $sidebarItemActiveClass : '' }}">Meetings</span>
@@ -475,11 +488,11 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                                    <line x1="3" y1="10" x2="21" y2="10"/>
-                                                    <line x1="8" y1="14" x2="16" y2="14"/>
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                                    <line x1="8" y1="14" x2="16" y2="14" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isLeavesActive ? $sidebarItemActiveClass : '' }}">
@@ -498,8 +511,8 @@
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/>
-                                                <polyline points="9 16 11 18 15 14"/>
+                                                <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                                                <polyline points="9 16 11 18 15 14" />
                                             </svg>
                                         </span>
                                         <span class="item-text text-base font-medium leading-none">
@@ -517,26 +530,9 @@
                                 <a href="{{ route('holidays.index') }}">
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                            <svg
-                                                width="18"
-                                                height="18"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg">
-                                                <path
-                                                    d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.8"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <path
-                                                    d="M8 13L10 15L14 11"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.8"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M8 13L10 15L14 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </span>
                                         <span class="item-text text-base font-medium leading-none">
@@ -555,10 +551,28 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isAppraisalActive ? $sidebarItemActiveClass : '' }}">Appraisal</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if ($canViewExpenses)
+                            <!-- Company Expenses -->
+                            <li class="item py-[8px] {{ $isExpensesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ $expensesRoute }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isExpensesActive ? $sidebarItemActiveClass : '' }}">Expenses</span>
                                         </div>
                                     </div>
                                 </a>
@@ -584,8 +598,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                                                    <polyline points="17 6 23 6 23 12"/>
+                                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                                    <polyline points="17 6 23 6 23 12" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isPerformanceReportsMenuActive ? $sidebarItemActiveClass : '' }}">Performance</span>
@@ -636,8 +650,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                                                    <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                                                    <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isProjectsReportsMenuActive ? $sidebarItemActiveClass : '' }}">Projects</span>
@@ -707,8 +721,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <circle cx="12" cy="12" r="10"/>
-                                                    <polyline points="12 6 12 12 16 14"/>
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <polyline points="12 6 12 12 16 14" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isScheduleShiftActive ? $sidebarItemActiveClass : '' }}">Schedule Shift</span>
@@ -726,8 +740,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <circle cx="12" cy="12" r="3"/>
-                                                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                                                    <circle cx="12" cy="12" r="3" />
+                                                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isSettingsActive ? $sidebarItemActiveClass : '' }}">Settings</span>
@@ -745,8 +759,8 @@
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M12 8v4l3 3"/>
-                                                    <path d="M3.05 11a9 9 0 11.5 4m-.5 5v-5h5"/>
+                                                    <path d="M12 8v4l3 3" />
+                                                    <path d="M3.05 11a9 9 0 11.5 4m-.5 5v-5h5" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isActivityLogActive ? $sidebarItemActiveClass : '' }}">Activity Log</span>
