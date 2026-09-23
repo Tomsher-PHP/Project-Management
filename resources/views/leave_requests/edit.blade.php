@@ -479,13 +479,13 @@
                         @endif
 
                         {{-- ==================================================
-                     Duration
+                    Number of Days
                 =================================================== --}}
                         <div class="mb-5">
 
                             <label for="duration" class="mb-2 block text-sm font-medium text-gray-700">
 
-                                Duration
+                                Number of Days
 
                             </label>
 
@@ -494,14 +494,14 @@
                             <p class="mt-1 text-xs text-gray-500">
 
                                 @if ($approvalMode)
-                                    Duration is calculated from the approved dates.
+                                    Number of Days is calculated from the approved dates.
                                     The final paid and unpaid days are calculated
                                     by the server when the leave is approved.
                                 @elseif($fullEdit)
-                                    Duration is calculated automatically from the
+                                    Number of Days is calculated automatically from the
                                     selected requested dates.
                                 @else
-                                    Duration cannot be changed for this request.
+                                    Number of Days cannot be changed for this request.
                                 @endif
 
                                 Half-day leave counts as 0.50 day per date.
