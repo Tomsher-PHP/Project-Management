@@ -72,7 +72,7 @@ const loadProjectTaskDetailNotesTab = async (detailModal, notesUrl) => {
         container.innerHTML = result.html;
 
         const noteEditorElement = container.querySelector('#project_task_manage_note_editor');
-        if (noteEditorElement && !projectTaskManageNoteEditors.has(detailModal)) {
+        if (noteEditorElement) {
             const noteEditor = new window.Quill(noteEditorElement, {
                 theme: 'snow',
                 placeholder: 'Write a note...',
