@@ -20,7 +20,7 @@
 
     <div class="space-y-4">
         <h4 class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">
-            Existing Notes & Files ({{ $taskNotes->count() }})
+            Notes & Files ({{ $taskNotes->count() }})
         </h4>
 
         <div class="space-y-4" data-project-task-manage-notes-list>
