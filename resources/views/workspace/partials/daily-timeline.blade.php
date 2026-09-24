@@ -139,14 +139,18 @@
                 @foreach ($workedTaskSegments ?? [] as $segment)
                     @php
                         $hasPendingTimeLogChangeRequest = !empty($segment['has_pending_time_log_change_request']);
-                        $canRequestOwnTimeLogChange = empty($workspaceTimelineShowsUser) && !empty($segment['can_request_time_log_change']);
-                        $workSegmentClasses = trim('daily-timeline__segment daily-timeline__segment--work' . ($hasPendingTimeLogChangeRequest ? ' daily-timeline__segment--work-request-pending' : '') . ($canRequestOwnTimeLogChange ? ' modal-open' : ''));
+                        $isOwnWorkspace = empty($workspaceTimelineShowsUser);
                         $currentUser = auth()->user();
+                        $canManageTimeLogChange = $currentUser && ($currentUser->is_super_admin || $currentUser->can('task_time_log_change_request.approve_reject'));
+                        $canRequestOwnTimeLogChange = $isOwnWorkspace && !empty($segment['can_request_time_log_change']);
+                        $canRequestOtherUserTimeLogChange = !$isOwnWorkspace && $canManageTimeLogChange && !empty($segment['can_request_time_log_change']);
+                        $canRequestTimeLogChange = $canRequestOwnTimeLogChange || $canRequestOtherUserTimeLogChange;
+                        $workSegmentClasses = trim('daily-timeline__segment daily-timeline__segment--work' . ($hasPendingTimeLogChangeRequest ? ' daily-timeline__segment--work-request-pending' : '') . ($canRequestTimeLogChange ? ' modal-open' : ''));
                         $canViewTask = $currentUser && ($currentUser->can('task.view_all_tasks') || $currentUser->can('task.view'));
                         $canViewProject = $currentUser && ($currentUser->can('project.view_all_projects') || $currentUser->can('project.view'));
                     @endphp
                     <button type="button" class="{{ $workSegmentClasses }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $hasPendingTimeLogChangeRequest ? 'Pending time change request | ' : '' }}{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}{{ $hasPendingTimeLogChangeRequest ? ' pending time change request' : '' }}"
-                        @if ($canRequestOwnTimeLogChange) data-target="#timeLogChangeRequestModal"
+                        @if ($canRequestTimeLogChange) data-target="#timeLogChangeRequestModal"
                             data-time-log-change-request-open
                             data-task_id="{{ $segment['task_id'] }}"
                             data-task_name="{{ $segment['task_name'] }}"
@@ -159,6 +163,7 @@
                             data-original_started_at="{{ $segment['original_started_at'] }}"
                             data-original_ended_at="{{ $segment['original_ended_at'] }}"
                             data-time_log_user_name="{{ $workspaceTimelineUserName }}"
+                            data-is_other_user="{{ $isOwnWorkspace ? '0' : '1' }}"
                             data-time_log_change_request_mode="{{ $hasPendingTimeLogChangeRequest ? 'edit' : 'create' }}"
                             @if ($hasPendingTimeLogChangeRequest)
                                 data-time_log_change_request_id="{{ $segment['pending_change_request_id'] }}"

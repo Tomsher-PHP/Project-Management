@@ -71,24 +71,30 @@
 
                             <div class="grid gap-5 md:grid-cols-2">
                                 <div>
-                                    <label for="timeLogChangeRequestNewStartedAt" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                        New Started At <x-red-star />
+                                    <label for="timeLogChangeRequestNewStartedAt" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50" data-time-log-change-request-started-at-label>
+                                        Started At <x-red-star />
                                     </label>
-                                    <input type="text" id="timeLogChangeRequestNewStartedAt" name="new_started_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-enable-seconds="true" data-time-24hr="true" data-format="Y-m-d H:i:S" data-time-log-change-request-started-at placeholder="Select start date and time" autocomplete="off">
+                                    <div data-time-log-change-request-started-at-picker-container>
+                                        <input type="text" id="timeLogChangeRequestNewStartedAt" name="new_started_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-enable-seconds="true" data-time-24hr="true" data-format="Y-m-d H:i:S" data-time-log-change-request-started-at placeholder="Select start date and time" autocomplete="off">
+                                    </div>
+                                    <p id="timeLogChangeRequestStartedAtDisplay" class="hidden text-base font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-started-at-display></p>
                                     <p class="mt-1 hidden text-sm text-error-300" data-time-log-change-request-error-for="new_started_at"></p>
                                 </div>
 
                                 <div>
-                                    <label for="timeLogChangeRequestNewEndedAt" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                        New Ended At <x-red-star />
+                                    <label for="timeLogChangeRequestNewEndedAt" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50" data-time-log-change-request-ended-at-label>
+                                        Ended At <x-red-star />
                                     </label>
-                                    <input type="text" id="timeLogChangeRequestNewEndedAt" name="new_ended_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-enable-seconds="true" data-time-24hr="true" data-format="Y-m-d H:i:S" data-time-log-change-request-ended-at placeholder="Select end date and time" autocomplete="off">
+                                    <div data-time-log-change-request-ended-at-picker-container>
+                                        <input type="text" id="timeLogChangeRequestNewEndedAt" name="new_ended_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-enable-seconds="true" data-time-24hr="true" data-format="Y-m-d H:i:S" data-time-log-change-request-ended-at placeholder="Select end date and time" autocomplete="off">
+                                    </div>
+                                    <p id="timeLogChangeRequestEndedAtDisplay" class="hidden text-base font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-ended-at-display></p>
                                     <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300" data-time-log-change-request-duration>Duration: --</p>
                                     <p class="mt-1 hidden text-sm text-error-300" data-time-log-change-request-error-for="new_ended_at"></p>
                                 </div>
                             </div>
 
-                            <div>
+                            <div data-time-log-change-request-reason-container>
                                 <div class="mb-2 flex items-center justify-between gap-3">
                                     <label for="timeLogChangeRequestReason" class="block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                         Reason <x-red-star />
