@@ -15,7 +15,8 @@ class UserTimelineService
 
         return TaskTimeLog::query()
             ->with([
-                'task:id,name,request_status',
+                'task:id,name,project_id,request_status',
+                'task.project:id,name',
                 'changeRequests' => fn($query) => $query
                     ->where('status', 'pending')
                     ->latest('id'),
@@ -475,6 +476,8 @@ class UserTimelineService
             'task_id' => $log->task_id,
             'task_time_log_id' => $log->id,
             'task_name' => $log->task?->name ?? ('Task #' . $log->task_id),
+            'project_name' => $log->task?->project?->name ?? '--',
+            'project_id' => $log->task?->project_id,
             'original_started_at' => $startedAtLocal->format('Y-m-d H:i:s'),
             'original_ended_at' => $log->ended_at?->copy()->timezone($timezone)->format('Y-m-d H:i:s'),
             'can_request_time_log_change' => !$log->is_running

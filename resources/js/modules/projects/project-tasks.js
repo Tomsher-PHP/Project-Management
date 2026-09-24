@@ -20,6 +20,125 @@ const taskListPaginationObservers = new WeakMap();
 let taskRowMenuDocumentListenerBound = false;
 const projectTaskEditors = new WeakMap();
 const projectTaskDetailEditors = new WeakMap();
+const projectTaskNoteEditors = new WeakMap();
+const projectTaskCreateFilesMap = new WeakMap();
+const projectTaskManageNoteEditors = new WeakMap();
+const projectTaskManageFilesMap = new WeakMap();
+
+const renderProjectTaskManageFiles = (container, files) => {
+    if (!container) return;
+    if (!files || !files.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = files.map((file, index) => `
+        <div class="flex items-center justify-between rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-2 text-xs dark:border-darkblack-400 dark:bg-darkblack-500">
+            <div class="flex items-center gap-2 min-w-0 pr-2">
+                <svg class="h-4 w-4 text-bgray-600 dark:text-bgray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                <span class="truncate font-medium text-bgray-900 dark:text-white">${file.name}</span>
+                <span class="text-bgray-700 dark:text-bgray-300 flex-shrink-0">(${(file.size / 1024).toFixed(1)} KB)</span>
+            </div>
+            <button type="button" class="text-red-500 hover:text-red-700 flex-shrink-0 font-bold px-1" data-project-task-manage-remove-file="${index}">✕</button>
+        </div>
+    `).join('');
+};
+
+const loadProjectTaskDetailNotesTab = async (detailModal, notesUrl) => {
+    const container = detailModal.querySelector('[data-project-task-detail-notes-container]');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="py-8 text-center text-sm text-bgray-600 dark:text-bgray-300">
+            Loading notes & files...
+        </div>
+    `;
+
+    try {
+        const response = await fetch(notesUrl, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.status) {
+            throw new Error(result.message || 'Unable to load notes and files.');
+        }
+
+        container.innerHTML = result.html;
+
+        const noteEditorElement = container.querySelector('#project_task_manage_note_editor');
+        if (noteEditorElement) {
+            const noteEditor = new window.Quill(noteEditorElement, {
+                theme: 'snow',
+                placeholder: 'Write a note...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['link']
+                    ]
+                }
+            });
+            projectTaskManageNoteEditors.set(detailModal, noteEditor);
+        }
+
+        projectTaskManageFilesMap.set(detailModal, []);
+        const attachmentsInput = container.querySelector('#project_task_manage_attachments_input');
+        const selectedFilesContainer = container.querySelector('#project_task_manage_selected_files');
+
+        if (attachmentsInput && attachmentsInput.dataset.bound !== 'true') {
+            attachmentsInput.dataset.bound = 'true';
+            attachmentsInput.addEventListener('change', () => {
+                const newFiles = Array.from(attachmentsInput.files || []);
+                let currentFiles = projectTaskManageFilesMap.get(detailModal) || [];
+                const combined = [...currentFiles];
+                newFiles.forEach((f) => {
+                    if (!combined.some((item) => item.name === f.name && item.size === f.size)) {
+                        combined.push(f);
+                    }
+                });
+                projectTaskManageFilesMap.set(detailModal, combined);
+                renderProjectTaskManageFiles(selectedFilesContainer, combined);
+            });
+        }
+    } catch (error) {
+        container.innerHTML = `
+            <div class="py-6 text-center text-sm text-red-500">
+                ${error.message || 'Failed to load notes and files.'}
+            </div>
+        `;
+    }
+};
+
+const renderProjectTaskCreateFiles = (root) => {
+    const container = root.querySelector('#project_task_create_selected_files');
+    if (!container) return;
+
+    const files = projectTaskCreateFilesMap.get(root) || [];
+    if (!files.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = files.map((file, index) => `
+        <div class="flex items-center justify-between rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-2 text-xs dark:border-darkblack-400 dark:bg-darkblack-500">
+            <div class="flex items-center gap-2 min-w-0 pr-2">
+                <svg class="h-4 w-4 text-bgray-600 dark:text-bgray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                <span class="truncate font-medium text-bgray-900 dark:text-white">${file.name}</span>
+                <span class="text-bgray-700 dark:text-bgray-300 flex-shrink-0">(${(file.size / 1024).toFixed(1)} KB)</span>
+            </div>
+            <button type="button" class="text-red-500 hover:text-red-700 flex-shrink-0 font-bold px-1" data-project-task-create-remove-file="${index}">✕</button>
+        </div>
+    `).join('');
+};
 
 const getGroupElements = (group) => ({
     icon: group.querySelector('[data-project-task-group-icon]'),
@@ -296,30 +415,24 @@ const getDefaultTaskDueDateTime = () => {
 };
 
 const setTaskModalAdvancedState = (root, expanded) => {
-    const modal = root?.querySelector('[data-project-task-modal]');
     const panel = root?.querySelector('[data-project-task-modal-panel]');
     const form = root?.querySelector('[data-project-task-form]');
-    const advancedSection = form?.querySelector('[data-project-task-advanced-section]');
-    const toggleButton = form?.querySelector('[data-project-task-advanced-toggle]');
 
-    if (!modal || !panel || !form || !advancedSection || !toggleButton) {
-        return;
+    if (panel) {
+        panel.classList.remove('max-w-lg', 'max-w-5xl');
+        panel.classList.add('max-w-[95vw]', '2xl:max-w-[1400px]');
     }
 
-    form.dataset.advanced = expanded ? 'true' : 'false';
-    advancedSection.hidden = !expanded;
-    panel.classList.toggle('max-w-lg', !expanded);
-    panel.classList.toggle('max-w-5xl', expanded);
-    toggleButton.textContent = expanded ? 'Hide Advanced' : 'Show Advanced';
+    if (form) {
+        // Set default due date when opening/initializing the task modal
+        const dueDateField = form.querySelector('[name="due_date_time"]');
 
-    // Set default due date when opening/initializing the task modal
-    const dueDateField = form.querySelector('[name="due_date_time"]');
-
-    if (dueDateField && !dueDateField.value) {
-        setFieldValue(
-            dueDateField,
-            getDefaultTaskDueDateTime()
-        );
+        if (dueDateField && !dueDateField.value) {
+            setFieldValue(
+                dueDateField,
+                getDefaultTaskDueDateTime()
+            );
+        }
     }
 };
 
@@ -371,6 +484,20 @@ const prepareTaskModal = async (root, {
     if (descInput) {
         descInput.value = '';
     }
+    const noteEditor = projectTaskNoteEditors.get(root);
+    if (noteEditor) {
+        noteEditor.setContents([]);
+    }
+    const noteInput = form.querySelector('#project_task_create_note_input');
+    if (noteInput) {
+        noteInput.value = '';
+    }
+    projectTaskCreateFilesMap.set(root, []);
+    const attachmentsInput = form.querySelector('#project_task_create_attachments_input');
+    if (attachmentsInput) {
+        attachmentsInput.value = '';
+    }
+    renderProjectTaskCreateFiles(root);
     clearTaskFormErrors(form);
     setTaskModalAdvancedState(root, false);
     syncTaskFormSelectState(form);
@@ -406,11 +533,6 @@ const prepareTaskModal = async (root, {
 
 const applyTaskFormErrors = (form, errors = {}) => {
     clearTaskFormErrors(form);
-
-    if (Object.keys(errors).some((fieldName) => ADVANCED_TASK_FIELDS.has(fieldName.split('.')[0]))) {
-        const root = form.closest('[data-project-tasks-root]');
-        setTaskModalAdvancedState(root, true);
-    }
 
     Object.entries(errors).forEach(([fieldName, messages]) => {
         const normalizedFieldName = fieldName.split('.')[0];
@@ -1636,6 +1758,40 @@ const initializeTasksRoot = (root) => {
         projectTaskEditors.set(root, editor);
     }
 
+    const noteEditorElement = root.querySelector('#project_task_create_note_editor');
+    if (noteEditorElement && !projectTaskNoteEditors.has(root)) {
+        const noteEditor = new window.Quill(noteEditorElement, {
+            theme: 'snow',
+            placeholder: 'Write an initial task note...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['link']
+                ]
+            }
+        });
+        projectTaskNoteEditors.set(root, noteEditor);
+    }
+
+    const attachmentsInput = root.querySelector('#project_task_create_attachments_input');
+    if (attachmentsInput && attachmentsInput.dataset.bound !== 'true') {
+        attachmentsInput.dataset.bound = 'true';
+        attachmentsInput.addEventListener('change', () => {
+            const newFiles = Array.from(attachmentsInput.files || []);
+            let currentFiles = projectTaskCreateFilesMap.get(root) || [];
+            const combined = [...currentFiles];
+            newFiles.forEach((f) => {
+                if (!combined.some((item) => item.name === f.name && item.size === f.size)) {
+                    combined.push(f);
+                }
+            });
+            projectTaskCreateFilesMap.set(root, combined);
+            renderProjectTaskCreateFiles(root);
+        });
+    }
+
     if (!taskRowMenuDocumentListenerBound) {
         document.addEventListener('click', (event) => {
             if (event.target.closest('[data-project-task-row-dropdown]')) {
@@ -1662,6 +1818,238 @@ const initializeTasksRoot = (root) => {
     }
 
     root.addEventListener('click', async (event) => {
+        const detailTabBtn = event.target.closest('[data-project-task-detail-tab]');
+        if (detailTabBtn && root.contains(detailTabBtn)) {
+            const tabName = detailTabBtn.dataset.projectTaskDetailTab;
+            const detailModal = detailTabBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            if (!detailModal) return;
+
+            detailModal.querySelectorAll('[data-project-task-detail-tab]').forEach((btn) => {
+                const isActive = btn.dataset.projectTaskDetailTab === tabName;
+                btn.className = isActive
+                    ? 'border-b-2 border-success-300 px-4 py-2 text-sm font-semibold text-success-400 dark:text-success-300'
+                    : 'border-b-2 border-transparent px-4 py-2 text-sm font-medium text-bgray-600 transition hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white';
+            });
+
+            detailModal.querySelectorAll('[data-project-task-detail-tab-panel]').forEach((panel) => {
+                const isActive = panel.dataset.projectTaskDetailTabPanel === tabName;
+                panel.classList.toggle('hidden', !isActive);
+            });
+
+            if (tabName === 'notes') {
+                const notesUrl = detailTabBtn.dataset.notesTabUrl;
+                if (notesUrl) {
+                    loadProjectTaskDetailNotesTab(detailModal, notesUrl);
+                }
+            }
+            return;
+        }
+
+        const manageNoteSubmitBtn = event.target.closest('[data-project-task-manage-note-submit]');
+        if (manageNoteSubmitBtn && root.contains(manageNoteSubmitBtn)) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const detailModal = manageNoteSubmitBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            const noteContainer = manageNoteSubmitBtn.closest('[data-project-task-manage-note-container]');
+            const storeUrl = noteContainer?.dataset.storeUrl;
+
+            if (!detailModal || !storeUrl) return;
+
+            const noteEditor = projectTaskManageNoteEditors.get(detailModal);
+            const noteInput = noteContainer.querySelector('#project_task_manage_note_input');
+            let noteHtml = '';
+            if (noteEditor) {
+                const content = noteEditor.root.innerHTML.trim();
+                noteHtml = (content === '<p><br></p>') ? '' : content;
+            }
+            if (noteInput) {
+                noteInput.value = noteHtml;
+            }
+
+            manageNoteSubmitBtn.disabled = true;
+            manageNoteSubmitBtn.textContent = 'Saving...';
+
+            try {
+                const formData = new FormData();
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+                formData.append('note', noteHtml);
+                formData.append('description', noteHtml);
+
+                const selectedFiles = projectTaskManageFilesMap.get(detailModal) || [];
+                selectedFiles.forEach((file) => {
+                    formData.append('attachments[]', file);
+                });
+
+                const response = await fetch(storeUrl, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Failed to add note.');
+                }
+
+                if (noteEditor) {
+                    noteEditor.setContents([]);
+                }
+                if (noteInput) {
+                    noteInput.value = '';
+                }
+
+                const attachmentsInput = noteContainer.querySelector('#project_task_manage_attachments_input');
+                if (attachmentsInput) {
+                    attachmentsInput.value = '';
+                }
+
+                projectTaskManageFilesMap.set(detailModal, []);
+                const selectedFilesContainer = noteContainer.querySelector('#project_task_manage_selected_files');
+                if (selectedFilesContainer) {
+                    selectedFilesContainer.innerHTML = '';
+                }
+
+                const notesList = detailModal.querySelector('[data-project-task-manage-notes-list]');
+                if (notesList) {
+                    if (result.note_card_html) {
+                        notesList.insertAdjacentHTML('afterbegin', result.note_card_html);
+                    }
+                    const emptyState = notesList.querySelector('.rounded-xl.border-dashed');
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                }
+
+                Alert.successModal(result.message || 'Note added successfully.');
+            } catch (err) {
+                Alert.errorModal(err.message || 'Unable to save note.');
+            } finally {
+                manageNoteSubmitBtn.disabled = false;
+                manageNoteSubmitBtn.textContent = 'Add Note & Files';
+            }
+            return;
+        }
+
+        const removeManageFileBtn = event.target.closest('[data-project-task-manage-remove-file]');
+        if (removeManageFileBtn && root.contains(removeManageFileBtn)) {
+            const index = Number(removeManageFileBtn.dataset.projectTaskManageRemoveFile);
+            const detailModal = removeManageFileBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            if (detailModal) {
+                let currentFiles = projectTaskManageFilesMap.get(detailModal) || [];
+                currentFiles.splice(index, 1);
+                projectTaskManageFilesMap.set(detailModal, currentFiles);
+                const selectedFilesContainer = detailModal.querySelector('#project_task_manage_selected_files');
+                renderProjectTaskManageFiles(selectedFilesContainer, currentFiles);
+            }
+            return;
+        }
+
+        const deleteNoteBtn = event.target.closest('.delete-task-note');
+        if (deleteNoteBtn && root.contains(deleteNoteBtn)) {
+            const noteId = deleteNoteBtn.dataset.noteId;
+            const detailModal = deleteNoteBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            const taskId = deleteNoteBtn.closest('[data-task-id]')?.dataset.taskId
+                || detailModal?.querySelector('[data-current-task-id]')?.dataset.currentTaskId
+                || detailModal?.querySelector('[data-task-id]')?.dataset.taskId;
+
+            if (noteId && taskId) {
+                const confirmation = await Alert.confirm({
+                    title: 'Delete Note',
+                    text: 'Are you sure you want to delete this note?',
+                    confirmText: 'Yes, delete it',
+                    confirmColor: '#ef4444',
+                });
+
+                if (!confirmation?.isConfirmed) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/tasks/${taskId}/notes/${noteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        },
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        Alert.successModal(result.message || 'Note deleted.');
+                        const tabBtn = detailModal?.querySelector('[data-project-task-detail-tab="notes"]');
+                        if (tabBtn?.dataset.notesTabUrl) {
+                            loadProjectTaskDetailNotesTab(detailModal, tabBtn.dataset.notesTabUrl);
+                        }
+                    } else {
+                        throw new Error(result.message || 'Failed to delete note.');
+                    }
+                } catch (err) {
+                    Alert.errorModal(err.message || 'Failed to delete note.');
+                }
+            }
+            return;
+        }
+
+        const deleteFileBtn = event.target.closest('.delete-task-note-file');
+        if (deleteFileBtn && root.contains(deleteFileBtn)) {
+            const noteId = deleteFileBtn.dataset.noteId;
+            const attachmentId = deleteFileBtn.dataset.attachmentId;
+            const detailModal = deleteFileBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            const taskId = deleteFileBtn.closest('[data-task-id]')?.dataset.taskId
+                || detailModal?.querySelector('[data-current-task-id]')?.dataset.currentTaskId
+                || detailModal?.querySelector('[data-task-id]')?.dataset.taskId;
+
+            if (noteId && attachmentId && taskId) {
+                const confirmation = await Alert.confirm({
+                    title: 'Remove File',
+                    text: 'Are you sure you want to remove this file?',
+                    confirmText: 'Yes, remove it',
+                    confirmColor: '#ef4444',
+                });
+
+                if (!confirmation?.isConfirmed) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/tasks/${taskId}/notes/${noteId}/attachments/${attachmentId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        },
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        Alert.successModal(result.message || 'File removed.');
+                        const tabBtn = detailModal?.querySelector('[data-project-task-detail-tab="notes"]');
+                        if (tabBtn?.dataset.notesTabUrl) {
+                            loadProjectTaskDetailNotesTab(detailModal, tabBtn.dataset.notesTabUrl);
+                        }
+                    } else {
+                        throw new Error(result.message || 'Failed to remove file.');
+                    }
+                } catch (err) {
+                    Alert.errorModal(err.message || 'Failed to remove file.');
+                }
+            }
+            return;
+        }
+        const removeFileBtn = event.target.closest('[data-project-task-create-remove-file]');
+        if (removeFileBtn && root.contains(removeFileBtn)) {
+            const index = Number(removeFileBtn.dataset.projectTaskCreateRemoveFile);
+            let currentFiles = projectTaskCreateFilesMap.get(root) || [];
+            currentFiles.splice(index, 1);
+            projectTaskCreateFilesMap.set(root, currentFiles);
+            renderProjectTaskCreateFiles(root);
+            return;
+        }
         const rowMenuTrigger = event.target.closest('[data-project-task-row-menu-trigger]');
 
         if (rowMenuTrigger && root.contains(rowMenuTrigger)) {
@@ -1783,11 +2171,23 @@ const initializeTasksRoot = (root) => {
             return;
         }
 
-        const closeButton = event.target.closest('[data-project-task-modal-close]');
+        const projectTaskModal = root.querySelector('[data-project-task-modal]');
+        if (projectTaskModal && !projectTaskModal.classList.contains('hidden')) {
+            const closeButton = event.target.closest('[data-project-task-modal-close]');
+            const panel = projectTaskModal.querySelector('[data-project-task-modal-panel]');
+            const isClickInsidePanel = panel && panel.contains(event.target);
+            const isClickInsideModal = projectTaskModal.contains(event.target);
+            const isClickOnDropdownPopup = event.target.closest('.ts-dropdown, .flatpickr-calendar, .ql-toolbar, .ql-container');
 
-        if (closeButton && root.contains(closeButton)) {
-            closeTaskModal(root.querySelector('[data-project-task-modal]'));
-            return;
+            if (closeButton && root.contains(closeButton)) {
+                closeTaskModal(projectTaskModal);
+                return;
+            }
+
+            if (isClickInsideModal && !isClickInsidePanel && !isClickOnDropdownPopup) {
+                closeTaskModal(projectTaskModal);
+                return;
+            }
         }
 
         const detailCloseButton = event.target.closest('[data-project-task-detail-close]');
@@ -1963,6 +2363,13 @@ const initializeTasksRoot = (root) => {
                 descInput.value = (content === '<p><br></p>') ? '' : content;
             }
 
+            const noteEditor = projectTaskNoteEditors.get(root);
+            const noteInput = form.querySelector('#project_task_create_note_input');
+            if (noteEditor && noteInput) {
+                const noteContent = noteEditor.root.innerHTML.trim();
+                noteInput.value = (noteContent === '<p><br></p>') ? '' : noteContent;
+            }
+
             const submitButton = form.querySelector('[data-project-task-submit]');
             const modal = root.querySelector('[data-project-task-modal]');
             const storeUrl = form.dataset.storeUrl;
@@ -1979,6 +2386,15 @@ const initializeTasksRoot = (root) => {
             }
 
             try {
+                const formData = new FormData(form);
+                const selectedFiles = projectTaskCreateFilesMap.get(root) || [];
+                if (selectedFiles.length > 0) {
+                    formData.delete('attachments[]');
+                    selectedFiles.forEach((file) => {
+                        formData.append('attachments[]', file);
+                    });
+                }
+
                 const response = await fetch(storeUrl, {
                     method: 'POST',
                     headers: {
@@ -1986,7 +2402,7 @@ const initializeTasksRoot = (root) => {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                     },
-                    body: new FormData(form),
+                    body: formData,
                 });
 
                 const result = await response.json();

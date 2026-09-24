@@ -14,6 +14,19 @@ class TaskQuickStoreRequest extends FormRequest
 {
     use ValidatesAgileTaskPlacement;
 
+    protected function prepareForValidation(): void
+    {
+        $note = $this->input('note');
+
+        if (is_string($note)) {
+            $plainText = trim(str_replace("\xc2\xa0", ' ', strip_tags($note)));
+
+            $this->merge([
+                'note' => $plainText === '' ? null : $note,
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -66,6 +79,9 @@ class TaskQuickStoreRequest extends FormRequest
             'request_type' => ['nullable', Rule::in($requestTypes)],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'note' => ['nullable', 'string'],
+            'attachments' => ['nullable', 'array', 'max:5'],
+            'attachments.*' => ['nullable', 'file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:15360'],
             'project_milestone_id' => [
                 'nullable',
                 'integer',
@@ -138,6 +154,9 @@ class TaskQuickStoreRequest extends FormRequest
             'due_date_time.date' => 'The selected due date is invalid.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
+            'attachments.max' => 'You can attach up to 5 files.',
+            'attachments.*.mimes' => 'Allowed file types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png.',
+            'attachments.*.max' => 'Maximum file size is 15MB per file.',
         ];
     }
 
@@ -151,6 +170,10 @@ class TaskQuickStoreRequest extends FormRequest
                 $projectMilestoneId = $this->nullableIntegerInput('project_milestone_id');
                 $selectedSprintId = $this->nullableIntegerInput('project_sprint_id');
                 $requestType = $this->input('request_type', 'assigned');
+
+                if (($this->filled('note') || $this->hasFile('attachments')) && ! $this->user()?->can('task.add_notes_files')) {
+                    $validator->errors()->add('note', 'You do not have permission to add notes and files to tasks.');
+                }
 
                 if (! $project || ! $projectId) {
                     return;

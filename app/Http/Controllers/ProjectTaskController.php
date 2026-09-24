@@ -209,6 +209,26 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function taskNotesTab(Request $request, Project $project, Task $task): JsonResponse
+    {
+        abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless($this->canViewTaskModal($task), Response::HTTP_FORBIDDEN);
+
+        $taskNotes = $task->taskNotes()
+            ->with(['addedBy', 'attachments.addedBy'])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'html' => view('projects.partials.tasks.modals.notes-tab-content', [
+                'project' => $project,
+                'task' => $task,
+                'taskNotes' => $taskNotes,
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
     public function taskLog(Request $request, Project $project, Task $task): JsonResponse
     {
         abort_unless(

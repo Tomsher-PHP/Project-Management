@@ -413,6 +413,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('meetings/groups/{group}', [ProjectController::class, 'meetingGroup'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.meetings.groups.show');
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
+        Route::get('tasks/{task}/notes-tab', [ProjectTaskController::class, 'taskNotesTab'])->name('projects.tasks.notes-tab');
         Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware(['permission.type:task.create'])->name('projects.tasks.store');
         Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['can:view,task'])->name('projects.tasks.update');
         Route::put('tasks/{task}/requests/approve-with-update', [TaskRequestController::class, 'updateAndApprove'])->name('projects.tasks.requests.update-approve');

@@ -19,10 +19,24 @@ const readTriggerData = (trigger, key) => {
     return trigger.getAttribute(`data-${key}`) || '';
 };
 
+const escapeHtml = (str) => {
+    if (!str) {
+        return '';
+    }
+
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 const fieldSelectors = {
     taskTimeLogId: '#timeLogChangeRequestTaskTimeLogId',
     taskId: '#timeLogChangeRequestTaskId',
     taskName: '[data-time-log-change-request-task-name]',
+    projectName: '[data-time-log-change-request-project-name]',
     originalStartedAt: '#timeLogChangeRequestOriginalStartedAt',
     originalEndedAt: '#timeLogChangeRequestOriginalEndedAt',
     newStartedAt: '#timeLogChangeRequestNewStartedAt',
@@ -59,6 +73,32 @@ const parseDateTimeValue = (value) => {
     const date = new Date(normalizedValue);
 
     return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatDateTimeDisplay = (value) => {
+    if (!value) {
+        return '--';
+    }
+
+    const date = parseDateTimeValue(value);
+
+    if (!date) {
+        return String(value);
+    }
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const formattedHours = String(hours).padStart(2, '0');
+
+    return `${day} ${month} ${year} ${formattedHours}:${minutes} ${ampm}`;
 };
 
 const syncDurationDisplay = () => {
@@ -128,6 +168,13 @@ const applyErrors = (form, errors = {}) => {
     const unhandledMessages = [];
 
     Object.entries(errors).forEach(([fieldName, messages]) => {
+        if (fieldName === 'reason') {
+            const reasonContainer = document.querySelector('[data-time-log-change-request-reason-container]');
+            if (reasonContainer?.classList.contains('hidden')) {
+                return;
+            }
+        }
+
         const message = Array.isArray(messages) ? String(messages[0] || '') : String(messages || '');
         const field = form.querySelector(`[name="${fieldName}"]`);
         const errorNode = form.querySelector(`[data-time-log-change-request-error-for="${fieldName}"]`);
@@ -163,6 +210,7 @@ const populateFromTrigger = (trigger) => {
 
     const userNameNode = document.querySelector(fieldSelectors.userName);
     const taskNameNode = document.querySelector(fieldSelectors.taskName);
+    const projectNameNode = document.querySelector(fieldSelectors.projectName);
     const taskTimeLogIdField = document.querySelector(fieldSelectors.taskTimeLogId);
     const taskIdField = document.querySelector(fieldSelectors.taskId);
     const originalStartedAtField = document.querySelector(fieldSelectors.originalStartedAt);
@@ -170,9 +218,18 @@ const populateFromTrigger = (trigger) => {
     const newStartedAtField = document.querySelector(fieldSelectors.newStartedAt);
     const newEndedAtField = document.querySelector(fieldSelectors.newEndedAt);
     const reasonField = document.querySelector(fieldSelectors.reason);
+    const reasonContainer = document.querySelector('[data-time-log-change-request-reason-container]');
     const submitButton = document.querySelector(fieldSelectors.submit);
     const modalTitleNode = document.querySelector('#timeLogChangeRequestModalTitle');
 
+    const startedAtPickerContainer = document.querySelector('[data-time-log-change-request-started-at-picker-container]');
+    const endedAtPickerContainer = document.querySelector('[data-time-log-change-request-ended-at-picker-container]');
+    const startedAtDisplayNode = document.querySelector('[data-time-log-change-request-started-at-display]');
+    const endedAtDisplayNode = document.querySelector('[data-time-log-change-request-ended-at-display]');
+    const startedAtLabel = document.querySelector('[data-time-log-change-request-started-at-label]');
+    const endedAtLabel = document.querySelector('[data-time-log-change-request-ended-at-label]');
+
+    const isOtherUser = readTriggerData(trigger, 'is_other_user') === '1' || readTriggerData(trigger, 'is-other-user') === '1';
     const mode = readTriggerData(trigger, 'time_log_change_request_mode') === 'edit' ? 'edit' : 'create';
     const storeUrl = form.dataset.storeUrl || form.getAttribute('action') || '';
     const updateUrl = readTriggerData(trigger, 'time_log_change_request_update_url');
@@ -182,11 +239,20 @@ const populateFromTrigger = (trigger) => {
     form.dataset.mode = mode;
 
     if (modalTitleNode) {
-        modalTitleNode.textContent = mode === 'edit' ? 'Update Time Log Change Request' : 'Request Time Log Change';
+        if (isOtherUser) {
+            modalTitleNode.textContent = 'Task Time Log';
+        } else {
+            modalTitleNode.textContent = mode === 'edit' ? 'Update Time Log Change Request' : 'Request Time Log Change';
+        }
     }
 
     if (submitButton) {
-        submitButton.textContent = mode === 'edit' ? 'Update' : 'Submit';
+        if (isOtherUser) {
+            submitButton.classList.add('hidden');
+        } else {
+            submitButton.classList.remove('hidden');
+            submitButton.textContent = mode === 'edit' ? 'Update' : 'Submit';
+        }
     }
 
     if (userNameNode) {
@@ -195,19 +261,79 @@ const populateFromTrigger = (trigger) => {
     }
 
     const taskName = readTriggerData(trigger, 'task_name');
+    const taskUrl = readTriggerData(trigger, 'task_url') || readTriggerData(trigger, 'task-url') || taskNameNode?.dataset.defaultUrl || '';
     if (taskNameNode && taskName) {
-        taskNameNode.textContent = taskName;
+        if (taskUrl) {
+            taskNameNode.innerHTML = `<a href="${taskUrl}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300 underline-offset-2 hover:underline">${escapeHtml(taskName)}</a>`;
+        } else {
+            taskNameNode.textContent = taskName;
+        }
     }
+
+    const projectName = readTriggerData(trigger, 'project_name') || readTriggerData(trigger, 'project-name');
+    const projectUrl = readTriggerData(trigger, 'project_url') || readTriggerData(trigger, 'project-url') || projectNameNode?.dataset.defaultUrl || '';
+    if (projectNameNode && projectName) {
+        if (projectUrl) {
+            projectNameNode.innerHTML = `<a href="${projectUrl}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300 underline-offset-2 hover:underline">${escapeHtml(projectName)}</a>`;
+        } else {
+            projectNameNode.textContent = projectName;
+        }
+    }
+
+    const rawStartedAt = readTriggerData(trigger, 'new_started_at') || readTriggerData(trigger, 'original_started_at');
+    const rawEndedAt = readTriggerData(trigger, 'new_ended_at') || readTriggerData(trigger, 'original_ended_at');
 
     setFieldValue(taskTimeLogIdField, readTriggerData(trigger, 'task_time_log_id'));
     setFieldValue(taskIdField, readTriggerData(trigger, 'task_id'));
     setFieldValue(originalStartedAtField, readTriggerData(trigger, 'original_started_at'));
     setFieldValue(originalEndedAtField, readTriggerData(trigger, 'original_ended_at'));
-    setFieldValue(newStartedAtField, readTriggerData(trigger, 'new_started_at'));
-    setFieldValue(newEndedAtField, readTriggerData(trigger, 'new_ended_at'));
-    setFieldValue(reasonField, mode === 'edit'
-        ? readTriggerData(trigger, 'time_log_change_request_reason')
-        : '');
+    setFieldValue(newStartedAtField, rawStartedAt);
+    setFieldValue(newEndedAtField, rawEndedAt);
+
+    if (isOtherUser) {
+        startedAtPickerContainer?.classList.add('hidden');
+        endedAtPickerContainer?.classList.add('hidden');
+        if (startedAtDisplayNode) {
+            startedAtDisplayNode.textContent = formatDateTimeDisplay(rawStartedAt);
+            startedAtDisplayNode.classList.remove('hidden');
+        }
+        if (endedAtDisplayNode) {
+            endedAtDisplayNode.textContent = formatDateTimeDisplay(rawEndedAt);
+            endedAtDisplayNode.classList.remove('hidden');
+        }
+        if (startedAtLabel) startedAtLabel.textContent = 'Started At';
+        if (endedAtLabel) endedAtLabel.textContent = 'Ended At';
+    } else {
+        startedAtPickerContainer?.classList.remove('hidden');
+        endedAtPickerContainer?.classList.remove('hidden');
+        startedAtDisplayNode?.classList.add('hidden');
+        endedAtDisplayNode?.classList.add('hidden');
+        if (startedAtLabel) startedAtLabel.innerHTML = 'Started At <span class="text-error-300">*</span>';
+        if (endedAtLabel) endedAtLabel.innerHTML = 'Ended At <span class="text-error-300">*</span>';
+    }
+
+    if (reasonContainer) {
+        if (isOtherUser) {
+            reasonContainer.classList.add('hidden');
+            if (reasonField) {
+                reasonField.value = '';
+                reasonField.disabled = true;
+            }
+        } else {
+            reasonContainer.classList.remove('hidden');
+            if (reasonField) {
+                reasonField.disabled = false;
+                setFieldValue(reasonField, mode === 'edit'
+                    ? readTriggerData(trigger, 'time_log_change_request_reason')
+                    : '');
+            }
+        }
+    } else {
+        setFieldValue(reasonField, mode === 'edit'
+            ? readTriggerData(trigger, 'time_log_change_request_reason')
+            : '');
+    }
+
     syncDurationDisplay();
 };
 
