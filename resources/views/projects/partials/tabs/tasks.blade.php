@@ -202,52 +202,54 @@
                                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="description"></p>
                                         </div>
 
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Type</label>
-                                            <div class="flex items-center gap-2">
-                                                <select name="task_type_id" class="tom-select-no-search w-full">
-                                                    @foreach ($taskTypeOptions as $option)
-                                                        <option value="{{ $option->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $option->name }}</option>
+                                        <div class="grid grid-cols-3 gap-4 md:col-span-2">
+                                            <div>
+                                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Type</label>
+                                                <div class="flex items-center gap-2">
+                                                    <select name="task_type_id" class="tom-select-no-search w-full">
+                                                        @foreach ($taskTypeOptions as $option)
+                                                            <option value="{{ $option->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $option->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @can('task_settings.create')
+                                                        <button type="button" data-target="#task-create-type-modal" data-select-target="task_type_id" data-module="Task Type" data-url="{{ route('settings.task-types.store') }}" data-method="POST" data-sort_order="{{ $nextTaskTypeSortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Task Type" aria-label="Add Task Type">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                                            </svg>
+                                                        </button>
+                                                    @endcan
+                                                </div>
+                                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="task_type_id"></p>
+                                            </div>
+
+                                            <div>
+                                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Mode</label>
+                                                <div class="flex items-center gap-2">
+                                                    <select name="task_mode_id" class="tom-select-no-search w-full">
+                                                        @foreach ($taskModeOptions as $option)
+                                                            <option value="{{ $option->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $option->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @can('task_settings.create')
+                                                        <button type="button" data-target="#task-create-mode-modal" data-select-target="task_mode_id" data-module="Task Mode" data-url="{{ route('settings.task-modes.store') }}" data-method="POST" data-sort_order="{{ $nextTaskModeSortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Task Mode" aria-label="Add Task Mode">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                                            </svg>
+                                                        </button>
+                                                    @endcan
+                                                </div>
+                                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="task_mode_id"></p>
+                                            </div>
+
+                                            <div>
+                                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Priority</label>
+                                                <select name="priority" class="tom-select-no-search w-full">
+                                                    @foreach ($taskPriorityOptions as $option)
+                                                        <option value="{{ $option['value'] }}" {{ $option['value'] === $defaultTaskPriority ? 'selected' : '' }}>{{ $option['label'] }}</option>
                                                     @endforeach
                                                 </select>
-                                                @can('task_settings.create')
-                                                    <button type="button" data-target="#task-create-type-modal" data-select-target="task_type_id" data-module="Task Type" data-url="{{ route('settings.task-types.store') }}" data-method="POST" data-sort_order="{{ $nextTaskTypeSortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Task Type" aria-label="Add Task Type">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                                        </svg>
-                                                    </button>
-                                                @endcan
+                                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="priority"></p>
                                             </div>
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="task_type_id"></p>
-                                        </div>
-
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Mode</label>
-                                            <div class="flex items-center gap-2">
-                                                <select name="task_mode_id" class="tom-select-no-search w-full">
-                                                    @foreach ($taskModeOptions as $option)
-                                                        <option value="{{ $option->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $option->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @can('task_settings.create')
-                                                    <button type="button" data-target="#task-create-mode-modal" data-select-target="task_mode_id" data-module="Task Mode" data-url="{{ route('settings.task-modes.store') }}" data-method="POST" data-sort_order="{{ $nextTaskModeSortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Task Mode" aria-label="Add Task Mode">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                                        </svg>
-                                                    </button>
-                                                @endcan
-                                            </div>
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="task_mode_id"></p>
-                                        </div>
-
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Priority</label>
-                                            <select name="priority" class="tom-select-no-search w-full">
-                                                @foreach ($taskPriorityOptions as $option)
-                                                    <option value="{{ $option['value'] }}" {{ $option['value'] === $defaultTaskPriority ? 'selected' : '' }}>{{ $option['label'] }}</option>
-                                                @endforeach
-                                            </select>
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="priority"></p>
                                         </div>
 
                                         <div class="md:col-span-2">
