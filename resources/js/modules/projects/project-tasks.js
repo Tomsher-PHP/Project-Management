@@ -1873,6 +1873,7 @@ const initializeTasksRoot = (root) => {
             try {
                 const formData = new FormData();
                 formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+                formData.append('note', noteHtml);
                 formData.append('description', noteHtml);
 
                 const selectedFiles = projectTaskManageFilesMap.get(detailModal) || [];

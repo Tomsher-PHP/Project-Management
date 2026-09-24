@@ -487,7 +487,7 @@ class TaskController extends Controller
             $validated = $request->validated();
 
             $createdNote = $task->taskNotes()->create([
-                'description' => $validated['description'] ?? null,
+                'description' => $validated['note'] ?? $validated['description'] ?? null,
                 'is_active' => true,
             ]);
 
