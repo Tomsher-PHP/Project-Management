@@ -1952,8 +1952,11 @@ const initializeTasksRoot = (root) => {
         if (deleteNoteBtn && root.contains(deleteNoteBtn)) {
             const noteId = deleteNoteBtn.dataset.noteId;
             const detailModal = deleteNoteBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            const taskId = deleteNoteBtn.closest('[data-task-id]')?.dataset.taskId
+                || detailModal?.querySelector('[data-current-task-id]')?.dataset.currentTaskId
+                || detailModal?.querySelector('[data-task-id]')?.dataset.taskId;
 
-            if (noteId) {
+            if (noteId && taskId) {
                 const confirmation = await Alert.confirm({
                     title: 'Delete Note',
                     text: 'Are you sure you want to delete this note?',
@@ -1966,7 +1969,7 @@ const initializeTasksRoot = (root) => {
                 }
 
                 try {
-                    const response = await fetch(`/tasks/notes/${noteId}`, {
+                    const response = await fetch(`/tasks/${taskId}/notes/${noteId}`, {
                         method: 'DELETE',
                         headers: {
                             Accept: 'application/json',
@@ -1996,8 +1999,11 @@ const initializeTasksRoot = (root) => {
             const noteId = deleteFileBtn.dataset.noteId;
             const attachmentId = deleteFileBtn.dataset.attachmentId;
             const detailModal = deleteFileBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            const taskId = deleteFileBtn.closest('[data-task-id]')?.dataset.taskId
+                || detailModal?.querySelector('[data-current-task-id]')?.dataset.currentTaskId
+                || detailModal?.querySelector('[data-task-id]')?.dataset.taskId;
 
-            if (noteId && attachmentId) {
+            if (noteId && attachmentId && taskId) {
                 const confirmation = await Alert.confirm({
                     title: 'Remove File',
                     text: 'Are you sure you want to remove this file?',
@@ -2010,7 +2016,7 @@ const initializeTasksRoot = (root) => {
                 }
 
                 try {
-                    const response = await fetch(`/tasks/notes/${noteId}/attachments/${attachmentId}`, {
+                    const response = await fetch(`/tasks/${taskId}/notes/${noteId}/attachments/${attachmentId}`, {
                         method: 'DELETE',
                         headers: {
                             Accept: 'application/json',

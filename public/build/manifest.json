@@ -321,7 +321,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-BdSs4T6U.js",
+    "file": "assets/project-detail-1v0axwBL.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -354,7 +354,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-CjPq1sFn.js",
+    "file": "assets/project-tasks-_XU7W3Z2.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -380,7 +380,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-BKLhRBb7.js",
+    "file": "assets/task-detail-DeLS1Arw.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,

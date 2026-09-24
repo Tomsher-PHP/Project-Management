@@ -1,6 +1,6 @@
-<div class="space-y-5">
+<div class="space-y-5" data-task-id="{{ $task->id }}">
     @can('task.add_notes_files')
-        <div data-project-task-manage-note-container data-store-url="{{ route('tasks.notes.store', $task) }}">
+        <div data-project-task-manage-note-container data-store-url="{{ route('tasks.notes.store', $task) }}" data-task-id="{{ $task->id }}">
             @include('tasks.partials.note-files-fields', [
                 'noteInputId' => 'project_task_manage_note_input',
                 'noteEditorId' => 'project_task_manage_note_editor',
