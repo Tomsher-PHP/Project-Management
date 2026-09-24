@@ -169,6 +169,30 @@
                                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="name"></p>
                                         </div>
 
+                                        <div class="grid grid-cols-3 gap-4 md:col-span-2">
+                                            <div>
+                                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
+                                                <select name="current_assignee_ids[]" class="tom-select-multiple w-full" multiple data-sort="0">
+                                                    <option value="">Select assignee</option>
+                                                    @foreach ($assignableUsers as $assignableUser)
+                                                        <option value="{{ $assignableUser->id }}">{{ $assignableUser->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_ids"></p>
+                                            </div>
+
+                                            <div>
+                                                <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$defaultTaskEstimateMinutes ?? 0" :show-label="false" />
+                                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
+                                            </div>
+
+                                            <div>
+                                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date <x-red-star /></label>
+                                                <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" placeholder="Choose a due date and time" autocomplete="off">
+                                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="due_date_time"></p>
+                                            </div>
+                                        </div>
+
                                         <div class="md:col-span-2">
                                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
                                             <input type="hidden" name="description" id="project_task_description_input">
@@ -176,17 +200,6 @@
                                                 <div id="project_task_description_editor" class="h-44 bg-white dark:bg-darkblack-500 dark:text-white"></div>
                                             </div>
                                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="description"></p>
-                                        </div>
-
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
-                                            <select name="current_assignee_ids[]" class="tom-select-multiple w-full" multiple data-sort="0">
-                                                <option value="">Select assignee</option>
-                                                @foreach ($assignableUsers as $assignableUser)
-                                                    <option value="{{ $assignableUser->id }}">{{ $assignableUser->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_ids"></p>
                                         </div>
 
                                         <div>
@@ -235,17 +248,6 @@
                                                 @endforeach
                                             </select>
                                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="priority"></p>
-                                        </div>
-
-                                        <div>
-                                            <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$defaultTaskEstimateMinutes ?? 0" :show-label="false" />
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
-                                        </div>
-
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date <x-red-star /></label>
-                                            <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" placeholder="Choose a due date and time" autocomplete="off">
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="due_date_time"></p>
                                         </div>
 
                                         <div class="md:col-span-2">

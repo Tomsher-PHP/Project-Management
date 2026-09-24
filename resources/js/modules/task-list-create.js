@@ -309,6 +309,17 @@ const setTaskCreateMode = (root, mode = 'create') => {
         assigneeFieldWrapper.hidden = normalizedMode === 'request';
     }
 
+    const assigneeTimeDueRow = root.querySelector('[data-task-create-row-assignee-time-due]');
+    if (assigneeTimeDueRow) {
+        if (normalizedMode === 'request') {
+            assigneeTimeDueRow.classList.remove('grid-cols-3', 'md:grid-cols-3');
+            assigneeTimeDueRow.classList.add('grid-cols-2');
+        } else {
+            assigneeTimeDueRow.classList.remove('grid-cols-2', 'md:grid-cols-2');
+            assigneeTimeDueRow.classList.add('grid-cols-3');
+        }
+    }
+
     if (requestTypeField) {
         requestTypeField.value = normalizedMode === 'request' ? 'self' : 'assigned';
     }
