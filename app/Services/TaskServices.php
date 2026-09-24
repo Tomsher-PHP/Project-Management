@@ -39,7 +39,8 @@ class TaskServices
         protected TaskFilterService $filterService,
         protected NotificationService $notificationService,
         protected HandoffServices $handoffServices,
-        protected RunningTaskNavbarService $runningTaskNavbarService
+        protected RunningTaskNavbarService $runningTaskNavbarService,
+        protected AttachmentService $attachmentService
     ) {}
 
     // Get paginated task list for the current user
@@ -487,6 +488,37 @@ class TaskServices
                         $taskNote,
                         $task
                     );
+                }
+            }
+
+            $hasNote = ! empty($validated['note']);
+            $hasAttachments = ! empty($validated['attachments']) && is_array($validated['attachments']);
+
+            if (($hasNote || $hasAttachments) && $createdTasks->isNotEmpty() && auth()->user()?->can('task.add_notes_files')) {
+                $firstTask = $createdTasks->first();
+                $taskNote = $firstTask->taskNotes()->create([
+                    'description' => $validated['note'] ?? null,
+                    'is_active' => true,
+                ]);
+
+                if ($hasAttachments) {
+                    $projectCode = $project->project_code ?: 'project';
+                    $taskCode = $firstTask->code ?: ('task-' . $firstTask->id);
+                    $directory = 'task_files/' . $projectCode . '/' . $taskCode . '/notes';
+
+                    foreach ($validated['attachments'] as $file) {
+                        if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                            $this->attachmentService->upload(
+                                $file,
+                                $directory,
+                                $taskNote,
+                                'public',
+                                'public',
+                                false,
+                                'task_note'
+                            );
+                        }
+                    }
                 }
             }
 

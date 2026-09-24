@@ -2,115 +2,101 @@
     <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-task-create-close></div>
 
     <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
-        <div class="relative z-10 w-full max-w-lg transition-all duration-200" data-task-create-modal-panel>
+        <div class="relative z-10 w-full max-w-[95vw] 2xl:max-w-[1400px] transition-all duration-200" data-task-create-modal-panel>
             <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
-                <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-2 dark:border-darkblack-400 sm:px-7">
                     <div>
-                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white" data-task-create-title data-default-title="Add Task" data-request-title="Request Task">
+                        <h3 class="text-xl font-semibold text-bgray-900 dark:text-white" data-task-create-title data-default-title="Add Task" data-request-title="Request Task">
                             Add Task
                         </h3>
                     </div>
 
-                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-task-create-close>
+                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-task-create-close>
                         ✕
                     </button>
                 </div>
 
-                <form class="space-y-4 overflow-y-auto px-5 py-5" data-task-create-form data-store-url="{{ route('tasks.store') }}" data-default-store-url="{{ route('tasks.store') }}" data-request-store-url="{{ route('tasks.request.store') }}" data-advanced="false" data-self-assignee-id="{{ auth()->id() }}">
+                <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(340px,1fr)]" data-task-create-form data-store-url="{{ route('tasks.store') }}" data-default-store-url="{{ route('tasks.store') }}" data-request-store-url="{{ route('tasks.request.store') }}" data-self-assignee-id="{{ auth()->id() }}" enctype="multipart/form-data">
                     <input type="hidden" name="request_type" value="assigned" data-task-create-request-type>
                     <input type="hidden" name="handoff_request_id" id="handoff_request_id">
 
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                            <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
-                                <option value="">Search your project here..</option>
-                                @foreach ($taskCreateProjects as $projectOption)
-                                    <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
-                                        {{ $projectOption->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_id"></p>
-                        </div>
+                    <!-- Left Column: Task Form Fields -->
+                    <div class="min-h-0 overflow-y-auto border-b border-bgray-200 px-6 py-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r sm:px-7">
+                        <div class="grid gap-5 md:grid-cols-2">
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
+                                <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
+                                    <option value="">Search your project here..</option>
+                                    @foreach ($taskCreateProjects as $projectOption)
+                                        <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
+                                            {{ $projectOption->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_id"></p>
+                            </div>
 
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
-                            <select name="project_milestone_id" class="tom-select w-full" data-sort="0">
-                                <option value="">Select project first</option>
-                            </select>
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_milestone_id"></p>
-                        </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
+                                <select name="project_milestone_id" class="tom-select w-full" data-sort="0">
+                                    <option value="">Select project first</option>
+                                </select>
+                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_milestone_id"></p>
+                            </div>
 
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
-                                Sprint
-                                <span class="hidden" data-task-create-required-star="project_sprint_id">
-                                    <x-red-star />
-                                </span>
-                            </label>
-                            <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
-                                <option value="">Select project first</option>
-                            </select>
-                            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300" data-task-create-placement-hint></p>
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_sprint_id"></p>
-                        </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                                    Sprint
+                                    <span class="hidden" data-task-create-required-star="project_sprint_id">
+                                        <x-red-star />
+                                    </span>
+                                </label>
+                                <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
+                                    <option value="">Select project first</option>
+                                </select>
+                                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300" data-task-create-placement-hint></p>
+                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_sprint_id"></p>
+                            </div>
 
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Parent Task</label>
-                            <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-task-create-parent-select>
-                                <option value="">Select project first</option>
-                            </select>
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="parent_task_id"></p>
-                        </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Parent Task</label>
+                                <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-task-create-parent-select>
+                                    <option value="">Select project first</option>
+                                </select>
+                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="parent_task_id"></p>
+                            </div>
 
-                        <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
-                            <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="name"></p>
-                        </div>
+                            <div class="md:col-span-2">
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
+                                <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
+                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="name"></p>
+                            </div>
 
-                        <div data-task-create-assignee-field>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
-                            <select name="current_assignee_ids[]" class="tom-select-multiple w-full" multiple data-sort="0">
-                                <option value="">Select project first</option>
-                            </select>
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="current_assignee_ids"></p>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="0" :show-label="false" />
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="estimated_time_minutes"></p>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date <x-red-star /></label>
-                            <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" placeholder="Choose a due date and time" autocomplete="off">
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="due_date_time"></p>
-                        </div>
-                    </div>
-
-                    <div class="rounded-[8px] border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-task-create-advanced-section hidden>
-                        <div class="grid gap-4 md:grid-cols-2">
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
                                 <input type="hidden" name="description" id="task_create_description_input">
                                 <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
-                                    <div id="task_create_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                    <div id="task_create_description_editor" class="h-44 bg-white dark:bg-darkblack-500 dark:text-white"></div>
                                 </div>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="description"></p>
                             </div>
 
+                            <div data-task-create-assignee-field>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
+                                <select name="current_assignee_ids[]" class="tom-select-multiple w-full" multiple data-sort="0">
+                                    <option value="">Select project first</option>
+                                </select>
+                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="current_assignee_ids"></p>
+                            </div>
+
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Type</label>
-
                                 <div class="flex items-center gap-2">
                                     <select name="task_type_id" class="tom-select-no-search w-full">
                                         @foreach ($taskTypeOptions as $option)
                                             <option value="{{ $option->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $option->name }}</option>
                                         @endforeach
                                     </select>
-
                                     @can('task_settings.create')
                                         <button type="button" data-target="#task-create-type-modal" data-select-target="task_type_id" data-module="Task Type" data-url="{{ route('settings.task-types.store') }}" data-method="POST" data-sort_order="{{ $nextTaskTypeSortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Task Type" aria-label="Add Task Type">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -119,20 +105,17 @@
                                         </button>
                                     @endcan
                                 </div>
-
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="task_type_id"></p>
                             </div>
 
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Mode</label>
-
                                 <div class="flex items-center gap-2">
                                     <select name="task_mode_id" class="tom-select-no-search w-full">
                                         @foreach ($taskModeOptions as $option)
                                             <option value="{{ $option->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $option->name }}</option>
                                         @endforeach
                                     </select>
-
                                     @can('task_settings.create')
                                         <button type="button" data-target="#task-create-mode-modal" data-select-target="task_mode_id" data-module="Task Mode" data-url="{{ route('settings.task-modes.store') }}" data-method="POST" data-sort_order="{{ $nextTaskModeSortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Task Mode" aria-label="Add Task Mode">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -141,11 +124,10 @@
                                         </button>
                                     @endcan
                                 </div>
-
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="task_mode_id"></p>
                             </div>
 
-                            <div class="md:col-span-2">
+                            <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Priority</label>
                                 <select name="priority" class="tom-select-no-search w-full">
                                     @foreach ($taskPriorityOptions as $option)
@@ -153,6 +135,17 @@
                                     @endforeach
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="priority"></p>
+                            </div>
+
+                            <div>
+                                <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="0" :show-label="false" />
+                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="estimated_time_minutes"></p>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date <x-red-star /></label>
+                                <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" placeholder="Choose a due date and time" autocomplete="off">
+                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="due_date_time"></p>
                             </div>
 
                             <div class="md:col-span-2">
@@ -176,20 +169,53 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-end gap-3 pt-1">
-                        <button type="button" class="inline-flex items-center rounded-lg border border-success-200 bg-success-50 px-4 py-2 text-sm font-medium text-success-400 transition hover:border-success-300 hover:bg-success-100 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300" data-task-create-advanced-toggle>
-                            Show Advanced
-                        </button>
+                    <!-- Right Column: Notes & Files Section -->
+                    <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
+                        <div class="min-h-0 flex-1 overflow-y-auto pr-1 space-y-5">
+                            @can('task.add_notes_files')
+                                <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Note & Files</p>
 
-                        <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300" data-task-create-close>
-                            Cancel
-                        </button>
+                                    <div class="mt-4 space-y-4">
+                                        <div>
+                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">Note</label>
+                                            <input type="hidden" name="note" id="task_create_note_input">
+                                            <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
+                                                <div id="task_create_note_editor" class="h-36 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                            </div>
+                                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="note"></p>
+                                        </div>
 
-                        <button type="submit" class="inline-flex items-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60"
-                            data-task-create-submit>
-                            Save Task
-                        </button>
-                    </div>
+                                        <div>
+                                            <label for="task_create_attachments_input" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">Files</label>
+                                            <input type="file" id="task_create_attachments_input" name="attachments[]" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-3 py-2.5 text-sm text-bgray-700 file:mr-3 file:rounded-md file:border-0 file:bg-success-50 file:px-3 file:py-1.5 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
+                                            <p class="mt-2 text-xs text-bgray-600 dark:text-bgray-300">
+                                                Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 15MB per file.
+                                            </p>
+                                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="attachments"></p>
+
+                                            <div id="task_create_selected_files" class="mt-3 space-y-2"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Initial Note & Files</p>
+                                    <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">You do not have permission to add notes and files to tasks.</p>
+                                </div>
+                            @endcan
+                        </div>
+
+                        <div class="mt-5 flex flex-wrap justify-end gap-3 border-t border-bgray-200 pt-4 dark:border-darkblack-400">
+                            <button type="button" class="rounded-lg border border-bgray-300 bg-white px-5 py-2.5 text-sm font-medium text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300" data-task-create-close>
+                                Cancel
+                            </button>
+
+                            <button type="submit" class="rounded-lg bg-success-300 px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-task-create-submit>
+                                Save Task
+                            </button>
+                        </div>
+                    </aside>
                 </form>
             </div>
         </div>

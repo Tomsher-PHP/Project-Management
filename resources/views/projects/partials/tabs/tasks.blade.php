@@ -108,97 +108,85 @@
                 <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-modal-close></div>
 
                 <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
-                    <div class="relative z-10 w-full max-w-lg transition-all duration-200" data-project-task-modal-panel>
+                    <div class="relative z-10 w-full max-w-[95vw] 2xl:max-w-[1400px] transition-all duration-200" data-project-task-modal-panel>
                         <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
-                            <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                            <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-2 dark:border-darkblack-400 sm:px-7">
                                 <div>
-                                    <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Add Task</h3>
+                                    <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Add Task</h3>
                                 </div>
 
-                                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-task-modal-close>
+                                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-task-modal-close>
                                     ✕
                                 </button>
                             </div>
-                            <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-form data-store-url="{{ route('projects.tasks.store', $project) }}" data-advanced="false" data-task-placement='@json($taskPlacementOptions)'>
-                                <div class="grid gap-4 md:grid-cols-2">
-                                    @unless ($isLinearFlow)
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
-                                            <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-module-select>
-                                                <option value="">Select milestone or leave empty for backlog</option>
-                                                @foreach ($taskCreateProjectModules as $projectMilestone)
-                                                    <option value="{{ $projectMilestone->id }}">{{ $projectMilestone->name }}</option>
-                                                @endforeach
+                            <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(340px,1fr)]" data-project-task-form data-store-url="{{ route('projects.tasks.store', $project) }}" data-task-placement='@json($taskPlacementOptions)' enctype="multipart/form-data">
+                                <!-- Left Column: Task Form Fields -->
+                                <div class="min-h-0 overflow-y-auto border-b border-bgray-200 px-6 py-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r sm:px-7">
+                                    <div class="grid gap-5 md:grid-cols-2">
+                                        @unless ($isLinearFlow)
+                                            <div>
+                                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
+                                                <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-module-select>
+                                                    <option value="">Select milestone or leave empty for backlog</option>
+                                                    @foreach ($taskCreateProjectModules as $projectMilestone)
+                                                        <option value="{{ $projectMilestone->id }}">{{ $projectMilestone->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_milestone_id"></p>
+                                            </div>
+
+                                            <div>
+                                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                                                    Sprint
+                                                    <span class="hidden" data-project-task-required-star="project_sprint_id"></span>
+                                                </label>
+                                                <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
+                                                    <option value="">Select sprint or leave empty for backlog</option>
+                                                    @foreach ($taskCreateProjectSprints as $projectSprint)
+                                                        <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_milestone_id }}">
+                                                            {{ $projectSprint->name }}@if ($projectSprint->projectMilestone?->name)
+                                                                - {{ $projectSprint->projectMilestone->name }}
+                                                            @endif
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300" data-project-task-placement-hint></p>
+                                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_sprint_id"></p>
+                                            </div>
+                                        @endunless
+
+                                        <div class="{{ $isLinearFlow ? 'md:col-span-2' : '' }}">
+                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Parent Task</label>
+                                            <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-parent-task-select data-parent-task-url="{{ route('projects.tasks.parent-options', $project) }}">
+                                                <option value="">Select parent task</option>
                                             </select>
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_milestone_id"></p>
+                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="parent_task_id"></p>
                                         </div>
 
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
-                                                Sprint
-                                                <span class="hidden" data-project-task-required-star="project_sprint_id"></span>
-                                            </label>
-                                            <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
-                                                <option value="">Select sprint or leave empty for backlog</option>
-                                                @foreach ($taskCreateProjectSprints as $projectSprint)
-                                                    <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_milestone_id }}">
-                                                        {{ $projectSprint->name }}@if ($projectSprint->projectMilestone?->name)
-                                                            - {{ $projectSprint->projectMilestone->name }}
-                                                        @endif
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300" data-project-task-placement-hint></p>
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_sprint_id"></p>
+                                        <div class="md:col-span-2">
+                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
+                                            <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
+                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="name"></p>
                                         </div>
-                                    @endunless
 
-                                    <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Parent Task</label>
-                                        <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-parent-task-select data-parent-task-url="{{ route('projects.tasks.parent-options', $project) }}">
-                                            <option value="">Select parent task</option>
-                                        </select>
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="parent_task_id"></p>
-                                    </div>
-
-                                    <div class="md:col-span-2">
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
-                                        <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="name"></p>
-                                    </div>
-
-                                    <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
-                                        <select name="current_assignee_ids[]" class="tom-select-multiple w-full" multiple data-sort="0">
-                                            <option value="">Select assignee</option>
-                                            @foreach ($assignableUsers as $assignableUser)
-                                                <option value="{{ $assignableUser->id }}">{{ $assignableUser->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_ids"></p>
-                                    </div>
-
-                                    <div class="{{ $isLinearFlow ? '' : '' }}">
-                                        <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$defaultTaskEstimateMinutes ?? 0" :show-label="false" />
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
-                                    </div>
-
-                                    <div class="md:col-span-2">
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date <x-red-star /></label>
-                                        <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" placeholder="Choose a due date and time" autocomplete="off">
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="due_date_time"></p>
-                                    </div>
-                                </div>
-
-                                <div class="rounded-[8px] border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-project-task-advanced-section hidden>
-                                    <div class="grid gap-4 md:grid-cols-2">
                                         <div class="md:col-span-2">
                                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
                                             <input type="hidden" name="description" id="project_task_description_input">
                                             <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
-                                                <div id="project_task_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                                <div id="project_task_description_editor" class="h-44 bg-white dark:bg-darkblack-500 dark:text-white"></div>
                                             </div>
                                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="description"></p>
+                                        </div>
+
+                                        <div>
+                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
+                                            <select name="current_assignee_ids[]" class="tom-select-multiple w-full" multiple data-sort="0">
+                                                <option value="">Select assignee</option>
+                                                @foreach ($assignableUsers as $assignableUser)
+                                                    <option value="{{ $assignableUser->id }}">{{ $assignableUser->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_ids"></p>
                                         </div>
 
                                         <div>
@@ -239,7 +227,7 @@
                                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="task_mode_id"></p>
                                         </div>
 
-                                        <div class="md:col-span-2">
+                                        <div>
                                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Priority</label>
                                             <select name="priority" class="tom-select-no-search w-full">
                                                 @foreach ($taskPriorityOptions as $option)
@@ -247,6 +235,17 @@
                                                 @endforeach
                                             </select>
                                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="priority"></p>
+                                        </div>
+
+                                        <div>
+                                            <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$defaultTaskEstimateMinutes ?? 0" :show-label="false" />
+                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
+                                        </div>
+
+                                        <div>
+                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date <x-red-star /></label>
+                                            <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" placeholder="Choose a due date and time" autocomplete="off">
+                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="due_date_time"></p>
                                         </div>
 
                                         <div class="md:col-span-2">
@@ -270,19 +269,53 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center justify-end gap-3 pt-1">
-                                    <button type="button" class="inline-flex items-center rounded-lg border border-success-200 bg-success-50 px-4 py-2 text-sm font-medium text-success-400 transition hover:border-success-300 hover:bg-success-100 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300" data-project-task-advanced-toggle>
-                                        Show Advanced
-                                    </button>
+                                <!-- Right Column: Notes & Files Section -->
+                                <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
+                                    <div class="min-h-0 flex-1 overflow-y-auto pr-1 space-y-5">
+                                        @can('task.add_notes_files')
+                                            <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Note & Files</p>
 
-                                    <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300" data-project-task-modal-close>
-                                        Cancel
-                                    </button>
+                                                <div class="mt-4 space-y-4">
+                                                    <div>
+                                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">Note</label>
+                                                        <input type="hidden" name="note" id="project_task_create_note_input">
+                                                        <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
+                                                            <div id="project_task_create_note_editor" class="h-36 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                                        </div>
+                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="note"></p>
+                                                    </div>
 
-                                    <button type="submit" class="inline-flex items-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400" data-project-task-submit>
-                                        Save Task
-                                    </button>
-                                </div>
+                                                    <div>
+                                                        <label for="project_task_create_attachments_input" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">Files</label>
+                                                        <input type="file" id="project_task_create_attachments_input" name="attachments[]" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-3 py-2.5 text-sm text-bgray-700 file:mr-3 file:rounded-md file:border-0 file:bg-success-50 file:px-3 file:py-1.5 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
+                                                        <p class="mt-2 text-xs text-bgray-600 dark:text-bgray-300">
+                                                            Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 15MB per file.
+                                                        </p>
+                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="attachments"></p>
+
+                                                        <div id="project_task_create_selected_files" class="mt-3 space-y-2"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Initial Note & Files</p>
+                                                <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">You do not have permission to add notes and files to tasks.</p>
+                                            </div>
+                                        @endcan
+                                    </div>
+
+                                    <div class="mt-5 flex flex-wrap justify-end gap-3 border-t border-bgray-200 pt-4 dark:border-darkblack-400">
+                                        <button type="button" class="rounded-lg border border-bgray-300 bg-white px-5 py-2.5 text-sm font-medium text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300" data-project-task-modal-close>
+                                            Cancel
+                                        </button>
+
+                                        <button type="submit" class="rounded-lg bg-success-300 px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-project-task-submit>
+                                            Save Task
+                                        </button>
+                                    </div>
+                                </aside>
                             </form>
                         </div>
                     </div>
