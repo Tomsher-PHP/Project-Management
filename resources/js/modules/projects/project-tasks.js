@@ -22,6 +22,99 @@ const projectTaskEditors = new WeakMap();
 const projectTaskDetailEditors = new WeakMap();
 const projectTaskNoteEditors = new WeakMap();
 const projectTaskCreateFilesMap = new WeakMap();
+const projectTaskManageNoteEditors = new WeakMap();
+const projectTaskManageFilesMap = new WeakMap();
+
+const renderProjectTaskManageFiles = (container, files) => {
+    if (!container) return;
+    if (!files || !files.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = files.map((file, index) => `
+        <div class="flex items-center justify-between rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-2 text-xs dark:border-darkblack-400 dark:bg-darkblack-500">
+            <div class="flex items-center gap-2 min-w-0 pr-2">
+                <svg class="h-4 w-4 text-bgray-600 dark:text-bgray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                <span class="truncate font-medium text-bgray-900 dark:text-white">${file.name}</span>
+                <span class="text-bgray-700 dark:text-bgray-300 flex-shrink-0">(${(file.size / 1024).toFixed(1)} KB)</span>
+            </div>
+            <button type="button" class="text-red-500 hover:text-red-700 flex-shrink-0 font-bold px-1" data-project-task-manage-remove-file="${index}">✕</button>
+        </div>
+    `).join('');
+};
+
+const loadProjectTaskDetailNotesTab = async (detailModal, notesUrl) => {
+    const container = detailModal.querySelector('[data-project-task-detail-notes-container]');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="py-8 text-center text-sm text-bgray-600 dark:text-bgray-300">
+            Loading notes & files...
+        </div>
+    `;
+
+    try {
+        const response = await fetch(notesUrl, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.status) {
+            throw new Error(result.message || 'Unable to load notes and files.');
+        }
+
+        container.innerHTML = result.html;
+
+        const noteEditorElement = container.querySelector('#project_task_manage_note_editor');
+        if (noteEditorElement && !projectTaskManageNoteEditors.has(detailModal)) {
+            const noteEditor = new window.Quill(noteEditorElement, {
+                theme: 'snow',
+                placeholder: 'Write a note...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['link']
+                    ]
+                }
+            });
+            projectTaskManageNoteEditors.set(detailModal, noteEditor);
+        }
+
+        projectTaskManageFilesMap.set(detailModal, []);
+        const attachmentsInput = container.querySelector('#project_task_manage_attachments_input');
+        const selectedFilesContainer = container.querySelector('#project_task_manage_selected_files');
+
+        if (attachmentsInput && attachmentsInput.dataset.bound !== 'true') {
+            attachmentsInput.dataset.bound = 'true';
+            attachmentsInput.addEventListener('change', () => {
+                const newFiles = Array.from(attachmentsInput.files || []);
+                let currentFiles = projectTaskManageFilesMap.get(detailModal) || [];
+                const combined = [...currentFiles];
+                newFiles.forEach((f) => {
+                    if (!combined.some((item) => item.name === f.name && item.size === f.size)) {
+                        combined.push(f);
+                    }
+                });
+                projectTaskManageFilesMap.set(detailModal, combined);
+                renderProjectTaskManageFiles(selectedFilesContainer, combined);
+            });
+        }
+    } catch (error) {
+        container.innerHTML = `
+            <div class="py-6 text-center text-sm text-red-500">
+                ${error.message || 'Failed to load notes and files.'}
+            </div>
+        `;
+    }
+};
 
 const renderProjectTaskCreateFiles = (root) => {
     const container = root.querySelector('#project_task_create_selected_files');
@@ -1725,6 +1818,111 @@ const initializeTasksRoot = (root) => {
     }
 
     root.addEventListener('click', async (event) => {
+        const detailTabBtn = event.target.closest('[data-project-task-detail-tab]');
+        if (detailTabBtn && root.contains(detailTabBtn)) {
+            const tabName = detailTabBtn.dataset.projectTaskDetailTab;
+            const detailModal = detailTabBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            if (!detailModal) return;
+
+            detailModal.querySelectorAll('[data-project-task-detail-tab]').forEach((btn) => {
+                const isActive = btn.dataset.projectTaskDetailTab === tabName;
+                btn.className = isActive
+                    ? 'border-b-2 border-success-300 px-4 py-2 text-sm font-semibold text-success-400 dark:text-success-300'
+                    : 'border-b-2 border-transparent px-4 py-2 text-sm font-medium text-bgray-600 transition hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white';
+            });
+
+            detailModal.querySelectorAll('[data-project-task-detail-tab-panel]').forEach((panel) => {
+                const isActive = panel.dataset.projectTaskDetailTabPanel === tabName;
+                panel.classList.toggle('hidden', !isActive);
+            });
+
+            if (tabName === 'notes') {
+                const notesUrl = detailTabBtn.dataset.notesTabUrl;
+                if (notesUrl) {
+                    loadProjectTaskDetailNotesTab(detailModal, notesUrl);
+                }
+            }
+            return;
+        }
+
+        const removeManageFileBtn = event.target.closest('[data-project-task-manage-remove-file]');
+        if (removeManageFileBtn && root.contains(removeManageFileBtn)) {
+            const index = Number(removeManageFileBtn.dataset.projectTaskManageRemoveFile);
+            const detailModal = removeManageFileBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            if (detailModal) {
+                let currentFiles = projectTaskManageFilesMap.get(detailModal) || [];
+                currentFiles.splice(index, 1);
+                projectTaskManageFilesMap.set(detailModal, currentFiles);
+                const selectedFilesContainer = detailModal.querySelector('#project_task_manage_selected_files');
+                renderProjectTaskManageFiles(selectedFilesContainer, currentFiles);
+            }
+            return;
+        }
+
+        const deleteNoteBtn = event.target.closest('.delete-task-note');
+        if (deleteNoteBtn && root.contains(deleteNoteBtn)) {
+            const noteId = deleteNoteBtn.dataset.noteId;
+            const detailModal = deleteNoteBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+
+            if (noteId && confirm('Are you sure you want to delete this note?')) {
+                try {
+                    const response = await fetch(`/tasks/notes/${noteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        },
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        Alert.successModal(result.message || 'Note deleted.');
+                        const tabBtn = detailModal?.querySelector('[data-project-task-detail-tab="notes"]');
+                        if (tabBtn?.dataset.notesTabUrl) {
+                            loadProjectTaskDetailNotesTab(detailModal, tabBtn.dataset.notesTabUrl);
+                        }
+                    } else {
+                        throw new Error(result.message || 'Failed to delete note.');
+                    }
+                } catch (err) {
+                    Alert.errorModal(err.message || 'Failed to delete note.');
+                }
+            }
+            return;
+        }
+
+        const deleteFileBtn = event.target.closest('.delete-task-note-file');
+        if (deleteFileBtn && root.contains(deleteFileBtn)) {
+            const noteId = deleteFileBtn.dataset.noteId;
+            const attachmentId = deleteFileBtn.dataset.attachmentId;
+            const detailModal = deleteFileBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+
+            if (noteId && attachmentId && confirm('Are you sure you want to remove this file?')) {
+                try {
+                    const response = await fetch(`/tasks/notes/${noteId}/attachments/${attachmentId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        },
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        Alert.successModal(result.message || 'File removed.');
+                        const tabBtn = detailModal?.querySelector('[data-project-task-detail-tab="notes"]');
+                        if (tabBtn?.dataset.notesTabUrl) {
+                            loadProjectTaskDetailNotesTab(detailModal, tabBtn.dataset.notesTabUrl);
+                        }
+                    } else {
+                        throw new Error(result.message || 'Failed to remove file.');
+                    }
+                } catch (err) {
+                    Alert.errorModal(err.message || 'Failed to remove file.');
+                }
+            }
+            return;
+        }
         const removeFileBtn = event.target.closest('[data-project-task-create-remove-file]');
         if (removeFileBtn && root.contains(removeFileBtn)) {
             const index = Number(removeFileBtn.dataset.projectTaskCreateRemoveFile);
@@ -2030,6 +2228,67 @@ const initializeTasksRoot = (root) => {
         }
 
         initializeTaskListPagination(group);
+    });
+
+    root.addEventListener('submit', async (event) => {
+        const noteForm = event.target.closest('[data-project-task-manage-note-form]');
+        if (noteForm && root.contains(noteForm)) {
+            event.preventDefault();
+            const detailModal = noteForm.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            const noteEditor = projectTaskManageNoteEditors.get(detailModal);
+            const noteInput = noteForm.querySelector('#project_task_manage_note_input');
+            if (noteEditor && noteInput) {
+                const content = noteEditor.root.innerHTML.trim();
+                noteInput.value = (content === '<p><br></p>') ? '' : content;
+            }
+
+            const submitBtn = noteForm.querySelector('[data-project-task-manage-note-submit]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+            }
+
+            try {
+                const formData = new FormData(noteForm);
+                const selectedFiles = projectTaskManageFilesMap.get(detailModal) || [];
+                if (selectedFiles.length > 0) {
+                    formData.delete('attachments[]');
+                    selectedFiles.forEach((file) => {
+                        formData.append('attachments[]', file);
+                    });
+                }
+
+                const response = await fetch(noteForm.action, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Failed to add note.');
+                }
+
+                Alert.successModal(result.message || 'Note added successfully.');
+
+                const tabBtn = detailModal?.querySelector('[data-project-task-detail-tab="notes"]');
+                if (tabBtn?.dataset.notesTabUrl) {
+                    loadProjectTaskDetailNotesTab(detailModal, tabBtn.dataset.notesTabUrl);
+                }
+            } catch (err) {
+                Alert.errorModal(err.message || 'Unable to save note.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Add Note & Files';
+                }
+            }
+        }
     });
 
     const form = root.querySelector('[data-project-task-form]');

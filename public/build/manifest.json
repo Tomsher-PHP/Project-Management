@@ -79,7 +79,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-c6sr0wUb.css",
+    "file": "assets/app-Cc-Ex5Cs.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -321,7 +321,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-G2oE2-fH.js",
+    "file": "assets/project-detail-DZ_7hJc9.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -354,7 +354,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-CovxmBrE.js",
+    "file": "assets/project-tasks-061CQO3F.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -380,7 +380,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-CbNrmwKB.js",
+    "file": "assets/task-detail-5RLkuKRb.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -400,7 +400,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-Bg9G4fgq.js",
+    "file": "assets/task-list-create-CRh7mvGe.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
@@ -485,7 +485,7 @@
     ]
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-Nw0E2vj7.js",
+    "file": "assets/time-log-change-request-yYz_vYIS.js",
     "name": "time-log-change-request",
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
@@ -560,7 +560,7 @@
     ]
   },
   "resources/js/modules/workspace/user-timeline.js": {
-    "file": "assets/user-timeline-DjbLEo2Z.js",
+    "file": "assets/user-timeline-Cm00tPXo.js",
     "name": "user-timeline",
     "src": "resources/js/modules/workspace/user-timeline.js",
     "isEntry": true,

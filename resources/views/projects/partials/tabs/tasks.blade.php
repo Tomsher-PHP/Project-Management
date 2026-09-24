@@ -272,38 +272,14 @@
                                 <!-- Right Column: Notes & Files Section -->
                                 <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
                                     <div class="min-h-0 flex-1 overflow-y-auto pr-1 space-y-5">
-                                        @can('task.add_notes_files')
-                                            <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
-                                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Note & Files</p>
-
-                                                <div class="mt-4 space-y-4">
-                                                    <div>
-                                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">Note</label>
-                                                        <input type="hidden" name="note" id="project_task_create_note_input">
-                                                        <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
-                                                            <div id="project_task_create_note_editor" class="h-36 bg-white dark:bg-darkblack-500 dark:text-white"></div>
-                                                        </div>
-                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="note"></p>
-                                                    </div>
-
-                                                    <div>
-                                                        <label for="project_task_create_attachments_input" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">Files</label>
-                                                        <input type="file" id="project_task_create_attachments_input" name="attachments[]" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-3 py-2.5 text-sm text-bgray-700 file:mr-3 file:rounded-md file:border-0 file:bg-success-50 file:px-3 file:py-1.5 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
-                                                        <p class="mt-2 text-xs text-bgray-600 dark:text-bgray-300">
-                                                            Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 15MB per file.
-                                                        </p>
-                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="attachments"></p>
-
-                                                        <div id="project_task_create_selected_files" class="mt-3 space-y-2"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @else
-                                            <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
-                                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Initial Note & Files</p>
-                                                <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">You do not have permission to add notes and files to tasks.</p>
-                                            </div>
-                                        @endcan
+                                        @include('tasks.partials.note-files-fields', [
+                                            'noteInputId' => 'project_task_create_note_input',
+                                            'noteEditorId' => 'project_task_create_note_editor',
+                                            'attachmentsInputId' => 'project_task_create_attachments_input',
+                                            'selectedFilesContainerId' => 'project_task_create_selected_files',
+                                            'errorPrefix' => 'project-task',
+                                            'sectionTitle' => 'Note & Files',
+                                        ])
                                     </div>
 
                                     <div class="mt-5 flex flex-wrap justify-end gap-3 border-t border-bgray-200 pt-4 dark:border-darkblack-400">
