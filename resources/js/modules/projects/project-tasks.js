@@ -1953,7 +1953,18 @@ const initializeTasksRoot = (root) => {
             const noteId = deleteNoteBtn.dataset.noteId;
             const detailModal = deleteNoteBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
 
-            if (noteId && confirm('Are you sure you want to delete this note?')) {
+            if (noteId) {
+                const confirmation = await Alert.confirm({
+                    title: 'Delete Note',
+                    text: 'Are you sure you want to delete this note?',
+                    confirmText: 'Yes, delete it',
+                    confirmColor: '#ef4444',
+                });
+
+                if (!confirmation?.isConfirmed) {
+                    return;
+                }
+
                 try {
                     const response = await fetch(`/tasks/notes/${noteId}`, {
                         method: 'DELETE',
@@ -1986,7 +1997,18 @@ const initializeTasksRoot = (root) => {
             const attachmentId = deleteFileBtn.dataset.attachmentId;
             const detailModal = deleteFileBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
 
-            if (noteId && attachmentId && confirm('Are you sure you want to remove this file?')) {
+            if (noteId && attachmentId) {
+                const confirmation = await Alert.confirm({
+                    title: 'Remove File',
+                    text: 'Are you sure you want to remove this file?',
+                    confirmText: 'Yes, remove it',
+                    confirmColor: '#ef4444',
+                });
+
+                if (!confirmation?.isConfirmed) {
+                    return;
+                }
+
                 try {
                     const response = await fetch(`/tasks/notes/${noteId}/attachments/${attachmentId}`, {
                         method: 'DELETE',
