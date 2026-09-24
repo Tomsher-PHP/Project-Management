@@ -1855,11 +1855,23 @@ const initializeTasksRoot = (root) => {
             return;
         }
 
-        const closeButton = event.target.closest('[data-project-task-modal-close]');
+        const projectTaskModal = root.querySelector('[data-project-task-modal]');
+        if (projectTaskModal && !projectTaskModal.classList.contains('hidden')) {
+            const closeButton = event.target.closest('[data-project-task-modal-close]');
+            const panel = projectTaskModal.querySelector('[data-project-task-modal-panel]');
+            const isClickInsidePanel = panel && panel.contains(event.target);
+            const isClickInsideModal = projectTaskModal.contains(event.target);
+            const isClickOnDropdownPopup = event.target.closest('.ts-dropdown, .flatpickr-calendar, .ql-toolbar, .ql-container');
 
-        if (closeButton && root.contains(closeButton)) {
-            closeTaskModal(root.querySelector('[data-project-task-modal]'));
-            return;
+            if (closeButton && root.contains(closeButton)) {
+                closeTaskModal(projectTaskModal);
+                return;
+            }
+
+            if (isClickInsideModal && !isClickInsidePanel && !isClickOnDropdownPopup) {
+                closeTaskModal(projectTaskModal);
+                return;
+            }
         }
 
         const detailCloseButton = event.target.closest('[data-project-task-detail-close]');

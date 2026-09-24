@@ -502,6 +502,7 @@ class TaskServices
                 ]);
 
                 if ($hasAttachments) {
+                    $filesystemDisk = env('FILESYSTEM_DISK', 'public');
                     $projectCode = $project->project_code ?: 'project';
                     $taskCode = $firstTask->code ?: ('task-' . $firstTask->id);
                     $directory = 'task_files/' . $projectCode . '/' . $taskCode . '/notes';
@@ -512,7 +513,7 @@ class TaskServices
                                 $file,
                                 $directory,
                                 $taskNote,
-                                'public',
+                                $filesystemDisk,
                                 'public',
                                 false,
                                 'task_note'

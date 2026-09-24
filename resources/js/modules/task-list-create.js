@@ -822,10 +822,23 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             return;
         }
 
-        const closeButton = event.target.closest('[data-task-create-close]');
+        const taskCreateModal = root.querySelector('[data-task-create-modal]');
+        if (taskCreateModal && !taskCreateModal.classList.contains('hidden')) {
+            const closeButton = event.target.closest('[data-task-create-close]');
+            const panel = taskCreateModal.querySelector('[data-task-create-modal-panel]');
+            const isClickInsidePanel = panel && panel.contains(event.target);
+            const isClickInsideModal = taskCreateModal.contains(event.target);
+            const isClickOnDropdownPopup = event.target.closest('.ts-dropdown, .flatpickr-calendar, .ql-toolbar, .ql-container');
 
-        if (closeButton && root.contains(closeButton)) {
-            closeTaskCreateModal(root.querySelector('[data-task-create-modal]'));
+            if (closeButton && root.contains(closeButton)) {
+                closeTaskCreateModal(taskCreateModal);
+                return;
+            }
+
+            if (isClickInsideModal && !isClickInsidePanel && !isClickOnDropdownPopup) {
+                closeTaskCreateModal(taskCreateModal);
+                return;
+            }
         }
     });
 
