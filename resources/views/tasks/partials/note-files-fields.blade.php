@@ -16,7 +16,7 @@
 
         <div class="{{ $showTitle ? 'mt-4' : '' }} space-y-4">
             <div>
-                <input type="hidden" name="note" id="{{ $noteInputId }}">
+                <input type="hidden" name="description" id="{{ $noteInputId }}">
                 <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
                     <div id="{{ $noteEditorId }}" class="h-36 bg-white dark:bg-darkblack-500 dark:text-white"></div>
                 </div>

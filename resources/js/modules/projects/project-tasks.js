@@ -1845,6 +1845,95 @@ const initializeTasksRoot = (root) => {
             return;
         }
 
+        const manageNoteSubmitBtn = event.target.closest('[data-project-task-manage-note-submit]');
+        if (manageNoteSubmitBtn && root.contains(manageNoteSubmitBtn)) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const detailModal = manageNoteSubmitBtn.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
+            const noteContainer = manageNoteSubmitBtn.closest('[data-project-task-manage-note-container]');
+            const storeUrl = noteContainer?.dataset.storeUrl;
+
+            if (!detailModal || !storeUrl) return;
+
+            const noteEditor = projectTaskManageNoteEditors.get(detailModal);
+            const noteInput = noteContainer.querySelector('#project_task_manage_note_input');
+            let noteHtml = '';
+            if (noteEditor) {
+                const content = noteEditor.root.innerHTML.trim();
+                noteHtml = (content === '<p><br></p>') ? '' : content;
+            }
+            if (noteInput) {
+                noteInput.value = noteHtml;
+            }
+
+            manageNoteSubmitBtn.disabled = true;
+            manageNoteSubmitBtn.textContent = 'Saving...';
+
+            try {
+                const formData = new FormData();
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+                formData.append('description', noteHtml);
+
+                const selectedFiles = projectTaskManageFilesMap.get(detailModal) || [];
+                selectedFiles.forEach((file) => {
+                    formData.append('attachments[]', file);
+                });
+
+                const response = await fetch(storeUrl, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Failed to add note.');
+                }
+
+                if (noteEditor) {
+                    noteEditor.setContents([]);
+                }
+                if (noteInput) {
+                    noteInput.value = '';
+                }
+
+                const attachmentsInput = noteContainer.querySelector('#project_task_manage_attachments_input');
+                if (attachmentsInput) {
+                    attachmentsInput.value = '';
+                }
+
+                projectTaskManageFilesMap.set(detailModal, []);
+                const selectedFilesContainer = noteContainer.querySelector('#project_task_manage_selected_files');
+                if (selectedFilesContainer) {
+                    selectedFilesContainer.innerHTML = '';
+                }
+
+                const notesList = detailModal.querySelector('[data-project-task-manage-notes-list]');
+                if (notesList) {
+                    if (result.note_card_html) {
+                        notesList.insertAdjacentHTML('afterbegin', result.note_card_html);
+                    }
+                    const emptyState = notesList.querySelector('.rounded-xl.border-dashed');
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                }
+
+                Alert.successModal(result.message || 'Note added successfully.');
+            } catch (err) {
+                Alert.errorModal(err.message || 'Unable to save note.');
+            } finally {
+                manageNoteSubmitBtn.disabled = false;
+                manageNoteSubmitBtn.textContent = 'Add Note & Files';
+            }
+            return;
+        }
+
         const removeManageFileBtn = event.target.closest('[data-project-task-manage-remove-file]');
         if (removeManageFileBtn && root.contains(removeManageFileBtn)) {
             const index = Number(removeManageFileBtn.dataset.projectTaskManageRemoveFile);
@@ -2228,67 +2317,6 @@ const initializeTasksRoot = (root) => {
         }
 
         initializeTaskListPagination(group);
-    });
-
-    root.addEventListener('submit', async (event) => {
-        const noteForm = event.target.closest('[data-project-task-manage-note-form]');
-        if (noteForm && root.contains(noteForm)) {
-            event.preventDefault();
-            const detailModal = noteForm.closest('[data-project-task-detail-modal], [data-project-task-detail-content]');
-            const noteEditor = projectTaskManageNoteEditors.get(detailModal);
-            const noteInput = noteForm.querySelector('#project_task_manage_note_input');
-            if (noteEditor && noteInput) {
-                const content = noteEditor.root.innerHTML.trim();
-                noteInput.value = (content === '<p><br></p>') ? '' : content;
-            }
-
-            const submitBtn = noteForm.querySelector('[data-project-task-manage-note-submit]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Saving...';
-            }
-
-            try {
-                const formData = new FormData(noteForm);
-                const selectedFiles = projectTaskManageFilesMap.get(detailModal) || [];
-                if (selectedFiles.length > 0) {
-                    formData.delete('attachments[]');
-                    selectedFiles.forEach((file) => {
-                        formData.append('attachments[]', file);
-                    });
-                }
-
-                const response = await fetch(noteForm.action, {
-                    method: 'POST',
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    },
-                    body: formData,
-                });
-
-                const result = await response.json();
-
-                if (!response.ok || !result.success) {
-                    throw new Error(result.message || 'Failed to add note.');
-                }
-
-                Alert.successModal(result.message || 'Note added successfully.');
-
-                const tabBtn = detailModal?.querySelector('[data-project-task-detail-tab="notes"]');
-                if (tabBtn?.dataset.notesTabUrl) {
-                    loadProjectTaskDetailNotesTab(detailModal, tabBtn.dataset.notesTabUrl);
-                }
-            } catch (err) {
-                Alert.errorModal(err.message || 'Unable to save note.');
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Add Note & Files';
-                }
-            }
-        }
     });
 
     const form = root.querySelector('[data-project-task-form]');

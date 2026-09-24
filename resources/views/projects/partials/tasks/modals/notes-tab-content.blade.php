@@ -1,7 +1,6 @@
 <div class="space-y-5">
     @can('task.add_notes_files')
-        <form data-project-task-manage-note-form action="{{ route('tasks.notes.store', $task) }}" method="POST" enctype="multipart/form-data">
-            @csrf
+        <div data-project-task-manage-note-container data-store-url="{{ route('tasks.notes.store', $task) }}">
             @include('tasks.partials.note-files-fields', [
                 'noteInputId' => 'project_task_manage_note_input',
                 'noteEditorId' => 'project_task_manage_note_editor',
@@ -12,11 +11,11 @@
             ])
 
             <div class="mt-3 flex justify-end">
-                <button type="submit" class="rounded-lg bg-success-300 px-4 py-2 text-xs font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-project-task-manage-note-submit>
+                <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-xs font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-project-task-manage-note-submit>
                     Add Note & Files
                 </button>
             </div>
-        </form>
+        </div>
     @endcan
 
     <div class="space-y-4">
