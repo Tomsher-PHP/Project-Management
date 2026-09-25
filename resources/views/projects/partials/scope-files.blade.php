@@ -1,7 +1,7 @@
 @php
     $isDeletedProjectView = $project->trashed();
-    $showUpload = ($showUpload ?? true) && ! $isDeletedProjectView;
-    $showDelete = ($showDelete ?? true) && ! $isDeletedProjectView;
+    $showUpload = ($showUpload ?? true) && !$isDeletedProjectView;
+    $showDelete = ($showDelete ?? true) && !$isDeletedProjectView;
     $heading = $heading ?? 'Scope Files';
 @endphp
 
@@ -11,7 +11,7 @@
 @if ($showUpload && auth()->user()->can('project.add_scope'))
     <div id="file-upload-box" class="border-2 border-dashed border-bgray-300 rounded-xl p-6 mt-4 text-center cursor-pointer hover:border-success-300 transition">
 
-        <p class="text-bgray-700">Attach your project scope files <span class="text-success-300">click to upload</span></p>
+        <p class="text-bgray-700 dark:text-bgray-300">Attach your project scope files <span class="text-success-300">click to upload</span></p>
         <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
     </div>
     <p class="text-error-300 text-sm mt-2">Files includes pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png and max file size is 1GB</p>
