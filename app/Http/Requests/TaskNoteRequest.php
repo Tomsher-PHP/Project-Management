@@ -32,7 +32,7 @@ class TaskNoteRequest extends FormRequest
             'note' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'attachments' => ['nullable', 'array', 'required_without_all:note,description'],
-            'attachments.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:15360'],
+            'attachments.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:1048576'],
         ];
     }
 
@@ -42,6 +42,7 @@ class TaskNoteRequest extends FormRequest
             'note.required_without' => 'Please add a note or attach at least one file.',
             'description.required_without' => 'Please add a note or attach at least one file.',
             'attachments.required_without_all' => 'Please add a note or attach at least one file.',
+            'attachments.*.max' => 'Maximum file size is 1GB per file.',
         ];
     }
 }

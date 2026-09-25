@@ -64,6 +64,12 @@ return [
     ['name' => 'project_sprint.delete',  'label' => 'Project Sprint', 'sort_order' => 6060, 'default_checked' => false],
     ['name' => 'project_sprint.restore', 'label' => 'Project Sprint', 'sort_order' => 6080, 'default_checked' => false],
 
+    // PROJECT TRACKING
+    ['name' => 'project_tracking.view',    'label' => 'Project Tracking', 'sort_order' => 6200, 'default_checked' => false],
+    ['name' => 'project_tracking.create',  'label' => 'Project Tracking', 'sort_order' => 6220, 'default_checked' => false],
+    ['name' => 'project_tracking.edit',    'label' => 'Project Tracking', 'sort_order' => 6240, 'default_checked' => false],
+    ['name' => 'project_tracking.delete',  'label' => 'Project Tracking', 'sort_order' => 6260, 'default_checked' => false],
+
     // TASK
     ['name' => 'task.view_all_tasks',     'label' => 'Task', 'sort_order' => 7000, 'default_checked' => false],
     ['name' => 'task.view',               'label' => 'Task', 'sort_order' => 7020, 'default_checked' => true],

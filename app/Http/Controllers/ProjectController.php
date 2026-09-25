@@ -359,8 +359,10 @@ class ProjectController extends Controller
 
     public function deleteScopeFile(Project $project, int $fileId, AttachmentService $attachmentService)
     {
-        $attachment = $project->attachments()->where('id', $fileId)->get();
-        $attachmentService->delete($attachment);
+        $attachment = $project->scopeFiles()->where('attachments.id', $fileId)->get();
+        if ($attachment->isNotEmpty()) {
+            $attachmentService->delete($attachment);
+        }
 
         return response()->json([
             'success' => true,
@@ -752,10 +754,21 @@ class ProjectController extends Controller
             })
             ->values();
 
+        // Project Tracking
+        $projectTrackings = $project->trackings()
+        ->with([
+            'attachments',
+            'attachments.addedBy:id,name',
+        ])
+        ->latest('date')
+        ->latest('id')
+        ->get();
+
         $currentStatus = [
             'label' => $project->projectStatus?->name ?? 'No Status',
             'color' => $project->projectStatus?->color ?: '#CBD5E1',
         ];
+
         $currentStage = [
             'label' => $project->projectStage?->name ?? 'No Stage',
             'color' => $project->projectStage?->color ?: '#CBD5E1',
@@ -766,7 +779,8 @@ class ProjectController extends Controller
             'statusHistory',
             'stageHistory',
             'currentStatus',
-            'currentStage'
+            'currentStage',
+            'projectTrackings'
         ))->render();
     }
 

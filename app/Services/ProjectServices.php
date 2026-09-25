@@ -320,26 +320,27 @@ class ProjectServices
 
     public function uploadFile(Project $project, array $data, $category = null)
     {
-        return DB::transaction(function () use ($project, $data, $category) {
-            $attachments = [];
-            if (!empty($data['project_files'])) {
-                $directory = 'project_files/' . $project->project_code;
+        $attachments = [];
+        if (!empty($data['project_files'])) {
+            $directory = 'project_files/' . $project->project_code;
 
-                foreach ($data['project_files'] as $file) {
-                    $attachments[] = $this->attachmentService->upload(
-                        $file,
-                        $directory,
-                        $project,
-                        $this->filesystemDisk,
-                        'public',
-                        true,
-                        $category
-                    );
+            foreach ($data['project_files'] as $file) {
+                $attachment = $this->attachmentService->upload(
+                    $file,
+                    $directory,
+                    $project,
+                    $this->filesystemDisk,
+                    'public',
+                    false,
+                    $category
+                );
+                if ($attachment) {
+                    $attachments[] = $attachment;
                 }
             }
+        }
 
-            return $attachments;
-        });
+        return $attachments;
     }
 
     public function createNote(Project $project, array $data): ProjectNote

@@ -81,7 +81,7 @@ class TaskQuickStoreRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'note' => ['nullable', 'string'],
             'attachments' => ['nullable', 'array', 'max:5'],
-            'attachments.*' => ['nullable', 'file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:15360'],
+            'attachments.*' => ['nullable', 'file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:1048576'],
             'project_milestone_id' => [
                 'nullable',
                 'integer',
@@ -156,7 +156,7 @@ class TaskQuickStoreRequest extends FormRequest
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
             'attachments.max' => 'You can attach up to 5 files.',
             'attachments.*.mimes' => 'Allowed file types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png.',
-            'attachments.*.max' => 'Maximum file size is 15MB per file.',
+            'attachments.*.max' => 'Maximum file size is 1GB per file.',
         ];
     }
 

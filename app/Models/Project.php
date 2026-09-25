@@ -436,4 +436,10 @@ class Project extends Model
     {
         return $this->hasMany(Meeting::class, 'project_id');
     }
+
+    public function trackings()
+    {
+        return $this->hasMany(ProjectTracking::class);
+    }
+
 }

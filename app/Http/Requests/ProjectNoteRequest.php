@@ -37,7 +37,7 @@ class ProjectNoteRequest extends FormRequest
         return [
             'description' => ['nullable', 'string', 'required_without:attachments'],
             'attachments' => ['nullable', 'array', 'required_without:description'],
-            'attachments.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:15360'],
+            'attachments.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:1048576'],
         ];
     }
 
@@ -46,6 +46,7 @@ class ProjectNoteRequest extends FormRequest
         return [
             'description.required_without' => 'Please add a note or attach at least one file.',
             'attachments.required_without' => 'Please add a note or attach at least one file.',
+            'attachments.*.max' => 'Maximum file size is 1GB per file.',
         ];
     }
 }
