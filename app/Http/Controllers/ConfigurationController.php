@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ConfigurationRequest;
 use App\Models\Configuration;
-use App\Models\CountryTimezones;
+use App\Models\Country;
 use App\Services\AttachmentService;
 use Illuminate\Support\Facades\Cache;
 
@@ -25,22 +25,28 @@ class ConfigurationController extends Controller
     public function edit()
     {
         $config = $this->getConfiguration();
-        $dateFormats = config('constants.date_formats');
-        $timeFormats = config('constants.time_formats');
-        $timezones = CountryTimezones::select('zone_name')
-            ->distinct()
-            ->orderBy('zone_name')
-            ->get();
 
-        if (! $timezones->contains(function ($timezone) {
-            return strtoupper((string) $timezone->zone_name) === 'UTC';
-        })) {
-            $timezones->prepend((object) [
-                'zone_name' => 'UTC',
-            ]);
+        if (blank($config->currency)) {
+            $config->currency = config('constants.currency', 'AED');
         }
 
-        return view('settings.configurations.page', compact('config', 'dateFormats', 'timeFormats', 'timezones'));
+        $currencyOption = null;
+        if (!blank($config->currency)) {
+            $country = Country::where('currency', $config->currency)->first();
+            $label = $country && $country->currency_symbol
+                ? "{$config->currency} ({$country->currency_symbol})"
+                : $config->currency;
+
+            $currencyOption = [
+                'id' => $config->currency,
+                'name' => $label,
+            ];
+        }
+
+        $dateFormats = config('constants.date_formats');
+        $timeFormats = config('constants.time_formats');
+
+        return view('settings.configurations.page', compact('config', 'dateFormats', 'timeFormats', 'currencyOption'));
     }
 
     public function update(ConfigurationRequest $request, AttachmentService $attachmentService)
@@ -56,6 +62,7 @@ class ConfigurationController extends Controller
             'company_phone',
             'company_address',
             'timezone',
+            'currency',
             'date_format',
             'time_format',
         ]));

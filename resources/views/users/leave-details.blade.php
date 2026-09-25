@@ -3,30 +3,17 @@
     <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
         {{-- Header --}}
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h2 class="text-2xl font-semibold text-bgray-900 dark:text-white">
-                    Leave Details
-                </h2>
-                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                    Leave entitlement and balance details for
-                    <span class="font-semibold">
-                        {{ $user->name }}
-                    </span>
-                </p>
-            </div>
 
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('users.index') }}"
-                    class="inline-flex items-center rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-medium text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                    Back
-                </a>
+                <x-back-button />
+
                 @can('user.leave_details.create')
                     <a href="{{ route('users.leave-details', ['user' => $user->id, 'add' => 1]) }}"
-                        class="inline-flex items-center rounded-lg bg-success-300 px-5 py-2.5 text-sm font-semibold text-white hover:bg-success-400">
-                        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        class="inline-flex items-center gap-1 rounded-md border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
                         </svg>
-                        Add New Leave Year
+                        <span>Add New Leave Year</span>
                     </a>
                 @endcan
             </div>
@@ -131,38 +118,21 @@
 
                     <div class="flex gap-2">
                         @can('user.leave_details.edit')
-                            <a href="{{ route('users.leave-details', [
-                                'user' => $user->id,
-                                'edit_year' => $year,
-                            ]) }}"
-                                class="inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
-                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.5-8.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 7.5-7.5z" />
-                                </svg>
-                                Edit
-                            </a>
+                            <x-edit-button
+                                :action="route('users.leave-details', [
+                                    'user' => $user->id,
+                                    'edit_year' => $year,
+                                ])"
+                            />
                         @endcan
 
                         @can('user.leave_details.delete')
-                            <form
-                                action="{{ route('users.leave-details.destroy', [
+                            <x-delete-form
+                                :action="route('users.leave-details.destroy', [
                                     'user' => $user->id,
                                     'year' => $year,
-                                ]) }}"
-                                method="POST"
-                                onsubmit="return confirm('Are you sure you want to delete the {{ $year }} leave assignment? This will remove all leave balances for this period.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                    class="inline-flex items-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
-                                    <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 7h12M9 7V4h6v3m-8 0l1 13h8l1-13M10 11v6M14 11v6" />
-                                    </svg>
-                                    Delete
-                                </button>
-                            </form>
+                                ])"
+                            />
                         @endcan
                     </div>
                 </div>

@@ -8,13 +8,15 @@ class TaskNoteRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
-        $description = $this->input('description');
+        $note = $this->input('note') ?? $this->input('description');
 
-        if (is_string($description)) {
-            $plainText = trim(str_replace("\xc2\xa0", ' ', strip_tags($description)));
+        if (is_string($note)) {
+            $plainText = trim(str_replace("\xc2\xa0", ' ', strip_tags($note)));
+            $cleanedNote = $plainText === '' ? null : $note;
 
             $this->merge([
-                'description' => $plainText === '' ? null : $description,
+                'note' => $cleanedNote,
+                'description' => $cleanedNote,
             ]);
         }
     }
@@ -27,8 +29,9 @@ class TaskNoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'description' => ['nullable', 'string', 'required_without:attachments'],
-            'attachments' => ['nullable', 'array', 'required_without:description'],
+            'note' => ['nullable', 'string'],
+            'description' => ['nullable', 'string'],
+            'attachments' => ['nullable', 'array', 'required_without_all:note,description'],
             'attachments.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:15360'],
         ];
     }
@@ -36,8 +39,9 @@ class TaskNoteRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'note.required_without' => 'Please add a note or attach at least one file.',
             'description.required_without' => 'Please add a note or attach at least one file.',
-            'attachments.required_without' => 'Please add a note or attach at least one file.',
+            'attachments.required_without_all' => 'Please add a note or attach at least one file.',
         ];
     }
 }

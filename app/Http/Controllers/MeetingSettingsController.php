@@ -12,13 +12,11 @@ use Illuminate\Support\Facades\DB;
 class MeetingSettingsController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Meeting Settings';
-        $this->subTitle = 'Manage reusable meeting types, locations and tags';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)

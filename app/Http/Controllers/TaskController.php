@@ -481,11 +481,13 @@ class TaskController extends Controller
 
     public function storeNote(TaskNoteRequest $request, Task $task, AttachmentService $attachmentService): JsonResponse
     {
-        DB::transaction(function () use ($task, $request, $attachmentService) {
+        $createdNote = null;
+
+        DB::transaction(function () use ($task, $request, $attachmentService, &$createdNote) {
             $validated = $request->validated();
 
-            $note = $task->taskNotes()->create([
-                'description' => $validated['description'] ?? null,
+            $createdNote = $task->taskNotes()->create([
+                'description' => $validated['note'] ?? $validated['description'] ?? null,
                 'is_active' => true,
             ]);
 
@@ -498,7 +500,7 @@ class TaskController extends Controller
                     $attachmentService->upload(
                         $file,
                         $directory,
-                        $note,
+                        $createdNote,
                         $this->filesystemDisk,
                         'public',
                         false,
@@ -508,6 +510,7 @@ class TaskController extends Controller
             }
         });
 
+        $createdNote?->load(['addedBy', 'attachments.addedBy']);
         $task = $this->loadTaskForDetail($task);
         $taskNotes = $this->getPaginatedTaskNotes($task, 1);
 
@@ -520,6 +523,10 @@ class TaskController extends Controller
                 'canRemove' => auth()->user()->can('update', $task),
                 'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
+            'note_card_html' => $createdNote ? view('tasks.partials.task-note-card', [
+                'note' => $createdNote,
+                'canRemove' => auth()->user()?->can('task.remove_notes_files') ?? false,
+            ])->render() : '',
             'current_page' => $taskNotes->currentPage(),
         ], Response::HTTP_OK);
     }

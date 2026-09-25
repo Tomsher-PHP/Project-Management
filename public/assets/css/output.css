@@ -756,6 +756,10 @@ select {
   width: 100%;
 }
 
+.break-word{
+    word-wrap: break-word;
+}
+
 @media (min-width: 640px) {
   .container {
     max-width: 640px;

@@ -543,6 +543,13 @@ class UserController extends Controller
 
     public function leaveDetails(User $user, Request $request)
     {
+
+        $this->pageTitle = 'User Leave Balance Details';
+
+        view()->share([
+            'pageTitle' => $this->pageTitle,
+        ]);
+
         /*
         * --------------------------------------------------------------------------
         * Get all leave balances for the user.

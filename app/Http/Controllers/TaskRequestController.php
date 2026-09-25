@@ -18,13 +18,11 @@ use Illuminate\Http\Response;
 class TaskRequestController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Task Requests Management';
-        $this->subTitle = 'Manage your task requests and approvals';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request, TaskRequestServices $taskRequestServices)

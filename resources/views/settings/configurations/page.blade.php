@@ -162,7 +162,7 @@
                             System Settings
                         </h3>
 
-                        <div class="flex flex-col gap-6 xl:flex-row xl:items-start">
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                             <!-- Timezone -->
                             <div class="flex-1 min-w-0">
                                 <label for="timezone" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
@@ -176,15 +176,47 @@
                                         </span>
                                     </span>
                                 </label>
-                                <select name="timezone" id="timezone" class="tom-select w-full">
+                                <select name="timezone" id="timezone" class="tom-select-lazy w-full" data-route="{{ route('timezones.search') }}" data-placeholder="Start typing to search timezone...">
                                     <option value="">Select Timezone</option>
-                                    @foreach ($timezones as $tz)
-                                        <option value="{{ $tz->zone_name }}" {{ old('timezone', $config->timezone ?? '') == $tz->zone_name ? 'selected' : '' }}>
-                                            {{ $tz->zone_name }}
+                                    @if (old('timezone', $config->timezone ?? false))
+                                        <option value="{{ old('timezone', $config->timezone) }}" selected>
+                                            {{ old('timezone', $config->timezone) }}
                                         </option>
-                                    @endforeach
+                                    @endif
                                 </select>
                                 @error('timezone')
+                                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Currency -->
+                            <div class="flex-1 min-w-0">
+                                <label for="currency" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                    <span>Default Currency</span>
+                                    <span class="group relative inline-flex cursor-help">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
+                                        <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                            Default system currency used for financial amounts and transactions.
+                                        </span>
+                                    </span>
+                                </label>
+                                @php
+                                    $selectedCurrency = old('currency', $config->currency ?? config('constants.currency', 'AED'));
+                                    $selectedCurrencyLabel = isset($currencyOption) && $currencyOption['id'] === $selectedCurrency
+                                        ? $currencyOption['name']
+                                        : $selectedCurrency;
+                                @endphp
+                                <select name="currency" id="currency" class="tom-select-lazy w-full" data-route="{{ route('currencies.search') }}" data-placeholder="Start typing to search currency...">
+                                    <option value="">Select Currency</option>
+                                    @if ($selectedCurrency)
+                                        <option value="{{ $selectedCurrency }}" selected>
+                                            {{ $selectedCurrencyLabel }}
+                                        </option>
+                                    @endif
+                                </select>
+                                @error('currency')
                                     <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                                 @enderror
                             </div>

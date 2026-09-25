@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\TaskTimeLog;
 use App\Models\TaskTimeLogChangeRequest;
+use App\Models\User;
 use App\Services\CompanyService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,12 +21,15 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
 
     public function rules(): array
     {
+        $timeLog = $this->resolveTimeLog();
+        $isSelf = $timeLog && (int) $timeLog->user_id === (int) $this->user()?->id;
+
         return [
             'task_id' => ['required', 'integer', Rule::exists('tasks', 'id')],
             'task_time_log_id' => ['required', 'integer', Rule::exists('task_time_logs', 'id')],
             'new_started_at' => ['required', 'date'],
             'new_ended_at' => ['required', 'date', 'after:new_started_at'],
-            'reason' => ['required', 'string', 'max:1000'],
+            'reason' => $isSelf ? ['required', 'string', 'max:1000'] : ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -62,8 +66,13 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
                     return;
                 }
 
-                if ((int) $timeLog->user_id !== (int) $this->user()?->id) {
-                    $validator->errors()->add('task_time_log_id', 'You can only change your own time logs.');
+                $isSelf = (int) $timeLog->user_id === (int) $this->user()?->id;
+                $isAuthorizedForOtherUser = $this->user()?->can('task_time_log_change_request.approve_reject')
+                    && User::query()->accessibleBy($this->user())->whereKey($timeLog->user_id)->exists();
+
+                if (! $isSelf && ! $isAuthorizedForOtherUser) {
+                    $validator->errors()->add('task_time_log_id', 'You are not authorized to change time logs for this user.');
+                    return;
                 }
 
                 if ((bool) $timeLog->is_running) {

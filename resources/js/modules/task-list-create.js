@@ -14,6 +14,32 @@ const ADVANCED_TASK_FIELDS = new Set([
 ]);
 
 const taskCreateEditors = new WeakMap();
+const taskCreateNoteEditors = new WeakMap();
+const taskCreateFilesMap = new WeakMap();
+
+const renderTaskCreateFiles = (root) => {
+    const container = root.querySelector('#task_create_selected_files');
+    if (!container) return;
+
+    const files = taskCreateFilesMap.get(root) || [];
+    if (!files.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = files.map((file, index) => `
+        <div class="flex items-center justify-between rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-2 text-xs dark:border-darkblack-400 dark:bg-darkblack-500">
+            <div class="flex items-center gap-2 min-w-0 pr-2">
+                <svg class="h-4 w-4 text-bgray-600 dark:text-bgray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                <span class="truncate font-medium text-bgray-900 dark:text-white">${file.name}</span>
+                <span class="text-bgray-700 dark:text-bgray-300 flex-shrink-0">(${(file.size / 1024).toFixed(1)} KB)</span>
+            </div>
+            <button type="button" class="text-red-500 hover:text-red-700 flex-shrink-0 font-bold px-1" data-task-create-remove-file="${index}">✕</button>
+        </div>
+    `).join('');
+};
 
 const parseDependencies = () => {
     const node = document.getElementById('task-create-dependencies');
@@ -73,21 +99,11 @@ const syncTaskCreateSelectState = (form) => {
 };
 
 const setTaskCreateAdvancedState = (root, expanded) => {
-    const modal = root?.querySelector('[data-task-create-modal]');
     const panel = root?.querySelector('[data-task-create-modal-panel]');
-    const form = root?.querySelector('[data-task-create-form]');
-    const advancedSection = form?.querySelector('[data-task-create-advanced-section]');
-    const toggleButton = form?.querySelector('[data-task-create-advanced-toggle]');
-
-    if (!modal || !panel || !form || !advancedSection || !toggleButton) {
-        return;
+    if (panel) {
+        panel.classList.remove('max-w-lg');
+        panel.classList.add('max-w-[95vw]', '2xl:max-w-[1400px]');
     }
-
-    form.dataset.advanced = expanded ? 'true' : 'false';
-    advancedSection.hidden = !expanded;
-    panel.classList.toggle('max-w-lg', !expanded);
-    panel.classList.toggle('max-w-5xl', expanded);
-    toggleButton.textContent = expanded ? 'Hide Advanced' : 'Show Advanced';
 };
 
 const setFieldValue = (field, value = '') => {
@@ -291,6 +307,17 @@ const setTaskCreateMode = (root, mode = 'create') => {
 
     if (assigneeFieldWrapper) {
         assigneeFieldWrapper.hidden = normalizedMode === 'request';
+    }
+
+    const assigneeTimeDueRow = root.querySelector('[data-task-create-row-assignee-time-due]');
+    if (assigneeTimeDueRow) {
+        if (normalizedMode === 'request') {
+            assigneeTimeDueRow.classList.remove('grid-cols-3', 'md:grid-cols-3');
+            assigneeTimeDueRow.classList.add('grid-cols-2');
+        } else {
+            assigneeTimeDueRow.classList.remove('grid-cols-2', 'md:grid-cols-2');
+            assigneeTimeDueRow.classList.add('grid-cols-3');
+        }
     }
 
     if (requestTypeField) {
@@ -673,6 +700,23 @@ const prepareTaskCreateModal = async (root, dependencies) => {
     if (descInput) {
         descInput.value = '';
     }
+
+    const noteEditor = taskCreateNoteEditors.get(root);
+    if (noteEditor) {
+        noteEditor.setContents([]);
+    }
+    const noteInput = form.querySelector('#task_create_note_input');
+    if (noteInput) {
+        noteInput.value = '';
+    }
+
+    taskCreateFilesMap.set(root, []);
+    const attachmentsInput = form.querySelector('#task_create_attachments_input');
+    if (attachmentsInput) {
+        attachmentsInput.value = '';
+    }
+    renderTaskCreateFiles(root);
+
     clearTaskCreateErrors(form);
     setTaskCreateAdvancedState(root, false);
     setTaskCreateMode(root, getTaskCreateMode(root));
@@ -688,10 +732,6 @@ const prepareTaskCreateModal = async (root, dependencies) => {
 
 const applyTaskCreateErrors = (root, form, errors = {}) => {
     clearTaskCreateErrors(form);
-
-    if (Object.keys(errors).some((fieldName) => ADVANCED_TASK_FIELDS.has(fieldName.split('.')[0]))) {
-        setTaskCreateAdvancedState(root, true);
-    }
 
     Object.entries(errors).forEach(([fieldName, messages]) => {
         const normalizedFieldName = fieldName.split('.')[0];
@@ -733,7 +773,52 @@ const initializeTaskCreateRoot = (root, dependencies) => {
         editorElement.__quill = editor;
     }
 
+    const noteEditorElement = root.querySelector('#task_create_note_editor');
+    if (noteEditorElement && !taskCreateNoteEditors.has(root)) {
+        const noteEditor = new window.Quill(noteEditorElement, {
+            theme: 'snow',
+            placeholder: 'Write an initial task note...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['link']
+                ]
+            }
+        });
+        taskCreateNoteEditors.set(root, noteEditor);
+        noteEditorElement.__quill = noteEditor;
+    }
+
+    const attachmentsInput = root.querySelector('#task_create_attachments_input');
+    if (attachmentsInput && attachmentsInput.dataset.bound !== 'true') {
+        attachmentsInput.dataset.bound = 'true';
+        attachmentsInput.addEventListener('change', () => {
+            const newFiles = Array.from(attachmentsInput.files || []);
+            let currentFiles = taskCreateFilesMap.get(root) || [];
+            const combined = [...currentFiles];
+            newFiles.forEach((f) => {
+                if (!combined.some((item) => item.name === f.name && item.size === f.size)) {
+                    combined.push(f);
+                }
+            });
+            taskCreateFilesMap.set(root, combined);
+            renderTaskCreateFiles(root);
+        });
+    }
+
     root.addEventListener('click', async (event) => {
+        const removeFileBtn = event.target.closest('[data-task-create-remove-file]');
+        if (removeFileBtn && root.contains(removeFileBtn)) {
+            const index = Number(removeFileBtn.dataset.taskCreateRemoveFile);
+            let currentFiles = taskCreateFilesMap.get(root) || [];
+            currentFiles.splice(index, 1);
+            taskCreateFilesMap.set(root, currentFiles);
+            renderTaskCreateFiles(root);
+            return;
+        }
+
         const openButton = event.target.closest('[data-task-create-open]');
 
         if (openButton) {
@@ -748,18 +833,23 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             return;
         }
 
-        const advancedToggle = event.target.closest('[data-task-create-advanced-toggle]');
+        const taskCreateModal = root.querySelector('[data-task-create-modal]');
+        if (taskCreateModal && !taskCreateModal.classList.contains('hidden')) {
+            const closeButton = event.target.closest('[data-task-create-close]');
+            const panel = taskCreateModal.querySelector('[data-task-create-modal-panel]');
+            const isClickInsidePanel = panel && panel.contains(event.target);
+            const isClickInsideModal = taskCreateModal.contains(event.target);
+            const isClickOnDropdownPopup = event.target.closest('.ts-dropdown, .flatpickr-calendar, .ql-toolbar, .ql-container');
 
-        if (advancedToggle && root.contains(advancedToggle)) {
-            const form = root.querySelector('[data-task-create-form]');
-            setTaskCreateAdvancedState(root, form?.dataset.advanced !== 'true');
-            return;
-        }
+            if (closeButton && root.contains(closeButton)) {
+                closeTaskCreateModal(taskCreateModal);
+                return;
+            }
 
-        const closeButton = event.target.closest('[data-task-create-close]');
-
-        if (closeButton && root.contains(closeButton)) {
-            closeTaskCreateModal(root.querySelector('[data-task-create-modal]'));
+            if (isClickInsideModal && !isClickInsidePanel && !isClickOnDropdownPopup) {
+                closeTaskCreateModal(taskCreateModal);
+                return;
+            }
         }
     });
 
@@ -839,7 +929,6 @@ const initializeTaskCreateRoot = (root, dependencies) => {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        // Stop duplicate submissions
         if (isTaskCreateSubmitting) {
             return;
         }
@@ -851,10 +940,15 @@ const initializeTaskCreateRoot = (root, dependencies) => {
 
         if (editor && descInput) {
             const content = editor.root.innerHTML.trim();
+            descInput.value = content === '<p><br></p>' ? '' : content;
+        }
 
-            descInput.value = content === '<p><br></p>'
-                ? ''
-                : content;
+        const noteEditor = taskCreateNoteEditors.get(root);
+        const noteInput = form.querySelector('#task_create_note_input');
+
+        if (noteEditor && noteInput) {
+            const noteContent = noteEditor.root.innerHTML.trim();
+            noteInput.value = noteContent === '<p><br></p>' ? '' : noteContent;
         }
 
         const submitButton = form.querySelector('[data-task-create-submit]');
@@ -865,7 +959,6 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             return;
         }
 
-        // Lock immediately when the first submit happens
         isTaskCreateSubmitting = true;
 
         if (submitButton) {
@@ -874,6 +967,15 @@ const initializeTaskCreateRoot = (root, dependencies) => {
         }
 
         try {
+            const formData = new FormData(form);
+            const selectedFiles = taskCreateFilesMap.get(root) || [];
+            if (selectedFiles.length > 0) {
+                formData.delete('attachments[]');
+                selectedFiles.forEach((file) => {
+                    formData.append('attachments[]', file);
+                });
+            }
+
             const response = await fetch(storeUrl, {
                 method: 'POST',
                 headers: {
@@ -883,7 +985,7 @@ const initializeTaskCreateRoot = (root, dependencies) => {
                         document.querySelector('meta[name="csrf-token"]')
                             ?.getAttribute('content') || '',
                 },
-                body: new FormData(form),
+                body: formData,
             });
 
             const result = await response.json();
@@ -902,14 +1004,9 @@ const initializeTaskCreateRoot = (root, dependencies) => {
                 );
             }
 
-            // Successful request.
-            // Keep the button disabled because the page is reloading.
             window.location.reload();
 
         } catch (error) {
-
-            // If validation/server/network error occurred,
-            // allow the user to submit again.
             isTaskCreateSubmitting = false;
 
             if (!(error.message || '').includes('highlighted fields')) {

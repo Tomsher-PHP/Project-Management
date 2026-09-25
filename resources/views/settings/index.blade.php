@@ -317,6 +317,23 @@
                 </a>
             @endcan
 
+            @can('company_expenses.view')
+                <a href="{{ route('settings.expense-payment-modes.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-6h6M3 6h18v12H3z" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Company Expense
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
+
             @can('configuration.view')
                 <a href="{{ route('settings.configurations.edit') }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">

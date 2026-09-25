@@ -124,6 +124,28 @@ return [
     ['name' => 'meeting.edit',       'label' => 'Meeting', 'sort_order' => 14040, 'default_checked' => false],
     ['name' => 'meeting.delete',     'label' => 'Meeting', 'sort_order' => 14060, 'default_checked' => false],
 
+    // EXPENSE
+    ['name' => 'expense.view_all',   'label' => 'Expense', 'sort_order' => 15000, 'default_checked' => false],
+    ['name' => 'expense.view',       'label' => 'Expense', 'sort_order' => 15010, 'default_checked' => false],
+    ['name' => 'expense.create',     'label' => 'Expense', 'sort_order' => 15020, 'default_checked' => false],
+    ['name' => 'expense.edit',       'label' => 'Expense', 'sort_order' => 15030, 'default_checked' => false],
+    ['name' => 'expense.delete',     'label' => 'Expense', 'sort_order' => 15040, 'default_checked' => false],
+
+    // CHECK EXPENSE
+    ['name' => 'check_expense.view_all',   'label' => 'Check Expense', 'sort_order' => 15050, 'default_checked' => false],
+    ['name' => 'check_expense.view',       'label' => 'Check Expense', 'sort_order' => 15060, 'default_checked' => false],
+    ['name' => 'check_expense.create',     'label' => 'Check Expense', 'sort_order' => 15070, 'default_checked' => false],
+    ['name' => 'check_expense.edit',       'label' => 'Check Expense', 'sort_order' => 15080, 'default_checked' => false],
+    ['name' => 'check_expense.delete',     'label' => 'Check Expense', 'sort_order' => 15090, 'default_checked' => false],
+
+    // REIMBURSEMENT
+    ['name' => 'reimbursement.view_all',   'label' => 'Reimbursement', 'sort_order' => 15100, 'default_checked' => false],
+    ['name' => 'reimbursement.view',       'label' => 'Reimbursement', 'sort_order' => 15110, 'default_checked' => false],
+    ['name' => 'reimbursement.create',     'label' => 'Reimbursement', 'sort_order' => 15120, 'default_checked' => false],
+    ['name' => 'reimbursement.edit',       'label' => 'Reimbursement', 'sort_order' => 15130, 'default_checked' => false],
+    ['name' => 'reimbursement.status_change',       'label' => 'Reimbursement', 'sort_order' => 15140, 'default_checked' => false],
+    ['name' => 'reimbursement.delete',     'label' => 'Reimbursement', 'sort_order' => 15150, 'default_checked' => false],
+
     //======================================================================
     // Requests Actions Start
     //======================================================================
@@ -275,14 +297,21 @@ return [
     ['name' => 'meeting_settings.edit',   'label' => 'Settings - Meeting', 'sort_order' => 65040, 'default_checked' => false],
     ['name' => 'meeting_settings.delete', 'label' => 'Settings - Meeting', 'sort_order' => 65060, 'default_checked' => false],
 
-    // CONFIGURATION
-    ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
-    ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
-
     // LEAVE TYPES
     ['name' => 'leave_types.view',   'label' => 'Settings - Leave Types', 'sort_order' => 68000, 'default_checked' => false],
     ['name' => 'leave_types.create', 'label' => 'Settings - Leave Types', 'sort_order' => 68020, 'default_checked' => false],
     ['name' => 'leave_types.edit',   'label' => 'Settings - Leave Types', 'sort_order' => 68040, 'default_checked' => false],
     ['name' => 'leave_types.delete', 'label' => 'Settings - Leave Types', 'sort_order' => 68060, 'default_checked' => false],
+
+    // Company Expenses
+    ['name' => 'company_expenses.view',   'label' => 'Settings - Company Expenses', 'sort_order' => 69000, 'default_checked' => false],
+    ['name' => 'company_expenses.create', 'label' => 'Settings - Company Expenses', 'sort_order' => 69020, 'default_checked' => false],
+    ['name' => 'company_expenses.edit',   'label' => 'Settings - Company Expenses', 'sort_order' => 69040, 'default_checked' => false],
+    ['name' => 'company_expenses.delete', 'label' => 'Settings - Company Expenses', 'sort_order' => 69060, 'default_checked' => false],
+
+    // ---------------------------------------------------------------------------------------------------------------------------------
+    // CONFIGURATION  -- Last Settings Module
+    ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
+    ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
 
 ];

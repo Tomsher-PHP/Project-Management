@@ -19,6 +19,12 @@ return [
     // Time format    
     'time_format' => 'H:i',
 
+    // Timezone
+    'timezone' => 'UTC',
+
+    // Currency
+    'currency' => 'AED',
+
     // Constant color code
     'soft_colors' => [
         '#f3f4f6',
@@ -77,6 +83,9 @@ return [
         'kpi.view',
         'checklist_template.view',
         'appraisal_settings.view',
+        'meeting_settings.view',
+        'leave_types.view',
+        'company_expenses.view',
         'configuration.view',
     ],
 

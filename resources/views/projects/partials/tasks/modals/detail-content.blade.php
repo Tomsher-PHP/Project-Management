@@ -133,6 +133,60 @@
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="name"></p>
                 </div>
 
+                <div class="grid grid-cols-3 gap-4 md:col-span-2">
+                    <div>
+                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Assignee</label>
+                        <select name="current_assignee_id" class="tom-select w-full" data-sort="0" @disabled(!$canEditTask)>
+                            <option value="">Select assignee</option>
+                            @foreach ($assignableUsers as $assignableUser)
+                                <option value="{{ $assignableUser->id }}" data-subtype="{{ $assignableUser->email }}" {{ (int) $task->current_assignee_id === (int) $assignableUser->id ? 'selected' : '' }}>
+                                    {{ $assignableUser->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="current_assignee_id"></p>
+                    </div>
+
+                    <div>
+                        <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" />
+                        <p class="mt-1 hidden text-sm" data-project-task-detail-error="estimated_time_minutes"></p>
+                        @if ($canRequestEstimate)
+                            @php
+                                $latestExtendRequest = \App\Models\TaskExtendTimeRequest::where('task_id', $task->id)->latest('id')->first();
+                                $buttonText = 'Request Estimate Change';
+                                $buttonColorClass = 'text-success-300 hover:text-success-100';
+
+                                if ($latestExtendRequest) {
+                                    if ($latestExtendRequest->status === 'pending') {
+                                        $buttonText = 'Edit Estimate Change Request';
+                                        $buttonColorClass = 'text-success-300 hover:text-success-100';
+                                    } elseif ($latestExtendRequest->status === 'approved') {
+                                        $buttonText = 'Estimate Change Request Approved';
+                                        $buttonColorClass = 'text-success-300 hover:text-success-100';
+                                    } elseif ($latestExtendRequest->status === 'rejected') {
+                                        $buttonText = 'Estimate Change Request Rejected';
+                                        $buttonColorClass = 'text-error-300 hover:text-error-200';
+                                    }
+                                }
+                            @endphp
+                            <div class="mt-2">
+                                <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold {{ $buttonColorClass }} transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-current-estimate-minutes="{{ (int) round(($task->estimated_time_seconds ?? 0) / 60) }}" data-store-url="{{ route('tasks.extend-time-requests.store', $task) }}" data-pending-url="{{ route('tasks.extend-time-requests.pending', $task) }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{{ $buttonText }}</span>
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Due Date <x-red-star /></label>
+                        <input type="text" name="due_date_time" value="{{ $task->due_date_time?->copy()->timezone(config('constants.timezone'))->format('Y-m-d H:i') }}" class="datepicker {{ $textInputClasses }}" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Select a date and time" autocomplete="off" @disabled(!$canEditTask)>
+                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="due_date_time"></p>
+                    </div>
+                </div>
+
                 <div class="md:col-span-2">
                     <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
                     @if ($canEditTask)
@@ -157,19 +211,6 @@
                         @endforeach
                     </select>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="status_id"></p>
-                </div>
-
-                <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Assignee</label>
-                    <select name="current_assignee_id" class="tom-select w-full" data-sort="0" @disabled(!$canEditTask)>
-                        <option value="">Select assignee</option>
-                        @foreach ($assignableUsers as $assignableUser)
-                            <option value="{{ $assignableUser->id }}" data-subtype="{{ $assignableUser->email }}" {{ (int) $task->current_assignee_id === (int) $assignableUser->id ? 'selected' : '' }}>
-                                {{ $assignableUser->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="current_assignee_id"></p>
                 </div>
 
                 <div>
@@ -202,45 +243,6 @@
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="priority"></p>
                 </div>
 
-                <div>
-                    <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" />
-                    <p class="mt-1 hidden text-sm" data-project-task-detail-error="estimated_time_minutes"></p>
-                    @if ($canRequestEstimate)
-                        @php
-                            $latestExtendRequest = \App\Models\TaskExtendTimeRequest::where('task_id', $task->id)->latest('id')->first();
-                            $buttonText = 'Request Estimate Change';
-                            $buttonColorClass = 'text-success-300 hover:text-success-100';
-
-                            if ($latestExtendRequest) {
-                                if ($latestExtendRequest->status === 'pending') {
-                                    $buttonText = 'Edit Estimate Change Request';
-                                    $buttonColorClass = 'text-success-300 hover:text-success-100';
-                                } elseif ($latestExtendRequest->status === 'approved') {
-                                    $buttonText = 'Estimate Change Request Approved';
-                                    $buttonColorClass = 'text-success-300 hover:text-success-100';
-                                } elseif ($latestExtendRequest->status === 'rejected') {
-                                    $buttonText = 'Estimate Change Request Rejected';
-                                    $buttonColorClass = 'text-error-300 hover:text-error-200';
-                                }
-                            }
-                        @endphp
-                        <div class="mt-2">
-                            <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold {{ $buttonColorClass }} transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-current-estimate-minutes="{{ (int) round(($task->estimated_time_seconds ?? 0) / 60) }}" data-store-url="{{ route('tasks.extend-time-requests.store', $task) }}" data-pending-url="{{ route('tasks.extend-time-requests.pending', $task) }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span>{{ $buttonText }}</span>
-                            </button>
-                        </div>
-                    @endif
-                </div>
-
-                <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Due Date <x-red-star /></label>
-                    <input type="text" name="due_date_time" value="{{ $task->due_date_time?->copy()->timezone(config('constants.timezone'))->format('Y-m-d H:i') }}" class="datepicker {{ $textInputClasses }}" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Select a date and time" autocomplete="off" @disabled(!$canEditTask)>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="due_date_time"></p>
-                </div>
-
                 <div class="md:col-span-2">
                     <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Tags</label>
                     <select name="tag_ids[]" class="tom-select-tags w-full" multiple @disabled(!$canEditTask)>
@@ -265,76 +267,104 @@
         </div>
 
         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
-            <div class="min-h-0 flex-1 overflow-y-auto pr-1">
-                <div class="space-y-4">
-                    <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Summary</p>
-                        <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                            <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">{{ __('label.project.estimated') }}</p>
-                                <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</p>
-                            </div>
-                            <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">{{ __('label.project.spent') }}</p>
-                                <p class="mt-1 text-base font-semibold {{ $actualTimeClasses }}">{{ $task->actual_time_formatted }}</p>
+            <!-- TAB BUTTONS -->
+            <div class="mb-4 flex items-center border-b border-bgray-200 dark:border-darkblack-400">
+                <button type="button" class="border-b-2 border-success-300 px-4 py-2 text-sm font-semibold text-success-400 dark:text-success-300" data-project-task-detail-tab="overview">
+                    Overview
+                </button>
+                <button type="button" class="border-b-2 border-transparent px-4 py-2 text-sm font-medium text-bgray-600 transition hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-project-task-detail-tab="notes" data-notes-tab-url="{{ route('projects.tasks.notes-tab', [$project, $task]) }}">
+                    Notes & Files
+                </button>
+            </div>
+
+            <!-- OVERVIEW TAB CONTENT (loaded initially) -->
+            <div class="flex min-h-0 flex-1 flex-col overflow-hidden" data-project-task-detail-tab-panel="overview">
+                <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+                    <div class="space-y-4">
+                        <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Summary</p>
+                            <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                                <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
+                                    <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">{{ __('label.project.estimated') }}</p>
+                                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</p>
+                                </div>
+                                <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
+                                    <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">{{ __('label.project.spent') }}</p>
+                                    <p class="mt-1 text-base font-semibold {{ $actualTimeClasses }}">{{ $task->actual_time_formatted }}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Context</p>
-                        <dl class="mt-4 space-y-3 text-sm">
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-700 dark:text-bgray-300">Project</dt>
-                                <dd class="text-right font-medium">
-                                    @if ($task->project)
-                                        @if (auth()->user()->can('project.view'))
-                                            <a href="{{ route('projects.edit', $task->project) }}" class="text-bgray-900 hover:text-success-300 dark:text-white">
-                                                {{ $task->project->name }}
-                                            </a>
+                        <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Context</p>
+                            <dl class="mt-4 space-y-3 text-sm">
+                                <div class="flex items-start justify-between gap-3">
+                                    <dt class="text-bgray-700 dark:text-bgray-300">Project</dt>
+                                    <dd class="text-right font-medium">
+                                        @if ($task->project)
+                                            @if (auth()->user()->can('project.view'))
+                                                <a href="{{ route('projects.edit', $task->project) }}" class="text-bgray-900 hover:text-success-300 dark:text-white">
+                                                    {{ $task->project->name }}
+                                                </a>
+                                            @else
+                                                <span class="text-bgray-900 dark:text-white">{{ $task->project->name }}</span>
+                                            @endif
                                         @else
-                                            <span class="text-bgray-900 dark:text-white">{{ $task->project->name }}</span>
+                                            <span class="text-bgray-900 dark:text-white">--</span>
                                         @endif
-                                    @else
-                                        <span class="text-bgray-900 dark:text-white">--</span>
-                                    @endif
-                                </dd>
-                            </div>
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-700 dark:text-bgray-300">Milestone</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectMilestone?->name ?? '--' }}</dd>
-                            </div>
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-700 dark:text-bgray-300">Sprint</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectSprint?->name ?? '--' }}</dd>
-                            </div>
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-700 dark:text-bgray-300">Created By</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->addedBy?->name ?? '--' }}</dd>
-                            </div>
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-700 dark:text-bgray-300">Created At</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">@appDateTime($task->created_at)</dd>
-                            </div>
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-700 dark:text-bgray-300">Updated At</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">@appDateTime($task->updated_at)</dd>
-                            </div>
-                        </dl>
+                                    </dd>
+                                </div>
+                                <div class="flex items-start justify-between gap-3">
+                                    <dt class="text-bgray-700 dark:text-bgray-300">Milestone</dt>
+                                    <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectMilestone?->name ?? '--' }}</dd>
+                                </div>
+                                <div class="flex items-start justify-between gap-3">
+                                    <dt class="text-bgray-700 dark:text-bgray-300">Sprint</dt>
+                                    <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectSprint?->name ?? '--' }}</dd>
+                                </div>
+                                <div class="flex items-start justify-between gap-3">
+                                    <dt class="text-bgray-700 dark:text-bgray-300">Created By</dt>
+                                    <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->addedBy?->name ?? '--' }}</dd>
+                                </div>
+                                <div class="flex items-start justify-between gap-3">
+                                    <dt class="text-bgray-700 dark:text-bgray-300">Created At</dt>
+                                    <dd class="text-right font-medium text-bgray-900 dark:text-white">@appDateTime($task->created_at)</dd>
+                                </div>
+                                <div class="flex items-start justify-between gap-3">
+                                    <dt class="text-bgray-700 dark:text-bgray-300">Updated At</dt>
+                                    <dd class="text-right font-medium text-bgray-900 dark:text-white">@appDateTime($task->updated_at)</dd>
+                                </div>
+                            </dl>
+                        </div>
                     </div>
+                </div>
+
+                <div class="mt-5 flex flex-wrap justify-end gap-3 border-t border-bgray-200 pt-4 dark:border-darkblack-400">
+                    <button type="button" class="rounded-lg border border-bgray-300 bg-white px-6 py-3 text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-detail-close>
+                        {{ $canEditTask ? 'Cancel' : 'Close' }}
+                    </button>
+
+                    @if ($canEditTask)
+                        <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-white transition duration-200 hover:bg-success-400" data-project-task-detail-submit>
+                            {{ $submitLabel }}
+                        </button>
+                    @endif
                 </div>
             </div>
 
-            <div class="mt-5 flex flex-wrap justify-end gap-3 border-t border-bgray-200 pt-4 dark:border-darkblack-400">
-                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-6 py-3 text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-detail-close>
-                    {{ $canEditTask ? 'Cancel' : 'Close' }}
-                </button>
+            <!-- NOTES & FILES TAB CONTENT (loaded via AJAX) -->
+            <div class="hidden flex min-h-0 flex-1 flex-col overflow-hidden" data-project-task-detail-tab-panel="notes">
+                <div class="min-h-0 flex-1 overflow-y-auto pr-1" data-project-task-detail-notes-container>
+                    <div class="py-8 text-center text-sm text-bgray-600 dark:text-bgray-300">
+                        Loading notes & files...
+                    </div>
+                </div>
 
-                @if ($canEditTask)
-                    <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-white transition duration-200 hover:bg-success-400" data-project-task-detail-submit>
-                        {{ $submitLabel }}
+                <div class="mt-5 flex flex-wrap justify-end gap-3 border-t border-bgray-200 pt-4 dark:border-darkblack-400">
+                    <button type="button" class="rounded-lg border border-bgray-300 bg-white px-6 py-3 text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-detail-close>
+                        Close
                     </button>
-                @endif
+                </div>
             </div>
         </aside>
     </form>
