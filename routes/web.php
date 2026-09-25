@@ -6,6 +6,7 @@ use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
 use App\Http\Controllers\AppraisalController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
 use App\Http\Controllers\ChecklistController;
@@ -18,12 +19,13 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
+use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
-use App\Http\Controllers\MeetingSettingsController;
-use App\Http\Controllers\MeetingController;
-use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\LeaveRequestController;
+use App\Http\Controllers\LeaveTypeController;
+use App\Http\Controllers\MeetingController;
+use App\Http\Controllers\MeetingSettingsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
@@ -36,6 +38,7 @@ use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\ProjectTaskController;
+use App\Http\Controllers\ProjectTrackingController;
 use App\Http\Controllers\QuickNoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
@@ -52,13 +55,11 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserHierarchyController;
+use App\Http\Controllers\UserLeaveBalanceImportController;
 use App\Http\Controllers\UserLoginActivityController;
 use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\HolidayController;
-use App\Http\Controllers\UserLeaveBalanceImportController;
 
 
 Route::get('/', function () {
@@ -373,6 +374,23 @@ Route::middleware(['auth'])->group(function () {
         Route::post('checklists/render-workspace', [ProjectChecklistController::class, 'renderWorkspaceChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderWorkspace');
         Route::post('checklists/render-library', [ProjectChecklistController::class, 'renderLibraryChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderLibrary');
         Route::patch('checklists/items/{itemId}/toggle', [ProjectChecklistController::class, 'toggleItemStatus'])->middleware('permission.type:project.view')->name('projects.checklists.toggleItem');
+
+        // Project Tracking routes
+        Route::post('trackings', [ProjectTrackingController::class, 'store'])
+            ->middleware(['permission.type:project_tracking.create', 'can:update,project'])
+            ->name('projects.trackings.store');
+
+        Route::get('trackings/{projectTracking}', [ProjectTrackingController::class, 'show'])
+            ->middleware('permission.type:project_tracking.view')
+            ->name('projects.trackings.show');
+
+        Route::put('trackings/{projectTracking}', [ProjectTrackingController::class, 'update'])
+            ->middleware(['permission.type:project_tracking.edit', 'can:update,project'])
+            ->name('projects.trackings.update');
+
+        Route::delete('trackings/{projectTracking}', [ProjectTrackingController::class, 'destroy'])
+            ->middleware(['permission.type:project_tracking.delete', 'can:update,project'])
+        ->name('projects.trackings.destroy');
     });
 
     // Project task routes
