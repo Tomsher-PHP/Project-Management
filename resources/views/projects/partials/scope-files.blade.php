@@ -14,7 +14,7 @@
         <p class="text-bgray-700">Attach your project scope files <span class="text-success-300">click to upload</span></p>
         <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
     </div>
-    <p class="text-error-300 text-sm mt-2">Files includes pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png and max file size is 15MB</p>
+    <p class="text-error-300 text-sm mt-2">Files includes pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png and max file size is 1GB</p>
 @endif
 
 <!-- File Preview List -->

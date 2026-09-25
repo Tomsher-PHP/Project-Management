@@ -26,7 +26,7 @@
             <div>
                 <input type="file" id="{{ $attachmentsInputId }}" name="attachments[]" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-3 py-2.5 text-sm text-bgray-700 file:mr-3 file:rounded-md file:border-0 file:bg-success-50 file:px-3 file:py-1.5 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
                 <p class="mt-2 text-xs text-bgray-600 dark:text-bgray-300">
-                    Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 15MB per file.
+                    Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 1GB per file.
                 </p>
                 <p class="mt-1 hidden text-xs text-red-500" data-{{ $errorPrefix }}-error="attachments"></p>
 

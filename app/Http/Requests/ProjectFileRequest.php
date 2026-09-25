@@ -23,17 +23,21 @@ class ProjectFileRequest extends FormRequest
     {
         return [
             'project_files' => ['required', 'array'],
-            'project_files.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:15360'], // 15MB
+            'project_files.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:1048576'], // 1GB
         ];
     }
 
     public function messages(): array
     {
         return [
+            'project_files.required' => 'Please select a file to upload.',
+            'project_files.*.file' => 'The selected file is not a valid file.',
+            'project_files.*.mimes' => 'The selected file must be a PDF, Excel, Word, PowerPoint, or image file.',
+            'project_files.*.max' => 'The selected file must not be larger than 1GB.',
             'project_file.required' => 'Please select a file to upload.',
             'project_file.file' => 'The selected file is not a valid file.',
             'project_file.mimes' => 'The selected file must be a PDF, Excel, Word, PowerPoint, or image file.',
-            'project_file.max' => 'The selected file must not be larger than 15MB.',
+            'project_file.max' => 'The selected file must not be larger than 1GB.',
         ];
     }
 }
