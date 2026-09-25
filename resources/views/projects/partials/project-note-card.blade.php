@@ -18,7 +18,7 @@
             </span>
 
             @if ($canRemove)
-                <button type="button" class="delete-project-note rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-red-50" data-note-id="{{ $note->id }}">
+                <button type="button" class="delete-project-note rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-error-300 transition hover:bg-red-50" data-note-id="{{ $note->id }}">
                     Delete
                 </button>
             @endif
