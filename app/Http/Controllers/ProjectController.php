@@ -359,8 +359,10 @@ class ProjectController extends Controller
 
     public function deleteScopeFile(Project $project, int $fileId, AttachmentService $attachmentService)
     {
-        $attachment = $project->attachments()->where('id', $fileId)->get();
-        $attachmentService->delete($attachment);
+        $attachment = $project->scopeFiles()->where('attachments.id', $fileId)->get();
+        if ($attachment->isNotEmpty()) {
+            $attachmentService->delete($attachment);
+        }
 
         return response()->json([
             'success' => true,

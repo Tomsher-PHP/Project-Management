@@ -145,10 +145,7 @@ class AttachmentService
         foreach ($attachments as $attachment) {
             if ($attachment->file_path) {
                 $disk = $attachment->disk ?? 'public';
-
-                if (Storage::disk($disk)->exists($attachment->file_path)) {
-                    Storage::disk($disk)->delete($attachment->file_path);
-                }
+                Storage::disk($disk)->delete($attachment->file_path);
             }
 
             $deleted = $attachment->delete() && $deleted;
