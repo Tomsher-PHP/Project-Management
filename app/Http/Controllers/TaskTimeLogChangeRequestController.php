@@ -172,4 +172,49 @@ class TaskTimeLogChangeRequestController extends Controller
                 ? "{$processedCount} time log change request(s) approved successfully."
                 : "{$processedCount} time log change request(s) rejected successfully.");
     }
+
+    /**
+     * Cancel a pending task time log change request.
+     */
+    public function cancel(
+        Request $request,
+        TaskTimeLogChangeRequest $changeRequest
+    ): RedirectResponse {
+        $authUser = auth()->user();
+
+        if ((int) $changeRequest->user_id !== (int) $authUser->id) {
+            abort(403);
+        }
+
+        if (!$changeRequest->isPending()) {
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'Only pending time log change requests can be cancelled.'
+                );
+        }
+
+        $validated = $request->validate([
+            'cancellation_reason' => [
+                'required',
+                'string',
+                'max:1000',
+            ],
+        ]);
+
+        $changeRequest->update([
+            'status' => TaskTimeLogChangeRequest::STATUS_CANCELLED,
+            'cancelled_by' => $authUser->id,
+            'cancelled_at' => now(),
+            'cancellation_reason' => $validated['cancellation_reason'],
+        ]);
+
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Time log change request cancelled successfully.'
+            );
+    }
 }

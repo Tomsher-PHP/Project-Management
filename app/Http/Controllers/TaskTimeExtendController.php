@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\TaskExtendTimeRequest;
 use App\Services\TaskTimeExtendService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -167,5 +168,50 @@ class TaskTimeExtendController extends Controller
             'status' => true,
             'data' => null,
         ]);
+    }
+
+    /**
+     * Cancel a pending task time extension request.
+     */
+    public function cancel(
+        Request $request,
+        TaskExtendTimeRequest $extendTimeRequest
+    ): RedirectResponse {
+        $authUser = auth()->user();
+
+        if ((int) $extendTimeRequest->user_id !== (int) $authUser->id) {
+            abort(403);
+        }
+
+        if (!$extendTimeRequest->isPending()) {
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'Only pending task time extension requests can be cancelled.'
+                );
+        }
+
+        $validated = $request->validate([
+            'cancellation_reason' => [
+                'required',
+                'string',
+                'max:1000',
+            ],
+        ]);
+
+        $extendTimeRequest->update([
+            'status' => TaskExtendTimeRequest::STATUS_CANCELLED,
+            'cancelled_by' => $authUser->id,
+            'cancelled_at' => now(),
+            'cancellation_reason' => $validated['cancellation_reason'],
+        ]);
+
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Task time extension request cancelled successfully.'
+            );
     }
 }

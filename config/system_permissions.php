@@ -153,6 +153,7 @@ return [
 
     // TASK TIME LOG CHANGE REQUEST
     ['name' => 'task_time_log_change_request.approve_reject', 'label' => 'Requests - Task Time Log Change', 'sort_order' => 20000, 'default_checked' => false],
+    ['name' => 'task_time_log_change_request.cancel', 'label' => 'Requests - Task Time Log Change', 'sort_order' => 20020, 'default_checked' => false],
 
     // HANDOFF
     ['name' => 'handoff_request.view_all',     'label' => 'Requests - Handoff', 'sort_order' => 21000, 'default_checked' => false],
@@ -162,9 +163,11 @@ return [
 
     // Break Request
     ['name' => 'break_request.approve_reject', 'label' => 'Requests - Break', 'sort_order' => 22000, 'default_checked' => false],
+    ['name' => 'break_request.cancel', 'label' => 'Requests - Break', 'sort_order' => 22020, 'default_checked' => false],
 
     // Task Time Extend Request
     ['name' => 'task_time_extend_request.approve_reject', 'label' => 'Requests - Task Time Extend', 'sort_order' => 23000, 'default_checked' => false],
+    ['name' => 'task_time_extend_request.cancel', 'label' => 'Requests - Task Time Extend', 'sort_order' => 23020, 'default_checked' => false],
 
     //======================================================================
     // Reports Modules Start

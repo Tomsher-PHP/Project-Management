@@ -9,6 +9,11 @@ class TaskExtendTimeRequest extends Model
 {
     use HasFactory;
 
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+    public const STATUS_CANCELLED = 'cancelled';
+
     protected $fillable = [
         'task_id',
         'user_id',
@@ -22,6 +27,15 @@ class TaskExtendTimeRequest extends Model
         'rejected_by',
         'rejected_at',
         'rejection_reason',
+        'cancelled_by',
+        'cancelled_at',
+        'cancellation_reason',
+    ];
+
+    protected $casts = [
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function task()
@@ -44,34 +58,49 @@ class TaskExtendTimeRequest extends Model
         return $this->belongsTo(User::class, 'rejected_by');
     }
 
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
     public function scopePending($query)
     {
-        return $query->where('status', 'pending');
+        return $query->where('status', self::STATUS_PENDING);
     }
 
     public function scopeApproved($query)
     {
-        return $query->where('status', 'approved');
+        return $query->where('status', self::STATUS_APPROVED);
     }
 
     public function scopeRejected($query)
     {
-        return $query->where('status', 'rejected');
+        return $query->where('status', self::STATUS_REJECTED);
     }
 
-    public function isPending()
+    public function scopeCancelled($query)
     {
-        return $this->status === 'pending';
+        return $query->where('status', self::STATUS_CANCELLED);
     }
 
-    public function isApproved()
+    public function isPending(): bool
     {
-        return $this->status === 'approved';
+        return $this->status === self::STATUS_PENDING;
     }
 
-    public function isRejected()
+    public function isApproved(): bool
     {
-        return $this->status === 'rejected';
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
     }
 
     public function getEstimatedTimeFormattedAttribute(): string
@@ -86,7 +115,10 @@ class TaskExtendTimeRequest extends Model
 
     public function getUserRequestedTimeFormattedAttribute(): string
     {
-        return $this->formatSeconds($this->user_requested_time_seconds ?? $this->new_estimated_time_seconds);
+        return $this->formatSeconds(
+            $this->user_requested_time_seconds
+                ?? $this->new_estimated_time_seconds
+        );
     }
 
     public function hasDifference(): bool

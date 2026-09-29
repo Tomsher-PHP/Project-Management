@@ -543,12 +543,29 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                         @endcan
                                                     @elseif ($isOwnRequest && !$isSuperAdmin)
                                                         {{-- Own pending request --}}
-                                                        <span class="text-sm font-medium text-bgray-500 dark:text-bgray-400">
+                                                        {{-- <span class="text-sm font-medium text-bgray-500 dark:text-bgray-400">
                                                             Waiting for approval
-                                                        </span>
+                                                        </span> --}}
                                                     @endif
 
-
+                                                        {{-- Cancel --}}
+                                                        @if ($status === 'pending')
+                                                            @can('leave_request.cancel')
+                                                                <x-cancel-button
+                                                                    type="button"
+                                                                    onclick="openCancelModalFromButton(this)"
+                                                                    data-cancel-id="{{ $leaveRequest->id }}"
+                                                                    data-cancel-employee="{{ $leaveRequest->user?->name ?? 'Employee' }}"
+                                                                    data-cancel-leave-type="{{ $leaveRequest->leaveType?->name ?? 'Leave' }}"
+                                                                    data-cancel-day-type="{{ $dayType }}"
+                                                                    data-cancel-half-day="{{ $halfDayType }}"
+                                                                    data-cancel-from="{{ $fromDate }}"
+                                                                    data-cancel-to="{{ $toDate }}"
+                                                                    data-cancel-duration="{{ $duration }}"
+                                                                    data-cancel-status="{{ $displayStatus }}"
+                                                                />
+                                                            @endcan
+                                                        @endif
                                                     {{-- View --}}
                                                     @if ($canManageLeave)
                                                         @can('leave_request.view')

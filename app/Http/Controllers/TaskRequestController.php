@@ -110,4 +110,28 @@ class TaskRequestController extends Controller
                 ? "{$processedCount} task request(s) approved successfully."
                 : "{$processedCount} task request(s) rejected successfully.");
     }
+
+    public function cancel(
+        Request $request,
+        Task $task,
+        TaskRequestServices $taskRequestServices
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'cancellation_reason' => [
+                'required',
+                'string',
+                'max:2000',
+            ],
+        ]);
+
+        $taskRequestServices->cancelRequest(
+            $request->user(),
+            $task,
+            $validated['cancellation_reason']
+        );
+
+        return redirect()
+            ->route('tasks.requests.index')
+            ->with('success', 'Task request cancelled successfully.');
+    }
 }

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TaskRequestServices
 {
@@ -253,5 +254,35 @@ class TaskRequestServices
         if ($totalDuration > 0) {
             $task->increment('actual_time_seconds', $totalDuration);
         }
+    }
+
+    public function cancelRequest(
+        User $authUser,
+        Task $task,
+        string $reason
+    ): void {
+        if ($task->request_status !== 'pending') {
+            throw ValidationException::withMessages([
+                'task' => 'Only pending task requests can be cancelled.',
+            ]);
+        }
+
+        $isSuperAdmin = (bool) $authUser->is_super_admin;
+
+        $isRequester = (int) $task->current_assignee_id === (int) $authUser->id;
+
+        if (! $isSuperAdmin && ! $isRequester) {
+            abort(403);
+        }
+
+        $task->update([
+            'request_status' => 'cancelled',
+            'cancelled_by' => $authUser->id,
+            'cancelled_at' => now(),
+            'cancellation_reason' => trim($reason),
+        ]);
+
+        app(NotificationService::class)
+            ->notifyTaskRequestCancelled($task, $authUser);
     }
 }

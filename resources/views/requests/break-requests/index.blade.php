@@ -6,9 +6,12 @@
             'pending' => 'Pending',
             'approved' => 'Approved',
             'rejected' => 'Rejected',
+            // 'cancelled' => 'Cancelled',
         ];
 
         $canApproveRejectBreakRequests = auth()->user()?->can('break_request.approve_reject');
+        $canCancelBreakRequests = auth()->user()?->can('break_request.cancel');
+
         $showBulkActions = $selectedStatus === 'pending' && $canApproveRejectBreakRequests;
     @endphp
 
@@ -84,7 +87,12 @@
                             @php
                                 $requestUser = $breakRequest->user;
                                 $canAccess = $breakRequest->user_id != auth()->id() || auth()->user()->is_super_admin;
-                                $statusClasses = $breakRequest->isApproved() ? 'bg-success-50 text-success-300' : ($breakRequest->isRejected() ? 'bg-error-50 text-error-300' : 'bg-warning-50 text-warning-300');
+                                $statusClasses = match ($breakRequest->status) {
+                                    'approved' => 'bg-success-50 text-success-300',
+                                    'rejected' => 'bg-error-50 text-error-300',
+                                    'cancelled' => 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300',
+                                    default => 'bg-warning-50 text-warning-300',
+                                };
                             @endphp
                             <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                 @if ($showBulkActions)
@@ -130,32 +138,113 @@
                                     </span>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    @if ($breakRequest->isPending() && $canApproveRejectBreakRequests && $canAccess)
-                                        <div class="flex min-w-[180px] flex-wrap items-center gap-2">
-                                            <form method="POST" action="{{ route('break-requests.action', [$breakRequest, 'approve']) }}" data-break-request-action-form data-confirm-title="Approve break work request?" data-confirm-text="This will approve the submitted break work request." data-confirm-text-button="Yes, approve">
-                                                @csrf
-                                                <button type="submit" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
-                                                    Approve
-                                                </button>
-                                            </form>
+                                    @if ($breakRequest->isPending())
+                                        @if ($breakRequest->user_id == auth()->id())
+                                            <div class="flex min-w-[220px] flex-wrap items-center gap-2">
 
-                                            <button type="button" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400" data-break-request-reject-open data-action="{{ route('break-requests.action', [$breakRequest, 'reject']) }}" data-request-user-name="{{ $requestUser?->name ?? 'Unknown User' }}">
-                                                Reject
-                                            </button>
-                                        </div>
-                                    @elseif ($breakRequest->isPending())
-                                        <span class="text-xs text-bgray-700 dark:text-bgray-300">Waiting for approval</span>
+                                                {{-- Requester --}}
+                                                @can('break_request.cancel')
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('break-requests.cancel', $breakRequest) }}"
+                                                        data-break-request-cancel-form
+                                                        data-confirm-title="Cancel break work request?"
+                                                        data-confirm-text="This will cancel your pending break work request."
+                                                        data-confirm-text-button="Yes, cancel"
+                                                    >
+                                                        @csrf
+
+                                                        <button
+                                                            type="submit"
+                                                            class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </form>
+                                                @endcan
+
+                                            </div>
+                                        @elseif ($canApproveRejectBreakRequests && $canAccess)
+
+                                            {{-- Approver --}}
+                                            <div class="flex min-w-[180px] flex-wrap items-center gap-2">
+
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('break-requests.action', [$breakRequest, 'approve']) }}"
+                                                    data-break-request-action-form
+                                                    data-confirm-title="Approve break work request?"
+                                                    data-confirm-text="This will approve the submitted break work request."
+                                                    data-confirm-text-button="Yes, approve"
+                                                >
+                                                    @csrf
+
+                                                    <button
+                                                        type="submit"
+                                                        class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                </form>
+
+                                                <button
+                                                    type="button"
+                                                    class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400"
+                                                    data-break-request-reject-open
+                                                    data-action="{{ route('break-requests.action', [$breakRequest, 'reject']) }}"
+                                                    data-request-user-name="{{ $requestUser?->name ?? 'Unknown User' }}"
+                                                >
+                                                    Reject
+                                                </button>
+
+                                            </div>
+
+                                        @else
+                                            {{-- <span class="text-xs text-bgray-700 dark:text-bgray-300">
+                                                Waiting for approval
+                                            </span> --}}
+                                        @endif
+
                                     @elseif ($breakRequest->isRejected())
+
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
-                                            <p class="font-semibold text-bgray-700 dark:text-white">Rejected by {{ $breakRequest->rejectedBy?->name ?? '--' }}</p>
-                                            <p>@appDateTime($breakRequest->rejected_at)</p>
-                                            <p title="{{ $breakRequest->rejection_reason }}">{{ \Illuminate\Support\Str::limit($breakRequest->rejection_reason ?? '--', 45) }}</p>
+                                            <p class="font-semibold text-bgray-700 dark:text-white">
+                                                Rejected by {{ $breakRequest->rejectedBy?->name ?? '--' }}
+                                            </p>
+
+                                            <p>
+                                                @appDateTime($breakRequest->rejected_at)
+                                            </p>
+
+                                            <p title="{{ $breakRequest->rejection_reason }}">
+                                                {{ \Illuminate\Support\Str::limit($breakRequest->rejection_reason ?? '--', 45) }}
+                                            </p>
                                         </div>
+
+                                    @elseif ($breakRequest->isCancelled())
+
+                                        <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
+                                            <p class="font-semibold text-bgray-700 dark:text-white">
+                                                Cancelled by {{ $breakRequest->cancelledBy?->name ?? '--' }}
+                                            </p>
+
+                                            <p>
+                                                @appDateTime($breakRequest->cancelled_at)
+                                            </p>
+                                        </div>
+
                                     @else
+
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
-                                            <p class="font-semibold text-bgray-700 dark:text-white">Approved by {{ $breakRequest->approvedBy?->name ?? '--' }}</p>
-                                            <p>@appDateTime($breakRequest->approved_at)</p>
+                                            <p class="font-semibold text-bgray-700 dark:text-white">
+                                                Approved by {{ $breakRequest->approvedBy?->name ?? '--' }}
+                                            </p>
+
+                                            <p>
+                                                @appDateTime($breakRequest->approved_at)
+                                            </p>
                                         </div>
+
                                     @endif
                                 </td>
                             </tr>
@@ -346,7 +435,9 @@
 
             syncBulkActions();
 
-            document.querySelectorAll('[data-break-request-action-form]').forEach((form) => {
+            document.querySelectorAll(
+                '[data-break-request-action-form], [data-break-request-cancel-form]'
+            ).forEach((form) => {
                 form.addEventListener('submit', async (event) => {
                     event.preventDefault();
 
