@@ -422,6 +422,16 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('trackings/{projectTracking}', [ProjectTrackingController::class, 'destroy'])
             ->middleware(['permission.type:project_tracking.delete', 'can:update,project'])
         ->name('projects.trackings.destroy');
+
+        Route::post(
+            'trackings/bulk-export',
+            [ProjectTrackingController::class, 'bulkExport']
+        )->name('projects.trackings.bulk-export');
+
+        Route::get(
+            'trackings/attachments/{attachment}/download',
+            [ProjectTrackingController::class, 'downloadAttachment']
+        )->name('projects.trackings.attachments.download');
     });
 
     // Project task routes
