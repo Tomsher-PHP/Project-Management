@@ -10,6 +10,13 @@
         <table class="w-full min-w-[900px]">
             <thead>
                 <tr class="border-b border-bgray-200 dark:border-darkblack-400">
+                    <th class="px-4 py-3">
+                        <input
+                            type="checkbox"
+                            id="select-all-project-trackings"
+                            class="project-tracking-checkbox"
+                        >
+                    </th>
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-500">
                         Date
                     </th>
@@ -35,9 +42,16 @@
             <tbody class="divide-y divide-bgray-200 dark:divide-darkblack-400">
 
                 @foreach ($projectTrackings as $tracking)
-                    <tr class="hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                    <tr>
+                        <td class="px-4 py-3 text-center">
+                            <input
+                                type="checkbox"
+                                value="{{ $tracking->id }}"
+                                class="project-tracking-checkbox project-tracking-row-checkbox"
+                            >
+                        </td>
 
-                        <td class="whitespace-nowrap px-5 py-4 text-sm text-bgray-700 dark:text-bgray-300">
+                        <td>
                             {{ $tracking->date?->format('d M Y') }}
                         </td>
 

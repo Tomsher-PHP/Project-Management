@@ -69,6 +69,7 @@ return [
     ['name' => 'project_tracking.create',  'label' => 'Project Tracking', 'sort_order' => 6220, 'default_checked' => false],
     ['name' => 'project_tracking.edit',    'label' => 'Project Tracking', 'sort_order' => 6240, 'default_checked' => false],
     ['name' => 'project_tracking.delete',  'label' => 'Project Tracking', 'sort_order' => 6260, 'default_checked' => false],
+    ['name' => 'project_tracking.export',  'label' => 'Project Tracking', 'sort_order' => 6280, 'default_checked' => false],
 
     // TASK
     ['name' => 'task.view_all_tasks',     'label' => 'Task', 'sort_order' => 7000, 'default_checked' => false],

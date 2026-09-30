@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProjectTrackingExport;
+use App\Models\Attachment;
 use App\Models\Project;
 use App\Models\ProjectTracking;
 use App\Services\AttachmentService;
@@ -10,6 +12,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectTrackingController extends Controller
 {
@@ -670,6 +674,134 @@ class ProjectTrackingController extends Controller
             (int) $projectTracking->project_id ===
                 (int) $project->id,
             404
+        );
+    }
+
+    /**
+     * Export multiple project trackings.
+     * @param  Request $request
+     * @param  Project $project
+     */
+    public function bulkExport(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'tracking_ids' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+
+            'tracking_ids.*' => [
+                'integer',
+                'exists:project_trackings,id',
+            ],
+        ]);
+
+        $trackingIds = $validated['tracking_ids'];
+
+        $trackings = ProjectTracking::query()
+            ->where('project_id', $project->id)
+            ->whereIn('id', $trackingIds)
+            ->with('attachments')
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+
+        if ($trackings->isEmpty()) {
+            return response()->json([
+                'message' => 'No project tracking records found.',
+            ], 422);
+        }
+
+        $fileName = 'project-tracking-' .
+            \Illuminate\Support\Str::slug(
+                $project->project_name
+                    ?? $project->name
+                    ?? 'project'
+            ) .
+            '-' .
+            now()->format('Y-m-d-His') .
+            '.xlsx';
+
+        return Excel::download(
+            new ProjectTrackingExport(
+                $trackings,
+                $project
+            ),
+            $fileName
+        );
+    }
+
+    public function downloadAttachment(Project $project, Attachment $attachment): StreamedResponse {
+        /*
+        * Make sure this attachment actually belongs
+        * to a project tracking record inside this project.
+        */
+        $belongsToProjectTracking = ProjectTracking::query()
+            ->where('project_id', $project->id)
+            ->whereHas('attachments', function ($query) use ($attachment) {
+                $query->whereKey($attachment->id);
+            })
+            ->exists();
+
+        abort_unless(
+            $belongsToProjectTracking,
+            404
+        );
+
+        /*
+        * Get the stored file path.
+        *
+        * Adjust these fallbacks if your Attachment model
+        * uses a different column.
+        */
+        $filePath =
+            $attachment->file
+            ?? $attachment->file_path
+            ?? $attachment->path
+            ?? null;
+
+        if (!$filePath) {
+            abort(404, 'Attachment file was not found.');
+        }
+
+        /*
+        * If the database contains:
+        *
+        * storage/foo.pdf
+        *
+        * convert it to:
+        *
+        * foo.pdf
+        *
+        * because the public disk normally starts
+        * from storage/app/public.
+        */
+        $filePath = ltrim(
+            str_replace(
+                [
+                    'storage/',
+                    '/storage/',
+                ],
+                '',
+                $filePath
+            ),
+            '/'
+        );
+
+        if (!Storage::disk('public')->exists($filePath)) {
+            abort(404, 'Attachment file was not found.');
+        }
+
+        $downloadName =
+            $attachment->filename
+            ?? $attachment->file_name
+            ?? $attachment->original_name
+            ?? basename($filePath);
+
+        return Storage::disk('public')->download(
+            $filePath,
+            $downloadName
         );
     }
 }

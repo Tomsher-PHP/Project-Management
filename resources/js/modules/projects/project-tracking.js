@@ -3,6 +3,7 @@ const projectTrackingState = {
     listenersBound: false,
     formBound: false,
     attachmentHandlingBound: false,
+    bulkExportBound: false,
 };
 
 
@@ -703,6 +704,233 @@ const projectTrackingForm = {
 
 /*
 |--------------------------------------------------------------------------
+| Bulk Export
+|--------------------------------------------------------------------------
+*/
+
+const initializeProjectTrackingBulkExport = () => {
+    const selectAll = document.querySelector(
+        '#select-all-project-trackings'
+    );
+
+    const exportButton = document.querySelector(
+        '#bulk-export-project-trackings'
+    );
+
+    /*
+     * History tab may not be loaded yet.
+     */
+    if (!selectAll || !exportButton) {
+        return;
+    }
+
+    /*
+     * Prevent duplicate listeners on the same button.
+     */
+    if (
+        exportButton.dataset.projectTrackingBulkExportBound ===
+        'true'
+    ) {
+        return;
+    }
+
+    /*
+     * Always fetch the CURRENT checkboxes.
+     *
+     * This is important because the History tab can be
+     * completely replaced after create/update/delete.
+     */
+    const getRowCheckboxes = () => {
+        return Array.from(
+            document.querySelectorAll(
+                '.project-tracking-row-checkbox'
+            )
+        );
+    };
+
+    const updateState = () => {
+        const rowCheckboxes =
+            getRowCheckboxes();
+
+        const selectedCheckboxes =
+            rowCheckboxes.filter(
+                (checkbox) => checkbox.checked
+            );
+
+        const selectedCount =
+            selectedCheckboxes.length;
+
+        /*
+         * Enable export when at least one row
+         * is selected.
+         */
+        exportButton.disabled =
+            selectedCount === 0;
+
+        /*
+         * Update Select All checkbox.
+         */
+        if (!rowCheckboxes.length) {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+
+            return;
+        }
+
+        selectAll.checked =
+            selectedCount === rowCheckboxes.length;
+
+        selectAll.indeterminate =
+            selectedCount > 0 &&
+            selectedCount < rowCheckboxes.length;
+    };
+
+    /*
+     * SELECT ALL
+     */
+    selectAll.addEventListener(
+        'change',
+        function () {
+            const rowCheckboxes =
+                getRowCheckboxes();
+
+            rowCheckboxes.forEach(
+                (checkbox) => {
+                    checkbox.checked =
+                        this.checked;
+                }
+            );
+
+            updateState();
+        }
+    );
+
+    /*
+     * INDIVIDUAL CHECKBOXES
+     *
+     * Delegated because the History table
+     * can be dynamically replaced.
+     */
+    document.addEventListener(
+        'change',
+        (event) => {
+            if (
+                !event.target.matches(
+                    '.project-tracking-row-checkbox'
+                )
+            ) {
+                return;
+            }
+
+            updateState();
+        }
+    );
+
+    /*
+     * BULK EXPORT BUTTON
+     */
+    exportButton.addEventListener(
+        'click',
+        () => {
+            const selectedIds =
+                getRowCheckboxes()
+                    .filter(
+                        (checkbox) =>
+                            checkbox.checked
+                    )
+                    .map(
+                        (checkbox) =>
+                            checkbox.value
+                    );
+
+            if (!selectedIds.length) {
+                return;
+            }
+
+            const url =
+                exportButton.dataset.url;
+
+            if (!url) {
+                console.error(
+                    'Project tracking bulk export URL was not found.'
+                );
+
+                return;
+            }
+
+            const form =
+                document.createElement('form');
+
+            form.method = 'POST';
+            form.action = url;
+            form.style.display = 'none';
+
+            /*
+             * CSRF
+             */
+            const csrfToken =
+                document.querySelector(
+                    'meta[name="csrf-token"]'
+                );
+
+            if (!csrfToken) {
+                console.error(
+                    'CSRF token was not found.'
+                );
+
+                return;
+            }
+
+            const csrfInput =
+                document.createElement('input');
+
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value =
+                csrfToken.getAttribute(
+                    'content'
+                );
+
+            form.appendChild(csrfInput);
+
+            /*
+             * Selected tracking IDs
+             */
+            selectedIds.forEach((id) => {
+                const input =
+                    document.createElement(
+                        'input'
+                    );
+
+                input.type = 'hidden';
+                input.name =
+                    'tracking_ids[]';
+                input.value = id;
+
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+
+            form.submit();
+        }
+    );
+
+    exportButton.dataset.projectTrackingBulkExportBound =
+        'true';
+
+    projectTrackingState.bulkExportBound =
+        true;
+
+    /*
+     * Set initial state.
+     */
+    updateState();
+};
+
+
+/*
+|--------------------------------------------------------------------------
 | Initialize Project Tracking
 |--------------------------------------------------------------------------
 */
@@ -717,6 +945,12 @@ const initializeProjectTracking = (root = document) => {
     projectTrackingForm.initialize();
 
     bindProjectTrackingActions();
+
+    /*
+     * Initialize bulk export whenever the History
+     * tab is available.
+     */
+    initializeProjectTrackingBulkExport();
 
     projectTrackingState.initialized = true;
 };
@@ -764,9 +998,6 @@ const initializeAttachmentHandling = () => {
 
         /*
          * Maximum 5 new files selected at once.
-         *
-         * Backend also checks the total:
-         * remaining existing + new files <= 5.
          */
         if (files.length > 5) {
             if (attachmentError) {
@@ -950,96 +1181,88 @@ const bindProjectTrackingActions = () => {
     /*
      * DELETE
      */
-    /*
- * DELETE
- */
-document.addEventListener(
-    'click',
-    async (event) => {
-        const deleteButton = event.target.closest(
-            '[data-project-tracking-delete]'
-        );
-
-        if (!deleteButton) {
-            return;
-        }
-
-        /*
-         * Prevent the normal button/form action.
-         */
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        const form = deleteButton.closest(
-            '.project-tracking-delete-form'
-        );
-
-        if (!form) {
-            console.error(
-                'Project tracking delete form was not found.'
+    document.addEventListener(
+        'click',
+        async (event) => {
+            const deleteButton = event.target.closest(
+                '[data-project-tracking-delete]'
             );
 
-            return;
-        }
-
-        try {
-            const result = await Alert.confirm({
-                title: 'Delete Project Tracking?',
-                text: 'Are you sure you want to delete this project tracking entry? This action cannot be undone.',
-                confirmText: 'Yes, delete',
-                cancelText: 'Cancel',
-            });
+            if (!deleteButton) {
+                return;
+            }
 
             /*
-             * Alert.confirm() may return either:
-             *
-             * 1. true / false
-             * 2. SweetAlert-style result:
-             *    { isConfirmed: true/false, ... }
-             *
-             * Handle both formats safely.
+             * Prevent normal button/form action.
              */
-            const confirmed =
-                result === true ||
-                result?.isConfirmed === true;
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
 
-            /*
-             * CANCEL / DISMISS
-             *
-             * Absolutely do not call deleteTracking().
-             */
-            if (!confirmed) {
-                console.log(
-                    'Project tracking deletion cancelled.'
+            const form = deleteButton.closest(
+                '.project-tracking-delete-form'
+            );
+
+            if (!form) {
+                console.error(
+                    'Project tracking delete form was not found.'
                 );
 
                 return;
             }
 
-            /*
-             * Only confirmed deletion reaches here.
-             */
-            await deleteTracking(
-                form,
-                deleteButton
-            );
+            try {
+                const result = await Alert.confirm({
+                    title: 'Delete Project Tracking?',
+                    text: 'Are you sure you want to delete this project tracking entry? This action cannot be undone.',
+                    confirmText: 'Yes, delete',
+                    cancelText: 'Cancel',
+                });
 
-        } catch (error) {
-            console.error(
-                'Project tracking confirmation error:',
-                error
-            );
-        }
-    },
-    true
-);
+                /*
+                 * Alert.confirm() may return either:
+                 *
+                 * 1. true / false
+                 * 2. SweetAlert-style result
+                 */
+                const confirmed =
+                    result === true ||
+                    result?.isConfirmed === true;
+
+                /*
+                 * CANCEL / DISMISS
+                 */
+                if (!confirmed) {
+                    console.log(
+                        'Project tracking deletion cancelled.'
+                    );
+
+                    return;
+                }
+
+                /*
+                 * Only confirmed deletion reaches here.
+                 */
+                await deleteTracking(
+                    form,
+                    deleteButton
+                );
+
+            } catch (error) {
+                console.error(
+                    'Project tracking confirmation error:',
+                    error
+                );
+            }
+        },
+        true
+    );
 
 
     /*
      * REMOVE EXISTING ATTACHMENT
      *
-     * This is delegated because attachment rows are
+     * Delegated because attachment rows are
      * generated dynamically when Edit is opened.
      */
     document.addEventListener('click', (event) => {
@@ -1292,12 +1515,6 @@ const renderExistingAttachments = (attachments = []) => {
     attachments.forEach((attachment) => {
         const item = document.createElement('div');
 
-        /*
-         * IMPORTANT:
-         *
-         * This is the exact selector used by
-         * removeExistingTrackingAttachment().
-         */
         item.setAttribute(
             'data-project-tracking-attachment-item',
             ''
@@ -1397,22 +1614,10 @@ const removeExistingTrackingAttachment = (button) => {
         return;
     }
 
-    /*
-     * Find the complete attachment row.
-     *
-     * This MUST match the attribute created inside
-     * renderExistingAttachments().
-     */
     const attachmentItem = button.closest(
         '[data-project-tracking-attachment-item]'
     );
 
-    /*
-     * Find the form.
-     *
-     * Use the modal first so another form elsewhere on
-     * the page cannot accidentally be selected.
-     */
     const modal = projectTrackingModal.modal;
 
     const form = modal
@@ -1431,19 +1636,11 @@ const removeExistingTrackingAttachment = (button) => {
         return;
     }
 
-    /*
-     * Check whether this attachment has already been
-     * marked for removal.
-     */
     const existingInput = form.querySelector(
         `[data-project-tracking-remove-attachment="${attachmentId}"]`
     );
 
     if (existingInput) {
-        /*
-         * If it was already marked for removal, simply
-         * make sure the row is gone from the UI.
-         */
         if (attachmentItem) {
             attachmentItem.remove();
         }
@@ -1451,13 +1648,6 @@ const removeExistingTrackingAttachment = (button) => {
         return;
     }
 
-    /*
-     * Create hidden field:
-     *
-     * remove_attachments[]=123
-     *
-     * This is submitted only when Update is clicked.
-     */
     const input = document.createElement('input');
 
     input.type = 'hidden';
@@ -1471,20 +1661,9 @@ const removeExistingTrackingAttachment = (button) => {
 
     form.appendChild(input);
 
-    /*
-     * NOW remove the entire row from the UI.
-     *
-     * This is intentionally done AFTER the hidden input
-     * is added so the server still knows which attachment
-     * should be deleted when the form is submitted.
-     */
     if (attachmentItem) {
         attachmentItem.remove();
     } else {
-        /*
-         * Fallback in case the data-project-tracking-
-         * attachment-item attribute is missing for any reason.
-         */
         const fallbackItem = button.closest(
             '[data-attachment-id]'
         );
@@ -1494,10 +1673,6 @@ const removeExistingTrackingAttachment = (button) => {
         }
     }
 
-    /*
-     * If there are no attachment rows remaining,
-     * hide the existing attachment container.
-     */
     const existingFilesContainer = modal
         ? modal.querySelector(
             '[data-project-tracking-existing-files]'
@@ -1524,28 +1699,6 @@ const removeExistingTrackingAttachment = (button) => {
 | Delete Tracking
 |--------------------------------------------------------------------------
 */
-
-// const handleDeleteTracking = async (
-//     form,
-//     deleteButton
-// ) => {
-//     const confirmed = await Alert.confirm({
-//         title: 'Delete Project Tracking?',
-//         text: 'Are you sure you want to delete this project tracking entry? This action cannot be undone.',
-//         confirmText: 'Yes, delete',
-//         cancelText: 'Cancel',
-//     });
-
-//     if (!confirmed) {
-//         return;
-//     }
-
-//     await deleteTracking(
-//         form,
-//         deleteButton
-//     );
-// };
-
 
 const deleteTracking = async (
     form,
@@ -1656,6 +1809,12 @@ const replaceTrackingHistory = (html) => {
     currentHistory.replaceWith(
         replacement
     );
+
+    /*
+     * The entire History section has just been replaced.
+     * Re-initialize bulk export for the new checkboxes.
+     */
+    initializeProjectTrackingBulkExport();
 };
 
 
