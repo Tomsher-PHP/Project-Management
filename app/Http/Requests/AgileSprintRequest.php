@@ -22,6 +22,7 @@ class AgileSprintRequest extends FormRequest
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'description' => ['nullable', 'string', 'max:100'],
             'sort_order' => ['required', 'numeric'],
+            'sprint_group_id' => ['nullable', 'integer', 'exists:sprint_groups,id,is_active,1'],
         ];
     }
 }

@@ -18,6 +18,7 @@ class AgileSprint extends Model
         'sort_order',
         'is_system',
         'is_active',
+        'sprint_group_id',
     ];
 
     protected $sortable = [
