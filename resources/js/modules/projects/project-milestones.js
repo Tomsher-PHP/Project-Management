@@ -1932,6 +1932,7 @@ const initializeProjectSprintBuilderModal = () => {
     let activeMilestoneEstimateSeconds = 0;
     let activeModuleName = '';
     let draggedLibrarySprint = null;
+    let draggedLibrarySprintGroup = null;
     let draggedWorkspaceCard = null;
     let handleCard = null;
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
@@ -2722,29 +2723,43 @@ const initializeProjectSprintBuilderModal = () => {
 
     library.addEventListener('dragstart', function (event) {
         const item = event.target.closest('[data-project-sprint-library-item]');
+        const group = event.target.closest('[data-project-sprint-library-group]');
 
-        if (!item) {
+        if (item) {
+            draggedLibrarySprint = {
+                id: item.dataset.librarySprintId,
+                name: item.dataset.name || '',
+                color: item.dataset.color || '#22C55E',
+                description: item.dataset.description || '',
+            };
+            if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'copy';
+            }
             return;
         }
 
-        draggedLibrarySprint = {
-            id: item.dataset.librarySprintId,
-            name: item.dataset.name || '',
-            color: item.dataset.color || '#22C55E',
-            description: item.dataset.description || '',
-        };
-
-        if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = 'copy';
+        if (group) {
+            const sprintElements = group.closest('details').querySelectorAll('[data-project-sprint-library-item]');
+            draggedLibrarySprintGroup = Array.from(sprintElements).map(el => ({
+                id: el.dataset.librarySprintId,
+                name: el.dataset.name || '',
+                color: el.dataset.color || '#22C55E',
+                description: el.dataset.description || '',
+            }));
+            if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'copy';
+            }
+            return;
         }
     });
 
     library.addEventListener('dragend', function () {
         draggedLibrarySprint = null;
+        draggedLibrarySprintGroup = null;
     });
 
     workspace.addEventListener('dragover', function (event) {
-        if (draggedLibrarySprint || draggedWorkspaceCard) {
+        if (draggedLibrarySprint || draggedLibrarySprintGroup || draggedWorkspaceCard) {
             event.preventDefault();
         }
 
@@ -2775,6 +2790,14 @@ const initializeProjectSprintBuilderModal = () => {
         if (draggedLibrarySprint) {
             await createLibrarySprintCard(draggedLibrarySprint);
             draggedLibrarySprint = null;
+            return;
+        }
+
+        if (draggedLibrarySprintGroup) {
+            for (const sprint of draggedLibrarySprintGroup) {
+                await createLibrarySprintCard(sprint);
+            }
+            draggedLibrarySprintGroup = null;
             return;
         }
 

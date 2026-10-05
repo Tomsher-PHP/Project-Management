@@ -441,7 +441,10 @@ class ProjectSprintController extends Controller
         return view('projects.partials.milestone.section', [
             'project' => $project,
             'projectMilestones' => $project->projectMilestones,
-            'agileSprints' => AgileSprint::active()->orderBy('sort_order', 'asc')->get(),
+            'agileSprints' => AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get(),
+            'agileSprintGroups' => \App\Models\SprintGroup::active()->with(['agileSprints' => function($q) {
+                $q->active()->orderBy('sort_order', 'asc');
+            }])->orderBy('sort_order', 'asc')->get(),
             'projectStatuses' => ProjectStatus::active()->orderBy('sort_order', 'asc')->get(),
             'assignableUsers' => app(UserService::class)->getAccessibleUsers(auth()->user()),
             'openMilestoneId' => $openMilestoneId,
