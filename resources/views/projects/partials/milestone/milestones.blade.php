@@ -466,7 +466,8 @@
                                             @php $group = $item['model']; @endphp
                                             <details class="group mb-3 overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300">
                                                 <summary class="flex cursor-grab items-center justify-between p-4 transition duration-200 hover:bg-bgray-50 dark:hover:bg-darkblack-500" draggable="true" data-project-sprint-library-group data-group-id="{{ $group->id }}">
-                                                    <div class="flex items-center gap-3">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $group->color ?: '#3B82F6' }}"></span>
                                                         <h5 class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $group->name }} ({{ $group->agileSprints->count() }})</h5>
                                                     </div>
                                                     <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-bgray-100 text-bgray-600 transition-transform duration-200 group-open:rotate-90 dark:bg-darkblack-500 dark:text-bgray-300">

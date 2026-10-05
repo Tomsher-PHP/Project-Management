@@ -2739,7 +2739,8 @@ const initializeProjectSprintBuilderModal = () => {
         }
 
         if (group) {
-            const sprintElements = group.closest('details').querySelectorAll('[data-project-sprint-library-item]');
+            const details = group.closest('details');
+            const sprintElements = details.querySelectorAll('[data-project-sprint-library-item]');
             draggedLibrarySprintGroup = Array.from(sprintElements).map(el => ({
                 id: el.dataset.librarySprintId,
                 name: el.dataset.name || '',
@@ -2748,6 +2749,9 @@ const initializeProjectSprintBuilderModal = () => {
             }));
             if (event.dataTransfer) {
                 event.dataTransfer.effectAllowed = 'copy';
+                if (details) {
+                    event.dataTransfer.setDragImage(details, 20, 20);
+                }
             }
             return;
         }
