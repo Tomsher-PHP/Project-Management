@@ -76,6 +76,12 @@ class SprintGroupController extends Controller
                 ->with('error', 'System sprint group cannot be deleted.');
         }
 
+        if ($sprintGroup->agileSprints()->exists()) {
+            return redirect()
+                ->route('settings.sprint-groups.index')
+                ->with('error', 'Sprint group cannot be deleted because it is assigned to one or more sprints.');
+        }
+
         $sprintGroup->delete();
 
         return redirect()
