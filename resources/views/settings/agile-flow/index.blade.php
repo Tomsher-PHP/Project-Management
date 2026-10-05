@@ -175,6 +175,9 @@
 
     <x-filters.drawer>
         <x-filters.input-search name="search" :label="$entityLabel . ' Name'" />
+        @if($currentTab === 'sprints' && isset($sprintGroups))
+            <x-filters.multi-select name="sprint_group_id" label="Sprint Group" :options="$sprintGroups" />
+        @endif
         <x-filters.select name="is_active" label="Is Active" :options="[
             1 => 'Active',
             0 => 'Inactive',
