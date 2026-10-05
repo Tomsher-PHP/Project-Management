@@ -2945,8 +2945,22 @@ const initializeProjectSprintBuilderModal = () => {
         const query = this.value.trim().toLowerCase();
 
         library.querySelectorAll('[data-project-sprint-library-item]').forEach((item) => {
-            const haystack = `${item.dataset.name || ''} ${item.dataset.description || ''}`.toLowerCase();
+            const group = item.closest('details');
+            const groupName = group ? (group.querySelector('summary h5')?.textContent || '').toLowerCase() : '';
+            
+            const haystack = `${item.dataset.name || ''} ${item.dataset.description || ''} ${groupName}`.toLowerCase();
             item.classList.toggle('hidden', !haystack.includes(query));
+        });
+
+        library.querySelectorAll('details').forEach((group) => {
+            const visibleItems = Array.from(group.querySelectorAll('[data-project-sprint-library-item]')).some(item => !item.classList.contains('hidden'));
+            group.classList.toggle('hidden', !visibleItems);
+            
+            if (query && visibleItems) {
+                group.setAttribute('open', '');
+            } else if (!query) {
+                group.removeAttribute('open');
+            }
         });
     });
 
