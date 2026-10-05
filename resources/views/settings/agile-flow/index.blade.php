@@ -1,20 +1,6 @@
 @extends('layouts.master')
 
 @php
-    $tabs = [
-        [
-            'key' => 'milestones',
-            'label' => 'Milestones',
-            'url' => route('settings.agile-milestones.index'),
-            'permission' => 'agile_milestone.view',
-        ],
-        [
-            'key' => 'sprints',
-            'label' => 'Sprints',
-            'url' => route('settings.agile-sprints.index'),
-            'permission' => 'agile_sprint.view',
-        ],
-    ];
     $sortOrderInfo = $currentTab === 'milestones' ? 'Lower numbers appear earlier in agile milestone lists and selection menus.' : 'Lower numbers appear earlier in agile sprint lists and selection menus.';
 @endphp
 
@@ -32,19 +18,7 @@
     <div class="2xl:flex 2xl:space-x-[48px]">
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
             <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
-                <div class="mb-6 flex flex-wrap gap-3 border-b border-bgray-300 pb-4 dark:border-darkblack-400">
-                    @foreach ($tabs as $tab)
-                        @can($tab['permission'])
-                            @php
-                                $isActiveTab = $currentTab === $tab['key'];
-                            @endphp
-
-                            <a href="{{ $tab['url'] }}" class="{{ $isActiveTab ? 'bg-success-300 text-white shadow-sm' : 'border border-bgray-200 bg-bgray-50 text-bgray-700 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300' }} inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold transition duration-200">
-                                {{ $tab['label'] }}
-                            </a>
-                        @endcan
-                    @endforeach
-                </div>
+                    @include('settings.project-tabs', ['currentTab' => $currentTab])
 
                 <div class="flex flex-col space-y-5">
                     <div class="table-content w-full overflow-x-auto">

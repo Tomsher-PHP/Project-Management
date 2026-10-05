@@ -17,6 +17,8 @@
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
             <!--list table-->
             <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
+                @include('settings.project-tabs', ['currentTab' => 'categories'])
+
                 <div class="flex flex-col space-y-5">
 
                     <div class="table-content w-full overflow-x-auto">

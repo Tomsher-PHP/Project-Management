@@ -100,26 +100,6 @@
                 </a>
             @endcan
 
-            @can('project_category.view')
-                <a href="{{ route('settings.project-categories.index') }}" class="block group transition duration-300">
-                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
-                        <div class="flex flex-col items-center justify-center text-center h-full">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
-                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h10" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h7" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l3 3-3 3" />
-                                </svg>
-                            </div>
-                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
-                                Project Categories
-                            </h3>
-                        </div>
-                    </div>
-                </a>
-            @endcan
-
             @can('industry.view')
                 <a href="{{ route('settings.industries.index') }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
@@ -140,59 +120,28 @@
                 </a>
             @endcan
 
-            @can('project_status.view')
-                <a href="{{ route('settings.project-statuses.index') }}" class="block group transition duration-300">
+            @canany(['project_category.view', 'project_status.view', 'project_stage.view', 'agile_milestone.view', 'agile_sprint.view'])
+                @php
+                    $projectSettingsRoute = '';
+                    if (auth()->user()->can('project_category.view')) $projectSettingsRoute = route('settings.project-categories.index');
+                    elseif (auth()->user()->can('project_status.view')) $projectSettingsRoute = route('settings.project-statuses.index');
+                    elseif (auth()->user()->can('project_stage.view')) $projectSettingsRoute = route('settings.project-stages.index');
+                    elseif (auth()->user()->can('agile_milestone.view')) $projectSettingsRoute = route('settings.agile-milestones.index');
+                    elseif (auth()->user()->can('agile_sprint.view')) $projectSettingsRoute = route('settings.agile-sprints.index');
+                @endphp
+                <a href="{{ $projectSettingsRoute }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                         <div class="flex flex-col items-center justify-center text-center h-full">
                             <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
                                 <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12l4 4 8-8" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5h14v14H5z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h10" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h7" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l3 3-3 3" />
                                 </svg>
                             </div>
                             <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
-                                Project Statuses
-                            </h3>
-                        </div>
-                    </div>
-                </a>
-            @endcan
-
-            @can('project_stage.view')
-                <a href="{{ route('settings.project-stages.index') }}" class="block group transition duration-300">
-                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
-                        <div class="flex flex-col items-center justify-center text-center h-full">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
-                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18h12" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12h8" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h4" />
-                                    <circle cx="18" cy="18" r="1.5" />
-                                    <circle cx="14" cy="12" r="1.5" />
-                                    <circle cx="10" cy="6" r="1.5" />
-                                </svg>
-                            </div>
-                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
-                                Project Stages
-                            </h3>
-                        </div>
-                    </div>
-                </a>
-            @endcan
-
-            @canany(['agile_milestone.view', 'agile_sprint.view'])
-                <a href="{{ auth()->user()->can('agile_milestone.view') ? route('settings.agile-milestones.index') : route('settings.agile-sprints.index') }}" class="block group transition duration-300">
-                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
-                        <div class="flex flex-col items-center justify-center text-center h-full">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
-                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h6l2 3h8" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h6l2-3h8" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 7v10" />
-                                </svg>
-                            </div>
-                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
-                                Project Agile Flow
+                                Project Settings
                             </h3>
                         </div>
                     </div>
