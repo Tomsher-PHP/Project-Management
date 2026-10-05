@@ -5,7 +5,7 @@
     <div class="mb-6 flex flex-wrap items-center gap-3">
         <x-back-button :url="route('settings.index')" label="Back" />
 
-        @can('project_category.create')
+        @can('project_settings.create')
             <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" label="Project Category" />
         @endcan
 
@@ -77,15 +77,15 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center">
-                                            <x-status-toggle :model="$projectCategory" route="settings.project_category.toggleStatus" entity="project_category" permission="project_category.edit" />
+                                            <x-status-toggle :model="$projectCategory" route="settings.project_category.toggleStatus" entity="project_category" permission="project_settings.edit" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
-                                            @can('project_category.edit')
+                                            @can('project_settings.edit')
                                                 <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-categories.update', $projectCategory->id) }}" data-name="{{ $projectCategory->name }}" data-sort_order="{{ $projectCategory->sort_order }}" data-method="PUT" data-module="Project Category" title="Edit Project Category" />
                                             @endcan
-                                            @can('project_category.delete')
+                                            @can('project_settings.delete')
                                                 @if (!$projectCategory->is_system)
                                                     <x-delete-form :action="route('settings.project-categories.destroy', $projectCategory->id)" />
                                                 @endif

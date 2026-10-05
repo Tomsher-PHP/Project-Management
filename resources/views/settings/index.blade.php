@@ -120,14 +120,9 @@
                 </a>
             @endcan
 
-            @canany(['project_category.view', 'project_status.view', 'project_stage.view', 'agile_milestone.view', 'agile_sprint.view'])
+            @can('project_settings.view')
                 @php
-                    $projectSettingsRoute = '';
-                    if (auth()->user()->can('project_category.view')) $projectSettingsRoute = route('settings.project-categories.index');
-                    elseif (auth()->user()->can('project_status.view')) $projectSettingsRoute = route('settings.project-statuses.index');
-                    elseif (auth()->user()->can('project_stage.view')) $projectSettingsRoute = route('settings.project-stages.index');
-                    elseif (auth()->user()->can('agile_milestone.view')) $projectSettingsRoute = route('settings.agile-milestones.index');
-                    elseif (auth()->user()->can('agile_sprint.view')) $projectSettingsRoute = route('settings.agile-sprints.index');
+                    $projectSettingsRoute = route('settings.project-categories.index');
                 @endphp
                 <a href="{{ $projectSettingsRoute }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">

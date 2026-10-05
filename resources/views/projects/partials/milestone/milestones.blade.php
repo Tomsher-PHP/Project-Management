@@ -209,7 +209,7 @@
                         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Milestone Library</h4>
-                                @can('agile_milestone.create')
+                                @can('project_settings.create')
                                     <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-milestone-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -265,7 +265,7 @@
         </script>
     </div>
 
-    @can('agile_milestone.create')
+    @can('project_settings.create')
         <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-milestone-library-create-modal" data-project-milestone-library-create-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-milestone-library-create-close></div>
 
@@ -394,7 +394,7 @@
                         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Sprint Library</h4>
-                                @can('agile_sprint.create')
+                                @can('project_settings.create')
                                     <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-sprint-library-create-open aria-label="Add sprint library item" title="Add sprint library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -450,7 +450,7 @@
         </script>
     </div>
 
-    @can('agile_sprint.create')
+    @can('project_settings.create')
         <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-sprint-library-create-modal" data-project-sprint-library-create-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-sprint-library-create-close></div>
 

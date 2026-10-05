@@ -5,7 +5,7 @@
     <div class="mb-6 flex flex-wrap items-center gap-3">
         <x-back-button :url="route('settings.index')" label="Back" />
 
-        @can('project_status.create')
+        @can('project_settings.create')
             <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Project Status" data-url="{{ route('settings.project-statuses.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" data-color="#22C55E" label="Project Status" />
         @endcan
 
@@ -96,15 +96,15 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center">
-                                            <x-status-toggle :model="$projectStatus" route="settings.project_status.toggleStatus" entity="project_status" permission="project_status.edit" />
+                                            <x-status-toggle :model="$projectStatus" route="settings.project_status.toggleStatus" entity="project_status" permission="project_settings.edit" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
-                                            @can('project_status.edit')
+                                            @can('project_settings.edit')
                                                 <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-statuses.update', $projectStatus->id) }}" data-name="{{ $projectStatus->name }}" data-code="{{ $projectStatus->code }}" data-color="{{ $projectStatus->color }}" data-type="{{ $projectStatus->type }}" data-is_completed="{{ (int) $projectStatus->is_completed }}" data-is_default="{{ (int) $projectStatus->is_default }}" data-sort_order="{{ $projectStatus->sort_order }}" data-method="PUT" data-module="Project Status" title="Edit Project Status" />
                                             @endcan
-                                            @can('project_status.delete')
+                                            @can('project_settings.delete')
                                                 @if (!$projectStatus->is_system)
                                                     <x-delete-form :action="route('settings.project-statuses.destroy', $projectStatus->id)" />
                                                 @endif

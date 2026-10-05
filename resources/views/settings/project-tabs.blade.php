@@ -4,31 +4,37 @@
             'key' => 'categories',
             'label' => 'Categories',
             'url' => route('settings.project-categories.index'),
-            'permission' => 'project_category.view',
+            'permission' => 'project_settings.view',
         ],
         [
             'key' => 'statuses',
             'label' => 'Statuses',
             'url' => route('settings.project-statuses.index'),
-            'permission' => 'project_status.view',
+            'permission' => 'project_settings.view',
         ],
         [
             'key' => 'stages',
             'label' => 'Stages',
             'url' => route('settings.project-stages.index'),
-            'permission' => 'project_stage.view',
+            'permission' => 'project_settings.view',
         ],
         [
             'key' => 'milestones',
             'label' => 'Milestones',
             'url' => route('settings.agile-milestones.index'),
-            'permission' => 'agile_milestone.view',
+            'permission' => 'project_settings.view',
+        ],
+        [
+            'key' => 'sprint_groups',
+            'label' => 'Sprint Groups',
+            'url' => route('settings.sprint-groups.index'),
+            'permission' => 'project_settings.view',
         ],
         [
             'key' => 'sprints',
             'label' => 'Sprints',
             'url' => route('settings.agile-sprints.index'),
-            'permission' => 'agile_sprint.view',
+            'permission' => 'project_settings.view',
         ],
     ];
 @endphp

@@ -13,6 +13,41 @@ class SetPermissionSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+        /*
+         * Permissions that should be removed from the system.
+         */
+        $permissionsToRemove = [
+            'project_category.view',
+            'project_category.create',
+            'project_category.edit',
+            'project_category.delete',
+            'project_status.view',
+            'project_status.create',
+            'project_status.edit',
+            'project_status.delete',
+            'project_stage.view',
+            'project_stage.create',
+            'project_stage.edit',
+            'project_stage.delete',
+            'agile_milestone.view',
+            'agile_milestone.create',
+            'agile_milestone.edit',
+            'agile_milestone.delete',
+            'agile_sprint.view',
+            'agile_sprint.create',
+            'agile_sprint.edit',
+            'agile_sprint.delete',
+            'sprint_group.view',
+            'sprint_group.create',
+            'sprint_group.edit',
+            'sprint_group.delete',
+        ];
+        foreach ($permissionsToRemove as $permissionName) {
+            Permission::where('name', $permissionName)
+                ->where('guard_name', 'web')
+                ->delete();
+        }
+
         $permissions = config('system_permissions');
 
         foreach ($permissions as $permissionData) {

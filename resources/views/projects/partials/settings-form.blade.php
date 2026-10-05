@@ -188,7 +188,7 @@
                     </select>
 
                     @if ($canEdit)
-                        @can('project_category.create')
+                        @can('project_settings.create')
                             <button type="button" data-target="#project-category-modal" data-select-target="project_category_ids[]" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextProjectCategorySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Project Category" aria-label="Add Project Category">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -287,7 +287,7 @@
 </form>
 
 @if ($canEdit)
-    @can('project_category.create')
+    @can('project_settings.create')
         <x-form-modal modalId="project-category-modal" module="Project Category" formId="projectCategoryInlineForm" action="{{ route('settings.project-categories.store') }}" button="Create Project Category">
             <div>
                 <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>

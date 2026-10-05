@@ -66,9 +66,11 @@
                                                         </span>
                                                     @endif
                                                 </div>
+                                                @if($currentTab !== 'sprint_groups')
                                                 <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                                                     {{ \Illuminate\Support\Str::limit($record->description ?: 'No description added.', 50, '...') }}
                                                 </p>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
@@ -85,7 +87,7 @@
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
                                             @can($editPermission)
-                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" data-name="{{ $record->name }}" data-color="{{ $record->color }}" data-description="{{ $record->description }}" data-sort_order="{{ $record->sort_order }}" data-is_system="{{ (int) $record->is_system }}" data-method="PUT" data-module="{{ $entityLabel }}" title="Edit {{ $entityLabel }}" />
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" data-name="{{ $record->name }}" data-color="{{ $record->color }}" data-description="{{ $currentTab !== 'sprint_groups' ? $record->description : '' }}" data-sort_order="{{ $record->sort_order }}" data-is_system="{{ (int) $record->is_system }}" data-method="PUT" data-module="{{ $entityLabel }}" title="Edit {{ $entityLabel }}" />
                                             @endcan
 
                                             @can($deletePermission)
@@ -119,6 +121,7 @@
             <input type="color" name="color" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
         </div>
 
+        @if($currentTab !== 'sprint_groups')
         <div>
             <div class="mb-2.5 flex items-center justify-between gap-3">
                 <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
@@ -126,6 +129,7 @@
             </div>
             <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
         </div>
+        @endif
 
         <div>
             <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-700 dark:text-bgray-50">
