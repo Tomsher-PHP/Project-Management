@@ -400,7 +400,7 @@ const setFieldValue = (field, value = '') => {
     }
 };
 
-const getDefaultTaskDueDateTime = () => {
+const getDefaultTaskDueDateTime = (estimateMinutes = 0) => {
     const now = new Date();
     const target = new Date(now);
     if (now.getHours() >= 18) {
@@ -408,10 +408,21 @@ const getDefaultTaskDueDateTime = () => {
     }
     target.setHours(19, 0, 0, 0);
 
-    const year = target.getFullYear();
-    const month = String(target.getMonth() + 1).padStart(2, '0');
-    const day = String(target.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day} 19:00`;
+    let finalDate = target;
+
+    if (estimateMinutes > 0) {
+        const estimatedEndMs = now.getTime() + (estimateMinutes * 60000);
+        if (estimatedEndMs > target.getTime()) {
+            finalDate = new Date(estimatedEndMs);
+        }
+    }
+
+    const year = finalDate.getFullYear();
+    const month = String(finalDate.getMonth() + 1).padStart(2, '0');
+    const day = String(finalDate.getDate()).padStart(2, '0');
+    const hours = String(finalDate.getHours()).padStart(2, '0');
+    const mins = String(finalDate.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${mins}`;
 };
 
 const setTaskModalAdvancedState = (root, expanded) => {
@@ -1816,6 +1827,18 @@ const initializeTasksRoot = (root) => {
         }, true);
         taskRowMenuDocumentListenerBound = true;
     }
+
+    root.addEventListener('input', (event) => {
+        if (event.target.name === 'estimated_time_minutes') {
+            const form = event.target.closest('form');
+            if (!form) return;
+            const dueDateField = form.querySelector('[name="due_date_time"]');
+            if (dueDateField) {
+                const estimateMinutes = Number.parseInt(event.target.value || '0', 10);
+                setFieldValue(dueDateField, getDefaultTaskDueDateTime(estimateMinutes));
+            }
+        }
+    });
 
     root.addEventListener('click', async (event) => {
         const detailTabBtn = event.target.closest('[data-project-task-detail-tab]');
