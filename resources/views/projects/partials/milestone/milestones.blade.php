@@ -426,13 +426,11 @@
                                         }
                                         
                                         foreach ($agileSprintGroups as $group) {
-                                            if ($group->agileSprints->count() > 0) {
-                                                $libraryItems->push([
-                                                    'type' => 'group',
-                                                    'sort_order' => $group->sort_order,
-                                                    'model' => $group,
-                                                ]);
-                                            }
+                                            $libraryItems->push([
+                                                'type' => 'group',
+                                                'sort_order' => $group->sort_order,
+                                                'model' => $group,
+                                            ]);
                                         }
                                         
                                         $libraryItems = $libraryItems->sortBy('sort_order');
@@ -464,7 +462,7 @@
                                             </article>
                                         @else
                                             @php $group = $item['model']; @endphp
-                                            <details class="group mb-3 overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300">
+                                            <details class="group mb-3 overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 {{ $group->agileSprints->count() === 0 ? 'hidden' : '' }}">
                                                 <summary class="flex cursor-grab items-center justify-between p-4 transition duration-200 hover:bg-bgray-50 dark:hover:bg-darkblack-500" draggable="true" data-project-sprint-library-group data-group-id="{{ $group->id }}">
                                                     <div class="flex items-center gap-2">
                                                         <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $group->color ?: '#3B82F6' }}"></span>
@@ -546,6 +544,17 @@
                                         <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
                                         <input type="color" name="color" value="#22C55E" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="color"></p>
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sprint Group</label>
+                                        <select name="sprint_group_id" class="tom-select w-full border-gray-300 dark:border-darkblack-400">
+                                            <option value="">Select Sprint Group</option>
+                                            @foreach($agileSprintGroups as $group)
+                                                <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="sprint_group_id"></p>
                                     </div>
 
                                     <div class="md:col-span-2">

@@ -1938,6 +1938,10 @@ const initializeProjectSprintBuilderModal = () => {
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
 
+    if (libraryCreateModal) {
+        initTomSelect(libraryCreateModal);
+    }
+
     const recalculateSprintAvailableTime = () => {
         const milestoneSeconds = Number(activeMilestoneEstimateSeconds) || 0;
 
@@ -2015,6 +2019,11 @@ const initializeProjectSprintBuilderModal = () => {
             sortOrderInput.value = String(getNextLibrarySortOrder());
         }
 
+        const tomSelectControl = libraryCreateForm.querySelector('.tom-select')?.tomselect;
+        if (tomSelectControl) {
+            tomSelectControl.clear();
+        }
+
         clearInlineFormErrors(libraryCreateForm, 'data-project-sprint-library-create-error');
         syncLibraryDescriptionCount();
     };
@@ -2047,7 +2056,32 @@ const initializeProjectSprintBuilderModal = () => {
             return null;
         }
 
-        library.appendChild(item);
+        if (librarySprint.sprint_group_id) {
+            const group = library.querySelector(`[data-group-id="${librarySprint.sprint_group_id}"]`);
+            if (group) {
+                const groupContainer = group.closest('details').querySelector('.space-y-3');
+                if (groupContainer) {
+                    groupContainer.appendChild(item);
+                    group.closest('details').classList.remove('hidden');
+                    
+                    const titleEl = group.querySelector('h5');
+                    if (titleEl) {
+                        const match = titleEl.textContent.match(/(.*)\((\d+)\)/);
+                        if (match) {
+                            const newCount = parseInt(match[2], 10) + 1;
+                            titleEl.textContent = `${match[1]}(${newCount})`;
+                        }
+                    }
+                } else {
+                    library.appendChild(item);
+                }
+            } else {
+                library.appendChild(item);
+            }
+        } else {
+            library.appendChild(item);
+        }
+
         config.nextLibrarySortOrder = Math.max(
             Number(config.nextLibrarySortOrder) || 0,
             (Number(librarySprint.sort_order) || 0) + 1
