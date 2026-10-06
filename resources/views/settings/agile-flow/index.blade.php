@@ -38,6 +38,10 @@
                                         <x-sorting.sortable-column column="sprint_group_id" label="Sprint Group" />
                                     </div>
                                 </td>
+                                @elseif($currentTab === 'sprint_groups')
+                                <td class="px-6 py-5 xl:w-[150px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Sprint Count</span>
+                                </td>
                                 @endif
                                 <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
@@ -85,6 +89,12 @@
                                     <td class="px-6 py-5 xl:w-[200px] xl:px-0">
                                         <p class="text-sm text-bgray-700 dark:text-bgray-300">
                                             {{ $record->sprintGroup ? $record->sprintGroup->name : '-' }}
+                                        </p>
+                                    </td>
+                                    @elseif($currentTab === 'sprint_groups')
+                                    <td class="px-6 py-5 xl:w-[150px] xl:px-0">
+                                        <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                                            {{ $record->agile_sprints_count ?? 0 }}
                                         </p>
                                     </td>
                                     @endif

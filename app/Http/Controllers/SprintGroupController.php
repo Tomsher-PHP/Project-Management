@@ -20,7 +20,7 @@ class SprintGroupController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
-        $records = SprintGroup::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+        $records = SprintGroup::withCount('agileSprints')->filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
         $nextSortOrder = ((int) SprintGroup::max('sort_order')) + 1;
 
         return view('settings.agile-flow.index', [
