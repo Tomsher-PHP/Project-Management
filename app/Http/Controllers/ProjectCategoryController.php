@@ -10,13 +10,11 @@ use Illuminate\Http\Response;
 class ProjectCategoryController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Project Categories';
-        $this->subTitle = 'Manage your project categories';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)

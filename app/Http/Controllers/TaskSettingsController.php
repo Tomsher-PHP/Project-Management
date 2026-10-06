@@ -12,13 +12,11 @@ use Illuminate\Support\Facades\DB;
 class TaskSettingsController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Task Settings';
-        $this->subTitle = 'Manage reusable task statuses, types and modes for your projects';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)

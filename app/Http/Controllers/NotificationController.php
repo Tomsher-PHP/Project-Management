@@ -12,13 +12,10 @@ class NotificationController extends Controller
 {
     protected string $pageTitle;
 
-    protected string $subTitle;
-
     public function __construct()
     {
         $this->pageTitle = 'Notifications';
-        $this->subTitle = 'View and manage your notifications';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)

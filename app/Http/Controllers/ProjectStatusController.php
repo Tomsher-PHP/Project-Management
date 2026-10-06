@@ -11,13 +11,11 @@ use Illuminate\Support\Facades\DB;
 class ProjectStatusController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Project Statuses';
-        $this->subTitle = 'Manage your project statuses';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)
