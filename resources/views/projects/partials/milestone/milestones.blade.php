@@ -433,7 +433,10 @@
                                             ]);
                                         }
                                         
-                                        $libraryItems = $libraryItems->sortBy('sort_order');
+                                        $libraryItems = $libraryItems->sortBy([
+                                            ['type', 'asc'],
+                                            ['sort_order', 'asc'],
+                                        ]);
                                     @endphp
 
                                     @foreach ($libraryItems as $item)

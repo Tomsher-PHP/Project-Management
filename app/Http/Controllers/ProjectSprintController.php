@@ -66,7 +66,7 @@ class ProjectSprintController extends Controller
             ],
             'count' => $totalCount,
             'sprints' => $projectSprints
-                ->map(fn (ProjectSprint $projectSprint) => $this->serializeSprint($projectSprint))
+                ->map(fn(ProjectSprint $projectSprint) => $this->serializeSprint($projectSprint))
                 ->values(),
             'pagination' => $pagination,
             'html' => view('projects.partials.milestone.sprints', [
@@ -412,7 +412,8 @@ class ProjectSprintController extends Controller
         while ($projectMilestone->projectSprints()
             ->where('name', $candidate)
             ->whereKeyNot($restoringSprintId)
-            ->exists()) {
+            ->exists()
+        ) {
             $candidate = $suffix === 1
                 ? "{$originalName} (Restored)"
                 : "{$originalName} (Restored {$suffix})";
@@ -426,7 +427,7 @@ class ProjectSprintController extends Controller
     private function renderSection(Project $project, ?int $openMilestoneId = null, ?int $openSprintId = null): string
     {
         $project->load([
-            'projectMilestones' => fn ($query) => $query
+            'projectMilestones' => fn($query) => $query
                 ->with([
                     'addedBy',
                     'updatedBy',
@@ -442,7 +443,7 @@ class ProjectSprintController extends Controller
             'project' => $project,
             'projectMilestones' => $project->projectMilestones,
             'agileSprints' => AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get(),
-            'agileSprintGroups' => \App\Models\SprintGroup::active()->with(['agileSprints' => function($q) {
+            'agileSprintGroups' => \App\Models\SprintGroup::active()->with(['agileSprints' => function ($q) {
                 $q->active()->orderBy('sort_order', 'asc');
             }])->orderBy('sort_order', 'asc')->get(),
             'projectStatuses' => ProjectStatus::active()->orderBy('sort_order', 'asc')->get(),
