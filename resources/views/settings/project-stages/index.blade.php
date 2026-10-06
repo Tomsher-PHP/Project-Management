@@ -5,7 +5,7 @@
     <div class="mb-6 flex flex-wrap items-center gap-3">
         <x-back-button :url="route('settings.index')" label="Back" />
 
-        @can('project_stage.create')
+        @can('project_settings.create')
             <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Project Stage" data-url="{{ route('settings.project-stages.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" data-color="#22C55E" label="Project Stage" />
         @endcan
 
@@ -17,6 +17,8 @@
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
             <!--list table-->
             <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
+                @include('settings.project-tabs', ['currentTab' => 'stages'])
+
                 <div class="flex flex-col space-y-5">
 
                     <div class="table-content w-full overflow-x-auto">
@@ -86,15 +88,15 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center">
-                                            <x-status-toggle :model="$projectStage" route="settings.project_stage.toggleStatus" entity="project_stage" permission="project_stage.edit" />
+                                            <x-status-toggle :model="$projectStage" route="settings.project_stage.toggleStatus" entity="project_stage" permission="project_settings.edit" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
-                                            @can('project_stage.edit')
+                                            @can('project_settings.edit')
                                                 <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-code="{{ $projectStage->code }}" data-color="{{ $projectStage->color }}" data-is_default="{{ (int) $projectStage->is_default }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage" title="Edit Project Stage" />
                                             @endcan
-                                            @can('project_stage.delete')
+                                            @can('project_settings.delete')
                                                 @if (!$projectStage->is_system)
                                                     <x-delete-form :action="route('settings.project-stages.destroy', $projectStage->id)" />
                                                 @endif

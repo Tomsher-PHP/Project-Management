@@ -11,13 +11,11 @@ class TechnologyController extends Controller
 {
 
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Technologies';
-        $this->subTitle = 'Manage your project technologies';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)
