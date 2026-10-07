@@ -167,23 +167,10 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2">
+                                        <div class="flex w-full items-center space-x-1">
                                             @can('project.edit')
-                                                <button type="button" class="project-edit-btn inline-flex h-8 w-8 items-center justify-center rounded-md bg-white text-bgray-600 shadow-sm transition hover:text-success-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:text-success-400" data-project="{{ json_encode($project) }}" title="Edit project">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M12 20h9"></path>
-                                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                                                    </svg>
-                                                </button>
+                                                <x-edit-button class="project-edit-btn" data-project="{{ json_encode($project) }}" title="Edit project" />
                                             @endcan
-                                            <a href="{{ route('projects.edit', $project->id) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white text-bgray-600 shadow-sm transition hover:text-primary-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:text-primary-400" title="Open project">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                                    <polyline points="15 3 21 3 21 9"></polyline>
-                                                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                                                </svg>
-                                            </a>
-
                                             @can('project.delete')
                                                 <x-delete-form :action="route('projects.destroy', $project->id)" formClass="project-delete-form" />
                                             @endcan

@@ -99,49 +99,29 @@
             </div>
 
             <!-- Project Category -->
-            <div class="col-span-1 md:col-span-2">
+            <div>
                 <label for="edit_project_category_ids" class="mb-2 block text-left text-sm font-medium text-bgray-600 dark:text-bgray-50">Project Category</label>
-                <div class="flex items-center gap-2">
-                    <select name="project_category_ids[]" id="edit_project_category_ids" multiple class="tom-select-multiple w-full">
-                        <option value="">Select Project Category</option>
-                        @isset($projectCategories)
-                            @foreach ($projectCategories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        @endisset
-                    </select>
-
-                    @can('project_settings.create')
-                        <button type="button" data-target="#project-category-modal" data-select-target="edit_project_category_ids[]" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextProjectCategorySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Project Category" aria-label="Add Project Category">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                        </button>
-                    @endcan
-                </div>
+                <select name="project_category_ids[]" id="edit_project_category_ids" multiple class="tom-select-multiple w-full">
+                    <option value="">Select Project Category</option>
+                    @isset($projectCategories)
+                        @foreach ($projectCategories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    @endisset
+                </select>
             </div>
 
             <!-- Project Technology -->
-            <div class="col-span-1 md:col-span-2">
+            <div>
                 <label for="edit_project_technology_ids" class="mb-2 block text-left text-sm font-medium text-bgray-600 dark:text-bgray-50">Project Technology</label>
-                <div class="flex items-center gap-2">
-                    <select name="project_technology_ids[]" id="edit_project_technology_ids" multiple class="tom-select-multiple w-full">
-                        <option value="">Select Project Technology</option>
-                        @isset($projectTechnologies)
-                            @foreach ($projectTechnologies as $technology)
-                                <option value="{{ $technology->id }}">{{ $technology->name }}</option>
-                            @endforeach
-                        @endisset
-                    </select>
-
-                    @can('technology.create')
-                        <button type="button" data-target="#project-technology-modal" data-select-target="edit_project_technology_ids[]" data-module="Technology" data-url="{{ route('settings.technologies.store') }}" data-method="POST" data-sort_order="{{ $nextProjectTechnologySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Technology" aria-label="Add Technology">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                        </button>
-                    @endcan
-                </div>
+                <select name="project_technology_ids[]" id="edit_project_technology_ids" multiple class="tom-select-multiple w-full">
+                    <option value="">Select Project Technology</option>
+                    @isset($projectTechnologies)
+                        @foreach ($projectTechnologies as $technology)
+                            <option value="{{ $technology->id }}">{{ $technology->name }}</option>
+                        @endforeach
+                    @endisset
+                </select>
             </div>
 
             <!-- Default Billable -->

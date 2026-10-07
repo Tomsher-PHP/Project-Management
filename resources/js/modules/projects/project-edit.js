@@ -14,8 +14,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // We added the click listener here to populate data BEFORE opening the modal.
     
     editBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-            const project = JSON.parse(this.getAttribute('data-project'));
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const project = JSON.parse(this.getAttribute('data-project') || this.closest('[data-project]').getAttribute('data-project'));
             
             // Set form action
             form.action = `/projects/${project.id}`;
