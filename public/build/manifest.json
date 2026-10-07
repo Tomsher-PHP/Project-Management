@@ -338,6 +338,16 @@
       "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
+  "resources/js/modules/projects/project-edit.js": {
+    "file": "assets/project-edit-CteeR2pE.js",
+    "name": "project-edit",
+    "src": "resources/js/modules/projects/project-edit.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
   "resources/js/modules/projects/project-payment.js": {
     "file": "assets/project-payment-CKl93k2U.js",
     "name": "project-payment",
@@ -367,6 +377,12 @@
       "_flatpickr.min-Cc3t1Oke.js",
       "_timepicker-BgMmsOv3.js"
     ]
+  },
+  "resources/js/modules/projects/project-timelines.js": {
+    "file": "assets/project-timelines-BtXwkrTp.js",
+    "name": "project-timelines",
+    "src": "resources/js/modules/projects/project-timelines.js",
+    "isEntry": true
   },
   "resources/js/modules/schedule-shift.js": {
     "file": "assets/schedule-shift-9MCgaxne.js",

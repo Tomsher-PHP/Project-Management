@@ -25,4 +25,11 @@ class ProjectTimelineStoreRequest extends FormRequest
             'notes' => 'nullable|string',
         ];
     }
+
+    protected function prepareForValidation()
+    {
+        if (! $this->has('status')) {
+            $this->merge(['status' => 1]);
+        }
+    }
 }

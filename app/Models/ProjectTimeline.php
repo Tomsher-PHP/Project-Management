@@ -15,6 +15,8 @@ class ProjectTimeline extends Model
     public const STATUS_COMPLETED = 3;
     public const STATUS_CANCELLED = 4;
 
+    public const DEFAULT_TYPE = 'new';
+
     protected $fillable = [
         'project_id',
         'name',
