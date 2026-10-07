@@ -61,31 +61,24 @@
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     @php
-                                        $prevTimeline = $projectTimelines
-                                            ->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)
-                                            ->where('sort_order', '<', $timeline->sort_order)
-                                            ->sortByDesc('sort_order')
-                                            ->first();
-                                        
-                                        $nextTimeline = $projectTimelines
-                                            ->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)
-                                            ->where('sort_order', '>', $timeline->sort_order)
-                                            ->sortBy('sort_order')
-                                            ->first();
-                                            
+                                        $prevTimeline = $projectTimelines->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)->where('sort_order', '<', $timeline->sort_order)->sortByDesc('sort_order')->first();
+
+                                        $nextTimeline = $projectTimelines->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)->where('sort_order', '>', $timeline->sort_order)->sortBy('sort_order')->first();
+
                                         $minDate = $prevTimeline && $prevTimeline->end_date ? \Carbon\Carbon::parse($prevTimeline->end_date)->addDay()->format('Y-m-d') : '';
                                         $maxDate = $nextTimeline && $nextTimeline->start_date ? \Carbon\Carbon::parse($nextTimeline->start_date)->subDay()->format('Y-m-d') : '';
                                     @endphp
                                     @if ($timeline->status === \App\Models\ProjectTimeline::STATUS_PLANNED)
                                         @php
                                             $hasActive = $projectTimelines->where('status', \App\Models\ProjectTimeline::STATUS_ACTIVE)->count() > 0;
-                                            $hasPrevNotCompleted = $projectTimelines
-                                                ->where('sort_order', '<', $timeline->sort_order)
-                                                ->whereNotIn('status', [\App\Models\ProjectTimeline::STATUS_COMPLETED, \App\Models\ProjectTimeline::STATUS_CANCELLED])
-                                                ->count() > 0;
+                                            $hasPrevNotCompleted =
+                                                $projectTimelines
+                                                    ->where('sort_order', '<', $timeline->sort_order)
+                                                    ->whereNotIn('status', [\App\Models\ProjectTimeline::STATUS_COMPLETED, \App\Models\ProjectTimeline::STATUS_CANCELLED])
+                                                    ->count() > 0;
                                             $canActivate = !$hasActive && !$hasPrevNotCompleted;
                                         @endphp
-                                        <form action="{{ route('projects.timelines.activate', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" method="POST" class="ajax-form inline-block" title="{{ $canActivate ? '' : 'Cannot activate until previous timelines are completed and no active timeline exists.' }}">
+                                        <form action="{{ route('projects.timelines.activate', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" method="POST" class="timeline-workflow-form inline-block" title="{{ $canActivate ? '' : 'Cannot activate until previous timelines are completed and no active timeline exists.' }}" data-action-name="activate">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold {{ $canActivate ? 'bg-success-300 text-white hover:bg-success-400' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }}" {{ $canActivate ? '' : 'disabled' }}>
@@ -93,10 +86,10 @@
                                             </button>
                                         </form>
                                     @elseif ($timeline->status === \App\Models\ProjectTimeline::STATUS_ACTIVE)
-                                        <form action="{{ route('projects.timelines.complete', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" method="POST" class="ajax-form inline-block">
+                                        <form action="{{ route('projects.timelines.complete', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" method="POST" class="timeline-workflow-form inline-block" data-action-name="complete">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="inline-flex items-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-600">
+                                            <button type="submit" class="inline-flex items-center gap-1 rounded bg-orange-600 px-2 py-1 text-xs font-semibold text-white hover:bg-orange-500">
                                                 Mark as Completed
                                             </button>
                                         </form>

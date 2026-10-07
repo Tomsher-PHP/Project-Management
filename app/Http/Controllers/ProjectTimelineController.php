@@ -90,7 +90,7 @@ class ProjectTimelineController extends Controller
     {
         abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
 
-        $timeline = $this->timelineService->activateTimeline($projectTimeline);
+        $timeline = $this->timelineService->activateTimeline($projectTimeline, request('remark'));
         
         return response()->json([
             'status' => true,
@@ -111,7 +111,7 @@ class ProjectTimelineController extends Controller
     {
         abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
 
-        $timeline = $this->timelineService->completeTimeline($projectTimeline);
+        $timeline = $this->timelineService->completeTimeline($projectTimeline, request('remark'));
         
         return response()->json([
             'status' => true,

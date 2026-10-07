@@ -115,13 +115,13 @@ class ProjectTimelineService
         $timeline->forceDelete();
     }
 
-    public function activateTimeline(ProjectTimeline $timeline): ProjectTimeline
+    public function activateTimeline(ProjectTimeline $timeline, ?string $remark = null): ProjectTimeline
     {
         if ($timeline->status !== ProjectTimeline::STATUS_PLANNED) {
             throw ValidationException::withMessages(['status' => 'Only planned timelines can be activated.']);
         }
 
-        return DB::transaction(function () use ($timeline) {
+        return DB::transaction(function () use ($timeline, $remark) {
             // Lock the project timelines to prevent concurrent activation
             $hasActive = ProjectTimeline::where('project_id', $timeline->project_id)
                 ->where('status', ProjectTimeline::STATUS_ACTIVE)
@@ -152,19 +152,20 @@ class ProjectTimelineService
                 'status' => $timeline->status,
                 'added_by' => auth()->id(),
                 'added_at' => now(),
+                'remarks' => $remark,
             ]);
 
             return $timeline;
         });
     }
 
-    public function completeTimeline(ProjectTimeline $timeline): ProjectTimeline
+    public function completeTimeline(ProjectTimeline $timeline, ?string $remark = null): ProjectTimeline
     {
         if ($timeline->status !== ProjectTimeline::STATUS_ACTIVE) {
             throw ValidationException::withMessages(['status' => 'Only active timelines can be completed.']);
         }
 
-        return DB::transaction(function () use ($timeline) {
+        return DB::transaction(function () use ($timeline, $remark) {
             $oldStatus = $timeline->status;
             $timeline->status = ProjectTimeline::STATUS_COMPLETED;
             $timeline->save();
@@ -175,6 +176,7 @@ class ProjectTimelineService
                 'status' => $timeline->status,
                 'added_by' => auth()->id(),
                 'added_at' => now(),
+                'remarks' => $remark,
             ]);
 
             return $timeline;

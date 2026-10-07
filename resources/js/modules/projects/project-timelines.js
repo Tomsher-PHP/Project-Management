@@ -212,3 +212,59 @@ document.body.addEventListener('click', function(e) {
             }
         });
     }
+
+    document.body.addEventListener('submit', function(e) {
+        if (e.target && e.target.classList.contains('timeline-workflow-form')) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const form = e.target;
+            const url = form.getAttribute('action');
+            const actionName = form.getAttribute('data-action-name');
+            const title = actionName === 'activate' ? 'Confirm Activation' : 'Confirm Completion';
+            const text = actionName === 'activate' ? 'Are you sure you want to activate this timeline?' : 'Are you sure you want to mark this timeline as completed?';
+
+            Alert.confirm({
+                title: title,
+                text: text,
+                requireRemark: true,
+                confirmText: 'Yes',
+                cancelText: 'Cancel'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    const formData = new FormData(form);
+                    if (result.value) {
+                        formData.append('remark', result.value);
+                    }
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json().then(data => ({status: response.status, body: data})))
+                    .then(res => {
+                        if (res.status === 200 && res.body.success) {
+                            Alert.success(res.body.message || 'Status updated successfully.');
+                            if (res.body.html) {
+                                document.getElementById('project-timelines-container').innerHTML = res.body.html;
+                            } else {
+                                window.location.reload();
+                            }
+                        } else if (res.status === 422) {
+                            Alert.error(res.body.message || 'Validation error.');
+                        } else {
+                            Alert.error(res.body.message || 'Unable to update status.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Alert.error('An error occurred.');
+                    });
+                }
+            });
+        }
+    });
