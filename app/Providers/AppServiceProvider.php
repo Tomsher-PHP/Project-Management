@@ -129,6 +129,26 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.sidebar', SidebarComposer::class);
 
+        View::composer('projects.partials.project-edit-modal', function ($view) {
+            $view->with('customers', \App\Models\Customer::active()->get());
+            $view->with('users', app(\App\Services\UserService::class)->getAccessibleUsers(auth()->user(), [], []));
+            $view->with('projectCategories', \App\Models\ProjectCategory::orderBy('sort_order', 'asc')->get());
+            $view->with('projectTechnologies', \App\Models\Technology::orderBy('sort_order', 'asc')->get());
+            
+            $projectId = $view->getData()['project']->id ?? 0;
+            $parentProjectOptions = \App\Models\Project::query()
+                ->eligibleParentOptions($projectId, $view->getData()['project']->parent_project_id ?? null)
+                ->get();
+            $view->with('parentProjectOptions', $parentProjectOptions);
+            
+            $view->with('nextProjectCategorySortOrder', ((int) \App\Models\ProjectCategory::max('sort_order')) + 1);
+            $view->with('nextProjectTechnologySortOrder', ((int) \App\Models\Technology::max('sort_order')) + 1);
+            
+            if (!isset($view->getData()['priorities'])) {
+                $view->with('priorities', config('project_constants.project_priorities'));
+            }
+        });
+
         Gate::define('request-task', function () {
             $user = auth()->user();
 
