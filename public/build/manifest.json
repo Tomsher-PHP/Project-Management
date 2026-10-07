@@ -379,10 +379,14 @@
     ]
   },
   "resources/js/modules/projects/project-timelines.js": {
-    "file": "assets/project-timelines-vLPgmMme.js",
+    "file": "assets/project-timelines-BEq_cpnn.js",
     "name": "project-timelines",
     "src": "resources/js/modules/projects/project-timelines.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/modules/schedule-shift.js": {
     "file": "assets/schedule-shift-9MCgaxne.js",

@@ -1,7 +1,32 @@
+import Alert from '../../alert.js';
+
 document.addEventListener('DOMContentLoaded', function () {
     document.body.addEventListener('click', function(e) {
+        const addBtn = e.target.closest('.add-timeline-btn');
+        if (addBtn) {
+            const modal = document.getElementById('create-timeline-modal');
+            const form = document.getElementById('projectTimelineCreateForm');
+            if (form) {
+                form.reset();
+                form.querySelectorAll('.tom-select-no-search').forEach(select => {
+                    if (select.tomselect) {
+                        select.tomselect.setValue(select.value, true);
+                    }
+                });
+            }
+            if (modal) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    const nameField = modal.querySelector('[name="name"]');
+                    if (nameField) nameField.focus();
+                }, 100);
+            }
+        }
+
         const editBtn = e.target.closest('.edit-timeline-btn');
         if (editBtn) {
+            e.preventDefault();
+            const modal = document.getElementById('edit-timeline-modal');
             const timeline = JSON.parse(editBtn.getAttribute('data-timeline'));
             const action = editBtn.getAttribute('data-action');
 
@@ -53,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             document.getElementById('edit_timeline_notes').value = timeline.notes || '';
             
-            // If it's original, lock the type select
             const typeEl = document.getElementById('edit_timeline_type');
             if (timeline.type === 'original') {
                 if (typeEl && typeEl.tomselect) {
@@ -70,8 +94,110 @@ document.addEventListener('DOMContentLoaded', function () {
                     typeEl.style.pointerEvents = 'auto';
                 }
             }
+
+            if (modal) modal.classList.remove('hidden');
         }
-
-
     });
+
+    const handleFormSubmit = (formId) => {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const formData = new FormData(form);
+            const url = form.getAttribute('action');
+
+            form.querySelectorAll('.error-text').forEach(el => el.remove());
+            form.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json().then(data => ({status: response.status, body: data})))
+            .then(res => {
+                if (res.status === 200 || res.status === 201) {
+                    Alert.success(res.body.message || 'Saved successfully.');
+                    form.closest('.modal-form').classList.add('hidden');
+                    if (res.body.html) {
+                        document.getElementById('project-timelines-container').innerHTML = res.body.html;
+                    } else {
+                        window.location.reload();
+                    }
+                } else if (res.status === 422) {
+                    const errors = res.body.errors;
+                    for (const key in errors) {
+                        const input = form.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            input.classList.add('border-red-500');
+                            input.insertAdjacentHTML('afterend', `<span class="text-red-500 error-text mt-1 text-xs block">${errors[key][0]}</span>`);
+                        }
+                    }
+                } else {
+                    Alert.error(res.body.message || 'An error occurred.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Alert.error('An error occurred.');
+            });
+        });
+    };
+
+    handleFormSubmit('projectTimelineCreateForm');
+    handleFormSubmit('projectTimelineEditForm');
+
+    const container = document.getElementById('project-timelines-container');
+    if (container) {
+        container.addEventListener('submit', function(e) {
+            if (e.target && e.target.classList.contains('delete-form')) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const form = e.target;
+                const url = form.getAttribute('action');
+
+                Alert.confirm({
+                    title: 'Confirm Delete',
+                    text: 'Are you sure you want to delete this timeline?',
+                    confirmText: 'Yes, delete it',
+                    cancelText: 'Cancel'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json'
+                            },
+                            body: new FormData(form)
+                        })
+                        .then(response => response.json().then(data => ({status: response.status, body: data})))
+                        .then(res => {
+                            if (res.status === 200 && res.body.success) {
+                                Alert.success(res.body.message || 'Deleted successfully.');
+                                if (res.body.html) {
+                                    document.getElementById('project-timelines-container').innerHTML = res.body.html;
+                                } else {
+                                    window.location.reload();
+                                }
+                            } else {
+                                Alert.error(res.body.message || 'Unable to delete this record.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Alert.error('Unable to delete this record.');
+                        });
+                    }
+                });
+            }
+        });
+    }
 });
