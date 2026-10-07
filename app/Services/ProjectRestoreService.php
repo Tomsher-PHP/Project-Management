@@ -348,36 +348,7 @@ class ProjectRestoreService
 
     private function renderSettingsTab(Project $project): string
     {
-        $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
-        $selectedCustomerId = $project->customer_id;
-        $selectedCategoryIds = $project->project_category_ids ?? [];
-        $selectedTechnologyIds = $project->technologies()->get()->pluck('id')->map(fn($id) => (int) $id)->all();
-        $selectedParentProjectId = $project->parent_project_id;
-
-        $users = $this->userService->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
-        $project->load('technologies');
-
-        $customers = Customer::forForm($selectedCustomerId)->get();
-        $projectCategories = ProjectCategory::forForm($selectedCategoryIds, 'sort_order')->get();
-        $projectTechnologies = Technology::forForm($selectedTechnologyIds, 'sort_order')->get();
-        $parentProjectOptions = Project::query()->eligibleParentOptions($project->id, $selectedParentProjectId)->get();
-
-        $nextProjectCategorySortOrder = ((int) ProjectCategory::max('sort_order')) + 1;
-        $nextProjectTechnologySortOrder = ((int) Technology::max('sort_order')) + 1;
-
-        $priorities = config('project_constants.project_priorities');
-
-        return view('projects.partials.tabs.settings', compact(
-            'project',
-            'users',
-            'customers',
-            'projectCategories',
-            'nextProjectCategorySortOrder',
-            'projectTechnologies',
-            'nextProjectTechnologySortOrder',
-            'priorities',
-            'parentProjectOptions'
-        ))->render();
+        return view('projects.partials.tabs.settings', compact('project'))->render();
     }
 
     private function getPaginatedProjectNotes(Project $project, int $page)
