@@ -30,6 +30,7 @@ class ProjectTimelineController extends Controller
             'html' => view('projects.partials.tabs.settings.timelines-list', [
                 'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
                 'project' => $project,
+                'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
             ])->render(),
         ], Response::HTTP_CREATED);
     }
@@ -37,7 +38,7 @@ class ProjectTimelineController extends Controller
     public function update(ProjectTimelineUpdateRequest $request, Project $project, ProjectTimeline $projectTimeline): JsonResponse
     {
         abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
-        
+
         $timeline = $this->timelineService->update($projectTimeline, $request->validated());
 
         return response()->json([
@@ -47,6 +48,7 @@ class ProjectTimelineController extends Controller
             'html' => view('projects.partials.tabs.settings.timelines-list', [
                 'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
                 'project' => $project,
+                'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
             ])->render(),
         ], Response::HTTP_OK);
     }
@@ -55,15 +57,26 @@ class ProjectTimelineController extends Controller
     {
         abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
 
+        if ($projectTimeline->tasks()->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Cannot delete this timeline because it has associated tasks.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         $this->timelineService->destroy($projectTimeline);
 
         return response()->json([
+            'status' => true,
             'success' => true,
             'message' => 'Project timeline deleted successfully.',
             'html' => view('projects.partials.tabs.settings.timelines-list', [
                 'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
                 'project' => $project,
+                'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
             ])->render(),
+            'render_target' => '#project-timelines-container',
+            'render_mode' => 'replace_inner',
         ], Response::HTTP_OK);
     }
 }

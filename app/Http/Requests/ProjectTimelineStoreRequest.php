@@ -47,7 +47,7 @@ class ProjectTimelineStoreRequest extends FormRequest
                 $hasActive = \App\Models\ProjectTimeline::where('project_id', $projectId)
                     ->where('status', \App\Models\ProjectTimeline::STATUS_ACTIVE)
                     ->exists();
-                
+
                 if ($hasActive) {
                     $validator->errors()->add('status', 'There is already an active timeline for this project. Only 1 active status is allowed.');
                 }
@@ -58,7 +58,7 @@ class ProjectTimelineStoreRequest extends FormRequest
                     ->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)
                     ->where(function ($query) use ($startDate, $endDate) {
                         $query->where('start_date', '<=', $endDate)
-                              ->where('end_date', '>=', $startDate);
+                            ->where('end_date', '>=', $startDate);
                     })
                     ->exists();
 

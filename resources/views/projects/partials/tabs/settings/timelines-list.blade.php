@@ -57,13 +57,9 @@
                         @if ($canEdit)
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button type="button" data-target="#edit-timeline-modal" data-module="Project Timeline" data-timeline="{{ json_encode($timeline) }}" data-action="{{ route('projects.timelines.update', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" class="modal-open edit-timeline-btn text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                                        Edit
-                                    </button>
+                                    <x-edit-button data-target="#edit-timeline-modal" data-module="Project Timeline" data-timeline="{{ json_encode($timeline) }}" data-action="{{ route('projects.timelines.update', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" class="modal-open edit-timeline-btn cursor-pointer" />
                                     @if ($timeline->type !== 'original')
-                                        <button type="button" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 delete-timeline-btn" data-url="{{ route('projects.timelines.destroy', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}">
-                                            Delete
-                                        </button>
+                                        <x-delete-form action="{{ route('projects.timelines.destroy', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" ajax="true" renderTarget="#project-timelines-container" renderMode="replace_inner" />
                                     @endif
                                 </div>
                             </td>

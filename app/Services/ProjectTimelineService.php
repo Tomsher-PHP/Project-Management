@@ -112,9 +112,7 @@ class ProjectTimelineService
             ]);
         }
 
-        $timeline->status = 4; // cancelled
-        $timeline->save();
-        $timeline->delete();
+        $timeline->forceDelete();
     }
 
     private function prepareTimelineData(array $data): array

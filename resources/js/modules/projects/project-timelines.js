@@ -72,35 +72,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        const deleteBtn = e.target.closest('.delete-timeline-btn');
-        if (deleteBtn) {
-            if (confirm('Are you sure you want to delete this timeline?')) {
-                const url = deleteBtn.getAttribute('data-url');
-                
-                fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json().then(data => ({status: response.status, body: data})))
-                .then(res => {
-                    if (res.status === 200 && res.body.success) {
-                        if (res.body.html) {
-                            document.getElementById('project-timelines-container').innerHTML = res.body.html;
-                        } else {
-                            window.location.reload();
-                        }
-                    } else {
-                        alert(res.body.message || 'Error deleting timeline.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting timeline.');
-                });
-            }
-        }
+
     });
 });
