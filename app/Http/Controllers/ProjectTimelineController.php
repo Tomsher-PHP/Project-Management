@@ -24,6 +24,7 @@ class ProjectTimelineController extends Controller
         $timeline = $this->timelineService->store($project, $request->validated());
 
         return response()->json([
+            'status' => true,
             'success' => true,
             'message' => 'Project timeline created successfully.',
             'timeline' => $timeline,
@@ -32,6 +33,8 @@ class ProjectTimelineController extends Controller
                 'project' => $project,
                 'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
             ])->render(),
+            'render_target' => '#project-timelines-container',
+            'render_mode' => 'replace_inner',
         ], Response::HTTP_CREATED);
     }
 
@@ -42,6 +45,7 @@ class ProjectTimelineController extends Controller
         $timeline = $this->timelineService->update($projectTimeline, $request->validated());
 
         return response()->json([
+            'status' => true,
             'success' => true,
             'message' => 'Project timeline updated successfully.',
             'timeline' => $timeline,
@@ -50,6 +54,8 @@ class ProjectTimelineController extends Controller
                 'project' => $project,
                 'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
             ])->render(),
+            'render_target' => '#project-timelines-container',
+            'render_mode' => 'replace_inner',
         ], Response::HTTP_OK);
     }
 
