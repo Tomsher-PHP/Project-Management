@@ -58,4 +58,9 @@ class ProjectTimeline extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    public function statusHistories()
+    {
+        return $this->hasMany(ProjectTimelineStatusHistory::class);
+    }
 }

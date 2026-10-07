@@ -115,6 +115,72 @@ class ProjectTimelineService
         $timeline->forceDelete();
     }
 
+    public function activateTimeline(ProjectTimeline $timeline): ProjectTimeline
+    {
+        if ($timeline->status !== ProjectTimeline::STATUS_PLANNED) {
+            throw ValidationException::withMessages(['status' => 'Only planned timelines can be activated.']);
+        }
+
+        return DB::transaction(function () use ($timeline) {
+            // Lock the project timelines to prevent concurrent activation
+            $hasActive = ProjectTimeline::where('project_id', $timeline->project_id)
+                ->where('status', ProjectTimeline::STATUS_ACTIVE)
+                ->lockForUpdate()
+                ->exists();
+
+            if ($hasActive) {
+                throw ValidationException::withMessages(['status' => 'There is already an active timeline for this project.']);
+            }
+
+            $hasPreviousNotCompleted = ProjectTimeline::where('project_id', $timeline->project_id)
+                ->where('sort_order', '<', $timeline->sort_order)
+                ->whereNotIn('status', [ProjectTimeline::STATUS_COMPLETED, ProjectTimeline::STATUS_CANCELLED])
+                ->lockForUpdate()
+                ->exists();
+
+            if ($hasPreviousNotCompleted) {
+                throw ValidationException::withMessages(['status' => 'Cannot activate timeline because a previous timeline is not completed.']);
+            }
+
+            $oldStatus = $timeline->status;
+            $timeline->status = ProjectTimeline::STATUS_ACTIVE;
+            $timeline->save();
+
+            \App\Models\ProjectTimelineStatusHistory::create([
+                'project_timeline_id' => $timeline->id,
+                'from_status' => $oldStatus,
+                'status' => $timeline->status,
+                'added_by' => auth()->id(),
+                'added_at' => now(),
+            ]);
+
+            return $timeline;
+        });
+    }
+
+    public function completeTimeline(ProjectTimeline $timeline): ProjectTimeline
+    {
+        if ($timeline->status !== ProjectTimeline::STATUS_ACTIVE) {
+            throw ValidationException::withMessages(['status' => 'Only active timelines can be completed.']);
+        }
+
+        return DB::transaction(function () use ($timeline) {
+            $oldStatus = $timeline->status;
+            $timeline->status = ProjectTimeline::STATUS_COMPLETED;
+            $timeline->save();
+
+            \App\Models\ProjectTimelineStatusHistory::create([
+                'project_timeline_id' => $timeline->id,
+                'from_status' => $oldStatus,
+                'status' => $timeline->status,
+                'added_by' => auth()->id(),
+                'added_at' => now(),
+            ]);
+
+            return $timeline;
+        });
+    }
+
     private function prepareTimelineData(array $data): array
     {
         $prepared = $data;

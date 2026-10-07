@@ -85,4 +85,46 @@ class ProjectTimelineController extends Controller
             'render_mode' => 'replace_inner',
         ], Response::HTTP_OK);
     }
+
+    public function activate(Project $project, ProjectTimeline $projectTimeline): JsonResponse
+    {
+        abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
+
+        $timeline = $this->timelineService->activateTimeline($projectTimeline);
+        
+        return response()->json([
+            'status' => true,
+            'success' => true,
+            'message' => 'Project timeline activated successfully.',
+            'timeline' => $timeline,
+            'html' => view('projects.partials.tabs.settings.timelines-list', [
+                'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
+                'project' => $project,
+                'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
+            ])->render(),
+            'render_target' => '#project-timelines-container',
+            'render_mode' => 'replace_inner',
+        ], Response::HTTP_OK);
+    }
+
+    public function complete(Project $project, ProjectTimeline $projectTimeline): JsonResponse
+    {
+        abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
+
+        $timeline = $this->timelineService->completeTimeline($projectTimeline);
+        
+        return response()->json([
+            'status' => true,
+            'success' => true,
+            'message' => 'Project timeline completed successfully.',
+            'timeline' => $timeline,
+            'html' => view('projects.partials.tabs.settings.timelines-list', [
+                'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
+                'project' => $project,
+                'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
+            ])->render(),
+            'render_target' => '#project-timelines-container',
+            'render_mode' => 'replace_inner',
+        ], Response::HTTP_OK);
+    }
 }

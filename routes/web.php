@@ -372,6 +372,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('timelines', [ProjectTimelineController::class, 'store'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.timelines.store');
         Route::put('timelines/{projectTimeline}', [ProjectTimelineController::class, 'update'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.timelines.update');
         Route::delete('timelines/{projectTimeline}', [ProjectTimelineController::class, 'destroy'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.timelines.destroy');
+        Route::patch('timelines/{projectTimeline}/activate', [ProjectTimelineController::class, 'activate'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.timelines.activate');
+        Route::patch('timelines/{projectTimeline}/complete', [ProjectTimelineController::class, 'complete'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.timelines.complete');
 
         // Comments and activity log routes
         Route::get('activity-modal', [ProjectController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.activity.modal');

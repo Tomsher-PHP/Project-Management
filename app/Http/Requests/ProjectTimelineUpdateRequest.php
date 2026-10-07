@@ -16,7 +16,6 @@ class ProjectTimelineUpdateRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'type' => 'required|in:original,renewal,extension,new',
-            'status' => 'required|in:1,2,3,4',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'customer_end_date' => 'nullable|date|after_or_equal:end_date',
@@ -35,22 +34,10 @@ class ProjectTimelineUpdateRequest extends FormRequest
             $timelineId = $this->route('projectTimeline');
             $timelineId = is_object($timelineId) ? $timelineId->id : $timelineId;
 
-            $status = $this->input('status');
             $startDate = $this->input('start_date');
             $endDate = $this->input('end_date');
 
-            if ($status == \App\Models\ProjectTimeline::STATUS_ACTIVE) {
-                $hasActive = \App\Models\ProjectTimeline::where('project_id', $projectId)
-                    ->where('id', '!=', $timelineId)
-                    ->where('status', \App\Models\ProjectTimeline::STATUS_ACTIVE)
-                    ->exists();
-                
-                if ($hasActive) {
-                    $validator->errors()->add('status', 'There is already an active timeline for this project. Only 1 active status is allowed.');
-                }
-            }
-
-            if ($startDate && $endDate && $status != \App\Models\ProjectTimeline::STATUS_CANCELLED) {
+            if ($startDate && $endDate) {
                 $overlapping = \App\Models\ProjectTimeline::where('project_id', $projectId)
                     ->where('id', '!=', $timelineId)
                     ->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)

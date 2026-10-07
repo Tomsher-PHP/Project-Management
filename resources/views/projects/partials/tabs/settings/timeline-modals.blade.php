@@ -78,14 +78,7 @@
         </select>
     </div>
 
-    <div style="grid-column: 1 / -1;">
-        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Status <x-red-star /></label>
-        <select name="status" id="edit_timeline_status" required class="tom-select-no-search w-full">
-            @foreach(config('project_constants.project_timeline_statuses') as $key => $label)
-                <option value="{{ $key }}">{{ ucfirst($label) }}</option>
-            @endforeach
-        </select>
-    </div>
+
 
     <div class="grid grid-cols-3 gap-4" style="grid-column: 1 / -1;">
         <div>

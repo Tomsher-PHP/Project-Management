@@ -16,7 +16,6 @@ class ProjectTimelineStoreRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'type' => 'required|in:renewal,extension,new',
-            'status' => 'required|in:1,2,3,4',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'customer_end_date' => 'nullable|date|after_or_equal:end_date',
@@ -28,9 +27,7 @@ class ProjectTimelineStoreRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        if (! $this->has('status')) {
-            $this->merge(['status' => 1]);
-        }
+        $this->merge(['status' => \App\Models\ProjectTimeline::STATUS_PLANNED]);
     }
 
     public function withValidator($validator)
@@ -39,19 +36,8 @@ class ProjectTimelineStoreRequest extends FormRequest
             $projectId = $this->route('project');
             $projectId = is_object($projectId) ? $projectId->id : $projectId;
 
-            $status = $this->input('status');
             $startDate = $this->input('start_date');
             $endDate = $this->input('end_date');
-
-            if ($status == \App\Models\ProjectTimeline::STATUS_ACTIVE) {
-                $hasActive = \App\Models\ProjectTimeline::where('project_id', $projectId)
-                    ->where('status', \App\Models\ProjectTimeline::STATUS_ACTIVE)
-                    ->exists();
-
-                if ($hasActive) {
-                    $validator->errors()->add('status', 'There is already an active timeline for this project. Only 1 active status is allowed.');
-                }
-            }
 
             if ($startDate && $endDate) {
                 $overlapping = \App\Models\ProjectTimeline::where('project_id', $projectId)

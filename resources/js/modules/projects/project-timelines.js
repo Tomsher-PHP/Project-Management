@@ -47,7 +47,7 @@ document.body.addEventListener('click', function(e) {
                 };
 
                 setSelectValue('edit_timeline_type', timeline.type || '');
-                setSelectValue('edit_timeline_status', timeline.status || '');
+
 
                 const minDate = editBtn.getAttribute('data-min-date');
                 const maxDate = editBtn.getAttribute('data-max-date');
