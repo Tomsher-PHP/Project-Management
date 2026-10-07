@@ -58,6 +58,9 @@ class Task extends Model
         'start_notify_at',
         'added_by',
         'updated_by',
+        'cancelled_by',
+        'cancelled_at',
+        'cancellation_reason',
     ];
 
     protected $sortable = [
@@ -102,6 +105,7 @@ class Task extends Model
         'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
+        'cancelled_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -261,6 +265,11 @@ class Task extends Model
     public function rejectedBy()
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function assignmentLogs()

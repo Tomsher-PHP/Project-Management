@@ -531,6 +531,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
     Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.bulk-action');
     Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.action');
+    Route::post('tasks/{task}/requests/cancel', [TaskRequestController::class, 'cancel'])
+    ->name('tasks.requests.cancel');
 
     // Task time log change request routes
     Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
@@ -538,6 +540,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->name('tasks.time-log-change-requests.index');
     Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.bulk-action');
     Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.action');
+    Route::post('tasks/time-logs/change-requests/{changeRequest}/cancel', [TaskTimeLogChangeRequestController::class, 'cancel'])->middleware(['permission.type:task_time_log_change_request.cancel'])->name('tasks.time-log-change-requests.cancel');
 
     // Handoff Request routes
     Route::prefix('handoff-requests')->as('handoff_requests.')->group(function () {
@@ -554,6 +557,8 @@ Route::middleware(['auth'])->group(function () {
     Route::match(['put', 'patch'], '/break-work-requests/{breakWorkRequest}', [BreakRequestController::class, 'update'])->name('break-work-requests.update');
     Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])->middleware(['permission.type:break_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('break-requests.bulk-action');
     Route::post('/break-work-requests/{breakWorkRequest}/{action}', [BreakRequestController::class, 'handleAction'])->middleware(['permission.type:break_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('break-requests.action');
+    Route::post('/break-work-requests/{breakWorkRequest}/cancel', [BreakRequestController::class, 'cancel'])->middleware(['permission.type:break_request.cancel'])->name('break-requests.cancel');
+
 
     // Task Time Extend Request routes
     Route::get('tasks/{task}/extend-time-requests/pending', [TaskTimeExtendController::class, 'pending'])->name('tasks.extend-time-requests.pending');
@@ -568,6 +573,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{extendTimeRequest}/reject', [TaskTimeExtendController::class, 'reject'])
             ->middleware('permission.type:task_time_extend_request.approve_reject')
             ->name('tasks.extend-time-requests.reject');
+        Route::post('{extendTimeRequest}/cancel', [TaskTimeExtendController::class, 'cancel'])
+            ->middleware(['permission.type:task_time_extend_request.cancel'])->name('tasks.extend-time-requests.cancel');
     });
 
     // Activity Log Route
