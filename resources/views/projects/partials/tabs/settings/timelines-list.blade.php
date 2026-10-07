@@ -34,7 +34,7 @@
             </thead>
             <tbody>
                 @forelse ($projectTimelines as $timeline)
-                    <tr class="border-b bg-white hover:bg-gray-50 dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:bg-darkblack-500">
+                    <tr class="border-b dark:border-darkblack-400 {{ $timeline->status === \App\Models\ProjectTimeline::STATUS_ACTIVE ? 'bg-success-50 hover:bg-success-100 dark:bg-success-300/10 dark:hover:bg-success-300/20' : 'bg-white hover:bg-gray-50 dark:bg-darkblack-600 dark:hover:bg-darkblack-500' }}">
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                             {{ $timeline->name }}
                         </td>
@@ -95,7 +95,7 @@
                                         </form>
                                     @endif
                                     <x-edit-button data-target="#edit-timeline-modal" data-module="Project Timeline" data-timeline="{{ json_encode($timeline) }}" data-min-date="{{ $minDate }}" data-max-date="{{ $maxDate }}" data-action="{{ route('projects.timelines.update', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" class="edit-timeline-btn cursor-pointer" />
-                                    @if ($timeline->type !== 'original')
+                                    @if ($timeline->type !== 'original' && $timeline->status !== \App\Models\ProjectTimeline::STATUS_COMPLETED)
                                         <x-delete-form action="{{ route('projects.timelines.destroy', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" ajax="true" renderTarget="#project-timelines-container" renderMode="replace_inner" />
                                     @endif
                                 </div>

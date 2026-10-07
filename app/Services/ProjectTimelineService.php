@@ -106,6 +106,12 @@ class ProjectTimelineService
             ]);
         }
 
+        if ($timeline->status === ProjectTimeline::STATUS_COMPLETED) {
+            throw ValidationException::withMessages([
+                'timeline' => 'Cannot delete a completed timeline.',
+            ]);
+        }
+
         if ($timeline->tasks()->withTrashed()->exists()) {
             throw ValidationException::withMessages([
                 'timeline' => 'This timeline cannot be deleted because it has assigned tasks.',

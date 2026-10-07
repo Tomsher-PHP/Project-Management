@@ -63,6 +63,13 @@ class ProjectTimelineController extends Controller
     {
         abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
 
+        if ($projectTimeline->status === ProjectTimeline::STATUS_COMPLETED) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Cannot delete a completed timeline.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         if ($projectTimeline->tasks()->exists()) {
             return response()->json([
                 'status' => false,
