@@ -42,6 +42,7 @@ class DatabaseSeeder extends Seeder
             ProjectStageSeeder::class,
             TagsSeeder::class,
             AgileMilestoneSeeder::class,
+            SprintGroupSeeder::class,
             AgileSprintSeeder::class,
             AgileMilestoneStatusSeeder::class,
             AgileSprintStatusSeeder::class,

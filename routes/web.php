@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
+use App\Http\Controllers\SprintGroupController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
 use App\Http\Controllers\AppraisalController;
@@ -174,11 +175,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('technologies', TechnologyController::class)->middleware('permission.type:technology.delete')->only(['destroy']);
 
         // Project Category Routes
-        Route::patch('/project-categories/toggle-status', [ProjectCategoryController::class, 'toggleStatus'])->middleware('permission.type:project_category.edit')->name('project_category.toggleStatus');
-        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.view')->only(['index']);
-        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.create')->only(['store']);
-        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.edit')->only(['update']);
-        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.delete')->only(['destroy']);
+        Route::patch('/project-categories/toggle-status', [ProjectCategoryController::class, 'toggleStatus'])->middleware('permission.type:project_settings.edit')->name('project_category.toggleStatus');
+        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_settings.view')->only(['index']);
+        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_settings.create')->only(['store']);
+        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
+        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
 
         // Industry Routes
         Route::patch('/industries/toggle-status', [IndustryController::class, 'toggleStatus'])->middleware('permission.type:industry.edit')->name('industry.toggleStatus');
@@ -188,32 +189,39 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('industries', IndustryController::class)->middleware('permission.type:industry.delete')->only(['destroy']);
 
         // Project Status Routes
-        Route::patch('/project-statuses/toggle-status', [ProjectStatusController::class, 'toggleStatus'])->middleware('permission.type:project_status.edit')->name('project_status.toggleStatus');
-        Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_status.view')->only(['index']);
-        Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_status.create')->only(['store']);
-        Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_status.edit')->only(['update']);
-        Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_status.delete')->only(['destroy']);
+        Route::patch('/project-statuses/toggle-status', [ProjectStatusController::class, 'toggleStatus'])->middleware('permission.type:project_settings.edit')->name('project_status.toggleStatus');
+        Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_settings.view')->only(['index']);
+        Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_settings.create')->only(['store']);
+        Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
+        Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
 
         // Project Stage Routes
-        Route::patch('/project-stages/toggle-status', [ProjectStageController::class, 'toggleStatus'])->middleware('permission.type:project_stage.edit')->name('project_stage.toggleStatus');
-        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.view')->only(['index']);
-        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.create')->only(['store']);
-        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.edit')->only(['update']);
-        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.delete')->only(['destroy']);
+        Route::patch('/project-stages/toggle-status', [ProjectStageController::class, 'toggleStatus'])->middleware('permission.type:project_settings.edit')->name('project_stage.toggleStatus');
+        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_settings.view')->only(['index']);
+        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_settings.create')->only(['store']);
+        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
+        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
 
         // Agile milestone Routes
-        Route::patch('/agile-milestones/toggle-status', [AgileMilestoneController::class, 'toggleStatus'])->middleware('permission.type:agile_milestone.edit')->name('agile_milestone.toggleStatus');
-        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.view')->only(['index']);
-        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.create')->only(['store']);
-        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.edit')->only(['update']);
-        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.delete')->only(['destroy']);
+        Route::patch('/agile-milestones/toggle-status', [AgileMilestoneController::class, 'toggleStatus'])->middleware('permission.type:project_settings.edit')->name('agile_milestone.toggleStatus');
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:project_settings.view')->only(['index']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:project_settings.create')->only(['store']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
 
         // Agile sprint Routes
-        Route::patch('/agile-sprints/toggle-status', [AgileSprintController::class, 'toggleStatus'])->middleware('permission.type:agile_sprint.edit')->name('agile_sprint.toggleStatus');
-        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.view')->only(['index']);
-        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.create')->only(['store']);
-        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.edit')->only(['update']);
-        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.delete')->only(['destroy']);
+        Route::patch('/agile-sprints/toggle-status', [AgileSprintController::class, 'toggleStatus'])->middleware('permission.type:project_settings.edit')->name('agile_sprint.toggleStatus');
+        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:project_settings.view')->only(['index']);
+        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:project_settings.create')->only(['store']);
+        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
+        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
+
+        // Sprint group Routes
+        Route::patch('/sprint-groups/toggle-status', [SprintGroupController::class, 'toggleStatus'])->middleware('permission.type:project_settings.edit')->name('sprint_group.toggleStatus');
+        Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.view')->only(['index']);
+        Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.create')->only(['store']);
+        Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
+        Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
 
         // Task settings routes
         Route::patch('/task-statuses/toggle-status', [TaskSettingsController::class, 'toggleStatusTaskStatus'])->middleware('permission.type:task_settings.edit')->name('task_status.toggleStatus');

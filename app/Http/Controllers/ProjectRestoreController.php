@@ -17,14 +17,12 @@ class ProjectRestoreController extends Controller
     use BuildsProjectActivityQueries;
 
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Restore Projects';
-        $this->subTitle = 'Review deleted projects and restore them with proper dependency validation';
 
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     /**

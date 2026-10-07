@@ -235,41 +235,17 @@ return [
     ['name' => 'technology.edit',   'label' => 'Settings - Technology', 'sort_order' => 54040, 'default_checked' => false],
     ['name' => 'technology.delete', 'label' => 'Settings - Technology', 'sort_order' => 54060, 'default_checked' => false],
 
-    // PROJECT CATEGORY
-    ['name' => 'project_category.view',   'label' => 'Settings - Project Category', 'sort_order' => 55000, 'default_checked' => false],
-    ['name' => 'project_category.create', 'label' => 'Settings - Project Category', 'sort_order' => 55020, 'default_checked' => false],
-    ['name' => 'project_category.edit',   'label' => 'Settings - Project Category', 'sort_order' => 55040, 'default_checked' => false],
-    ['name' => 'project_category.delete', 'label' => 'Settings - Project Category', 'sort_order' => 55060, 'default_checked' => false],
-
     // INDUSTRY
     ['name' => 'industry.view',   'label' => 'Settings - Industry', 'sort_order' => 56000, 'default_checked' => false],
     ['name' => 'industry.create', 'label' => 'Settings - Industry', 'sort_order' => 56020, 'default_checked' => false],
     ['name' => 'industry.edit',   'label' => 'Settings - Industry', 'sort_order' => 56040, 'default_checked' => false],
     ['name' => 'industry.delete', 'label' => 'Settings - Industry', 'sort_order' => 56060, 'default_checked' => false],
 
-    // PROJECT STATUS
-    ['name' => 'project_status.view',   'label' => 'Settings - Project Status', 'sort_order' => 57000, 'default_checked' => false],
-    ['name' => 'project_status.create', 'label' => 'Settings - Project Status', 'sort_order' => 57020, 'default_checked' => false],
-    ['name' => 'project_status.edit',   'label' => 'Settings - Project Status', 'sort_order' => 57040, 'default_checked' => false],
-    ['name' => 'project_status.delete', 'label' => 'Settings - Project Status', 'sort_order' => 57060, 'default_checked' => false],
-
-    // PROJECT STAGE
-    ['name' => 'project_stage.view',   'label' => 'Settings - Project Stage', 'sort_order' => 58000, 'default_checked' => false],
-    ['name' => 'project_stage.create', 'label' => 'Settings - Project Stage', 'sort_order' => 58020, 'default_checked' => false],
-    ['name' => 'project_stage.edit',   'label' => 'Settings - Project Stage', 'sort_order' => 58040, 'default_checked' => false],
-    ['name' => 'project_stage.delete', 'label' => 'Settings - Project Stage', 'sort_order' => 58060, 'default_checked' => false],
-
-    // AGILE MILESTONE
-    ['name' => 'agile_milestone.view',   'label' => 'Settings - Project Agile Flow', 'sort_order' => 59000, 'default_checked' => false],
-    ['name' => 'agile_milestone.create', 'label' => 'Settings - Project Agile Flow', 'sort_order' => 59020, 'default_checked' => false],
-    ['name' => 'agile_milestone.edit',   'label' => 'Settings - Project Agile Flow', 'sort_order' => 59040, 'default_checked' => false],
-    ['name' => 'agile_milestone.delete', 'label' => 'Settings - Project Agile Flow', 'sort_order' => 59060, 'default_checked' => false],
-
-    // AGILE SPRINT
-    ['name' => 'agile_sprint.view',   'label' => 'Settings - Project Agile Flow', 'sort_order' => 60000, 'default_checked' => false],
-    ['name' => 'agile_sprint.create', 'label' => 'Settings - Project Agile Flow', 'sort_order' => 60020, 'default_checked' => false],
-    ['name' => 'agile_sprint.edit',   'label' => 'Settings - Project Agile Flow', 'sort_order' => 60040, 'default_checked' => false],
-    ['name' => 'agile_sprint.delete', 'label' => 'Settings - Project Agile Flow', 'sort_order' => 60060, 'default_checked' => false],
+    // PROJECT SETTINGS
+    ['name' => 'project_settings.view',   'label' => 'Settings - Project Settings', 'sort_order' => 57000, 'default_checked' => false],
+    ['name' => 'project_settings.create', 'label' => 'Settings - Project Settings', 'sort_order' => 57020, 'default_checked' => false],
+    ['name' => 'project_settings.edit',   'label' => 'Settings - Project Settings', 'sort_order' => 57040, 'default_checked' => false],
+    ['name' => 'project_settings.delete', 'label' => 'Settings - Project Settings', 'sort_order' => 57060, 'default_checked' => false],
 
     // TASK SETTINGS
     ['name' => 'task_settings.view',   'label' => 'Settings - Task Settings', 'sort_order' => 61000, 'default_checked' => false],

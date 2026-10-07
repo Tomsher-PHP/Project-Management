@@ -22,6 +22,7 @@ class AgileSprintController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
         $records = AgileSprint::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
         $nextSortOrder = ((int) AgileSprint::max('sort_order')) + 1;
+        $sprintGroups = \App\Models\SprintGroup::active()->get();
 
         return view('settings.agile-flow.index', [
             'records' => $records,
@@ -30,15 +31,16 @@ class AgileSprintController extends Controller
             'currentTab' => 'sprints',
             'entityLabel' => 'Sprint',
             'entityPluralLabel' => 'Agile Sprints',
-            'createPermission' => 'agile_sprint.create',
-            'editPermission' => 'agile_sprint.edit',
-            'deletePermission' => 'agile_sprint.delete',
-            'togglePermission' => 'agile_sprint.edit',
+            'createPermission' => 'project_settings.create',
+            'editPermission' => 'project_settings.edit',
+            'deletePermission' => 'project_settings.delete',
+            'togglePermission' => 'project_settings.edit',
             'storeRoute' => route('settings.agile-sprints.store'),
             'updateRouteName' => 'settings.agile-sprints.update',
             'destroyRouteName' => 'settings.agile-sprints.destroy',
             'toggleRoute' => 'settings.agile_sprint.toggleStatus',
             'indexRoute' => route('settings.agile-sprints.index'),
+            'sprintGroups' => $sprintGroups,
         ]);
     }
 

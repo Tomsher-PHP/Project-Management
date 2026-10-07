@@ -8,14 +8,12 @@ use Illuminate\Http\Request;
 class SettingsController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Settings';
-        $this->subTitle = 'Settings subtitle here';
 
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index()

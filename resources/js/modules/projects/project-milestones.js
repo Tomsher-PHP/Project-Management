@@ -1932,10 +1932,15 @@ const initializeProjectSprintBuilderModal = () => {
     let activeMilestoneEstimateSeconds = 0;
     let activeModuleName = '';
     let draggedLibrarySprint = null;
+    let draggedLibrarySprintGroup = null;
     let draggedWorkspaceCard = null;
     let handleCard = null;
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
+
+    if (libraryCreateModal) {
+        initTomSelect(libraryCreateModal);
+    }
 
     const recalculateSprintAvailableTime = () => {
         const milestoneSeconds = Number(activeMilestoneEstimateSeconds) || 0;
@@ -2014,6 +2019,11 @@ const initializeProjectSprintBuilderModal = () => {
             sortOrderInput.value = String(getNextLibrarySortOrder());
         }
 
+        const tomSelectControl = libraryCreateForm.querySelector('.tom-select')?.tomselect;
+        if (tomSelectControl) {
+            tomSelectControl.clear();
+        }
+
         clearInlineFormErrors(libraryCreateForm, 'data-project-sprint-library-create-error');
         syncLibraryDescriptionCount();
     };
@@ -2046,7 +2056,32 @@ const initializeProjectSprintBuilderModal = () => {
             return null;
         }
 
-        library.appendChild(item);
+        if (librarySprint.sprint_group_id) {
+            const group = library.querySelector(`[data-group-id="${librarySprint.sprint_group_id}"]`);
+            if (group) {
+                const groupContainer = group.closest('details').querySelector('.space-y-3');
+                if (groupContainer) {
+                    groupContainer.appendChild(item);
+                    group.closest('details').classList.remove('hidden');
+                    
+                    const titleEl = group.querySelector('h5');
+                    if (titleEl) {
+                        const match = titleEl.textContent.match(/(.*)\((\d+)\)/);
+                        if (match) {
+                            const newCount = parseInt(match[2], 10) + 1;
+                            titleEl.textContent = `${match[1]}(${newCount})`;
+                        }
+                    }
+                } else {
+                    library.appendChild(item);
+                }
+            } else {
+                library.appendChild(item);
+            }
+        } else {
+            library.appendChild(item);
+        }
+
         config.nextLibrarySortOrder = Math.max(
             Number(config.nextLibrarySortOrder) || 0,
             (Number(librarySprint.sort_order) || 0) + 1
@@ -2722,29 +2757,47 @@ const initializeProjectSprintBuilderModal = () => {
 
     library.addEventListener('dragstart', function (event) {
         const item = event.target.closest('[data-project-sprint-library-item]');
+        const group = event.target.closest('[data-project-sprint-library-group]');
 
-        if (!item) {
+        if (item) {
+            draggedLibrarySprint = {
+                id: item.dataset.librarySprintId,
+                name: item.dataset.name || '',
+                color: item.dataset.color || '#22C55E',
+                description: item.dataset.description || '',
+            };
+            if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'copy';
+            }
             return;
         }
 
-        draggedLibrarySprint = {
-            id: item.dataset.librarySprintId,
-            name: item.dataset.name || '',
-            color: item.dataset.color || '#22C55E',
-            description: item.dataset.description || '',
-        };
-
-        if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = 'copy';
+        if (group) {
+            const details = group.closest('details');
+            const sprintElements = details.querySelectorAll('[data-project-sprint-library-item]');
+            draggedLibrarySprintGroup = Array.from(sprintElements).map(el => ({
+                id: el.dataset.librarySprintId,
+                name: el.dataset.name || '',
+                color: el.dataset.color || '#22C55E',
+                description: el.dataset.description || '',
+            }));
+            if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'copy';
+                if (details) {
+                    event.dataTransfer.setDragImage(details, 20, 20);
+                }
+            }
+            return;
         }
     });
 
     library.addEventListener('dragend', function () {
         draggedLibrarySprint = null;
+        draggedLibrarySprintGroup = null;
     });
 
     workspace.addEventListener('dragover', function (event) {
-        if (draggedLibrarySprint || draggedWorkspaceCard) {
+        if (draggedLibrarySprint || draggedLibrarySprintGroup || draggedWorkspaceCard) {
             event.preventDefault();
         }
 
@@ -2775,6 +2828,14 @@ const initializeProjectSprintBuilderModal = () => {
         if (draggedLibrarySprint) {
             await createLibrarySprintCard(draggedLibrarySprint);
             draggedLibrarySprint = null;
+            return;
+        }
+
+        if (draggedLibrarySprintGroup) {
+            for (const sprint of draggedLibrarySprintGroup) {
+                await createLibrarySprintCard(sprint);
+            }
+            draggedLibrarySprintGroup = null;
             return;
         }
 
@@ -2922,8 +2983,22 @@ const initializeProjectSprintBuilderModal = () => {
         const query = this.value.trim().toLowerCase();
 
         library.querySelectorAll('[data-project-sprint-library-item]').forEach((item) => {
-            const haystack = `${item.dataset.name || ''} ${item.dataset.description || ''}`.toLowerCase();
+            const group = item.closest('details');
+            const groupName = group ? (group.querySelector('summary h5')?.textContent || '').toLowerCase() : '';
+            
+            const haystack = `${item.dataset.name || ''} ${item.dataset.description || ''} ${groupName}`.toLowerCase();
             item.classList.toggle('hidden', !haystack.includes(query));
+        });
+
+        library.querySelectorAll('details').forEach((group) => {
+            const visibleItems = Array.from(group.querySelectorAll('[data-project-sprint-library-item]')).some(item => !item.classList.contains('hidden'));
+            group.classList.toggle('hidden', !visibleItems);
+            
+            if (query && visibleItems) {
+                group.setAttribute('open', '');
+            } else if (!query) {
+                group.removeAttribute('open');
+            }
         });
     });
 

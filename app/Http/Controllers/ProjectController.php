@@ -505,7 +505,10 @@ class ProjectController extends Controller
             ->get();
 
         $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
-        $agileSprints = AgileSprint::active()->orderBy('sort_order', 'asc')->get();
+        $agileSprints = AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get();
+        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function($q) {
+            $q->active()->orderBy('sort_order', 'asc');
+        }])->orderBy('sort_order', 'asc')->get();
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
@@ -525,6 +528,7 @@ class ProjectController extends Controller
             'projectMilestones',
             'agileMilestones',
             'agileSprints',
+            'agileSprintGroups',
             'agileMilestoneStatuses',
             'assignableUsers',
             'trashedProjectMilestones',

@@ -18,13 +18,10 @@ class TaskTimeLogChangeRequestController extends Controller
 {
     protected string $pageTitle;
 
-    protected string $subTitle;
-
     public function __construct()
     {
         $this->pageTitle = 'Task Time Log Change Requests';
-        $this->subTitle = 'Review submitted task time log change requests';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request, TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService)

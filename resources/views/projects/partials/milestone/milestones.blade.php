@@ -209,7 +209,7 @@
                         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Milestone Library</h4>
-                                @can('agile_milestone.create')
+                                @can('project_settings.create')
                                     <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-milestone-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -265,7 +265,7 @@
         </script>
     </div>
 
-    @can('agile_milestone.create')
+    @can('project_settings.create')
         <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-milestone-library-create-modal" data-project-milestone-library-create-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-milestone-library-create-close></div>
 
@@ -394,7 +394,7 @@
                         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Sprint Library</h4>
-                                @can('agile_sprint.create')
+                                @can('project_settings.create')
                                     <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-sprint-library-create-open aria-label="Add sprint library item" title="Add sprint library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -414,28 +414,97 @@
 
                             <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-sprint-builder-library-scroll>
                                 <div class="space-y-3" data-project-sprint-builder-library>
-                                    @foreach ($agileSprints as $librarySprint)
-                                        <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-sprint-library-item data-library-sprint-id="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color ?: '#22C55E' }}" data-description="{{ $librarySprint->description }}" data-sort-order="{{ $librarySprint->sort_order }}">
-                                            <div class="flex items-start justify-between gap-3">
-                                                <div class="min-w-0">
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $librarySprint->color ?: '#22C55E' }}"></span>
-                                                        <h5 class="truncate text-sm font-semibold text-bgray-900 dark:text-white">
-                                                            {{ $librarySprint->name }}
-                                                        </h5>
-                                                    </div>
-                                                    <p class="mt-2 text-xs leading-5 text-bgray-700 dark:text-bgray-300">
-                                                        {{ $librarySprint->description ?: 'No library description added yet.' }}
-                                                    </p>
-                                                </div>
+                                    @php
+                                        $libraryItems = collect();
+                                        
+                                        foreach ($agileSprints as $sprint) {
+                                            $libraryItems->push([
+                                                'type' => 'sprint',
+                                                'sort_order' => $sprint->sort_order,
+                                                'model' => $sprint,
+                                            ]);
+                                        }
+                                        
+                                        foreach ($agileSprintGroups as $group) {
+                                            $libraryItems->push([
+                                                'type' => 'group',
+                                                'sort_order' => $group->sort_order,
+                                                'model' => $group,
+                                            ]);
+                                        }
+                                        
+                                        $libraryItems = $libraryItems->sortBy([
+                                            ['type', 'asc'],
+                                            ['sort_order', 'asc'],
+                                        ]);
+                                    @endphp
 
-                                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
-                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01" />
-                                                    </svg>
-                                                </span>
-                                            </div>
-                                        </article>
+                                    @foreach ($libraryItems as $item)
+                                        @if ($item['type'] === 'sprint')
+                                            @php $librarySprint = $item['model']; @endphp
+                                            <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-sprint-library-item data-library-sprint-id="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color ?: '#22C55E' }}" data-description="{{ $librarySprint->description }}" data-sort-order="{{ $librarySprint->sort_order }}">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="min-w-0">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $librarySprint->color ?: '#22C55E' }}"></span>
+                                                            <h5 class="truncate text-sm font-semibold text-bgray-900 dark:text-white">
+                                                                {{ $librarySprint->name }}
+                                                            </h5>
+                                                        </div>
+                                                        <p class="mt-2 text-xs leading-5 text-bgray-700 dark:text-bgray-300">
+                                                            {{ $librarySprint->description ?: 'No library description added yet.' }}
+                                                        </p>
+                                                    </div>
+
+                                                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </article>
+                                        @else
+                                            @php $group = $item['model']; @endphp
+                                            <details class="group mb-3 overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 {{ $group->agileSprints->count() === 0 ? 'hidden' : '' }}">
+                                                <summary class="flex cursor-grab items-center justify-between p-4 transition duration-200 hover:bg-bgray-50 dark:hover:bg-darkblack-500" draggable="true" data-project-sprint-library-group data-group-id="{{ $group->id }}">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $group->color ?: '#3B82F6' }}"></span>
+                                                        <h5 class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $group->name }} ({{ $group->agileSprints->count() }})</h5>
+                                                    </div>
+                                                    <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-bgray-100 text-bgray-600 transition-transform duration-200 group-open:rotate-90 dark:bg-darkblack-500 dark:text-bgray-300">
+                                                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    </span>
+                                                </summary>
+                                                
+                                                <div class="space-y-3 border-t border-bgray-200 p-4 bg-bgray-50/50 dark:border-darkblack-400 dark:bg-darkblack-500/20">
+                                                    @foreach ($group->agileSprints as $librarySprint)
+                                                        <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-sprint-library-item data-library-sprint-id="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color ?: '#22C55E' }}" data-description="{{ $librarySprint->description }}" data-sort-order="{{ $librarySprint->sort_order }}">
+                                                            <div class="flex items-start justify-between gap-3">
+                                                                <div class="min-w-0">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $librarySprint->color ?: '#22C55E' }}"></span>
+                                                                        <h5 class="truncate text-sm font-semibold text-bgray-900 dark:text-white">
+                                                                            {{ $librarySprint->name }}
+                                                                        </h5>
+                                                                    </div>
+                                                                    <p class="mt-2 text-xs leading-5 text-bgray-700 dark:text-bgray-300">
+                                                                        {{ $librarySprint->description ?: 'No library description added yet.' }}
+                                                                    </p>
+                                                                </div>
+
+                                                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01" />
+                                                                    </svg>
+                                                                </span>
+                                                            </div>
+                                                        </article>
+                                                    @endforeach
+                                                </div>
+                                            </details>
+                                        @endif
                                     @endforeach
                                 </div>
                             </div>
@@ -450,7 +519,7 @@
         </script>
     </div>
 
-    @can('agile_sprint.create')
+    @can('project_settings.create')
         <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-sprint-library-create-modal" data-project-sprint-library-create-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-sprint-library-create-close></div>
 
@@ -478,6 +547,17 @@
                                         <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
                                         <input type="color" name="color" value="#22C55E" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="color"></p>
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sprint Group</label>
+                                        <select name="sprint_group_id" class="tom-select w-full border-gray-300 dark:border-darkblack-400">
+                                            <option value="">Select Sprint Group</option>
+                                            @foreach($agileSprintGroups as $group)
+                                                <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="sprint_group_id"></p>
                                     </div>
 
                                     <div class="md:col-span-2">
