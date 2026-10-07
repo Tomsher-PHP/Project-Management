@@ -1,4 +1,4 @@
-@props(['modalId', 'module', 'formId', 'action', 'button', 'modalZIndex' => null, 'maxWidth' => 'max-w-3xl', 'title' => null])
+@props(['modalId', 'module', 'formId', 'action', 'button', 'modalZIndex' => null, 'maxWidth' => 'max-w-3xl', 'title' => null, 'method' => 'POST'])
 
 <style>
     #{{ $modalId }} .form-modal-fields {
@@ -35,7 +35,7 @@
 
                 <form id="{{ $formId }}" class="ajax-form flex max-h-[80vh] flex-col" action="{{ $action }}" method="POST">
                     @csrf
-                    <input type="hidden" name="_method" value="POST" class="form-method">
+                    <input type="hidden" name="_method" value="{{ strtoupper($method) }}" class="form-method">
 
                     <div class="overflow-y-auto px-6 py-6 sm:px-7">
                         <div class="form-modal-fields">

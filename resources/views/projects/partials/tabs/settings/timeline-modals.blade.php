@@ -122,4 +122,3 @@
     </div>
 </x-form-modal>
 
-@vite('resources/js/modules/projects/project-timelines.js')

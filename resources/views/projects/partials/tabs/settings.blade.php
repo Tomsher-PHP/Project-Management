@@ -10,7 +10,4 @@
     </div>
 </div>
 
-@if ($canEdit)
-    <!-- Timeline Modals -->
-    @include('projects.partials.tabs.settings.timeline-modals')
-@endif
+<!-- Timeline modals have been moved to detail-page.blade.php -->

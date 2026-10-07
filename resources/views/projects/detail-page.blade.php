@@ -149,6 +149,10 @@
         @include('meetings.form-modal')
         <!-- Edit Project Modal -->
         @include('projects.partials.project-edit-modal')
+        <!-- Timeline Modals -->
+        @if(auth()->user()->can('project.edit') && !$project->trashed())
+            @include('projects.partials.tabs.settings.timeline-modals')
+        @endif
     @endpush
 @endsection
 
@@ -177,4 +181,5 @@
     @vite('resources/js/modules/meetings/meetings.js')
     @vite('resources/js/modules/meetings/meeting-form.js')
     @vite('resources/js/modules/projects/project-edit.js')
+    @vite('resources/js/modules/projects/project-timelines.js')
 @endpush
