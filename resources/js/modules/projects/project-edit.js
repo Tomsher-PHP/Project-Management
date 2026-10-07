@@ -46,11 +46,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             // Update Estimated Time (minutes)
-            if (document.getElementById('edit_project_estimated_time_minutes')) {
-                document.getElementById('edit_project_estimated_time_minutes').value = project.estimated_time_seconds ? Math.floor(project.estimated_time_seconds / 60) : 0;
+            // Update Estimated Time (minutes)
+            const estTimeInput = document.getElementById('edit_project_estimated_time_minutes');
+            if (estTimeInput) {
+                estTimeInput.value = project.estimated_time_seconds ? Math.floor(project.estimated_time_seconds / 60) : 0;
+                estTimeInput.closest('[data-estimated-time]')?.dispatchEvent(new Event('estimated-time:refresh'));
             }
-            if (document.getElementById('edit_project_customer_estimate_minutes')) {
-                document.getElementById('edit_project_customer_estimate_minutes').value = project.customer_estimate_seconds ? Math.floor(project.customer_estimate_seconds / 60) : 0;
+            
+            const custEstTimeInput = document.getElementById('edit_project_customer_estimate_minutes');
+            if (custEstTimeInput) {
+                custEstTimeInput.value = project.customer_estimate_seconds ? Math.floor(project.customer_estimate_seconds / 60) : 0;
+                custEstTimeInput.closest('[data-estimated-time]')?.dispatchEvent(new Event('estimated-time:refresh'));
             }
 
             // Select fields (Customer, Priority, Parent, Sales Person)
@@ -119,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Close on click outside
     modal.addEventListener('click', function (e) {
-        if (e.target.classList.contains('modal-overlay') || e.target === modal) {
+        if (!e.target.closest('.modal-content')) {
             closeModal();
         }
     });
