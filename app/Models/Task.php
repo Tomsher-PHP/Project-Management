@@ -27,6 +27,7 @@ class Task extends Model
 
     protected $fillable = [
         'project_id',
+        'project_timeline_id',
         'project_milestone_id',
         'project_sprint_id',
         'parent_task_id',
@@ -82,6 +83,7 @@ class Task extends Model
 
     protected $casts = [
         'project_id' => 'integer',
+        'project_timeline_id' => 'integer',
         'project_milestone_id' => 'integer',
         'project_sprint_id' => 'integer',
         'parent_task_id' => 'integer',
@@ -206,6 +208,11 @@ class Task extends Model
     public function project()
     {
         return $this->belongsTo(Project::class)->withTrashed();
+    }
+
+    public function projectTimeline()
+    {
+        return $this->belongsTo(ProjectTimeline::class);
     }
 
     public function projectMilestone()

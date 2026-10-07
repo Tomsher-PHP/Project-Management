@@ -91,58 +91,10 @@
         </div>
     </div>
 
-    <!-- ================= Timeline INFORMATION ================= -->
-    <div class="flex flex-col md:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
-        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <h3 class="col-span-full text-xl font-bold text-gray-800 border-b pb-4 dark:border-darkblack-400 dark:text-white">
-                Timeline Information
-            </h3>
-
-            <!-- Start Date -->
-            <div class="flex flex-col gap-2">
-                <label for="start_date" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Start Date
-                </label>
-                <input type="date" name="start_date" id="start_date" value="{{ old('start_date', isset($project) ? $project->start_date?->format('Y-m-d') : now()->format('Y-m-d')) }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" x-on:input="markDirty()">
-                @error('start_date')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Internal End Date -->
-            <div class="flex flex-col gap-2">
-                <label for="end_date" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    End Date
-                </label>
-                <input type="date" name="end_date" id="end_date" value="{{ old('end_date', $project->end_date?->format('Y-m-d') ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" x-on:input="markDirty()">
-                @error('end_date')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Customer End Date -->
-            @can('project.customer_end_date')
-                <div class="flex flex-col gap-2">
-                    <label for="customer_end_date" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                        Customer End Date
-                    </label>
-                    <input type="date" name="customer_end_date" id="customer_end_date" value="{{ old('customer_end_date', $project->customer_end_date?->format('Y-m-d') ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" x-on:input="markDirty()">
-                    @error('customer_end_date')
-                        <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                    @enderror
-                </div>
-            @endcan
-
-            <!-- Estimated Time -->
-            <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="old('estimated_time_minutes', $project->estimated_time_seconds !== null ? intdiv($project->estimated_time_seconds, 60) : 0)" input-action="markDirty()" />
-
-            @can('project.customer_end_date')
-                <!-- Customer Estimate Time -->
-                <x-forms.estimated-time-input label="Customer Estimate Time" name="customer_estimate_minutes" :total-minutes="old('customer_estimate_minutes', $project->customer_estimate_seconds !== null ? intdiv($project->customer_estimate_seconds, 60) : 0)" input-action="markDirty()" />
-            @endcan
-            <!-- Default Task Estimate -->
-            {{-- <x-forms.estimated-time-input label="Default Task Estimate" name="default_task_estimate_minutes" :total-minutes="old('default_task_estimate_minutes', $project->default_task_estimate_seconds !== null ? intdiv($project->default_task_estimate_seconds, 60) : 0)" input-action="markDirty()" help-text="Used as the default estimated time when creating new tasks in this project." /> --}}
-
+    <!-- ================= Project Timelines ================= -->
+    <div class="flex flex-col md:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center w-full">
+        <div class="flex-1 w-full" id="project-timelines-container">
+            @include('projects.partials.tabs.settings.timelines-list')
         </div>
     </div>
 
@@ -314,4 +266,7 @@
             </div>
         </x-form-modal>
     @endcan
+
+    <!-- Timeline Modals -->
+    @include('projects.partials.tabs.settings.timeline-modals')
 @endif

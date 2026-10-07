@@ -13,6 +13,7 @@ use App\Models\ProjectStage;
 use App\Models\ProjectStageHistory;
 use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
+use App\Models\ProjectTimeline;
 use App\Models\Task;
 use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
@@ -103,6 +104,21 @@ class ProjectServices
                 'stage_id' => $project->project_stage_id,
             ]);
 
+            // Generate Original Timeline for the new project
+            ProjectTimeline::create([
+                'project_id' => $project->id,
+                'name' => 'Original Timeline',
+                'type' => 'original',
+                'status' => ProjectTimeline::STATUS_ACTIVE,
+                'start_date' => $project->start_date,
+                'end_date' => $project->end_date,
+                'customer_end_date' => $project->customer_end_date,
+                'estimated_time_seconds' => $project->estimated_time_seconds,
+                'customer_estimate_seconds' => $project->customer_estimate_seconds,
+                'sort_order' => 1,
+                'created_by' => auth()->id(),
+            ]);
+
             return $project;
         });
     }
@@ -140,14 +156,23 @@ class ProjectServices
                 'name' => $data['name'],
                 'customer_id' => $data['customer_id'],
                 'priority' => $data['priority'],
-                'start_date' => $data['start_date'] ?? null,
-                'end_date' => $data['end_date'] ?? null,
-                'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
-                'default_task_estimate_seconds' => $data['default_task_estimate_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
                 'default_billable' => $data['default_billable'],
             ];
+
+            if (array_key_exists('start_date', $data)) {
+                $projectData['start_date'] = $data['start_date'];
+            }
+            if (array_key_exists('end_date', $data)) {
+                $projectData['end_date'] = $data['end_date'];
+            }
+            if (array_key_exists('estimated_time_seconds', $data)) {
+                $projectData['estimated_time_seconds'] = $data['estimated_time_seconds'];
+            }
+            if (array_key_exists('default_task_estimate_seconds', $data)) {
+                $projectData['default_task_estimate_seconds'] = $data['default_task_estimate_seconds'];
+            }
 
             if (array_key_exists('project_category_ids', $data)) {
                 $categoryIds = is_array($data['project_category_ids'])
@@ -179,6 +204,9 @@ class ProjectServices
                 $project->technologies()->sync($data['project_technology_ids']);
             }
 
+            // Sync original timeline
+            app(ProjectTimelineService::class)->syncOriginalTimelineFromProject($project);
+
             $updatedProject = $project->fresh();
 
             if ($timelineChanges !== [] && ($actor = auth()->user())) {
@@ -193,7 +221,7 @@ class ProjectServices
         });
     }
 
-    private function buildProjectTimelineChanges(Project $project, array $originalTimelineValues): array
+    public function buildProjectTimelineChanges(Project $project, array $originalTimelineValues): array
     {
         return collect(self::PROJECT_TIMELINE_FIELDS)
             ->filter(fn($label, $field) => $project->isDirty($field))
