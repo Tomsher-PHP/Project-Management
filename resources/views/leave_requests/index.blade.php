@@ -495,60 +495,20 @@ $displayStatus = $status ? ucfirst($status) : '-';
 
                                         <!-- Status -->
                                         <td class="px-6 py-5 xl:px-0">
-
                                             <div class="flex w-full items-center">
-
                                                 <span class="inline-flex rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] {{ $statusClasses }}">
                                                     {{ $displayStatus }}
                                                 </span>
-
                                             </div>
-
                                         </td>
-
 
                                         <!-- Actions -->
                                         <td class="px-6 py-5 xl:px-0">
+                                            <div class="flex min-w-[220px] flex-wrap items-center gap-2">
 
-                                            <div class="flex w-full items-center space-x-2">
-
-
-                                                {{-- =====================================================
-                                             PENDING LEAVE LISTING
-                                             ===================================================== --}}
+                                                {{-- PENDING LEAVE LISTING --}}
 
                                                 @if ($isPendingPage)
-                                                    @if ($canApproveReject)
-                                                        {{-- Approve --}}
-                                                        @can('leave_request.edit')
-                                                            <a href="{{ route('leave-requests.edit', [
-                                                                'leaveRequest' => $leaveRequest->id,
-                                                                'approved_mode' => 1,
-                                                                'action' => 'approve',
-                                                            ]) }}" class="inline-flex items-center rounded-lg bg-green-100 px-3 py-2 text-xs font-medium text-green-700 transition hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
-                                                                Approve
-                                                            </a>
-                                                        @endcan
-
-
-                                                        {{-- Reject --}}
-                                                        @can('leave_request.edit')
-                                                            <a href="{{ route('leave-requests.edit', [
-                                                                'leaveRequest' => $leaveRequest->id,
-                                                                'approved_mode' => 1,
-                                                                'action' => 'reject',
-                                                            ]) }}" class="inline-flex items-center rounded-lg bg-red-100 px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-900/50 dark:bg-red-900/30 dark:text-red-400">
-                                                                Reject
-                                                            </a>
-                                                        @endcan
-                                                    @elseif ($isOwnRequest && !$isSuperAdmin)
-                                                        {{-- Own pending request --}}
-                                                        <span class="text-sm font-medium text-bgray-500 dark:text-bgray-400">
-                                                            Waiting for approval
-                                                        </span>
-                                                    @endif
-
-
                                                     {{-- View --}}
                                                     @if ($canManageLeave)
                                                         @can('leave_request.view')
@@ -556,11 +516,61 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                         @endcan
                                                     @endif
 
+                                                    {{-- Approve / Reject --}}
+                                                    @if ($canApproveReject)
+                                                        {{-- Approve --}}
+                                                        @can('leave_request.edit')
+                                                            <a href="{{ route('leave-requests.edit', [
+                                                                'leaveRequest' => $leaveRequest->id,
+                                                                'approved_mode' => 1,
+                                                                'action' => 'approve',
+                                                            ]) }}" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
+                                                                Approve
+                                                            </a>
+                                                        @endcan
 
+                                                        {{-- Reject --}}
+                                                        @can('leave_request.edit')
+                                                            <a href="{{ route('leave-requests.edit', [
+                                                                'leaveRequest' => $leaveRequest->id,
+                                                                'approved_mode' => 1,
+                                                                'action' => 'reject',
+                                                            ]) }}" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400">
+                                                                Reject
+                                                            </a>
+                                                        @endcan
+                                                    @elseif ($isOwnRequest && !$isSuperAdmin)
+                                                        {{-- Own pending request --}}
+                                                        {{-- <span class="text-sm font-medium text-bgray-500 dark:text-bgray-400">
+                                                            Waiting for approval
+                                                        </span> --}}
+                                                    @endif
 
-                                                    {{-- =====================================================
-                                             FULL LEAVE LISTING
-                                             ===================================================== --}}
+                                                    {{-- Cancel --}}
+                                                    @if ($status === 'pending')
+                                                        @if($isOwnRequest)
+                                                            @can('leave_request.cancel')
+                                                                <button
+                                                                    type="button"
+                                                                    onclick="openCancelModalFromButton(this)"
+                                                                    data-cancel-id="{{ $leaveRequest->id }}"
+                                                                    data-cancel-employee="{{ $leaveRequest->user?->name ?? 'Employee' }}"
+                                                                    data-cancel-leave-type="{{ $leaveRequest->leaveType?->name ?? 'Leave' }}"
+                                                                    data-cancel-day-type="{{ $dayType }}"
+                                                                    data-cancel-half-day="{{ $halfDayType }}"
+                                                                    data-cancel-from="{{ $fromDate }}"
+                                                                    data-cancel-to="{{ $toDate }}"
+                                                                    data-cancel-duration="{{ $duration }}"
+                                                                    data-cancel-status="{{ $displayStatus }}"
+                                                                    class="rounded-lg bg-error-300 px-3 py-2 text-xs
+                                                                    font-semibold text-white transition hover:bg-error-400">
+                                                                    Cancel
+                                                                </button>
+                                                            @endcan
+                                                        @endif
+                                                    @endif
+
+                                                {{-- FULL LEAVE LISTING --}}
                                                 @else
                                                     @if ($canManageLeave)
                                                         {{-- View --}}

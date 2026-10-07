@@ -218,4 +218,48 @@ class BreakRequestController extends Controller
                 ? "{$processedCount} break work request(s) approved successfully."
                 : "{$processedCount} break work request(s) rejected successfully.");
     }
+
+    /**
+     * Cancel a pending break work request.
+     */
+    public function cancel(BreakWorkRequest $breakWorkRequest): RedirectResponse
+    {
+        $authUser = auth()->user();
+
+        /*
+        * Only the requester can cancel their own request.
+        */
+        if ((int) $breakWorkRequest->user_id !== (int) $authUser->id) {
+            abort(403);
+        }
+
+        /*
+        * Only pending requests can be cancelled.
+        */
+        if (!$breakWorkRequest->isPending()) {
+            return redirect()
+                ->route('break-requests.index', [
+                    'request_status' => $breakWorkRequest->status,
+                ])
+                ->with(
+                    'error',
+                    'Only pending break work requests can be cancelled.'
+                );
+        }
+
+        $breakWorkRequest->update([
+            'status' => 'cancelled',
+            'cancelled_by' => $authUser->id,
+            'cancelled_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('break-requests.index', [
+                'request_status' => 'pending',
+            ])
+            ->with(
+                'success',
+                'Break work request cancelled successfully.'
+            );
+    }
 }
