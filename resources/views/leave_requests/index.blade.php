@@ -495,29 +495,28 @@ $displayStatus = $status ? ucfirst($status) : '-';
 
                                         <!-- Status -->
                                         <td class="px-6 py-5 xl:px-0">
-
                                             <div class="flex w-full items-center">
-
                                                 <span class="inline-flex rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] {{ $statusClasses }}">
                                                     {{ $displayStatus }}
                                                 </span>
-
                                             </div>
-
                                         </td>
-
 
                                         <!-- Actions -->
                                         <td class="px-6 py-5 xl:px-0">
+                                            <div class="flex min-w-[220px] flex-wrap items-center gap-2">
 
-                                            <div class="flex w-full items-center space-x-2">
-
-
-                                                {{-- =====================================================
-                                             PENDING LEAVE LISTING
-                                             ===================================================== --}}
+                                                {{-- PENDING LEAVE LISTING --}}
 
                                                 @if ($isPendingPage)
+                                                    {{-- View --}}
+                                                    @if ($canManageLeave)
+                                                        @can('leave_request.view')
+                                                            <x-view-button :action="route('leave-requests.show', $leaveRequest->id)" />
+                                                        @endcan
+                                                    @endif
+
+                                                    {{-- Approve / Reject --}}
                                                     @if ($canApproveReject)
                                                         {{-- Approve --}}
                                                         @can('leave_request.edit')
@@ -525,11 +524,10 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                                 'leaveRequest' => $leaveRequest->id,
                                                                 'approved_mode' => 1,
                                                                 'action' => 'approve',
-                                                            ]) }}" class="inline-flex items-center rounded-lg bg-green-100 px-3 py-2 text-xs font-medium text-green-700 transition hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
+                                                            ]) }}" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
                                                                 Approve
                                                             </a>
                                                         @endcan
-
 
                                                         {{-- Reject --}}
                                                         @can('leave_request.edit')
@@ -537,7 +535,7 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                                 'leaveRequest' => $leaveRequest->id,
                                                                 'approved_mode' => 1,
                                                                 'action' => 'reject',
-                                                            ]) }}" class="inline-flex items-center rounded-lg bg-red-100 px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-900/50 dark:bg-red-900/30 dark:text-red-400">
+                                                            ]) }}" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400">
                                                                 Reject
                                                             </a>
                                                         @endcan
@@ -548,10 +546,11 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                         </span> --}}
                                                     @endif
 
-                                                        {{-- Cancel --}}
-                                                        @if ($status === 'pending')
+                                                    {{-- Cancel --}}
+                                                    @if ($status === 'pending')
+                                                        @if($isOwnRequest)
                                                             @can('leave_request.cancel')
-                                                                <x-cancel-button
+                                                                <button
                                                                     type="button"
                                                                     onclick="openCancelModalFromButton(this)"
                                                                     data-cancel-id="{{ $leaveRequest->id }}"
@@ -563,21 +562,15 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                                     data-cancel-to="{{ $toDate }}"
                                                                     data-cancel-duration="{{ $duration }}"
                                                                     data-cancel-status="{{ $displayStatus }}"
-                                                                />
+                                                                    class="rounded-lg bg-error-300 px-3 py-2 text-xs
+                                                                    font-semibold text-white transition hover:bg-error-400">
+                                                                    Cancel
+                                                                </button>
                                                             @endcan
                                                         @endif
-                                                    {{-- View --}}
-                                                    @if ($canManageLeave)
-                                                        @can('leave_request.view')
-                                                            <x-view-button :action="route('leave-requests.show', $leaveRequest->id)" />
-                                                        @endcan
                                                     @endif
 
-
-
-                                                    {{-- =====================================================
-                                             FULL LEAVE LISTING
-                                             ===================================================== --}}
+                                                {{-- FULL LEAVE LISTING --}}
                                                 @else
                                                     @if ($canManageLeave)
                                                         {{-- View --}}
