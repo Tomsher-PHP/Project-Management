@@ -59,6 +59,7 @@ export default defineConfig({
                 'resources/js/modules/workspace/break-work-request.js',
                 'resources/js/modules/meetings/meetings.js',
                 'resources/js/modules/meetings/meeting-form.js',
+                'resources/js/modules/projects/project-edit.js',
                 'resources/js/login/login.js',
                 'resources/js/modules/attendance/attendance.js',
                 'resources/js/modules/holiday.js',
