@@ -50,7 +50,7 @@ class ProjectTimelineUpdateRequest extends FormRequest
                 }
             }
 
-            if ($startDate && $endDate) {
+            if ($startDate && $endDate && $status != \App\Models\ProjectTimeline::STATUS_CANCELLED) {
                 $overlapping = \App\Models\ProjectTimeline::where('project_id', $projectId)
                     ->where('id', '!=', $timelineId)
                     ->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)

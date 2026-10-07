@@ -1,7 +1,6 @@
 import Alert from '../../alert.js';
 
-document.addEventListener('DOMContentLoaded', function () {
-    document.body.addEventListener('click', function(e) {
+document.body.addEventListener('click', function(e) {
         const addBtn = e.target.closest('.add-timeline-btn');
         if (addBtn) {
             const modal = document.getElementById('create-timeline-modal');
@@ -27,75 +26,88 @@ document.addEventListener('DOMContentLoaded', function () {
         if (editBtn) {
             e.preventDefault();
             const modal = document.getElementById('edit-timeline-modal');
-            const timeline = JSON.parse(editBtn.getAttribute('data-timeline'));
-            const action = editBtn.getAttribute('data-action');
-
-            document.getElementById('projectTimelineEditForm').setAttribute('action', action);
-            document.getElementById('edit_timeline_name').value = timeline.name || '';
-            
-            const setSelectValue = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    if (el.tomselect) {
-                        el.tomselect.setValue(val);
-                    } else {
-                        el.value = val;
-                    }
-                }
-            };
-
-            setSelectValue('edit_timeline_type', timeline.type || '');
-            setSelectValue('edit_timeline_status', timeline.status || '');
-
-            const setDate = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    if (el._flatpickr) {
-                        el._flatpickr.setDate(val);
-                    } else {
-                        el.value = val;
-                    }
-                }
-            };
-
-            setDate('edit_timeline_start_date', timeline.start_date ? timeline.start_date.split('T')[0] : '');
-            setDate('edit_timeline_end_date', timeline.end_date ? timeline.end_date.split('T')[0] : '');
-            setDate('edit_timeline_customer_end_date', timeline.customer_end_date ? timeline.customer_end_date.split('T')[0] : '');
-
-            let estInput = document.getElementById('edit_timeline_estimated_time_minutes');
-            if (estInput) {
-                let totalMin = timeline.estimated_time_seconds ? Math.floor(timeline.estimated_time_seconds / 60) : 0;
-                estInput.value = totalMin;
-                estInput.closest('[data-estimated-time]')?.dispatchEvent(new Event('estimated-time:refresh'));
-            }
-
-            let custEstInput = document.getElementById('edit_timeline_customer_estimate_minutes');
-            if (custEstInput) {
-                let totalCustMin = timeline.customer_estimate_seconds ? Math.floor(timeline.customer_estimate_seconds / 60) : 0;
-                custEstInput.value = totalCustMin;
-                custEstInput.closest('[data-estimated-time]')?.dispatchEvent(new Event('estimated-time:refresh'));
-            }
-
-            document.getElementById('edit_timeline_notes').value = timeline.notes || '';
-            
-            const typeEl = document.getElementById('edit_timeline_type');
-            if (timeline.type === 'original') {
-                if (typeEl && typeEl.tomselect) {
-                    typeEl.tomselect.lock();
-                } else if (typeEl) {
-                    typeEl.setAttribute('readonly', 'readonly');
-                    typeEl.style.pointerEvents = 'none';
-                }
-            } else {
-                if (typeEl && typeEl.tomselect) {
-                    typeEl.tomselect.unlock();
-                } else if (typeEl) {
-                    typeEl.removeAttribute('readonly');
-                    typeEl.style.pointerEvents = 'auto';
-                }
-            }
-
             if (modal) modal.classList.remove('hidden');
+
+            try {
+                const timeline = JSON.parse(editBtn.getAttribute('data-timeline'));
+                const action = editBtn.getAttribute('data-action');
+
+                document.getElementById('projectTimelineEditForm').setAttribute('action', action);
+                document.getElementById('edit_timeline_name').value = timeline.name || '';
+                
+                const setSelectValue = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el.tomselect) {
+                            el.tomselect.setValue(val);
+                        } else {
+                            el.value = val;
+                        }
+                    }
+                };
+
+                setSelectValue('edit_timeline_type', timeline.type || '');
+                setSelectValue('edit_timeline_status', timeline.status || '');
+
+                const minDate = editBtn.getAttribute('data-min-date');
+                const maxDate = editBtn.getAttribute('data-max-date');
+
+                const setDate = (id, val, minD, maxD) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el._flatpickr) {
+                            if (minD) el._flatpickr.set('minDate', minD);
+                            else el._flatpickr.set('minDate', null);
+                            
+                            if (maxD) el._flatpickr.set('maxDate', maxD);
+                            else el._flatpickr.set('maxDate', null);
+
+                            el._flatpickr.setDate(val);
+                        } else {
+                            el.value = val;
+                        }
+                    }
+                };
+
+                setDate('edit_timeline_start_date', timeline.start_date ? timeline.start_date.split('T')[0] : '', minDate, maxDate);
+                setDate('edit_timeline_end_date', timeline.end_date ? timeline.end_date.split('T')[0] : '', minDate, maxDate);
+                setDate('edit_timeline_customer_end_date', timeline.customer_end_date ? timeline.customer_end_date.split('T')[0] : '', minDate, maxDate);
+
+                let estInput = document.getElementById('edit_timeline_estimated_time_minutes');
+                if (estInput) {
+                    let totalMin = timeline.estimated_time_seconds ? Math.floor(timeline.estimated_time_seconds / 60) : 0;
+                    estInput.value = totalMin;
+                    estInput.closest('[data-estimated-time]')?.dispatchEvent(new Event('estimated-time:refresh'));
+                }
+
+                let custEstInput = document.getElementById('edit_timeline_customer_estimate_minutes');
+                if (custEstInput) {
+                    let totalCustMin = timeline.customer_estimate_seconds ? Math.floor(timeline.customer_estimate_seconds / 60) : 0;
+                    custEstInput.value = totalCustMin;
+                    custEstInput.closest('[data-estimated-time]')?.dispatchEvent(new Event('estimated-time:refresh'));
+                }
+
+                document.getElementById('edit_timeline_notes').value = timeline.notes || '';
+                
+                const typeEl = document.getElementById('edit_timeline_type');
+                if (timeline.type === 'original') {
+                    if (typeEl && typeEl.tomselect) {
+                        typeEl.tomselect.lock();
+                    } else if (typeEl) {
+                        typeEl.setAttribute('readonly', 'readonly');
+                        typeEl.style.pointerEvents = 'none';
+                    }
+                } else {
+                    if (typeEl && typeEl.tomselect) {
+                        typeEl.tomselect.unlock();
+                    } else if (typeEl) {
+                        typeEl.removeAttribute('readonly');
+                        typeEl.style.pointerEvents = 'auto';
+                    }
+                }
+            } catch (err) {
+                console.error("Error populating edit modal:", err);
+            }
         }
     });
 
@@ -200,4 +212,3 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-});

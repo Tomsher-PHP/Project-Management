@@ -57,7 +57,23 @@
                         @if ($canEdit)
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <x-edit-button data-target="#edit-timeline-modal" data-module="Project Timeline" data-timeline="{{ json_encode($timeline) }}" data-action="{{ route('projects.timelines.update', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" class="edit-timeline-btn cursor-pointer" />
+                                    @php
+                                        $prevTimeline = $project->projectTimelines
+                                            ->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)
+                                            ->where('sort_order', '<', $timeline->sort_order)
+                                            ->sortByDesc('sort_order')
+                                            ->first();
+                                        
+                                        $nextTimeline = $project->projectTimelines
+                                            ->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)
+                                            ->where('sort_order', '>', $timeline->sort_order)
+                                            ->sortBy('sort_order')
+                                            ->first();
+                                            
+                                        $minDate = $prevTimeline && $prevTimeline->end_date ? \Carbon\Carbon::parse($prevTimeline->end_date)->addDay()->format('Y-m-d') : '';
+                                        $maxDate = $nextTimeline && $nextTimeline->start_date ? \Carbon\Carbon::parse($nextTimeline->start_date)->subDay()->format('Y-m-d') : '';
+                                    @endphp
+                                    <x-edit-button data-target="#edit-timeline-modal" data-module="Project Timeline" data-timeline="{{ json_encode($timeline) }}" data-min-date="{{ $minDate }}" data-max-date="{{ $maxDate }}" data-action="{{ route('projects.timelines.update', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" class="edit-timeline-btn cursor-pointer" />
                                     @if ($timeline->type !== 'original')
                                         <x-delete-form action="{{ route('projects.timelines.destroy', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" ajax="true" renderTarget="#project-timelines-container" renderMode="replace_inner" />
                                     @endif
