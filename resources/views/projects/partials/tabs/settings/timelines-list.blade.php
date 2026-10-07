@@ -42,10 +42,10 @@
                             {{ config('project_constants.project_timeline_statuses.' . $timeline->status, 'Unknown') }}
                         </td>
                         <td class="px-6 py-4">
-                            <div><span class="font-semibold">Start:</span> {{ $timeline->start_date ? $timeline->start_date->format('M d, Y') : '--' }}</div>
-                            <div><span class="font-semibold">End:</span> {{ $timeline->end_date ? $timeline->end_date->format('M d, Y') : '--' }}</div>
+                            <div><span class="font-semibold">Start:</span> @appDate($timeline->start_date)</div>
+                            <div><span class="font-semibold">End:</span> @appDate($timeline->end_date)</div>
                             @can('project.customer_end_date')
-                                <div><span class="font-semibold">Cust End:</span> {{ $timeline->customer_end_date ? $timeline->customer_end_date->format('M d, Y') : '--' }}</div>
+                                <div><span class="font-semibold">Cust End:</span> @appDate($timeline->customer_end_date)</div>
                             @endcan
                         </td>
                         <td class="px-6 py-4">
@@ -57,17 +57,11 @@
                         @if ($canEdit)
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button type="button" 
-                                        data-target="#edit-timeline-modal" 
-                                        data-timeline="{{ json_encode($timeline) }}"
-                                        data-action="{{ route('projects.timelines.update', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}"
-                                        class="modal-open edit-timeline-btn text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                    <button type="button" data-target="#edit-timeline-modal" data-timeline="{{ json_encode($timeline) }}" data-action="{{ route('projects.timelines.update', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}" class="modal-open edit-timeline-btn text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                                         Edit
                                     </button>
                                     @if ($timeline->type !== 'original')
-                                        <button type="button" 
-                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 delete-timeline-btn"
-                                            data-url="{{ route('projects.timelines.destroy', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}">
+                                        <button type="button" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 delete-timeline-btn" data-url="{{ route('projects.timelines.destroy', ['project' => $project->id, 'projectTimeline' => $timeline->id]) }}">
                                             Delete
                                         </button>
                                     @endif
