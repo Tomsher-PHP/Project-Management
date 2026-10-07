@@ -18,11 +18,52 @@ class ProjectTimelineUpdateRequest extends FormRequest
             'type' => 'required|in:original,renewal,extension,new',
             'status' => 'required|in:1,2,3,4',
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => 'nullable|date|after:start_date',
             'customer_end_date' => 'nullable|date|after_or_equal:end_date',
             'estimated_time_minutes' => 'nullable|integer|min:0',
             'customer_estimate_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $projectId = $this->route('project');
+            $projectId = is_object($projectId) ? $projectId->id : $projectId;
+            
+            $timelineId = $this->route('projectTimeline');
+            $timelineId = is_object($timelineId) ? $timelineId->id : $timelineId;
+
+            $status = $this->input('status');
+            $startDate = $this->input('start_date');
+            $endDate = $this->input('end_date');
+
+            if ($status == \App\Models\ProjectTimeline::STATUS_ACTIVE) {
+                $hasActive = \App\Models\ProjectTimeline::where('project_id', $projectId)
+                    ->where('id', '!=', $timelineId)
+                    ->where('status', \App\Models\ProjectTimeline::STATUS_ACTIVE)
+                    ->exists();
+                
+                if ($hasActive) {
+                    $validator->errors()->add('status', 'There is already an active timeline for this project. Only 1 active status is allowed.');
+                }
+            }
+
+            if ($startDate && $endDate) {
+                $overlapping = \App\Models\ProjectTimeline::where('project_id', $projectId)
+                    ->where('id', '!=', $timelineId)
+                    ->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)
+                    ->where(function ($query) use ($startDate, $endDate) {
+                        $query->where('start_date', '<=', $endDate)
+                              ->where('end_date', '>=', $startDate);
+                    })
+                    ->exists();
+
+                if ($overlapping) {
+                    $validator->errors()->add('start_date', 'The date range overlaps with another timeline.');
+                }
+            }
+        });
     }
 }
