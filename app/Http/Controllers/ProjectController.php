@@ -67,7 +67,7 @@ class ProjectController extends Controller
         );
 
         $projects = Project::accessibleBy(auth()->user())
-            ->with(['customer.profileGrade', 'technologies'])
+            ->with(['customer.profileGrade', 'technologies', 'parentProject'])
             ->filter($request->all())
             ->sort($request->all())
             ->orderBy('projects.id', 'desc')
@@ -119,7 +119,7 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        $project->load(['technologies']);
+        $project->load(['technologies', 'parentProject']);
 
         return view('projects.detail-page', array_merge([
             'project' => $project,

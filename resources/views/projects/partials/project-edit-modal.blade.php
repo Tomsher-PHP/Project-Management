@@ -38,15 +38,8 @@
             <!-- Parent Project -->
             <div class="col-span-1 md:col-span-2">
                 <label for="edit_project_parent_project_id" class="mb-2 block text-left text-sm font-medium text-bgray-600 dark:text-bgray-50">Parent Project / Rework For</label>
-                <select name="parent_project_id" id="edit_project_parent_project_id" class="tom-select w-full">
-                    <option value="">No parent project</option>
-                    @isset($parentProjectOptions)
-                        @foreach ($parentProjectOptions as $parentProjectOption)
-                            <option value="{{ $parentProjectOption->id }}">
-                                {{ $parentProjectOption->name }}{{ $parentProjectOption->project_code ? ' (' . $parentProjectOption->project_code . ')' : '' }}
-                            </option>
-                        @endforeach
-                    @endisset
+                <select name="parent_project_id" id="edit_project_parent_project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}">
+                    <option value="">Search parent project here...</option>
                 </select>
                 <p class="text-xs text-bgray-500 mt-1">Select a completed project only when this project is rework or follow-up work for an earlier delivered project.</p>
             </div>

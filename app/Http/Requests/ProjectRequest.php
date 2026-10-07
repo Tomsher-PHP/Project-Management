@@ -99,7 +99,7 @@ class ProjectRequest extends FormRequest
                 return;
             }
 
-            if ($selectedParentProject->trashed() || ! $selectedParentProject->projectStatus?->is_completed) {
+            if ($selectedParentProject->trashed()) {
                 $validator->errors()->add(
                     'parent_project_id',
                     'Please select a completed project when linking this project as rework or follow-up work.'

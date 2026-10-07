@@ -76,6 +76,14 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const parentSelect = document.getElementById('edit_project_parent_project_id');
             if (parentSelect && parentSelect.tomselect) {
+                parentSelect.tomselect.clearOptions();
+                if (project.parent_project_id && project.parent_project) {
+                    parentSelect.tomselect.addOption({
+                        value: project.parent_project.id,
+                        text: project.parent_project.name,
+                        subtype: project.parent_project.project_code || '--'
+                    });
+                }
                 parentSelect.tomselect.setValue(project.parent_project_id || '');
             } else if (parentSelect) {
                 parentSelect.value = project.parent_project_id || '';
