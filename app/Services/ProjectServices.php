@@ -335,9 +335,14 @@ class ProjectServices
             ? (int) round(($completedEstimatedSeconds / $totalEstimatedSeconds) * 100)
             : 0;
 
+        $displayTimeline = $project->display_timeline;
+        $startDate = $displayTimeline?->start_date ?? $project->start_date;
+        $endDate = $displayTimeline?->end_date ?? $project->end_date;
+        $customerEndDate = $displayTimeline?->customer_end_date ?? $project->customer_end_date;
+
         return [
-            'projectTimeline' => $this->buildTimeline($project->start_date, $project->end_date),
-            'customerTimeline' => $this->buildTimeline($project->start_date, $project->customer_end_date),
+            'projectTimeline' => $this->buildTimeline($startDate, $endDate),
+            'customerTimeline' => $this->buildTimeline($startDate, $customerEndDate),
             'task_progress' => [
                 'percentage' => min(max($taskCompletionPercentage, 0), 100),
                 'completed_hours' => round($completedEstimatedSeconds / 3600, 2),

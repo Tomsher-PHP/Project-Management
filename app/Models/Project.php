@@ -447,4 +447,33 @@ class Project extends Model
         return $this->hasMany(ProjectTimeline::class)->orderBy('sort_order');
     }
 
+    public function getDisplayTimelineAttribute()
+    {
+        $timelines = $this->projectTimelines;
+
+        if ($timelines->isEmpty()) {
+            return null;
+        }
+
+        if ($timelines->count() === 1) {
+            return $timelines->first();
+        }
+
+        $active = $timelines->firstWhere('status', ProjectTimeline::STATUS_ACTIVE);
+        if ($active) {
+            return $active;
+        }
+
+        $lastCompleted = $timelines->where('status', ProjectTimeline::STATUS_COMPLETED)->last();
+        if ($lastCompleted) {
+            return $lastCompleted;
+        }
+
+        $lastNonCancelled = $timelines->where('status', '!=', ProjectTimeline::STATUS_CANCELLED)->last();
+        if ($lastNonCancelled) {
+            return $lastNonCancelled;
+        }
+
+        return null;
+    }
 }

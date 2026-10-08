@@ -16,8 +16,9 @@ class ProjectAnalyticsService
 
     public function getProgressbar(Project $project): Collection
     {
-        $estimatedSeconds = (int) ($project->estimated_time_seconds ?? 0);
-        $customerEstimateSeconds = (int) ($project->customer_estimate_seconds ?? 0);
+        $displayTimeline = $project->display_timeline;
+        $estimatedSeconds = (int) ($displayTimeline?->estimated_time_seconds ?? $project->estimated_time_seconds ?? 0);
+        $customerEstimateSeconds = (int) ($displayTimeline?->customer_estimate_seconds ?? $project->customer_estimate_seconds ?? 0);
 
         if ($estimatedSeconds <= 0 && $customerEstimateSeconds <= 0) {
             return collect($this->emptyProgressbarPayload());
