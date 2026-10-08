@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Models\ProjectTimeline;
 use App\Models\Task;
 use App\Models\TaskTimeLog;
 use Illuminate\Support\Facades\DB;
@@ -107,6 +108,27 @@ class ProjectTimeService
         ]);
     }
 
+    public function recalculateTimelineTimes(?int $timelineId): void
+    {
+        $timelineId = $this->normalizeId($timelineId);
+
+        if ($timelineId === null) {
+            return;
+        }
+
+        $projectTimeline = ProjectTimeline::query()->find($timelineId);
+
+        if (! $projectTimeline) {
+            return;
+        }
+
+        $projectTimeline->updateQuietly([
+            'actual_time_seconds' => (int) Task::query()
+                ->where('project_timeline_id', $projectTimeline->id)
+                ->sum('actual_time_seconds'),
+        ]);
+    }
+
     public function recalculateByTask(?int $taskId): void
     {
         $taskId = $this->normalizeId($taskId);
@@ -129,6 +151,12 @@ class ProjectTimeService
 
             if ($parentTaskId !== null) {
                 $this->recalculateTaskDerived($parentTaskId);
+            }
+
+            $timelineId = $this->normalizeId($task->project_timeline_id);
+
+            if ($timelineId !== null) {
+                $this->recalculateTimelineTimes($timelineId);
             }
 
             $sprintId = $this->normalizeId($task->project_sprint_id);
@@ -155,6 +183,12 @@ class ProjectTimeService
 
             if ($parentTaskId !== null) {
                 $this->recalculateTaskDerived($parentTaskId);
+            }
+
+            $oldTimelineId = $this->extractId($original, 'project_timeline_id');
+
+            if ($oldTimelineId !== null) {
+                $this->recalculateTimelineTimes($oldTimelineId);
             }
 
             $oldSprintId = $this->extractId($original, 'project_sprint_id');
@@ -227,6 +261,14 @@ class ProjectTimeService
 
             foreach ($milestoneIds as $milestoneId) {
                 $this->recalculateMilestoneTimes((int) $milestoneId);
+            }
+
+            $timelineIds = ProjectTimeline::query()
+                ->where('project_id', $projectId)
+                ->pluck('id');
+
+            foreach ($timelineIds as $timelineId) {
+                $this->recalculateTimelineTimes((int) $timelineId);
             }
         });
     }
