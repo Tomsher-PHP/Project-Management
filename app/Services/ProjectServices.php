@@ -632,6 +632,8 @@ class ProjectServices
 
         return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId) {
             $movingTasks = $this->collectTaskTree($task);
+            
+            $targetTimelineId = $targetProject->display_timeline?->id;
 
             foreach ($movingTasks as $t) {
                 // If assigned to a user, add user to target project team if not exists
@@ -653,6 +655,7 @@ class ProjectServices
                 'parent_task_id' => $newParentTaskId,
                 'project_milestone_id' => $resolvedMilestoneId,
                 'project_sprint_id' => $resolvedSprintId,
+                'project_timeline_id' => $targetTimelineId,
                 'sort_order' => Task::nextSortOrder($targetProject->id, $resolvedSprintId ? (int) $resolvedSprintId : null),
             ];
 
@@ -673,7 +676,9 @@ class ProjectServices
                 $resolvedMilestoneId ? (int) $resolvedMilestoneId : null,
                 $resolvedSprintId ? (int) $resolvedSprintId : null,
                 (int) $targetProject->id,
-                $isFlowChanged ? $newStatusId : null
+                $isFlowChanged ? $newStatusId : null,
+                true,
+                $targetTimelineId
             );
 
             return $task->fresh();
@@ -799,18 +804,24 @@ class ProjectServices
         ?int $projectMilestoneId,
         ?int $projectSprintId,
         ?int $projectId = null,
-        ?int $newStatusId = null
+        ?int $newStatusId = null,
+        bool $updateTimeline = false,
+        ?int $targetTimelineId = null
     ): void {
         $targetProjectId = $projectId ?: (int) $task->project_id;
 
         $task->childTasks()
             ->get()
-            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId) {
+            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId, $updateTimeline, $targetTimelineId) {
                 $childUpdateData = [
                     'project_id' => $targetProjectId,
                     'project_milestone_id' => $projectMilestoneId,
                     'project_sprint_id' => $projectSprintId,
                 ];
+
+                if ($updateTimeline) {
+                    $childUpdateData['project_timeline_id'] = $targetTimelineId;
+                }
 
                 if ($newStatusId) {
                     if ((int) $childTask->status_id !== (int) $newStatusId) {
@@ -824,7 +835,7 @@ class ProjectServices
 
                 $childTask->update($childUpdateData);
 
-                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId);
+                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId, $updateTimeline, $targetTimelineId);
             });
     }
 
