@@ -89,13 +89,14 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             $metrics['estimated_seconds'],
             $metrics['actual_seconds']
         );
+        $timeline = $project->display_timeline;
 
         return match ($column) {
             'project_name' => $project->name ?? '-',
             'customer' => $project->customer?->name ?? '-',
             'sales_person' => $project->salesPerson?->name ?? '-',
-            'start_date' => AppServiceProvider::formatAppDate($project->start_date, '-'),
-            'end_date' => AppServiceProvider::formatAppDate($project->end_date, '-'),
+            'start_date' => AppServiceProvider::formatAppDate($timeline?->start_date, '-'),
+            'end_date' => AppServiceProvider::formatAppDate($timeline?->end_date, '-'),
             'estimated_hours' => formatSecondsToHoursMinutes($metrics['estimated_seconds']),
             'actual_hours' => formatSecondsToHoursMinutes($metrics['actual_seconds']),
             'progress' => $progressPercentage . '%',
@@ -644,8 +645,10 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             return $this->projectMetricCache[$cacheKey];
         }
 
+        $timeline = $project->display_timeline;
+
         return $this->projectMetricCache[$cacheKey] = [
-            'estimated_seconds' => (int) ($project->estimated_time_seconds ?? 0),
+            'estimated_seconds' => (int) ($timeline?->estimated_time_seconds ?? 0),
             'actual_seconds' => (int) ($project->tasks_sum_actual_time_seconds ?? $project->tasks()->sum('actual_time_seconds') ?? 0),
             'completed_milestones' => (int) ($project->completed_milestones ?? 0),
             'total_milestones' => (int) ($project->total_milestones ?? 0),
