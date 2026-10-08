@@ -24,7 +24,7 @@ class ProjectAnalyticsService
             return collect($this->emptyProgressbarPayload());
         }
 
-        $workedSeconds = $this->getApprovedWorkedSeconds($project);
+        $workedSeconds = (int) ($displayTimeline?->actual_time_seconds ?? $this->getApprovedWorkedSeconds($project));
         $maxSeconds = max($estimatedSeconds, $customerEstimateSeconds, $workedSeconds, 1);
         $workedPercent = round(($workedSeconds / $maxSeconds) * 100, 1);
         $estimatedPercent = round(($estimatedSeconds / $maxSeconds) * 100, 1);
