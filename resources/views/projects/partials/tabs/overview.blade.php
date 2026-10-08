@@ -66,7 +66,7 @@
                         $timelineName = $bar->get('timeline_name', 'Task Progress');
                     @endphp
 
-                    <div class="flex flex-col gap-5 rounded-[8px] border lg:flex-row lg:items-center lg:gap-8 {{ $isActive ? 'border-success-300 bg-success-50 p-4 dark:border-darkblack-400 dark:bg-black' : 'border-bgray-200 p-4 dark:border-darkblack-400' }}">
+                    <div class="flex flex-col gap-5 rounded-[8px] border border-bgray-200 p-4 dark:border-darkblack-400 lg:flex-row lg:items-center lg:gap-8 {{ $isActive ? 'bg-white dark:bg-black' : '' }}" {!! $isActive ? 'style="border-left-width: 4px; border-left-color: rgb(34, 197, 94);"' : '' !!}>
 
                         <!-- Left: Task Title / Subtitle (Optional, or project name) -->
                         <div class="min-w-[140px] shrink-0">
