@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ProjectTimeline;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -30,7 +31,7 @@ return new class extends Migration
                 'project_id' => $project->id,
                 'name' => 'Original',
                 'type' => 'original',
-                'status' => 1,
+                'status' => ProjectTimeline::STATUS_ACTIVE,
                 'start_date' => $project->start_date,
                 'end_date' => $project->end_date,
                 'customer_end_date' => $project->customer_end_date,
