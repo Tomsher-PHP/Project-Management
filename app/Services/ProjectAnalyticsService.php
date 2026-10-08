@@ -14,9 +14,28 @@ use Illuminate\Support\Facades\DB;
 class ProjectAnalyticsService
 {
 
-    public function getProgressbar(Project $project): Collection
+    public function getTimelineProgressbars(Project $project): Collection
     {
-        $displayTimeline = $project->display_timeline;
+        $timelines = $project->projectTimelines()->orderBy('sort_order')->get();
+        
+        if ($timelines->isEmpty()) {
+            $bar = $this->getProgressbar($project);
+            $bar->put('timeline_name', 'Task Progress');
+            $bar->put('is_active', true);
+            return collect([$bar]);
+        }
+
+        return $timelines->map(function ($timeline) use ($project) {
+            $bar = $this->getProgressbar($project, $timeline);
+            $bar->put('timeline_name', $timeline->name);
+            $bar->put('is_active', $timeline->id === $project->display_timeline?->id);
+            return $bar;
+        });
+    }
+
+    public function getProgressbar(Project $project, ?\App\Models\ProjectTimeline $timeline = null): Collection
+    {
+        $displayTimeline = $timeline ?? $project->display_timeline;
         $estimatedSeconds = (int) ($displayTimeline?->estimated_time_seconds ?? $project->estimated_time_seconds ?? 0);
         $customerEstimateSeconds = (int) ($displayTimeline?->customer_estimate_seconds ?? $project->customer_estimate_seconds ?? 0);
 
