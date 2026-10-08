@@ -27,6 +27,14 @@ return new class extends Migration
         $projects = DB::table('projects')->get();
 
         foreach ($projects as $project) {
+            $actualTimeSeconds = DB::table('task_time_logs')
+                ->join('tasks', 'tasks.id', '=', 'task_time_logs.task_id')
+                ->where('tasks.project_id', $project->id)
+                ->where('tasks.request_status', 'approved')
+                ->whereNull('tasks.deleted_at')
+                ->where('task_time_logs.is_approved', true)
+                ->sum('task_time_logs.duration_seconds');
+
             $timelineId = DB::table('project_timelines')->insertGetId([
                 'project_id' => $project->id,
                 'name' => 'Original',
@@ -37,7 +45,8 @@ return new class extends Migration
                 'customer_end_date' => $project->customer_end_date,
                 'estimated_time_seconds' => $project->estimated_time_seconds,
                 'customer_estimate_seconds' => $project->customer_estimate_seconds,
-                'sort_order' => 0,
+                'actual_time_seconds' => (int) $actualTimeSeconds,
+                'sort_order' => 1,
                 'notes' => null,
                 'created_by' => $project->added_by ?? null,
                 'created_at' => now(),

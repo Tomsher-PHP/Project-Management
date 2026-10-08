@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('customer_end_date')->nullable();
             $table->unsignedBigInteger('estimated_time_seconds')->nullable();
             $table->unsignedBigInteger('customer_estimate_seconds')->nullable();
+            $table->unsignedBigInteger('actual_time_seconds')->nullable()->default(0);
             $table->integer('sort_order')->default(0);
             $table->text('notes')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
