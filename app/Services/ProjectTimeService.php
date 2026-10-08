@@ -125,6 +125,7 @@ class ProjectTimeService
         $projectTimeline->updateQuietly([
             'actual_time_seconds' => (int) Task::query()
                 ->where('project_timeline_id', $projectTimeline->id)
+                ->where('request_status', Task::REQUEST_APPROVED)
                 ->sum('actual_time_seconds'),
         ]);
     }
