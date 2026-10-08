@@ -780,13 +780,37 @@ class ProjectController extends Controller
             'color' => $project->projectStage?->color ?: '#CBD5E1',
         ];
 
+        $showTimelineHistory = $project->projectTimelines()->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)->count() > 1;
+
+        $timelineHistory = collect();
+        if ($showTimelineHistory) {
+            $timelineHistory = $project->timelineHistories()
+                ->with(['addedBy:id,name', 'projectTimeline:id,name'])
+                ->get()
+                ->map(function ($history) {
+                    return [
+                        'timeline_name' => $history->projectTimeline?->name ?? 'Unknown Timeline',
+                        'from_label' => $history->from_status ? ucfirst(config('project_constants.project_timeline_statuses.' . $history->from_status, 'Unknown')) : 'Start',
+                        'from_color' => '#CBD5E1',
+                        'to_label' => ucfirst(config('project_constants.project_timeline_statuses.' . $history->status, 'Unknown')),
+                        'to_color' => '#CBD5E1',
+                        'changed_at' => $this->projectServices->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
+                        'changed_by' => $history->addedBy?->name ?? '--',
+                        'remarks' => $history->remarks,
+                    ];
+                })
+                ->values();
+        }
+
         return view('projects.partials.tabs.history', compact(
             'project',
             'statusHistory',
             'stageHistory',
             'currentStatus',
             'currentStage',
-            'projectTrackings'
+            'projectTrackings',
+            'timelineHistory',
+            'showTimelineHistory'
         ))->render();
     }
 

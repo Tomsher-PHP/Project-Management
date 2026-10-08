@@ -447,6 +447,18 @@ class Project extends Model
         return $this->hasMany(ProjectTimeline::class)->orderBy('sort_order');
     }
 
+    public function timelineHistories()
+    {
+        return $this->hasManyThrough(
+            ProjectTimelineStatusHistory::class,
+            ProjectTimeline::class,
+            'project_id',
+            'project_timeline_id',
+            'id',
+            'id'
+        )->orderBy('project_timeline_status_histories.added_at', 'desc');
+    }
+
     public function getDisplayTimelineAttribute()
     {
         $timelines = $this->projectTimelines;
