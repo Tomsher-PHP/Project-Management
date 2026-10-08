@@ -467,7 +467,6 @@ class ProjectController extends Controller
 
     private function renderOverviewTab(Project $project): string
     {
-        $progressbar = $this->analyticsService->getProgressbar($project);
         $timelineProgressbars = $this->analyticsService->getTimelineProgressbars($project);
         $taskStatusOverview = $this->analyticsService->getTaskStatusOverview($project);
         $taskAssigneeOverview = $this->analyticsService->getTaskAssigneeOverview($project);
@@ -475,7 +474,6 @@ class ProjectController extends Controller
 
         return view('projects.partials.tabs.overview', [
             'project' => $project,
-            'progressbar' => $progressbar,
             'timelineProgressbars' => $timelineProgressbars,
             'taskStatusOverview' => $taskStatusOverview,
             'taskAssigneeOverview' => $taskAssigneeOverview,

@@ -1,21 +1,7 @@
 @php
-    $workedSeconds = (int) $progressbar->get('worked_seconds', 0);
-    $estimatedSeconds = (int) $progressbar->get('estimated_seconds', 0);
-    $customerEstimateSeconds = (int) $progressbar->get('customer_estimate_seconds', 0);
-    $workedPercent = (float) $progressbar->get('worked_percent', 0);
-    $estimatedPercent = (float) $progressbar->get('estimated_percent', 0);
-    $customerEstimatePercent = (float) $progressbar->get('customer_estimate_percent', 0);
-    $differencePercentage = $progressbar->get('difference_percentage');
-    $hasEstimate = (bool) $progressbar->get('has_estimate', false);
-    $isExceeded = (bool) $progressbar->get('is_exceeded', false);
-    $isWithinEstimate = $hasEstimate && !$isExceeded;
-    $statusLabel = (string) $progressbar->get('status_label', 'No estimate added');
-    $statusTextColor = (string) $progressbar->get('status_text_color', 'text-bgray-700 dark:text-bgray-300');
-    $workedBarColor = (string) $progressbar->get('worked_bar_color', 'bg-green-500');
-    $estimatedBarColor = 'bg-blue-400';
-    $customerEstimateBarColor = 'bg-purple-400';
-    $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
-    $workedTrackColor = $isExceeded ? 'bg-red-50 dark:bg-red-900/20' : 'bg-success-50 dark:bg-success-900/20';
+    $totalTimelineWorked = $timelineProgressbars->sum(fn($b) => (int) $b->get('worked_seconds', 0));
+    $totalTimelineEstimated = $timelineProgressbars->sum(fn($b) => (int) $b->get('estimated_seconds', 0));
+    $totalTimelineCustomerEstimate = $timelineProgressbars->sum(fn($b) => (int) $b->get('customer_estimate_seconds', 0));
     $chartItems = $taskStatusOverview
         ->map(
             fn(array $status) => [
@@ -39,7 +25,7 @@
 @endphp
 
 <div class="space-y-6" data-project-overview data-project-id="{{ $project->id }}">
-    @if ($hasEstimate)
+    @if ($timelineProgressbars->isNotEmpty())
         <section class="overflow-hidden rounded-[10px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <!-- Header -->
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/70 px-5 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
@@ -47,28 +33,18 @@
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Project Time Progress</h4>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    {{-- Status Pill / Badge --}}
-                    @if ($isExceedsLimits ?? $workedSeconds > ($customerEstimateSeconds ?? $estimatedSeconds))
-                        <span class="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
-                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                            </svg>
-                            Over estimate ↗ {{ $differencePercentage ?? '128' }}%
-                        </span>
-                        <span class="rounded-full border border-rose-200 bg-rose-50/60 px-2 py-0.5 text-[11px] font-semibold text-rose-500 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-400">
-                            Exceeds Limits
-                        </span>
-                    @elseif ($workedSeconds > $estimatedSeconds)
-                        <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-                            Over estimate ↗ {{ $differencePercentage }}%
-                        </span>
-                    @else
-                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                            </svg>
-                            Within estimate
+                <div class="flex items-center gap-2 select-text">
+                    <span title="Spent time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+                        Spent <span class="ml-1">{{ $formatDuration($totalTimelineWorked) }}</span>
+                    </span>
+
+                    <span title="Estimated time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+                        Estimate <span class="ml-1">{{ $formatDuration($totalTimelineEstimated) }}</span>
+                    </span>
+
+                    @if ($totalTimelineCustomerEstimate > 0 && auth()->user()?->can('project.customer_end_date'))
+                        <span title="Customer estimated time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+                            Customer Est. <span class="ml-1">{{ $formatDuration($totalTimelineCustomerEstimate) }}</span>
                         </span>
                     @endif
                 </div>
