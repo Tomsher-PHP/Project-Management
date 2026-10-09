@@ -27,6 +27,11 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Notifications\Events\NotificationFailed;
+use App\Notifications\ProjectNotification;
+use App\Models\ProjectNotificationLog;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -173,6 +178,23 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Appraisal::class, AppraisalPolicy::class);
+
+        Event::listen(NotificationSent::class, function (NotificationSent $event) {
+            if ($event->notification instanceof ProjectNotification && $event->notification->logId) {
+                ProjectNotificationLog::where('id', $event->notification->logId)->update([
+                    'status' => 'sent',
+                    'sent_at' => Carbon::now(),
+                ]);
+            }
+        });
+
+        Event::listen(NotificationFailed::class, function (NotificationFailed $event) {
+            if ($event->notification instanceof ProjectNotification && $event->notification->logId) {
+                ProjectNotificationLog::where('id', $event->notification->logId)->update([
+                    'status' => 'failed',
+                ]);
+            }
+        });
     }
 
     public static function formatAppDate($value, string $fallback = '--'): string
