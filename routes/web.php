@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\SprintGroupController;
+use App\Http\Controllers\ProjectNotificationSettingController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
 use App\Http\Controllers\AppraisalController;
@@ -223,6 +224,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.create')->only(['store']);
         Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
         Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
+
+        // Project Notifications Routes
+        Route::resource('project-notifications', ProjectNotificationSettingController::class)->middleware('permission.type:project_settings.view')->only(['index']);
+        Route::post('project-notifications', [ProjectNotificationSettingController::class, 'store'])->middleware('permission.type:project_settings.create')->name('project-notifications.store');
+        Route::put('project-notifications/{project_notification}', [ProjectNotificationSettingController::class, 'update'])->middleware('permission.type:project_settings.edit')->name('project-notifications.update');
 
         // Task settings routes
         Route::patch('/task-statuses/toggle-status', [TaskSettingsController::class, 'toggleStatusTaskStatus'])->middleware('permission.type:task_settings.edit')->name('task_status.toggleStatus');
