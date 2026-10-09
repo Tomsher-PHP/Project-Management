@@ -37,11 +37,11 @@
 @include('projects.partials.milestone.section')
 
 @canany(['project_milestone.create', 'project_milestone.edit'])
-    <div class="modal fixed inset-0 z-50 hidden overflow-y-auto modal-form" id="project-milestone-modal" data-project-milestone-builder-modal>
+    <div class="modal fixed inset-0 z-50 hidden overflow-y-auto" id="project-milestone-modal" data-project-milestone-builder-modal>
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-milestone-builder-close></div>
 
-        <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div class="relative z-10 w-full max-w-7xl">
+        <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6 pointer-events-none">
+            <div class="relative z-10 w-full max-w-7xl pointer-events-auto">
                 <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                         <div>
