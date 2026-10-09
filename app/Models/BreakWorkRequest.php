@@ -9,6 +9,7 @@ class BreakWorkRequest extends Model
     public const STATUS_PENDING = 'pending';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REJECTED = 'rejected';
+    public const STATUS_CANCELLED = 'cancelled';
 
     public const PROCESSING_STATUS_PENDING = 'pending';
     public const PROCESSING_STATUS_PROCESSING = 'processing';
@@ -19,6 +20,7 @@ class BreakWorkRequest extends Model
         self::STATUS_PENDING,
         self::STATUS_APPROVED,
         self::STATUS_REJECTED,
+        self::STATUS_CANCELLED,
     ];
 
     public const PROCESSING_STATUSES = [
@@ -35,12 +37,20 @@ class BreakWorkRequest extends Model
         'ended_at',
         'duration_seconds',
         'description',
+
         'status',
+
         'approved_by',
         'approved_at',
+
         'rejected_by',
         'rejected_at',
         'rejection_reason',
+
+        'cancelled_by',
+        'cancelled_at',
+        'cancellation_reason',
+
         'processing_status',
         'task_id',
         'task_time_log_id',
@@ -53,11 +63,17 @@ class BreakWorkRequest extends Model
     protected $casts = [
         'status' => 'string',
         'processing_status' => 'string',
+
         'work_date' => 'date',
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
+
         'approved_at' => 'datetime',
+
         'rejected_at' => 'datetime',
+
+        'cancelled_at' => 'datetime',
+
         'processed_at' => 'datetime',
     ];
 
@@ -74,6 +90,11 @@ class BreakWorkRequest extends Model
     public function rejectedBy()
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function task()
@@ -99,5 +120,10 @@ class BreakWorkRequest extends Model
     public function isRejected(): bool
     {
         return $this->status === self::STATUS_REJECTED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
     }
 }

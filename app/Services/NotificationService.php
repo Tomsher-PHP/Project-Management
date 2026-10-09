@@ -2823,4 +2823,107 @@ class NotificationService
 
         return true;
     }
+
+    public function notifyTaskRequestCancelled(
+        Task $task,
+        User $cancelledBy
+    ): void {
+        $task->loadMissing([
+            'project:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $taskName = $task->name ?? 'Task';
+        $projectName = $task->project?->name ?? 'Project';
+        $cancelledByName = $cancelledBy->name ?? 'A team member';
+
+        $requesterId = $task->current_assignee_id
+            ? (int) $task->current_assignee_id
+            : null;
+
+        if (! $requesterId) {
+            return;
+        }
+
+        /*
+        * If requester cancelled their own request,
+        * notify the related approver/reporting users.
+        *
+        * If a Super Admin cancelled it,
+        * notify the requester.
+        */
+        if ((int) $cancelledBy->id === $requesterId) {
+            $recipientIds = $task->getRelatedUsers()
+                ->pluck('id')
+                ->filter()
+                ->reject(
+                    fn ($userId) => (int) $userId === (int) $cancelledBy->id
+                )
+                ->unique()
+                ->values()
+                ->all();
+
+            if ($recipientIds === []) {
+                return;
+            }
+
+            $message = "{$cancelledByName} cancelled the task request '{$taskName}' in '{$projectName}'.";
+
+            $this->sendToMany(
+                $recipientIds,
+                'Task Request Cancelled',
+                $message,
+                route('tasks.edit', $task),
+                UserNotificationSetting::TASK_REQUEST,
+                (int) $cancelledBy->id,
+                $task->project_id ? (int) $task->project_id : null,
+                $this->taskEmailDetails($task, [
+                    'Request Type' => 'Task Request',
+                    'Status' => 'Cancelled',
+                    'Cancelled By' => $cancelledByName,
+                    'Cancellation Reason' => $task->cancellation_reason,
+                ]),
+                [
+                    'type' => 'task_request_cancelled',
+                    'actor_id' => (int) $cancelledBy->id,
+                    'actor_name' => $cancelledByName,
+                ]
+            );
+
+            return;
+        }
+
+        /*
+        * Manager / Super Admin cancelled the request.
+        * Notify the requester.
+        */
+        $message = "{$cancelledByName} cancelled your task request '{$taskName}' in '{$projectName}'.";
+
+        if (filled($task->cancellation_reason)) {
+            $message .= ' Reason: ' . trim($task->cancellation_reason);
+        }
+
+        $this->send(
+            $requesterId,
+            'Task Request Cancelled',
+            $message,
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_REQUEST,
+            (int) $cancelledBy->id,
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Request',
+                'Status' => 'Cancelled',
+                'Cancelled By' => $cancelledByName,
+                'Cancellation Reason' => $task->cancellation_reason,
+            ]),
+            [
+                'type' => 'task_request_cancelled',
+                'actor_id' => (int) $cancelledBy->id,
+                'actor_name' => $cancelledByName,
+                'assignee_id' => $requesterId,
+                'assignee_name' => $task->currentAssignee?->name ?? 'Unknown User',
+            ]
+        );
+    }
 }
