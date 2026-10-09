@@ -20,6 +20,8 @@ const Alert = {
         const requireText = typeof options.requireText === 'string' && options.requireText.length
             ? options.requireText
             : null;
+            
+        const requireRemark = options.requireRemark === true;
 
         return Swal.fire({
             target: options.target || document.body,
@@ -27,8 +29,8 @@ const Alert = {
             text: options.html ? undefined : (options.text || 'This action cannot be undone.'),
             html: options.html,
             icon: options.icon || 'warning',
-            input: requireText ? 'text' : undefined,
-            inputPlaceholder: requireText ? `Type "${requireText}" to confirm` : undefined,
+            input: requireText ? 'text' : (requireRemark ? 'textarea' : undefined),
+            inputPlaceholder: requireText ? `Type "${requireText}" to confirm` : (requireRemark ? 'Enter your remarks (optional)' : undefined),
             showConfirmButton: options.showConfirmButton !== undefined ? options.showConfirmButton : true,
             showCancelButton: true,
             confirmButtonText: options.confirmText || 'Yes',
@@ -68,13 +70,16 @@ const Alert = {
                 syncValidationState();
             },
             preConfirm: (value) => {
-                if (!requireText) {
+                if (requireText) {
+                    if (value !== requireText) {
+                        Swal.showValidationMessage(`You must type "${requireText}" to confirm`);
+                        return false;
+                    }
                     return value;
                 }
-
-                if (value !== requireText) {
-                    Swal.showValidationMessage(`You must type "${requireText}" to confirm`);
-                    return false;
+                
+                if (requireRemark) {
+                    return value;
                 }
 
                 return value;

@@ -10,19 +10,24 @@
     $projectStageUpdateUrl = route('projects.updateProjectStage', $project);
     $projectPaymentUpdateUrl = route('projects.addProjectPaymentStatus', $project);
 
+    $displayTimeline = $project->display_timeline;
+    $displayStartDate = $displayTimeline?->start_date ?? $project->start_date;
+    $displayEndDate = $displayTimeline?->end_date ?? $project->end_date;
+    $displayCustomerEndDate = $displayTimeline?->customer_end_date ?? $project->customer_end_date;
+
     $projectTimeline = $projectTimeline ?? [
         'percentage' => 0,
         'bar_class' => 'bg-gray-300',
         'text_class' => 'text-bgray-700 dark:text-bgray-300',
-        'start_label' => $project->start_date?->format($globalDateFormat) ?? '--',
-        'end_label' => $project->end_date?->format($globalDateFormat) ?? '--',
+        'start_label' => $displayStartDate?->format($globalDateFormat) ?? '--',
+        'end_label' => $displayEndDate?->format($globalDateFormat) ?? '--',
     ];
     $customerTimeline = $customerTimeline ?? [
         'percentage' => 0,
         'bar_class' => 'bg-gray-300',
         'text_class' => 'text-bgray-700 dark:text-bgray-300',
-        'start_label' => $project->start_date?->format($globalDateFormat) ?? '--',
-        'end_label' => $project->customer_end_date?->format($globalDateFormat) ?? '--',
+        'start_label' => $displayStartDate?->format($globalDateFormat) ?? '--',
+        'end_label' => $displayCustomerEndDate?->format($globalDateFormat) ?? '--',
     ];
     $isAgileFlow = $project->project_flow === 'agile';
     $flowLabel = ucfirst($project->project_flow ?? 'linear');
@@ -171,11 +176,17 @@
                 </div>
             @endif
 
-            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-bgray-500 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-300 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-header-collapse-toggle aria-expanded="false" aria-label="Expand project header details">
-                <svg class="h-4 w-4 transition duration-200" data-project-header-collapse-icon viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
+            <div class="flex items-center gap-2">
+                @can('project.edit')
+                    <x-edit-button class="project-edit-btn" data-project="{{ json_encode($project) }}" title="Edit project" />
+                @endcan
+
+                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-bgray-500 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-300 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-header-collapse-toggle aria-expanded="false" aria-label="Expand project header details">
+                    <svg class="h-4 w-4 transition duration-200" data-project-header-collapse-icon viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -212,16 +223,16 @@
                         </div>
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Start Date</p>
-                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($project->start_date)->format($globalDateFormat) ?? '--' }}</p>
+                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayStartDate)->format($globalDateFormat) ?? '--' }}</p>
                         </div>
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">End Date</p>
-                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}</p>
+                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayEndDate)->format($globalDateFormat) ?? '--' }}</p>
                         </div>
                         @if ($canCustomerEndDate)
                             <div class="min-w-0">
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer End Date</p>
-                                <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($project->customer_end_date)->format($globalDateFormat) ?? '--' }}</p>
+                                <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayCustomerEndDate)->format($globalDateFormat) ?? '--' }}</p>
                             </div>
                         @endif
                     </div>

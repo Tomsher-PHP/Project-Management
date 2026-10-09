@@ -137,15 +137,23 @@
         </div>
     </section>
 
-    @include('projects.partials.modals.insights-modal')
-    @include('projects.partials.modals.change-project-attribute-modal')
-    @include('projects.partials.modals.project-payment-status-modal')
-    <!-- Request Estimate Change Modal -->
-    @include('tasks.partials.extend-time-modal')
-    <!-- Meeting Preview Drawer -->
-    @include('meetings.partials.preview-drawer')
-    <!-- Meeting Form Modal -->
-    @include('meetings.form-modal')
+    @push('modals')
+        @include('projects.partials.modals.insights-modal')
+        @include('projects.partials.modals.change-project-attribute-modal')
+        @include('projects.partials.modals.project-payment-status-modal')
+        <!-- Request Estimate Change Modal -->
+        @include('tasks.partials.extend-time-modal')
+        <!-- Meeting Preview Drawer -->
+        @include('meetings.partials.preview-drawer')
+        <!-- Meeting Form Modal -->
+        @include('meetings.form-modal')
+        <!-- Edit Project Modal -->
+        @include('projects.partials.project-edit-modal')
+        <!-- Timeline Modals -->
+        @if(auth()->user()->can('project.edit') && !$project->trashed())
+            @include('projects.partials.tabs.settings.timeline-modals')
+        @endif
+    @endpush
 @endsection
 
 @push('scripts')
@@ -172,4 +180,6 @@
     @vite('resources/js/modules/tasks/extend-task.js')
     @vite('resources/js/modules/meetings/meetings.js')
     @vite('resources/js/modules/meetings/meeting-form.js')
+    @vite('resources/js/modules/projects/project-edit.js')
+    @vite('resources/js/modules/projects/project-timelines.js')
 @endpush

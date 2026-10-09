@@ -14,16 +14,36 @@ use Illuminate\Support\Facades\DB;
 class ProjectAnalyticsService
 {
 
-    public function getProgressbar(Project $project): Collection
+    public function getTimelineProgressbars(Project $project): Collection
     {
-        $estimatedSeconds = (int) ($project->estimated_time_seconds ?? 0);
-        $customerEstimateSeconds = (int) ($project->customer_estimate_seconds ?? 0);
+        $timelines = $project->projectTimelines()->orderBy('sort_order')->get();
+        
+        if ($timelines->isEmpty()) {
+            $bar = $this->getProgressbar($project);
+            $bar->put('timeline_name', 'Task Progress');
+            $bar->put('is_active', true);
+            return collect([$bar]);
+        }
+
+        return $timelines->map(function ($timeline) use ($project) {
+            $bar = $this->getProgressbar($project, $timeline);
+            $bar->put('timeline_name', $timeline->name);
+            $bar->put('is_active', $timeline->id === $project->display_timeline?->id);
+            return $bar;
+        });
+    }
+
+    public function getProgressbar(Project $project, ?\App\Models\ProjectTimeline $timeline = null): Collection
+    {
+        $displayTimeline = $timeline ?? $project->display_timeline;
+        $estimatedSeconds = (int) ($displayTimeline?->estimated_time_seconds ?? $project->estimated_time_seconds ?? 0);
+        $customerEstimateSeconds = (int) ($displayTimeline?->customer_estimate_seconds ?? $project->customer_estimate_seconds ?? 0);
 
         if ($estimatedSeconds <= 0 && $customerEstimateSeconds <= 0) {
             return collect($this->emptyProgressbarPayload());
         }
 
-        $workedSeconds = $this->getApprovedWorkedSeconds($project);
+        $workedSeconds = (int) ($displayTimeline?->actual_time_seconds ?? $this->getApprovedWorkedSeconds($project));
         $maxSeconds = max($estimatedSeconds, $customerEstimateSeconds, $workedSeconds, 1);
         $workedPercent = round(($workedSeconds / $maxSeconds) * 100, 1);
         $estimatedPercent = round(($estimatedSeconds / $maxSeconds) * 100, 1);

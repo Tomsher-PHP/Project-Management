@@ -442,4 +442,50 @@ class Project extends Model
         return $this->hasMany(ProjectTracking::class);
     }
 
+    public function projectTimelines()
+    {
+        return $this->hasMany(ProjectTimeline::class)->orderBy('sort_order');
+    }
+
+    public function timelineHistories()
+    {
+        return $this->hasManyThrough(
+            ProjectTimelineStatusHistory::class,
+            ProjectTimeline::class,
+            'project_id',
+            'project_timeline_id',
+            'id',
+            'id'
+        )->orderBy('project_timeline_status_histories.added_at', 'desc');
+    }
+
+    public function getDisplayTimelineAttribute()
+    {
+        $timelines = $this->projectTimelines;
+
+        if ($timelines->isEmpty()) {
+            return null;
+        }
+
+        if ($timelines->count() === 1) {
+            return $timelines->first();
+        }
+
+        $active = $timelines->firstWhere('status', ProjectTimeline::STATUS_ACTIVE);
+        if ($active) {
+            return $active;
+        }
+
+        $lastCompleted = $timelines->where('status', ProjectTimeline::STATUS_COMPLETED)->last();
+        if ($lastCompleted) {
+            return $lastCompleted;
+        }
+
+        $lastNonCancelled = $timelines->where('status', '!=', ProjectTimeline::STATUS_CANCELLED)->last();
+        if ($lastNonCancelled) {
+            return $lastNonCancelled;
+        }
+
+        return null;
+    }
 }

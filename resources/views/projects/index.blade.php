@@ -77,6 +77,10 @@
                             @endphp
                             @forelse ($projects as $key => $project)
                                 @php
+                                    $displayTimeline = $project->display_timeline;
+                                    $displayStartDate = $displayTimeline?->start_date ?? $project->start_date;
+                                    $displayEndDate = $displayTimeline?->end_date ?? $project->end_date;
+
                                     $priority = config('project_constants.project_priorities')[$project->priority] ?? null;
                                     $isAgileFlow = $project->project_flow === 'agile';
                                     $flowLabel = ucfirst($project->project_flow ?? 'linear');
@@ -156,20 +160,21 @@
                                         <div class="flex flex-col w-full">
 
                                             <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
-                                                {{ $project->start_date?->format($globalDateFormat) ?? '--' }}
+                                                {{ $displayStartDate?->format($globalDateFormat) ?? '--' }}
                                             </span>
 
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center">
-                                            <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->end_date?->format($globalDateFormat) ?? '--' }}</span>
+                                            <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $displayEndDate?->format($globalDateFormat) ?? '--' }}</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2">
-                                            <x-edit-button :action="route('projects.edit', $project->id)" title="Open project" />
-
+                                        <div class="flex w-full items-center space-x-1">
+                                            @can('project.edit')
+                                                <x-edit-button class="project-edit-btn" data-project="{{ json_encode($project) }}" title="Edit project" />
+                                            @endcan
                                             @can('project.delete')
                                                 <x-delete-form :action="route('projects.destroy', $project->id)" formClass="project-delete-form" />
                                             @endcan
@@ -288,5 +293,12 @@
         </div>
 
     </x-form-modal>
+
+    @push('modals')
+        <!-- Edit Project Modal -->
+        @include('projects.partials.project-edit-modal')
+    @endpush
+
     @vite('resources/js/modules/projects/project-delete.js')
+    @vite('resources/js/modules/projects/project-edit.js')
 @endsection
