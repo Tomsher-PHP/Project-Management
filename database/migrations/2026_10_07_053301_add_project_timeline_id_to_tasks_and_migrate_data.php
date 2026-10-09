@@ -73,11 +73,6 @@ return new class extends Migration
         if ($invalidTasks > 0) {
             throw new \Exception("Data integrity failure: {$invalidTasks} tasks belong to a timeline from a different project.");
         }
-
-        // 5. Make project_timeline_id required
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->foreignId('project_timeline_id')->nullable(false)->change();
-        });
     }
 
     /**
