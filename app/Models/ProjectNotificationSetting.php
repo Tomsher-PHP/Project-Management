@@ -10,6 +10,8 @@ class ProjectNotificationSetting extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const NOTIFICATION_TYPE_TIMELINE_ENDING_SOON = 'timeline_ending_soon';
+
     protected $fillable = [
         'notification_type',
         'is_enabled',

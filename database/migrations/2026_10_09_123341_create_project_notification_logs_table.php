@@ -21,11 +21,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('project_notification_setting_id', 'fk_pnl_setting_id')
-                  ->references('id')
-                  ->on('project_notification_settings')
-                  ->cascadeOnDelete();
-
-            $table->unique(['project_notification_setting_id', 'project_timeline_id'], 'proj_notif_set_timeline_unique');
+                ->references('id')
+                ->on('project_notification_settings')
+                ->cascadeOnDelete();
         });
     }
 

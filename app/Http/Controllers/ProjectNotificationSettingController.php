@@ -49,7 +49,7 @@ class ProjectNotificationSettingController extends Controller
         $data = $request->validated();
 
         $setting = ProjectNotificationSetting::create([
-            'notification_type' => 'timeline_ending_soon',
+            'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON,
             'is_enabled' => $data['is_enabled'],
             'days_before' => $data['days_before'],
             'created_by' => auth()->id(),

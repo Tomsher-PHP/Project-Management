@@ -9,6 +9,11 @@ class ProjectNotificationLog extends Model
 {
     use HasFactory;
 
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_QUEUED = 'queued';
+    public const STATUS_SENT = 'sent';
+    public const STATUS_FAILED = 'failed';
+
     protected $fillable = [
         'project_notification_setting_id',
         'project_timeline_id',

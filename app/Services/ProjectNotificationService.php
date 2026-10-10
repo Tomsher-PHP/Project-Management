@@ -27,9 +27,20 @@ class ProjectNotificationService
 
         // Find active timelines that end on the target date
         $timelines = ProjectTimeline::with('project')
-            ->where('status', ProjectTimeline::STATUS_ACTIVE)
-            ->whereNotNull('end_date')
-            ->whereDate('end_date', $targetDate)
+            ->leftJoin('project_notification_logs as log', 'log.project_timeline_id', '=', 'project_timelines.id')
+            ->where('project_timelines.status', ProjectTimeline::STATUS_ACTIVE)
+            ->whereNotNull('project_timelines.end_date')
+            ->where('project_timelines.end_date', '>=', Carbon::today()->format('Y-m-d'))
+            ->whereDate('project_timelines.end_date', '<=', $targetDate)
+            ->where(function ($query) {
+                $query->whereNull('log.id')
+                    ->orWhereNotIn('log.status', [
+                        ProjectNotificationLog::STATUS_SENT,
+                        ProjectNotificationLog::STATUS_QUEUED,
+                    ]);
+            })
+            ->select('project_timelines.*')
+            ->distinct()
             ->get();
 
         foreach ($timelines as $timeline) {
@@ -48,7 +59,7 @@ class ProjectNotificationService
                 ],
                 [
                     'scheduled_for' => $targetDate,
-                    'status' => 'queued',
+                    'status' => ProjectNotificationLog::STATUS_QUEUED,
                 ]
             );
 
@@ -66,9 +77,9 @@ class ProjectNotificationService
 
         $title = "Timeline Ending Soon";
         $message = "The timeline '{$timelineName}' in project '{$projectName}' is ending soon on {$endDate}.";
-        
+
         $url = $timeline->project ? url('projects/' . $timeline->project_id . '/edit') : null;
-        
+
         $channels = ['mail', 'database', 'broadcast'];
 
         $emailDetails = [
