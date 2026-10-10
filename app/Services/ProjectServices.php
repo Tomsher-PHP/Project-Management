@@ -321,10 +321,18 @@ class ProjectServices
 
     public function getTimelines(Project $project): array
     {
-        $taskEstimateTotals = Task::query()
+        $displayTimeline = $project->display_timeline;
+
+        $taskEstimateQuery = Task::query()
             ->leftJoin('task_statuses', 'task_statuses.id', '=', 'tasks.status_id')
             ->where('tasks.project_id', $project->id)
-            ->where('tasks.request_status', Task::REQUEST_APPROVED)
+            ->where('tasks.request_status', Task::REQUEST_APPROVED);
+
+        if ($displayTimeline) {
+            $taskEstimateQuery->where('tasks.project_timeline_id', $displayTimeline->id);
+        }
+
+        $taskEstimateTotals = $taskEstimateQuery
             ->selectRaw('COALESCE(SUM(tasks.estimated_time_seconds), 0) as total_estimated_seconds')
             ->selectRaw('COALESCE(SUM(CASE WHEN task_statuses.is_completed = 1 THEN tasks.estimated_time_seconds ELSE 0 END), 0) as completed_estimated_seconds')
             ->first();
@@ -335,7 +343,6 @@ class ProjectServices
             ? (int) round(($completedEstimatedSeconds / $totalEstimatedSeconds) * 100)
             : 0;
 
-        $displayTimeline = $project->display_timeline;
         $startDate = $displayTimeline?->start_date ?? $project->start_date;
         $endDate = $displayTimeline?->end_date ?? $project->end_date;
         $customerEndDate = $displayTimeline?->customer_end_date ?? $project->customer_end_date;

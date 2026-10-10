@@ -13,6 +13,8 @@ use App\Observers\ProjectSprintObserver;
 use App\Observers\TaskObserver;
 use App\Observers\TaskTimeLogObserver;
 use App\Models\Appraisal;
+use App\Models\Customer;
+use App\Models\ProjectCategory;
 use App\Policies\AppraisalPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\TaskPolicy;
@@ -27,6 +29,12 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Notifications\Events\NotificationFailed;
+use App\Notifications\ProjectNotification;
+use App\Models\ProjectNotificationLog;
+use App\Models\Technology;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -130,13 +138,13 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.sidebar', SidebarComposer::class);
 
         View::composer('projects.partials.project-edit-modal', function ($view) {
-            $view->with('customers', \App\Models\Customer::active()->get());
+            $view->with('customers', Customer::active()->get());
             $view->with('users', app(\App\Services\UserService::class)->getAccessibleUsers(auth()->user(), [], []));
-            $view->with('projectCategories', \App\Models\ProjectCategory::orderBy('sort_order', 'asc')->get());
-            $view->with('projectTechnologies', \App\Models\Technology::orderBy('sort_order', 'asc')->get());
+            $view->with('projectCategories', ProjectCategory::orderBy('sort_order', 'asc')->get());
+            $view->with('projectTechnologies', Technology::orderBy('sort_order', 'asc')->get());
 
-            $view->with('nextProjectCategorySortOrder', ((int) \App\Models\ProjectCategory::max('sort_order')) + 1);
-            $view->with('nextProjectTechnologySortOrder', ((int) \App\Models\Technology::max('sort_order')) + 1);
+            $view->with('nextProjectCategorySortOrder', ((int) ProjectCategory::max('sort_order')) + 1);
+            $view->with('nextProjectTechnologySortOrder', ((int) Technology::max('sort_order')) + 1);
 
             if (!isset($view->getData()['priorities'])) {
                 $view->with('priorities', config('project_constants.project_priorities'));
@@ -173,6 +181,23 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Appraisal::class, AppraisalPolicy::class);
+
+        Event::listen(NotificationSent::class, function (NotificationSent $event) {
+            if ($event->notification instanceof ProjectNotification && $event->notification->logId) {
+                ProjectNotificationLog::where('id', $event->notification->logId)->update([
+                    'status' => ProjectNotificationLog::STATUS_SENT,
+                    'sent_at' => Carbon::now(),
+                ]);
+            }
+        });
+
+        Event::listen(NotificationFailed::class, function (NotificationFailed $event) {
+            if ($event->notification instanceof ProjectNotification && $event->notification->logId) {
+                ProjectNotificationLog::where('id', $event->notification->logId)->update([
+                    'status' => ProjectNotificationLog::STATUS_FAILED,
+                ]);
+            }
+        });
     }
 
     public static function formatAppDate($value, string $fallback = '--'): string
