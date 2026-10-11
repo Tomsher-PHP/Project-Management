@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\SprintGroupController;
+use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\ProjectNotificationSettingController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
@@ -224,6 +225,13 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.create')->only(['store']);
         Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
         Route::resource('sprint-groups', SprintGroupController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
+
+        // Service Type Routes
+        Route::patch('/service-types/toggle-status', [ServiceTypeController::class, 'toggleStatus'])->middleware('permission.type:project_settings.edit')->name('service_type.toggleStatus');
+        Route::resource('service-types', ServiceTypeController::class)->middleware('permission.type:project_settings.view')->only(['index']);
+        Route::resource('service-types', ServiceTypeController::class)->middleware('permission.type:project_settings.create')->only(['store']);
+        Route::resource('service-types', ServiceTypeController::class)->middleware('permission.type:project_settings.edit')->only(['update']);
+        Route::resource('service-types', ServiceTypeController::class)->middleware('permission.type:project_settings.delete')->only(['destroy']);
 
         // Project Notifications Routes
         Route::resource('project-notifications', ProjectNotificationSettingController::class)->middleware('permission.type:project_settings.view')->only(['index']);
