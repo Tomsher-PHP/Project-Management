@@ -151,7 +151,7 @@ class Project extends Model
         return $this->belongsToMany(
             ServiceType::class,
             'project_service_types'
-        )->withTimestamps();
+        )->withTimestamps()->withTrashed();
     }
 
     public function statusHistories()
