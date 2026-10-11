@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Models\ServiceType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Str;
 
 class ServiceTypeRequest extends FormRequest
 {
@@ -19,11 +18,11 @@ class ServiceTypeRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        if ($this->isMethod('post') && $this->has('name')) {
-            $code = Str::slug($this->name) . '-' . random_int(1000, 9999);
-            while (ServiceType::withTrashed()->where('code', $code)->exists()) {
-                $code = Str::slug($this->name) . '-' . random_int(1000, 9999);
-            }
+        if ($this->isMethod('post')) {
+            do {
+                $code = (string) random_int(100000, 999999);
+            } while (ServiceType::withTrashed()->where('code', $code)->exists());
+
             $this->merge(['code' => $code]);
         }
     }
@@ -45,7 +44,7 @@ class ServiceTypeRequest extends FormRequest
         ];
 
         if ($this->isMethod('post')) {
-            $rules['code'] = ['required', 'string', 'max:255', 'unique:service_types,code'];
+            $rules['code'] = ['required', 'digits:6', 'unique:service_types,code'];
         }
 
         return $rules;
