@@ -49,12 +49,29 @@
                         $parentProject = $project->parentProject;
                         $parentProjectUrl = $parentProject ? ($parentProject->trashed() ? route('projects.restore.show', $parentProject->id) : route('projects.edit', $parentProject)) : null;
                     @endphp
-                    <div class="flex min-w-0 items-center gap-2">
-                        <x-project-flow-icon :flow="$project->project_flow" size="md" />
-                        <h2 class="min-w-0 truncate text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
-                            {{ $project->name }}
-                            <span class="text-base font-semibold text-bgray-700 dark:text-bgray-300">({{ $project->project_code ?? '--' }})</span>
-                        </h2>
+                    <div class="flex min-w-0 flex-wrap items-center gap-2.5">
+                        <div class="flex min-w-0 items-center gap-2">
+                            <x-project-flow-icon :flow="$project->project_flow" size="md" />
+                            <h2 class="min-w-0 truncate text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
+                                {{ $project->name }}
+                                <span class="text-base font-semibold text-bgray-700 dark:text-bgray-300">({{ $project->project_code ?? '--' }})</span>
+                            </h2>
+                        </div>
+                        @if ($project->serviceTypes && $project->serviceTypes->isNotEmpty())
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                @foreach ($project->serviceTypes as $serviceType)
+                                    @php
+                                        $serviceColor = $serviceType->color ?: '#9a9996';
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-xs transition duration-150 hover:opacity-90 dark:bg-darkblack-500"
+                                        style="background-color: {{ $serviceColor }}18; color: {{ $serviceColor }}; border: 1px solid {{ $serviceColor }}40;"
+                                        title="{{ ($serviceType->code ? $serviceType->name . ' (' . $serviceType->code . ')' : $serviceType->name) . ($serviceType->trashed() ? ' (deleted)' : '') }}">
+                                        <span class="h-2 w-2 shrink-0 rounded-full" style="background-color: {{ $serviceColor }};"></span>
+                                        <span class="whitespace-nowrap">{{ $serviceType->name }}</span>
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                     @if ($parentProject)
                         <p class="text-sm text-bgray-600 dark:text-bgray-300">
