@@ -6,7 +6,7 @@
         <x-back-button :url="route('settings.index')" label="Back" />
 
         @can('project_settings.create')
-            <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Service Type" data-url="{{ route('settings.service-types.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" label="Service Type" />
+            <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Service Type" data-url="{{ route('settings.service-types.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" data-color="#9a9996" label="Service Type" />
         @endcan
 
         <x-filters.button />
@@ -62,6 +62,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
+                                            <span class="inline-flex h-3 w-3 shrink-0 rounded-full border border-bgray-200 dark:border-darkblack-400" style="background-color: {{ $serviceType->color ?: '#9a9996' }}"></span>
                                             <div class="flex flex-col gap-1">
                                                 <div class="flex flex-wrap items-center gap-2">
                                                     <p class="text-base font-semibold text-bgray-900 dark:text-white">
@@ -105,7 +106,7 @@
                                         <div class="flex w-full items-center space-x-2">
                                             @can('project_settings.edit')
                                                 @if (!$serviceType->is_system)
-                                                    <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.service-types.update', $serviceType->id) }}" data-name="{{ $serviceType->name }}" data-description="{{ $serviceType->description }}" data-service_group_id="{{ $serviceType->service_group_id }}" data-sort_order="{{ $serviceType->sort_order }}" data-method="PUT" data-module="Service Type" title="Edit Service Type" />
+                                                    <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.service-types.update', $serviceType->id) }}" data-name="{{ $serviceType->name }}" data-description="{{ $serviceType->description }}" data-service_group_id="{{ $serviceType->service_group_id }}" data-color="{{ $serviceType->color ?: '#9a9996' }}" data-sort_order="{{ $serviceType->sort_order }}" data-method="PUT" data-module="Service Type" title="Edit Service Type" />
                                                 @endif
                                             @endcan
                                             @can('project_settings.delete')
@@ -149,6 +150,11 @@
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
             <textarea name="description" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" rows="3"></textarea>
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
+            <input type="color" name="color" value="#9a9996" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:border-darkblack-400">
         </div>
 
         <div>

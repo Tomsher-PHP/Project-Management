@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('service_group_id')->constrained('service_groups')->restrictOnDelete();
 
             $table->string('name');
+            $table->string('color')->nullable();
             $table->string('code')->unique();
             $table->text('description')->nullable();
 

@@ -39,6 +39,7 @@ class ServiceTypeRequest extends FormRequest
         $rules = [
             'name' => ['required', 'string', 'max:255', Rule::unique('service_types', 'name')->ignore($id)->whereNull('deleted_at')],
             'service_group_id' => ['required', 'exists:service_groups,id'],
+            'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'description' => ['nullable', 'string'],
             'sort_order' => ['required', 'numeric'],
         ];

@@ -16,6 +16,7 @@ class ServiceType extends Model
     protected $fillable = [
         'service_group_id',
         'name',
+        'color',
         'code',
         'description',
         'is_active',
@@ -40,6 +41,7 @@ class ServiceType extends Model
         return [
             'service_group_id' => 'integer',
             'name' => 'string',
+            'color' => 'string',
             'code' => 'string',
             'description' => 'string',
             'is_active' => 'boolean',
