@@ -34,6 +34,7 @@ use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Notifications\Events\NotificationFailed;
 use App\Notifications\ProjectNotification;
 use App\Models\ProjectNotificationLog;
+use App\Models\ServiceType;
 use App\Models\Technology;
 
 class AppServiceProvider extends ServiceProvider
@@ -142,6 +143,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with('users', app(\App\Services\UserService::class)->getAccessibleUsers(auth()->user(), [], []));
             $view->with('projectCategories', ProjectCategory::orderBy('sort_order', 'asc')->get());
             $view->with('projectTechnologies', Technology::orderBy('sort_order', 'asc')->get());
+            $view->with('serviceTypes', ServiceType::active()->orderBy('sort_order', 'asc')->get());
 
             $view->with('nextProjectCategorySortOrder', ((int) ProjectCategory::max('sort_order')) + 1);
             $view->with('nextProjectTechnologySortOrder', ((int) Technology::max('sort_order')) + 1);

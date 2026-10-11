@@ -201,7 +201,18 @@ class ProjectServices
 
             // Attach project technologies
             if (isset($data['project_technology_ids'])) {
-                $project->technologies()->sync($data['project_technology_ids']);
+                $technologyIds = is_array($data['project_technology_ids'])
+                    ? array_values(array_unique(array_filter(array_map('intval', $data['project_technology_ids']))))
+                    : [];
+                $project->technologies()->sync($technologyIds);
+            }
+
+            // Attach project service types
+            if (array_key_exists('service_type_ids', $data)) {
+                $serviceTypeIds = is_array($data['service_type_ids'])
+                    ? array_values(array_unique(array_filter(array_map('intval', $data['service_type_ids']))))
+                    : [];
+                $project->serviceTypes()->sync($serviceTypeIds);
             }
 
             // Sync original timeline

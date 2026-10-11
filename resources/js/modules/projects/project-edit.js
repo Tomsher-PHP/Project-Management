@@ -7,7 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!modal) return;
     
     const form = document.getElementById('projectEditForm');
-    
+    if (!form) return;
+
+    // Prevent generic ajax-form-modal handler from handling this custom form
+    form.classList.remove('ajax-form');
+
     // We assume there's a global toggleModal function, or we can just trigger it if it exists.
     // In this codebase, modals are typically toggled via classes or data attributes.
     // If <x-form-modal> is used, clicking a button with data-target="#project-edit-modal" and .modal-open opens it.
@@ -96,20 +100,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 salesPersonSelect.value = project.sales_person_id || '';
             }
 
-            // Multiselect fields (Category, Technology)
+            // Multiselect fields (Category, Technology, Service Type)
             const categorySelect = document.getElementById('edit_project_category_ids');
             if (categorySelect && categorySelect.tomselect) {
                 // If the project model eager loads project_categories
                 const cats = (project.project_categories || project.categories || []).map(c => c.id);
                 // Also if we have project_category_ids attribute appended
                 const catIds = project.project_category_ids || cats;
-                categorySelect.tomselect.setValue(catIds);
+                categorySelect.tomselect.setValue([...new Set((catIds || []).map(String))]);
             }
             
             const techSelect = document.getElementById('edit_project_technology_ids');
             if (techSelect && techSelect.tomselect) {
                 const techs = (project.technologies || []).map(t => t.id);
-                techSelect.tomselect.setValue(techs);
+                techSelect.tomselect.setValue([...new Set((techs || []).map(String))]);
+            }
+
+            const serviceTypeSelect = document.getElementById('edit_project_service_type_ids');
+            if (serviceTypeSelect && serviceTypeSelect.tomselect) {
+                const serviceTypes = (project.service_types || []).map(st => st.id);
+                serviceTypeSelect.tomselect.setValue([...new Set((serviceTypes || []).map(String))]);
             }
 
             // Open Modal
@@ -141,13 +151,21 @@ document.addEventListener('DOMContentLoaded', function () {
     // Form submit handling via AJAX
     form.addEventListener('submit', function (e) {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         
         const submitBtn = form.querySelector('button[type="submit"]');
+        if (!submitBtn || submitBtn.disabled) {
+            return;
+        }
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = 'Updating...';
         
         const formData = new FormData(form);
+        if (!formData.has('service_type_ids[]')) {
+            formData.append('service_type_ids', '');
+        }
         
         fetch(form.action, {
             method: 'POST', // POST with _method=PUT from FormData

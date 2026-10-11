@@ -21,6 +21,7 @@ use App\Models\ProjectNote;
 use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
+use App\Models\ServiceType;
 use App\Models\Technology;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
@@ -67,7 +68,7 @@ class ProjectController extends Controller
         );
 
         $projects = Project::accessibleBy(auth()->user())
-            ->with(['customer.profileGrade', 'technologies', 'parentProject', 'projectTimelines'])
+            ->with(['customer.profileGrade', 'technologies', 'parentProject', 'projectTimelines', 'serviceTypes'])
             ->filter($request->all())
             ->sort($request->all())
             ->orderBy('projects.id', 'desc')
@@ -95,6 +96,10 @@ class ProjectController extends Controller
         // Project categories for the category tabs
         $projectCategories = ProjectCategory::orderBy('name', 'asc')->get();
 
+        $serviceTypes = ServiceType::active()
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
         return view('projects.index', compact(
             'projects',
             'perPage',
@@ -102,7 +107,8 @@ class ProjectController extends Controller
             'statuses',
             'priorities',
             'types',
-            'projectCategories'
+            'projectCategories',
+            'serviceTypes'
         ));
     }
 
@@ -119,7 +125,7 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        $project->load(['technologies', 'parentProject', 'projectTimelines']);
+        $project->load(['technologies', 'parentProject', 'projectTimelines', 'serviceTypes']);
 
         return view('projects.detail-page', array_merge([
             'project' => $project,
