@@ -51,7 +51,7 @@
                     <option value="">Select Service Type</option>
                     @isset($serviceTypes)
                         @foreach ($serviceTypes as $serviceType)
-                            <option value="{{ $serviceType->id }}">{{ $serviceType->name }}</option>
+                            <option value="{{ $serviceType->id }}">{{ $serviceType->name }}@if ($serviceType->trashed()) (Deleted)@elseif (!$serviceType->is_active) (Inactive)@endif</option>
                         @endforeach
                     @endisset
                 </select>

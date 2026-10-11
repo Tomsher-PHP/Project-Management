@@ -118,8 +118,43 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const serviceTypeSelect = document.getElementById('edit_project_service_type_ids');
             if (serviceTypeSelect && serviceTypeSelect.tomselect) {
-                const serviceTypes = (project.service_types || []).map(st => st.id);
-                serviceTypeSelect.tomselect.setValue([...new Set((serviceTypes || []).map(String))]);
+                const projectServiceTypes = project.service_types || [];
+                projectServiceTypes.forEach(st => {
+                    const stId = String(st.id);
+                    if (!serviceTypeSelect.tomselect.options[stId]) {
+                        let label = st.name;
+                        if (st.deleted_at) {
+                            label += ' (Deleted)';
+                        } else if (st.is_active === false || st.is_active === 0 || st.is_active === '0') {
+                            label += ' (Inactive)';
+                        }
+                        serviceTypeSelect.tomselect.addOption({
+                            value: stId,
+                            text: label
+                        });
+                    }
+                });
+                const serviceTypeIds = projectServiceTypes.map(st => String(st.id));
+                serviceTypeSelect.tomselect.setValue([...new Set(serviceTypeIds)]);
+            } else if (serviceTypeSelect) {
+                const projectServiceTypes = project.service_types || [];
+                projectServiceTypes.forEach(st => {
+                    const stId = String(st.id);
+                    let opt = serviceTypeSelect.querySelector(`option[value="${stId}"]`);
+                    if (!opt) {
+                        opt = document.createElement('option');
+                        opt.value = stId;
+                        let label = st.name;
+                        if (st.deleted_at) {
+                            label += ' (Deleted)';
+                        } else if (st.is_active === false || st.is_active === 0 || st.is_active === '0') {
+                            label += ' (Inactive)';
+                        }
+                        opt.textContent = label;
+                        serviceTypeSelect.appendChild(opt);
+                    }
+                    opt.selected = true;
+                });
             }
 
             // Open Modal
