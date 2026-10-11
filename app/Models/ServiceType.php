@@ -8,6 +8,7 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ServiceType extends Model
 {
@@ -56,6 +57,14 @@ class ServiceType extends Model
     public function serviceGroup(): BelongsTo
     {
         return $this->belongsTo(ServiceGroup::class);
+    }
+
+    public function projects()
+    {
+        return $this->belongsToMany(
+            Project::class,
+            'project_service_types'
+        )->withTimestamps();
     }
 
     public function addedBy(): BelongsTo

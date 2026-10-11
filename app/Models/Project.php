@@ -146,6 +146,14 @@ class Project extends Model
         return $this->belongsToMany(Technology::class, 'project_technology')->withTrashed();
     }
 
+    public function serviceTypes()
+    {
+        return $this->belongsToMany(
+            ServiceType::class,
+            'project_service_types'
+        )->withTimestamps();
+    }
+
     public function statusHistories()
     {
         return $this->hasMany(ProjectStatusHistory::class)->orderBy('added_at', 'desc');
