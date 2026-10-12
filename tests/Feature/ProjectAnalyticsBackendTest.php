@@ -373,7 +373,17 @@ class ProjectAnalyticsBackendTest extends TestCase
             'type' => 'fixed',
         ]);
 
-        // Fetch upcoming timelines via route
+        // 4. Far future timeline (more than 45 days, must be excluded)
+        $farFutureTimeline = ProjectTimeline::create([
+            'project_id' => $project->id,
+            'name' => 'Far Future Timeline',
+            'start_date' => now()->subMonth(),
+            'end_date' => now()->addDays(60)->toDateString(),
+            'status' => ProjectTimeline::STATUS_ACTIVE,
+            'type' => 'fixed',
+        ]);
+
+        // Fetch upcoming timelines via route (only next 45 days)
         $response = $this->actingAs($this->superAdmin)
             ->getJson("/project-analytics/upcoming-timelines?project_id={$project->id}");
 
@@ -384,6 +394,7 @@ class ProjectAnalyticsBackendTest extends TestCase
         $this->assertTrue($timelines->contains('id', $futureTimeline->id));
         $this->assertFalse($timelines->contains('id', $pastTimeline->id));
         $this->assertFalse($timelines->contains('id', $completedTimeline->id));
+        $this->assertFalse($timelines->contains('id', $farFutureTimeline->id));
 
         $timelineData = $timelines->firstWhere('id', $futureTimeline->id);
         $this->assertArrayHasKey('timeline_name', $timelineData);
@@ -395,16 +406,9 @@ class ProjectAnalyticsBackendTest extends TestCase
 
         // Check filter with parameter "end_date"
         $filterResponse = $this->actingAs($this->superAdmin)
-            ->getJson("/project-analytics/upcoming-timelines?project_id={$project->id}&end_date=" . now()->addDays(20)->toDateString());
+            ->getJson("/project-analytics/upcoming-timelines?project_id={$project->id}&end_date=" . now()->addDays(5)->toDateString());
         $filterResponse->assertStatus(200);
         $this->assertEmpty($filterResponse->json('data.timelines'));
-
-        // Check backward-compatibility route /upcoming-contracts
-        $responseAlias = $this->actingAs($this->superAdmin)
-            ->getJson("/project-analytics/upcoming-contracts?project_id={$project->id}");
-        $responseAlias->assertStatus(200);
-        $this->assertTrue($responseAlias->json('data.can_view'));
-        $this->assertNotEmpty($responseAlias->json('data.contracts'));
     }
 
     /**

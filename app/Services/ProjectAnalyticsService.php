@@ -30,7 +30,7 @@ class ProjectAnalyticsService
     public function getTimelineProgressbars(Project $project): Collection
     {
         $timelines = $project->projectTimelines()->orderBy('sort_order')->get();
-        
+
         if ($timelines->isEmpty()) {
             $bar = $this->getProgressbar($project);
             $bar->put('timeline_name', 'Task Progress');
@@ -675,13 +675,8 @@ class ProjectAnalyticsService
     /**
      * 5. Upcoming Timeline Expirations
      */
-    public function getUpcomingTimelineExpirations(
-        User $authUser,
-        ?User $selectedUser = null,
-        ?int $projectId = null,
-        int $limit = 50,
-        ?string $endDate = null
-    ): array {
+    public function getUpcomingTimelineExpirations(User $authUser, ?User $selectedUser = null, ?int $projectId = null, int $limit = 50, ?string $endDate = null, int $days = 45): array
+    {
         $baseProjects = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId);
         $projectIds = $baseProjects->pluck('projects.id')->toArray();
 
@@ -694,12 +689,14 @@ class ProjectAnalyticsService
             ];
         }
 
-        $thresholdDate = $endDate ? Carbon::parse($endDate)->toDateString() : now()->toDateString();
+        $startDateStr = now()->toDateString();
+        $maxEndDateStr = $endDate ? Carbon::parse($endDate)->toDateString() : now()->addDays($days)->toDateString();
 
         $timelines = ProjectTimeline::query()
             ->whereIn('project_id', $projectIds)
             ->whereNotNull('end_date')
-            ->whereDate('end_date', '>=', $thresholdDate)
+            ->whereDate('end_date', '>=', $startDateStr)
+            ->whereDate('end_date', '<=', $maxEndDateStr)
             ->whereNotIn('status', [ProjectTimeline::STATUS_COMPLETED, ProjectTimeline::STATUS_CANCELLED])
             ->orderBy('end_date', 'asc')
             ->with([
@@ -769,19 +766,6 @@ class ProjectAnalyticsService
             'contracts' => $items,
             'total_count' => count($items),
         ];
-    }
-
-    /**
-     * Backward-compatibility alias for getUpcomingContractExpirations.
-     */
-    public function getUpcomingContractExpirations(
-        User $authUser,
-        ?User $selectedUser = null,
-        ?int $projectId = null,
-        int $limit = 50,
-        ?string $endDate = null
-    ): array {
-        return $this->getUpcomingTimelineExpirations($authUser, $selectedUser, $projectId, $limit, $endDate);
     }
 
     /**
@@ -885,11 +869,12 @@ class ProjectAnalyticsService
 
         $totalEstimatedSeconds = (int) $estimatedTaskQuery->sum('tasks.estimated_time_seconds');
 
-        // Upcoming timelines count (checking end_date >= today)
+        // Upcoming timelines count (checking end_date in next 45 days)
         $upcomingTimelinesCount = ProjectTimeline::query()
             ->whereIn('project_id', $projectIds)
             ->whereNotNull('end_date')
             ->whereDate('end_date', '>=', now()->toDateString())
+            ->whereDate('end_date', '<=', now()->addDays(45)->toDateString())
             ->whereNotIn('status', [ProjectTimeline::STATUS_COMPLETED, ProjectTimeline::STATUS_CANCELLED])
             ->count();
 
@@ -1151,15 +1136,8 @@ class ProjectAnalyticsService
     /**
      * Search projects for Tom Select lazy loading, respecting auth and user-involvement scoping.
      */
-    public function searchProjects(
-        User $authUser,
-        ?User $selectedUser = null,
-        ?string $query = null,
-        ?int $excludeProjectId = null,
-        ?int $projectId = null,
-        int $page = 1,
-        int $limit = 50
-    ): Collection {
+    public function searchProjects(User $authUser, ?User $selectedUser = null, ?string $query = null, ?int $excludeProjectId = null, ?int $projectId = null, int $page = 1, int $limit = 50): Collection
+    {
         $search = trim((string) $query);
 
         $projectsQuery = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId);

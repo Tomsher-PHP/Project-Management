@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between border-b border-bgray-200 bg-bgray-50/80 px-5 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
         <div>
             <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Upcoming Timeline Expirations</h4>
-            <p class="text-xs text-bgray-700 dark:text-bgray-400">Timelines ending soonest</p>
+            <p class="text-xs text-bgray-700 dark:text-bgray-400">Timelines ending in next 45 days</p>
         </div>
         <div class="text-xs font-semibold text-bgray-600 dark:text-bgray-300">
             Total Upcoming: <span data-timelines-total-count data-contracts-total-count class="font-bold text-bgray-900 dark:text-white">—</span>

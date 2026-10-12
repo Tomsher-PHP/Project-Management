@@ -4,7 +4,7 @@
 @section('page-content')
     <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] dark:bg-darkblack-700 sm:px-5 xl:px-4" data-project-analytics-root>
         @php
-            $hasProjectSelected = ! empty($projectAnalyticsSelectedProjectId);
+            $hasProjectSelected = !empty($projectAnalyticsSelectedProjectId);
         @endphp
 
         <!-- 1. Overall Dashboard View (Shown when All Projects is selected) -->
@@ -31,7 +31,7 @@
         </div>
 
         <!-- 2. Single Project Analytics View (Shown when a specific project is selected) -->
-        <div class="{{ ! $hasProjectSelected ? 'hidden ' : '' }}space-y-4" data-single-project-dashboard-view>
+        <div class="{{ !$hasProjectSelected ? 'hidden ' : '' }}space-y-4" data-single-project-dashboard-view>
             <!-- Project Metadata & Task Summary Tiles -->
             @include('project-analytics.partials.single-project-summary')
 
@@ -42,8 +42,5 @@
 @endsection
 
 @push('scripts')
-    @vite([
-        'resources/js/modules/analytics/project-analytics-filters.js',
-        'resources/js/modules/analytics/project-analytics-dashboard.js'
-    ])
+    @vite(['resources/js/modules/analytics/project-analytics-filters.js', 'resources/js/modules/analytics/project-analytics-dashboard.js'])
 @endpush

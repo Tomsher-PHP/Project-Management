@@ -243,7 +243,7 @@ class ProjectAnalyticsController extends Controller
     }
 
     /**
-     * 5. Upcoming Timeline Expirations
+     * 5. Upcoming Timeline Expirations (ending in next 45 days)
      */
     public function upcomingTimelines(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
     {
@@ -255,27 +255,21 @@ class ProjectAnalyticsController extends Controller
         [$selectedUser, $project] = $resolved;
         $limit = $request->integer('limit') ?: 50;
         $endDate = $request->input('end_date');
+        $days = $request->integer('days') ?: 45;
 
         $data = $analyticsService->getUpcomingTimelineExpirations(
             $request->user(),
             $selectedUser,
             $project?->id,
             $limit,
-            $endDate
+            $endDate,
+            $days
         );
 
         return response()->json([
             'success' => true,
             'data' => $data,
         ]);
-    }
-
-    /**
-     * Backward-compatibility alias for upcomingContracts.
-     */
-    public function upcomingContracts(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
-    {
-        return $this->upcomingTimelines($request, $analyticsService);
     }
 
     /**
