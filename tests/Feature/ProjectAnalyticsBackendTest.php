@@ -592,5 +592,169 @@ class ProjectAnalyticsBackendTest extends TestCase
             ->getJson("/user-analytics/chart/time-comparison?project_id={$project->id}");
         $timeResponse2->assertStatus(200);
     }
+
+    /**
+     * Tile details endpoint requires authentication.
+     */
+    public function test_tile_details_requires_authentication(): void
+    {
+        $this->getJson('/project-analytics/tile-details?type=total_projects')->assertStatus(401);
+    }
+
+    /**
+     * Tile details validates type.
+     */
+    public function test_tile_details_validates_type(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->getJson('/project-analytics/tile-details?type=invalid_type')
+            ->assertStatus(400);
+    }
+
+    /**
+     * Tile details returns project records and html.
+     */
+    public function test_tile_details_returns_project_records_and_html(): void
+    {
+        $project = Project::factory()->create([
+            'added_by' => $this->superAdmin->id,
+            'status_id' => $this->activeStatus->id,
+            'is_system' => false,
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->getJson('/project-analytics/tile-details?type=total_projects');
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'html',
+        ]);
+        $this->assertTrue($response->json('success'));
+        $this->assertStringContainsString($project->name, $response->json('html'));
+    }
+
+    /**
+     * Tile details returns task records and html.
+     */
+    public function test_tile_details_returns_task_records_and_html(): void
+    {
+        $project = Project::factory()->create([
+            'added_by' => $this->superAdmin->id,
+            'status_id' => $this->activeStatus->id,
+            'is_system' => false,
+        ]);
+
+        $taskStatus = TaskStatus::firstOrCreate(
+            ['flow_type' => 'agile', 'type' => 'active'],
+            [
+                'name' => 'Active Task Status',
+                'code' => 'active_test',
+                'color' => '#10B981',
+                'sort_order' => 1,
+                'is_completed' => 0,
+            ]
+        );
+
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Test Tile Task 1',
+            'task_code' => 'TSK-TEST-1',
+            'status_id' => $taskStatus->id,
+            'current_assignee_id' => $this->superAdmin->id,
+            'added_by' => $this->superAdmin->id,
+            'request_status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->getJson('/project-analytics/tile-details?type=total_tasks');
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'html',
+        ]);
+        $this->assertTrue($response->json('success'));
+        $this->assertStringContainsString($task->name, $response->json('html'));
+    }
+
+    /**
+     * Tile details filters by user and project correctly.
+     */
+    public function test_tile_details_filters_by_user_and_project(): void
+    {
+        $project = Project::factory()->create([
+            'added_by' => $this->superAdmin->id,
+            'status_id' => $this->activeStatus->id,
+            'is_system' => false,
+        ]);
+
+        $taskStatus = TaskStatus::firstOrCreate(
+            ['flow_type' => 'agile', 'type' => 'active'],
+            [
+                'name' => 'Active Task Status',
+                'code' => 'active_test',
+                'color' => '#10B981',
+                'sort_order' => 1,
+                'is_completed' => 0,
+            ]
+        );
+
+        $memberUser = User::factory()->create();
+
+        ProjectMember::create([
+            'project_id' => $project->id,
+            'user_id' => $memberUser->id,
+        ]);
+
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Test Tile Task 2',
+            'task_code' => 'TSK-TEST-2',
+            'status_id' => $taskStatus->id,
+            'current_assignee_id' => $memberUser->id,
+            'added_by' => $this->superAdmin->id,
+            'request_status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->getJson("/project-analytics/tile-details?type=total_tasks&project_id={$project->id}&user_id={$memberUser->id}");
+
+        $response->assertStatus(200);
+        $this->assertTrue($response->json('success'));
+        $this->assertStringContainsString($task->name, $response->json('html'));
+    }
+
+    /**
+     * Summary counts endpoint returns dashboard status type breakdown.
+     */
+    public function test_summary_counts_returns_dashboard_status_type_keys(): void
+    {
+        $project = Project::factory()->create([
+            'added_by' => $this->superAdmin->id,
+            'status_id' => $this->activeStatus->id,
+            'is_system' => false,
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->getJson('/project-analytics/summary');
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'data' => [
+                'total_projects',
+                'open_projects',
+                'in_progress_projects',
+                'archived_projects',
+                'completed_projects',
+                'total_tasks',
+                'pending_tasks',
+                'active_tasks',
+                'archived_tasks',
+                'completed_tasks',
+            ],
+        ]);
+    }
 }
 

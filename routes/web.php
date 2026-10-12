@@ -120,6 +120,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('project-analytics')->group(function () {
         Route::get('/', [ProjectAnalyticsController::class, 'index'])->name('project.analytics');
         Route::get('/summary', [ProjectAnalyticsController::class, 'summary'])->name('project.analytics.summary');
+        Route::get('/tile-details', [ProjectAnalyticsController::class, 'tileDetails'])->name('project.analytics.tile-details');
         Route::get('/search-projects', [ProjectAnalyticsController::class, 'searchProjects'])->name('project.analytics.search-projects');
         Route::get('/projects-by-service-type', [ProjectAnalyticsController::class, 'projectsByServiceType'])->name('project.analytics.projects-by-service-type');
         Route::get('/projects-by-flow', [ProjectAnalyticsController::class, 'projectsByFlow'])->name('project.analytics.projects-by-flow');

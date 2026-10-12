@@ -494,4 +494,21 @@ class ProjectAnalyticsDashboardTest extends TestCase
 
         $responseTimelines->assertStatus(403);
     }
+
+    /**
+     * Test blade view contains the dashboard summary tiles and drill-down modal container.
+     */
+    public function test_project_analytics_view_contains_dashboard_summary_tiles_and_modal(): void
+    {
+        $response = $this->actingAs($this->superAdmin)->get('/project-analytics');
+
+        $response->assertStatus(200);
+        $response->assertSee('data-project-analytics-summary-section', false);
+        $response->assertSee('data-project-counts-wrapper', false);
+        $response->assertSee('data-task-counts-wrapper', false);
+        $response->assertSee('data-dashboard-tile="total_projects"', false);
+        $response->assertSee('data-dashboard-tile="total_tasks"', false);
+        $response->assertSee('id="dashboard-tile-modal"', false);
+        $response->assertSee('data-dashboard-tile-overlay', false);
+    }
 }

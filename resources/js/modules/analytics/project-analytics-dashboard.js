@@ -39,6 +39,11 @@ export function destroyChart(canvasId) {
  */
 export function animateCounter(element, target, duration = 600) {
     if (!element) return;
+    const skeleton = element.querySelector('.animate-pulse');
+    if (skeleton) {
+        element.innerText = '0';
+    }
+
     const currentText = element.innerText || '';
     const start = parseInt(currentText.replace(/,/g, ''), 10) || 0;
     const targetValue = parseInt(target, 10) || 0;
@@ -128,28 +133,53 @@ export async function loadSummaryCounts(filters = getActiveFilters()) {
     const section = document.querySelector('[data-project-analytics-summary-section]');
     if (!section) return;
 
-    const summaryUrl = section.dataset.summaryUrl;
+    const summaryUrl = section.dataset.summaryUrl || section.dataset.dashboardSummaryUrl;
     if (!summaryUrl) return;
+
+    // Visibility toggle per requirement:
+    // - No project chosen (neither, or user only) -> show project and task summary counts
+    // - Project chosen (project only, or user + project) -> show only task summary counts
+    const projectCountsWrapper = section.querySelector('[data-project-counts-wrapper]');
+    const taskCountsWrapper = section.querySelector('[data-task-counts-wrapper]');
+    const hasProject = Boolean(filters.projectId);
+
+    if (projectCountsWrapper && taskCountsWrapper) {
+        if (hasProject) {
+            projectCountsWrapper.classList.add('hidden');
+            taskCountsWrapper.classList.add('md:col-span-2');
+        } else {
+            projectCountsWrapper.classList.remove('hidden');
+            taskCountsWrapper.classList.remove('md:col-span-2');
+        }
+    }
 
     try {
         const data = await fetchAnalyticsData(summaryUrl, filters);
 
         Object.entries(data).forEach(([key, value]) => {
-            const countEl = section.querySelector(`[data-project-analytics-summary-count="${key}"]`);
-            if (!countEl) return;
-
-            if (typeof value === 'number') {
-                animateCounter(countEl, value);
-            } else {
-                countEl.innerText = value ?? '—';
-            }
+            const countEls = section.querySelectorAll(
+                `[data-dashboard-count="${key}"], [data-project-analytics-summary-count="${key}"]`
+            );
+            countEls.forEach(countEl => {
+                if (typeof value === 'number') {
+                    animateCounter(countEl, value);
+                } else {
+                    const skeleton = countEl.querySelector('.animate-pulse');
+                    if (skeleton) skeleton.remove();
+                    countEl.innerText = value ?? '0';
+                }
+            });
         });
 
         document.dispatchEvent(new CustomEvent('project-analytics:summary-loaded', { detail: data }));
     } catch (err) {
-        console.warn('Failed to load overall summary counts:', err);
-        const countElements = section.querySelectorAll('[data-project-analytics-summary-count]');
-        countElements.forEach(el => { el.innerText = '—'; });
+        console.warn('Failed to load summary counts:', err);
+        const countElements = section.querySelectorAll('[data-dashboard-count], [data-project-analytics-summary-count]');
+        countElements.forEach(el => {
+            const skeleton = el.querySelector('.animate-pulse');
+            if (skeleton) skeleton.remove();
+            el.innerText = '0';
+        });
     }
 }
 
@@ -916,6 +946,9 @@ export function switchDashboardMode(filters = getActiveFilters()) {
 
     if (!overallView || !singleProjectView) return;
 
+    // Load Summary Counts (Project / Task tiles) for the active filters
+    loadSummaryCounts(filters);
+
     const isSingleProject = Boolean(filters.projectId);
 
     if (isSingleProject) {
@@ -968,6 +1001,106 @@ export function switchDashboardMode(filters = getActiveFilters()) {
 }
 
 /**
+ * Initialize Dashboard Tile Drill-down Modal.
+ */
+export function initTileDrilldownModal() {
+    const tileModal = document.getElementById('dashboard-tile-modal');
+    const tileModalContent = document.getElementById('dashboard-tile-modal-content');
+    const summarySectionEl = document.querySelector('[data-project-analytics-summary-section]');
+
+    if (!tileModal || !tileModalContent || !summarySectionEl) return;
+
+    // Delegate click on tiles
+    document.addEventListener('click', async (e) => {
+        const tile = e.target.closest('[data-dashboard-tile]');
+        if (!tile) return;
+
+        const type = tile.getAttribute('data-dashboard-tile');
+        if (!type) return;
+
+        const tileUrl = summarySectionEl.getAttribute('data-tile-url') || summarySectionEl.getAttribute('data-dashboard-tile-url');
+        if (!tileUrl) return;
+
+        const filters = getActiveFilters();
+        const url = new URL(tileUrl, window.location.origin);
+        url.searchParams.set('type', type);
+        if (filters.userId) url.searchParams.set('user_id', filters.userId);
+        if (filters.projectId) url.searchParams.set('project_id', filters.projectId);
+
+        // Show modal loading state
+        tileModal.classList.remove('hidden');
+        tileModal.classList.add('flex');
+        tileModalContent.innerHTML = `
+            <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Loading...</h3>
+                <button type="button" data-dashboard-tile-close class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-500 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white transition-colors duration-200">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="flex-1 p-6 flex justify-center items-center min-h-[200px]">
+                <span class="animate-pulse text-bgray-500 font-semibold text-lg">Fetching records...</span>
+            </div>
+        `;
+
+        try {
+            const response = await fetch(url.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to load tile details');
+
+            const result = await response.json();
+            if (result.success && result.html) {
+                tileModalContent.innerHTML = result.html;
+            } else {
+                throw new Error(result.message || 'Failed to load details');
+            }
+        } catch (error) {
+            console.error('Tile Details Load Error:', error);
+            tileModalContent.innerHTML = `
+                <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                    <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Error</h3>
+                    <button type="button" data-dashboard-tile-close class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-500 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white transition-colors duration-200">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="flex-1 p-6 flex justify-center items-center min-h-[200px]">
+                    <span class="text-red-500 font-semibold">Failed to load details. Please try again.</span>
+                </div>
+            `;
+        }
+    });
+
+    // Close modal on overlay click
+    const tileModalOverlay = document.querySelector('[data-dashboard-tile-overlay]');
+    if (tileModalOverlay) {
+        tileModalOverlay.addEventListener('click', () => {
+            tileModal.classList.add('hidden');
+            tileModal.classList.remove('flex');
+        });
+    }
+
+    // Close modal on close button click
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('[data-dashboard-tile-close]')) {
+            tileModal.classList.add('hidden');
+            tileModal.classList.remove('flex');
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !tileModal.classList.contains('hidden')) {
+            tileModal.classList.add('hidden');
+            tileModal.classList.remove('flex');
+        }
+    });
+}
+
+/**
  * Initialize dashboard listeners and lifecycle.
  */
 export function initProjectAnalyticsDashboard() {
@@ -979,6 +1112,9 @@ export function initProjectAnalyticsDashboard() {
         const filters = event.detail || getActiveFilters();
         switchDashboardMode(filters);
     });
+
+    // Initialize drill-down tile modal
+    initTileDrilldownModal();
 
     // Initialize time comparison buttons
     initTimeComparisonFilterButtons();

@@ -117,9 +117,7 @@ class ProjectAnalyticsController extends Controller
 
         view()->share($viewData);
 
-        $viewName = view()->exists('project-analytics.view') ? 'project-analytics.view' : 'project-analytics.index';
-
-        return view($viewName, $viewData);
+        return view('project-analytics.index', $viewData);
     }
 
     /**
@@ -143,6 +141,33 @@ class ProjectAnalyticsController extends Controller
         return response()->json([
             'success' => true,
             'data' => $data,
+        ]);
+    }
+
+    /**
+     * Dedicated AJAX endpoint for summary tile drill-down modal details.
+     */
+    public function tileDetails(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+
+        $type = (string) $request->query('type');
+
+        $data = $analyticsService->getTileDetails(
+            $request->user(),
+            $type,
+            $selectedUser,
+            $project?->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'html' => view('dashboard.partials.tile-details-modal-content', $data)->render(),
         ]);
     }
 

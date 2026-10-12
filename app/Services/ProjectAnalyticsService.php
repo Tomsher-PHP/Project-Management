@@ -781,12 +781,16 @@ class ProjectAnalyticsService
         if ($totalProjects === 0) {
             return [
                 'total_projects' => 0,
-                'active_projects' => 0,
+                'open_projects' => 0,
+                'in_progress_projects' => 0,
+                'archived_projects' => 0,
                 'completed_projects' => 0,
+                'active_projects' => 0,
                 'total_tasks' => 0,
-                'active_tasks' => 0,
-                'completed_tasks' => 0,
                 'pending_tasks' => 0,
+                'active_tasks' => 0,
+                'archived_tasks' => 0,
+                'completed_tasks' => 0,
                 'total_worked_seconds' => 0,
                 'formatted_worked_time' => '00h 00m',
                 'total_estimated_seconds' => 0,
@@ -796,34 +800,22 @@ class ProjectAnalyticsService
             ];
         }
 
-        $projectsByStatus = ProjectStatus::query()
-            ->whereIn('id', function ($sub) use ($projectIds) {
-                $sub->select('status_id')
-                    ->from('projects')
-                    ->whereIn('id', $projectIds);
-            })
-            ->get(['id', 'type', 'is_completed']);
-
-        $completedStatusIds = $projectsByStatus
-            ->filter(fn($s) => $s->is_completed || $s->type === ProjectStatus::TYPE_COMPLETED)
-            ->pluck('id')
+        // Grouped Project Counts by status type (matching Dashboard)
+        $projectCounts = Project::whereIn('projects.id', $projectIds)
+            ->join('project_statuses', 'projects.status_id', '=', 'project_statuses.id')
+            ->whereNull('project_statuses.deleted_at')
+            ->selectRaw('project_statuses.type, count(projects.id) as count')
+            ->groupBy('project_statuses.type')
+            ->pluck('count', 'type')
             ->toArray();
 
-        $activeStatusIds = $projectsByStatus
-            ->filter(fn($s) => ! $s->is_completed && in_array($s->type, [ProjectStatus::TYPE_OPEN, ProjectStatus::TYPE_IN_PROGRESS]))
-            ->pluck('id')
-            ->toArray();
-
-        $completedProjectsCount = empty($completedStatusIds)
-            ? 0
-            : Project::whereIn('id', $projectIds)->whereIn('status_id', $completedStatusIds)->count();
-
-        $activeProjectsCount = empty($activeStatusIds)
-            ? 0
-            : Project::whereIn('id', $projectIds)->whereIn('status_id', $activeStatusIds)->count();
+        $openProjects = (int) ($projectCounts['open'] ?? 0);
+        $inProgressProjects = (int) ($projectCounts['in_progress'] ?? 0);
+        $archivedProjects = (int) ($projectCounts['archived'] ?? 0);
+        $completedProjects = (int) ($projectCounts['completed'] ?? 0);
 
         // Tasks query
-        $taskQuery = Task::query()
+        $taskQuery = Task::accessibleBy($authUser)
             ->whereIn('tasks.project_id', $projectIds)
             ->where('tasks.request_status', '!=', 'rejected')
             ->whereNull('tasks.deleted_at');
@@ -832,16 +824,20 @@ class ProjectAnalyticsService
             $taskQuery->where('tasks.current_assignee_id', $selectedUser->id);
         }
 
-        $tasksByStatusType = $taskQuery
-            ->leftJoin('task_statuses', 'tasks.status_id', '=', 'task_statuses.id')
-            ->selectRaw('task_statuses.type, COUNT(tasks.id) as count')
+        // Grouped Task Counts by status type (matching Dashboard)
+        $taskCounts = (clone $taskQuery)
+            ->join('task_statuses', 'tasks.status_id', '=', 'task_statuses.id')
+            ->whereNull('task_statuses.deleted_at')
+            ->selectRaw('task_statuses.type, count(tasks.id) as count')
             ->groupBy('task_statuses.type')
-            ->pluck('count', 'type');
+            ->pluck('count', 'type')
+            ->toArray();
 
-        $totalTasks = $tasksByStatusType->sum();
-        $completedTasks = (int) ($tasksByStatusType->get('completed') ?? 0);
-        $activeTasks = (int) ($tasksByStatusType->get('active') ?? 0);
-        $pendingTasks = (int) ($tasksByStatusType->get('pending') ?? 0);
+        $totalTasks = (clone $taskQuery)->count();
+        $pendingTasks = (int) ($taskCounts['pending'] ?? 0);
+        $activeTasks = (int) ($taskCounts['active'] ?? 0);
+        $archivedTasks = (int) ($taskCounts['archived'] ?? 0);
+        $completedTasks = (int) ($taskCounts['completed'] ?? 0);
 
         // Worked seconds from approved task time logs
         $timeLogQuery = TaskTimeLog::query()
@@ -879,19 +875,112 @@ class ProjectAnalyticsService
             ->count();
 
         return [
+            // Project counts (matching Dashboard)
             'total_projects' => $totalProjects,
-            'active_projects' => $activeProjectsCount,
-            'completed_projects' => $completedProjectsCount,
+            'open_projects' => $openProjects,
+            'in_progress_projects' => $inProgressProjects,
+            'archived_projects' => $archivedProjects,
+            'completed_projects' => $completedProjects,
+            'active_projects' => $openProjects + $inProgressProjects,
+
+            // Task counts (matching Dashboard)
             'total_tasks' => $totalTasks,
-            'active_tasks' => $activeTasks,
-            'completed_tasks' => $completedTasks,
             'pending_tasks' => $pendingTasks,
+            'active_tasks' => $activeTasks,
+            'archived_tasks' => $archivedTasks,
+            'completed_tasks' => $completedTasks,
+
+            // Extra metrics for compatibility
             'total_worked_seconds' => $totalWorkedSeconds,
             'formatted_worked_time' => $this->formatDuration($totalWorkedSeconds),
             'total_estimated_seconds' => $totalEstimatedSeconds,
             'formatted_estimated_time' => $this->formatDuration($totalEstimatedSeconds),
             'upcoming_timelines' => $upcomingTimelinesCount,
             'upcoming_contracts' => $upcomingTimelinesCount,
+        ];
+    }
+
+    /**
+     * Get details for a summary count tile (Projects / Tasks)
+     */
+    public function getTileDetails(User $authUser, string $type, ?User $selectedUser = null, ?int $projectId = null): array
+    {
+        $isProject = str_ends_with($type, '_projects');
+        $isTask = str_ends_with($type, '_tasks');
+
+        if (!$isProject && !$isTask) {
+            abort(400, 'Invalid tile type');
+        }
+
+        $records = [];
+        $viewAllUrl = '';
+        $title = ucwords(str_replace('_', ' ', $type));
+
+        if ($isProject) {
+            $statusType = str_replace('_projects', '', $type); // 'total', 'open', 'in_progress', 'archived', 'completed'
+
+            $query = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId)
+                ->with(['customer.profileGrade', 'projectStatus']);
+
+            $statusIds = [];
+            if ($statusType !== 'total') {
+                $statusIds = ProjectStatus::where('type', $statusType)->pluck('id')->toArray();
+                $query->whereIn('projects.status_id', $statusIds);
+            }
+
+            $records = $query->latest('projects.created_at')->limit(15)->get();
+
+            $params = [];
+            if ($statusType !== 'total' && !empty($statusIds)) {
+                $params['status_id'] = $statusIds;
+            }
+            if ($selectedUser) {
+                $params['user_id'] = $selectedUser->id;
+            }
+            $viewAllUrl = route('projects.index', $params);
+        } else {
+            $statusType = str_replace('_tasks', '', $type); // 'total', 'pending', 'active', 'archived', 'completed'
+
+            $projectIds = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId)
+                ->pluck('projects.id')
+                ->toArray();
+
+            $query = Task::accessibleBy($authUser)
+                ->whereIn('tasks.project_id', $projectIds)
+                ->where('tasks.request_status', '!=', 'rejected')
+                ->whereNull('tasks.deleted_at')
+                ->with(['currentAssignee', 'status']);
+
+            if ($selectedUser) {
+                $query->where('tasks.current_assignee_id', $selectedUser->id);
+            }
+
+            $statusIds = [];
+            if ($statusType !== 'total') {
+                $statusIds = TaskStatus::where('type', $statusType)->pluck('id')->toArray();
+                $query->whereIn('tasks.status_id', $statusIds);
+            }
+
+            $records = $query->latest('tasks.created_at')->limit(15)->get();
+
+            $params = [];
+            if ($statusType !== 'total' && !empty($statusIds)) {
+                $params['status_id'] = $statusIds;
+            }
+            if ($projectId) {
+                $params['project_id'] = $projectId;
+            }
+            if ($selectedUser) {
+                $params['user_id'] = $selectedUser->id;
+            }
+            $viewAllUrl = route('tasks.index', $params);
+        }
+
+        return [
+            'records' => $records,
+            'title' => $title,
+            'viewAllUrl' => $viewAllUrl,
+            'isProject' => $isProject,
         ];
     }
 
