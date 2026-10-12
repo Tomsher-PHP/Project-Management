@@ -125,7 +125,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/projects-by-flow', [ProjectAnalyticsController::class, 'projectsByFlow'])->name('project.analytics.projects-by-flow');
         Route::get('/projects-by-status', [ProjectAnalyticsController::class, 'projectsByStatus'])->name('project.analytics.projects-by-status');
         Route::get('/projects-by-stage', [ProjectAnalyticsController::class, 'projectsByStage'])->name('project.analytics.projects-by-stage');
-        Route::get('/upcoming-contracts', [ProjectAnalyticsController::class, 'upcomingContracts'])->name('project.analytics.upcoming-contracts');
+        Route::get('/upcoming-timelines', [ProjectAnalyticsController::class, 'upcomingTimelines'])->name('project.analytics.upcoming-timelines');
         Route::get('/project-details', [ProjectAnalyticsController::class, 'projectDetails'])->name('project.analytics.project-details');
         Route::get('/chart/task-status', [ProjectAnalyticsController::class, 'taskStatusChart'])->name('project.analytics.chart.task-status');
         Route::get('/chart/task-priority', [ProjectAnalyticsController::class, 'taskPriorityChart'])->name('project.analytics.chart.task-priority');

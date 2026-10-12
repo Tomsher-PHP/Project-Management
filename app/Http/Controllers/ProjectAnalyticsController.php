@@ -97,8 +97,8 @@ class ProjectAnalyticsController extends Controller
                 'accent' => 'text-blue-500',
             ],
             [
-                'key' => 'upcoming_contracts',
-                'label' => 'Upcoming Contracts',
+                'key' => 'upcoming_timelines',
+                'label' => 'Upcoming Timelines',
                 'icon' => 'archive',
                 'iconBg' => 'bg-error-50 dark:bg-error-500/10',
                 'accent' => 'text-error-400',
@@ -243,9 +243,9 @@ class ProjectAnalyticsController extends Controller
     }
 
     /**
-     * 5. Upcoming Contract Expirations
+     * 5. Upcoming Timeline Expirations
      */
-    public function upcomingContracts(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    public function upcomingTimelines(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
     {
         $resolved = $this->resolveFilters($request);
         if ($resolved instanceof JsonResponse) {
@@ -254,18 +254,28 @@ class ProjectAnalyticsController extends Controller
 
         [$selectedUser, $project] = $resolved;
         $limit = $request->integer('limit') ?: 50;
+        $endDate = $request->input('end_date');
 
-        $data = $analyticsService->getUpcomingContractExpirations(
+        $data = $analyticsService->getUpcomingTimelineExpirations(
             $request->user(),
             $selectedUser,
             $project?->id,
-            $limit
+            $limit,
+            $endDate
         );
 
         return response()->json([
             'success' => true,
             'data' => $data,
         ]);
+    }
+
+    /**
+     * Backward-compatibility alias for upcomingContracts.
+     */
+    public function upcomingContracts(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        return $this->upcomingTimelines($request, $analyticsService);
     }
 
     /**

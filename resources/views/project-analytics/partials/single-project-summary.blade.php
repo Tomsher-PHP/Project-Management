@@ -60,8 +60,8 @@
                     <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-end-date>--</span>
                 </div>
                 <div>
-                    <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Contract Expiration</span>
-                    <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-contract-date>--</span>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Timeline Expiration</span>
+                    <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-timeline-date data-project-contract-date>--</span>
                 </div>
             </div>
         </div>

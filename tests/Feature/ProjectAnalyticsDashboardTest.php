@@ -157,7 +157,7 @@ class ProjectAnalyticsDashboardTest extends TestCase
         $response->assertSee('data-project-analytics-chart="status"', false);
         $response->assertSee('data-project-analytics-chart="stage"', false);
         $response->assertSee('data-project-analytics-section="service-type"', false);
-        $response->assertSee('data-project-analytics-section="upcoming-contracts"', false);
+        $response->assertSee('data-project-analytics-section="upcoming-timelines"', false);
 
         // Confirm calculated counts are NOT in view data
         $response->assertViewMissing('projectSummaryCounts');
@@ -390,9 +390,9 @@ class ProjectAnalyticsDashboardTest extends TestCase
         // Upcoming timeline in 7 days (expiring soon)
         $timelineSoon = ProjectTimeline::create([
             'project_id' => $project->id,
-            'name' => 'Phase 1 Contract',
+            'name' => 'Phase 1 Timeline',
             'start_date' => now()->subMonth(),
-            'customer_end_date' => now()->addDays(7)->toDateString(),
+            'end_date' => now()->addDays(7)->toDateString(),
             'status' => ProjectTimeline::STATUS_ACTIVE,
             'type' => 'fixed',
         ]);
@@ -400,9 +400,9 @@ class ProjectAnalyticsDashboardTest extends TestCase
         // Upcoming timeline in 30 days
         $timelineLater = ProjectTimeline::create([
             'project_id' => $project->id,
-            'name' => 'Phase 2 Contract',
+            'name' => 'Phase 2 Timeline',
             'start_date' => now()->subMonth(),
-            'customer_end_date' => now()->addDays(30)->toDateString(),
+            'end_date' => now()->addDays(30)->toDateString(),
             'status' => ProjectTimeline::STATUS_ACTIVE,
             'type' => 'fixed',
         ]);
@@ -410,34 +410,34 @@ class ProjectAnalyticsDashboardTest extends TestCase
         // Expired timeline (must be excluded)
         $timelineExpired = ProjectTimeline::create([
             'project_id' => $project->id,
-            'name' => 'Past Contract',
+            'name' => 'Past Timeline',
             'start_date' => now()->subMonths(3),
-            'customer_end_date' => now()->subDays(5)->toDateString(),
+            'end_date' => now()->subDays(5)->toDateString(),
             'status' => ProjectTimeline::STATUS_ACTIVE,
             'type' => 'fixed',
         ]);
 
         $response = $this->actingAs($this->superAdmin)
-            ->getJson("/project-analytics/upcoming-contracts?project_id={$project->id}");
+            ->getJson("/project-analytics/upcoming-timelines?project_id={$project->id}");
 
         $response->assertStatus(200);
         $data = $response->json('data');
 
         $this->assertTrue($data['can_view']);
-        $this->assertCount(2, $data['contracts']);
+        $this->assertCount(2, $data['timelines']);
 
         // Sorted by nearest expiration first
-        $this->assertEquals($timelineSoon->id, $data['contracts'][0]['id']);
-        $this->assertEquals($timelineLater->id, $data['contracts'][1]['id']);
+        $this->assertEquals($timelineSoon->id, $data['timelines'][0]['id']);
+        $this->assertEquals($timelineLater->id, $data['timelines'][1]['id']);
 
         // Service types included
-        $firstContract = $data['contracts'][0];
-        $this->assertEquals('Contract Expiration Test Project', $firstContract['project_name']);
-        $this->assertEquals('Acme Corporation', $firstContract['customer_name']);
-        $this->assertTrue($firstContract['is_expiring_soon']);
-        $this->assertNotEmpty($firstContract['service_types']);
-        $this->assertEquals('Web App Dev', $firstContract['service_types'][0]['name']);
-        $this->assertEquals('Web App Dev', $firstContract['service_type_names']);
+        $firstTimeline = $data['timelines'][0];
+        $this->assertEquals('Contract Expiration Test Project', $firstTimeline['project_name']);
+        $this->assertEquals('Acme Corporation', $firstTimeline['customer_name']);
+        $this->assertTrue($firstTimeline['is_expiring_soon']);
+        $this->assertNotEmpty($firstTimeline['service_types']);
+        $this->assertEquals('Web App Dev', $firstTimeline['service_types'][0]['name']);
+        $this->assertEquals('Web App Dev', $firstTimeline['service_type_names']);
     }
 
     /**
@@ -463,9 +463,9 @@ class ProjectAnalyticsDashboardTest extends TestCase
         $responseFlow->assertStatus(200);
         $this->assertEquals(0, $responseFlow->json('data.total_projects'));
 
-        $responseContracts = $this->actingAs($emptyUser)->getJson('/project-analytics/upcoming-contracts');
-        $responseContracts->assertStatus(200);
-        $this->assertEmpty($responseContracts->json('data.contracts'));
+        $responseTimelines = $this->actingAs($emptyUser)->getJson('/project-analytics/upcoming-timelines');
+        $responseTimelines->assertStatus(200);
+        $this->assertEmpty($responseTimelines->json('data.timelines'));
     }
 
     /**
@@ -489,9 +489,9 @@ class ProjectAnalyticsDashboardTest extends TestCase
             'message' => 'You are not authorized to view data for this project.',
         ]);
 
-        $responseContracts = $this->actingAs($this->memberUser)
-            ->getJson("/project-analytics/upcoming-contracts?project_id={$privateProject->id}");
+        $responseTimelines = $this->actingAs($this->memberUser)
+            ->getJson("/project-analytics/upcoming-timelines?project_id={$privateProject->id}");
 
-        $responseContracts->assertStatus(403);
+        $responseTimelines->assertStatus(403);
     }
 }

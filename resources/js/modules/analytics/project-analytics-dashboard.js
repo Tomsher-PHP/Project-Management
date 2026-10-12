@@ -405,10 +405,10 @@ export async function loadProjectsByStage(filters = getActiveFilters()) {
 }
 
 /**
- * Load Upcoming Contract Expirations Table.
+ * Load Upcoming Timeline Expirations Table.
  */
-export async function loadUpcomingContracts(filters = getActiveFilters()) {
-    const card = document.querySelector('[data-project-analytics-section="upcoming-contracts"]');
+export async function loadUpcomingTimelines(filters = getActiveFilters()) {
+    const card = document.querySelector('[data-project-analytics-section="upcoming-timelines"], [data-project-analytics-section="upcoming-contracts"]');
     if (!card) return;
     const url = card.dataset.url;
     if (!url) return;
@@ -416,8 +416,8 @@ export async function loadUpcomingContracts(filters = getActiveFilters()) {
     const loadingState = card.querySelector('[data-loading-state]');
     const emptyState = card.querySelector('[data-empty-state]');
     const content = card.querySelector('[data-content]');
-    const tbody = card.querySelector('[data-contracts-table-body]');
-    const totalCountEl = card.querySelector('[data-contracts-total-count]');
+    const tbody = card.querySelector('[data-timelines-table-body], [data-contracts-table-body]');
+    const totalCountEl = card.querySelector('[data-timelines-total-count], [data-contracts-total-count]');
     const emptyTitle = card.querySelector('[data-empty-title]');
     const emptySubtitle = card.querySelector('[data-empty-subtitle]');
 
@@ -428,24 +428,24 @@ export async function loadUpcomingContracts(filters = getActiveFilters()) {
     try {
         const data = await fetchAnalyticsData(url, filters);
         const canView = data.can_view !== false;
-        const contracts = data.contracts || [];
+        const timelines = data.timelines || data.contracts || [];
 
         if (loadingState) loadingState.classList.add('hidden');
 
         if (!canView) {
             if (emptyTitle) emptyTitle.innerText = 'Access Restricted';
-            if (emptySubtitle) emptySubtitle.innerText = 'You do not have permission to view contract expiration dates.';
+            if (emptySubtitle) emptySubtitle.innerText = 'You do not have permission to view timeline expiration dates.';
             if (emptyState) emptyState.classList.remove('hidden');
             if (content) content.classList.add('hidden');
             if (totalCountEl) totalCountEl.innerText = '0';
             return;
         }
 
-        if (totalCountEl) totalCountEl.innerText = contracts.length.toLocaleString();
+        if (totalCountEl) totalCountEl.innerText = timelines.length.toLocaleString();
 
-        if (contracts.length === 0) {
-            if (emptyTitle) emptyTitle.innerText = 'No upcoming contract expirations';
-            if (emptySubtitle) emptySubtitle.innerText = 'There are no active contracts or timelines with upcoming expiration dates.';
+        if (timelines.length === 0) {
+            if (emptyTitle) emptyTitle.innerText = 'No upcoming timeline expirations';
+            if (emptySubtitle) emptySubtitle.innerText = 'There are no active timelines with upcoming expiration dates.';
             if (emptyState) emptyState.classList.remove('hidden');
             if (content) content.classList.add('hidden');
             return;
@@ -454,7 +454,7 @@ export async function loadUpcomingContracts(filters = getActiveFilters()) {
         if (emptyState) emptyState.classList.add('hidden');
         if (content) content.classList.remove('hidden');
 
-        const rowsHtml = contracts.map(item => {
+        const rowsHtml = timelines.map(item => {
             const daysLeft = Number(item.days_remaining) || 0;
             const isSoon = Boolean(item.is_expiring_soon);
 
@@ -491,7 +491,7 @@ export async function loadUpcomingContracts(filters = getActiveFilters()) {
                         ${escapeHtml(item.formatted_start_date || item.start_date || '—')}
                     </td>
                     <td class="py-3 px-4 font-semibold text-bgray-900 dark:text-white">
-                        ${escapeHtml(item.formatted_customer_end_date || item.customer_end_date || '—')}
+                        ${escapeHtml(item.formatted_end_date || item.end_date || item.formatted_customer_end_date || item.customer_end_date || '—')}
                     </td>
                     <td class="py-3 px-4">
                         ${daysBadge}
@@ -507,12 +507,14 @@ export async function loadUpcomingContracts(filters = getActiveFilters()) {
 
         if (tbody) tbody.innerHTML = rowsHtml;
     } catch (err) {
-        console.warn('Failed to load upcoming contract expirations:', err);
+        console.warn('Failed to load upcoming timeline expirations:', err);
         if (loadingState) loadingState.classList.add('hidden');
         if (emptyState) emptyState.classList.remove('hidden');
         if (content) content.classList.add('hidden');
     }
 }
+
+export const loadUpcomingContracts = loadUpcomingTimelines;
 
 /**
  * Load all Overall Dashboard sections.
@@ -523,7 +525,7 @@ export function loadAllOverallDashboardSections(filters = getActiveFilters()) {
     loadProjectsByFlow(filters);
     loadProjectsByStatus(filters);
     loadProjectsByStage(filters);
-    loadUpcomingContracts(filters);
+    loadUpcomingTimelines(filters);
 }
 
 /* ==========================================================================
@@ -562,7 +564,7 @@ export async function loadSingleProjectDetails(filters = getActiveFilters()) {
         const serviceTypesContainer = section.querySelector('[data-project-service-types]');
         const startDateEl = section.querySelector('[data-project-start-date]');
         const endDateEl = section.querySelector('[data-project-end-date]');
-        const contractDateEl = section.querySelector('[data-project-contract-date]');
+        const contractDateEl = section.querySelector('[data-project-timeline-date], [data-project-contract-date]');
 
         if (nameEl) nameEl.innerText = data.name || '--';
         if (codeEl) codeEl.innerText = data.project_code || '--';
@@ -603,7 +605,7 @@ export async function loadSingleProjectDetails(filters = getActiveFilters()) {
 
         if (startDateEl) startDateEl.innerText = data.dates?.formatted_start_date || '--';
         if (endDateEl) endDateEl.innerText = data.dates?.formatted_end_date || '--';
-        if (contractDateEl) contractDateEl.innerText = data.dates?.formatted_contract_end_date || '--';
+        if (contractDateEl) contractDateEl.innerText = data.dates?.formatted_timeline_end_date || data.dates?.formatted_end_date || data.dates?.formatted_contract_end_date || '--';
 
         // Task summary count metrics
         const taskSummary = data.task_summary || {};

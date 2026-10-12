@@ -673,37 +673,35 @@ class ProjectAnalyticsService
     }
 
     /**
-     * 5. Upcoming Contract Expirations
+     * 5. Upcoming Timeline Expirations
      */
-    public function getUpcomingContractExpirations(User $authUser, ?User $selectedUser = null, ?int $projectId = null, int $limit = 50): array
-    {
-        if (! $authUser->can('project.customer_end_date')) {
-            return [
-                'can_view' => false,
-                'contracts' => [],
-                'total_count' => 0,
-            ];
-        }
-
+    public function getUpcomingTimelineExpirations(
+        User $authUser,
+        ?User $selectedUser = null,
+        ?int $projectId = null,
+        int $limit = 50,
+        ?string $endDate = null
+    ): array {
         $baseProjects = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId);
         $projectIds = $baseProjects->pluck('projects.id')->toArray();
 
         if (empty($projectIds)) {
             return [
                 'can_view' => true,
+                'timelines' => [],
                 'contracts' => [],
                 'total_count' => 0,
             ];
         }
 
-        $todayStr = now()->toDateString();
+        $thresholdDate = $endDate ? Carbon::parse($endDate)->toDateString() : now()->toDateString();
 
         $timelines = ProjectTimeline::query()
             ->whereIn('project_id', $projectIds)
-            ->whereNotNull('customer_end_date')
-            ->whereDate('customer_end_date', '>=', $todayStr)
+            ->whereNotNull('end_date')
+            ->whereDate('end_date', '>=', $thresholdDate)
             ->whereNotIn('status', [ProjectTimeline::STATUS_COMPLETED, ProjectTimeline::STATUS_CANCELLED])
-            ->orderBy('customer_end_date', 'asc')
+            ->orderBy('end_date', 'asc')
             ->with([
                 'project:id,name,project_code,customer_id,status_id,project_stage_id',
                 'project.customer:id,name',
@@ -717,8 +715,8 @@ class ProjectAnalyticsService
         $today = now()->startOfDay();
 
         $items = $timelines->map(function (ProjectTimeline $timeline) use ($today) {
-            $customerEndDate = $timeline->customer_end_date ? Carbon::parse($timeline->customer_end_date)->startOfDay() : null;
-            $daysRemaining = $customerEndDate ? (int) $today->diffInDays($customerEndDate, false) : 0;
+            $timelineEndDate = $timeline->end_date ? Carbon::parse($timeline->end_date)->startOfDay() : null;
+            $daysRemaining = $timelineEndDate ? (int) $today->diffInDays($timelineEndDate, false) : 0;
 
             return [
                 'id' => $timeline->id,
@@ -738,6 +736,8 @@ class ProjectAnalyticsService
                     : '--',
                 'start_date' => $timeline->start_date?->format('Y-m-d'),
                 'formatted_start_date' => $timeline->start_date?->format('d M Y') ?? '--',
+                'end_date' => $timeline->end_date?->format('Y-m-d'),
+                'formatted_end_date' => $timeline->end_date?->format('d M Y') ?? '--',
                 'customer_end_date' => $timeline->customer_end_date?->format('Y-m-d'),
                 'formatted_customer_end_date' => $timeline->customer_end_date?->format('d M Y') ?? '--',
                 'days_remaining' => max(0, $daysRemaining),
@@ -756,6 +756,8 @@ class ProjectAnalyticsService
                     'name' => $timeline->project?->projectStage?->name ?? '--',
                     'color' => $timeline->project?->projectStage?->color ?? '#64748B',
                 ],
+                'estimated_time_seconds' => (int) ($timeline->estimated_time_seconds ?? 0),
+                'formatted_estimated_time' => $this->formatDuration((int) ($timeline->estimated_time_seconds ?? 0)),
                 'customer_estimate_seconds' => (int) ($timeline->customer_estimate_seconds ?? 0),
                 'formatted_customer_estimate' => $this->formatDuration((int) ($timeline->customer_estimate_seconds ?? 0)),
             ];
@@ -763,9 +765,23 @@ class ProjectAnalyticsService
 
         return [
             'can_view' => true,
+            'timelines' => $items,
             'contracts' => $items,
             'total_count' => count($items),
         ];
+    }
+
+    /**
+     * Backward-compatibility alias for getUpcomingContractExpirations.
+     */
+    public function getUpcomingContractExpirations(
+        User $authUser,
+        ?User $selectedUser = null,
+        ?int $projectId = null,
+        int $limit = 50,
+        ?string $endDate = null
+    ): array {
+        return $this->getUpcomingTimelineExpirations($authUser, $selectedUser, $projectId, $limit, $endDate);
     }
 
     /**
@@ -791,6 +807,7 @@ class ProjectAnalyticsService
                 'formatted_worked_time' => '00h 00m',
                 'total_estimated_seconds' => 0,
                 'formatted_estimated_time' => '00h 00m',
+                'upcoming_timelines' => 0,
                 'upcoming_contracts' => 0,
             ];
         }
@@ -868,16 +885,13 @@ class ProjectAnalyticsService
 
         $totalEstimatedSeconds = (int) $estimatedTaskQuery->sum('tasks.estimated_time_seconds');
 
-        // Upcoming contracts count
-        $upcomingContractsCount = 0;
-        if ($authUser->can('project.customer_end_date')) {
-            $upcomingContractsCount = ProjectTimeline::query()
-                ->whereIn('project_id', $projectIds)
-                ->whereNotNull('customer_end_date')
-                ->whereDate('customer_end_date', '>=', now()->toDateString())
-                ->whereNotIn('status', [ProjectTimeline::STATUS_COMPLETED, ProjectTimeline::STATUS_CANCELLED])
-                ->count();
-        }
+        // Upcoming timelines count (checking end_date >= today)
+        $upcomingTimelinesCount = ProjectTimeline::query()
+            ->whereIn('project_id', $projectIds)
+            ->whereNotNull('end_date')
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->whereNotIn('status', [ProjectTimeline::STATUS_COMPLETED, ProjectTimeline::STATUS_CANCELLED])
+            ->count();
 
         return [
             'total_projects' => $totalProjects,
@@ -891,7 +905,8 @@ class ProjectAnalyticsService
             'formatted_worked_time' => $this->formatDuration($totalWorkedSeconds),
             'total_estimated_seconds' => $totalEstimatedSeconds,
             'formatted_estimated_time' => $this->formatDuration($totalEstimatedSeconds),
-            'upcoming_contracts' => $upcomingContractsCount,
+            'upcoming_timelines' => $upcomingTimelinesCount,
+            'upcoming_contracts' => $upcomingTimelinesCount,
         ];
     }
 
@@ -1193,6 +1208,7 @@ class ProjectAnalyticsService
         ]);
 
         $displayTimeline = $project->display_timeline;
+        $timelineEndDate = $displayTimeline?->end_date ?? $project->end_date ?? $project->deadline;
         $customerEndDate = null;
         if ($authUser->can('project.customer_end_date') && $displayTimeline?->customer_end_date) {
             $customerEndDate = $displayTimeline->customer_end_date;
@@ -1224,8 +1240,10 @@ class ProjectAnalyticsService
             'dates' => [
                 'start_date' => $project->start_date?->format('Y-m-d'),
                 'formatted_start_date' => $project->start_date?->format('d M Y') ?: '--',
-                'end_date' => ($project->end_date ?? $project->deadline)?->format('Y-m-d'),
-                'formatted_end_date' => ($project->end_date ?? $project->deadline)?->format('d M Y') ?: '--',
+                'end_date' => $timelineEndDate?->format('Y-m-d'),
+                'formatted_end_date' => $timelineEndDate?->format('d M Y') ?: '--',
+                'timeline_end_date' => $timelineEndDate?->format('Y-m-d'),
+                'formatted_timeline_end_date' => $timelineEndDate?->format('d M Y') ?: '--',
                 'contract_end_date' => $customerEndDate?->format('Y-m-d'),
                 'formatted_contract_end_date' => $customerEndDate?->format('d M Y') ?: '--',
             ],

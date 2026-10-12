@@ -19,13 +19,13 @@
                 @include('project-analytics.partials.projects-by-stage')
             </div>
 
-            <!-- Projects by Service Type & Upcoming Contract Expirations -->
+            <!-- Projects by Service Type & Upcoming Timeline Expirations -->
             <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
                 <div class="xl:col-span-5">
                     @include('project-analytics.partials.projects-by-service-type')
                 </div>
                 <div class="xl:col-span-7">
-                    @include('project-analytics.partials.upcoming-contracts')
+                    @include('project-analytics.partials.upcoming-timelines')
                 </div>
             </div>
         </div>

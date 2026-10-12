@@ -181,6 +181,7 @@ class ProjectAnalyticsBackendTest extends TestCase
                 'formatted_worked_time',
                 'total_estimated_seconds',
                 'formatted_estimated_time',
+                'upcoming_timelines',
                 'upcoming_contracts',
             ],
         ]);
@@ -341,23 +342,23 @@ class ProjectAnalyticsBackendTest extends TestCase
         $futureDate = now()->addDays(10)->toDateString();
         $pastDate = now()->subDays(5)->toDateString();
 
-        // 1. Future active timeline (should be included)
+        // 1. Future active timeline with end_date (should be included)
         $futureTimeline = ProjectTimeline::create([
             'project_id' => $project->id,
-            'name' => 'Future Contract',
+            'name' => 'Future Timeline',
             'start_date' => now()->subMonth(),
-            'customer_end_date' => $futureDate,
+            'end_date' => $futureDate,
             'status' => ProjectTimeline::STATUS_ACTIVE,
             'type' => 'fixed',
-            'customer_estimate_seconds' => 36000,
+            'estimated_time_seconds' => 36000,
         ]);
 
-        // 2. Past timeline (must be excluded)
+        // 2. Past timeline with end_date (must be excluded)
         $pastTimeline = ProjectTimeline::create([
             'project_id' => $project->id,
-            'name' => 'Expired Contract',
+            'name' => 'Expired Timeline',
             'start_date' => now()->subMonths(2),
-            'customer_end_date' => $pastDate,
+            'end_date' => $pastDate,
             'status' => ProjectTimeline::STATUS_ACTIVE,
             'type' => 'fixed',
         ]);
@@ -365,40 +366,45 @@ class ProjectAnalyticsBackendTest extends TestCase
         // 3. Future completed timeline (must be excluded)
         $completedTimeline = ProjectTimeline::create([
             'project_id' => $project->id,
-            'name' => 'Completed Contract',
+            'name' => 'Completed Timeline',
             'start_date' => now()->subMonth(),
-            'customer_end_date' => $futureDate,
+            'end_date' => $futureDate,
             'status' => ProjectTimeline::STATUS_COMPLETED,
             'type' => 'fixed',
         ]);
 
-        // User without permission
-        $responseNoPerm = $this->actingAs($this->regularUser)
+        // Fetch upcoming timelines via route
+        $response = $this->actingAs($this->superAdmin)
+            ->getJson("/project-analytics/upcoming-timelines?project_id={$project->id}");
+
+        $response->assertStatus(200);
+        $this->assertTrue($response->json('data.can_view'));
+
+        $timelines = collect($response->json('data.timelines'));
+        $this->assertTrue($timelines->contains('id', $futureTimeline->id));
+        $this->assertFalse($timelines->contains('id', $pastTimeline->id));
+        $this->assertFalse($timelines->contains('id', $completedTimeline->id));
+
+        $timelineData = $timelines->firstWhere('id', $futureTimeline->id);
+        $this->assertArrayHasKey('timeline_name', $timelineData);
+        $this->assertArrayHasKey('customer_name', $timelineData);
+        $this->assertArrayHasKey('days_remaining', $timelineData);
+        $this->assertArrayHasKey('formatted_end_date', $timelineData);
+        $this->assertArrayHasKey('end_date', $timelineData);
+        $this->assertEquals($futureDate, $timelineData['end_date']);
+
+        // Check filter with parameter "end_date"
+        $filterResponse = $this->actingAs($this->superAdmin)
+            ->getJson("/project-analytics/upcoming-timelines?project_id={$project->id}&end_date=" . now()->addDays(20)->toDateString());
+        $filterResponse->assertStatus(200);
+        $this->assertEmpty($filterResponse->json('data.timelines'));
+
+        // Check backward-compatibility route /upcoming-contracts
+        $responseAlias = $this->actingAs($this->superAdmin)
             ->getJson("/project-analytics/upcoming-contracts?project_id={$project->id}");
-
-        $responseNoPerm->assertStatus(200);
-        $this->assertFalse($responseNoPerm->json('data.can_view'));
-        $this->assertEmpty($responseNoPerm->json('data.contracts'));
-
-        // User with permission
-        $this->superAdmin->givePermissionTo('project.customer_end_date');
-        $responseWithPerm = $this->actingAs($this->superAdmin)
-            ->getJson("/project-analytics/upcoming-contracts?project_id={$project->id}");
-
-        $responseWithPerm->assertStatus(200);
-        $this->assertTrue($responseWithPerm->json('data.can_view'));
-
-        $contracts = collect($responseWithPerm->json('data.contracts'));
-        $this->assertTrue($contracts->contains('id', $futureTimeline->id));
-        $this->assertFalse($contracts->contains('id', $pastTimeline->id));
-        $this->assertFalse($contracts->contains('id', $completedTimeline->id));
-
-        $contractData = $contracts->firstWhere('id', $futureTimeline->id);
-        $this->assertArrayHasKey('timeline_name', $contractData);
-        $this->assertArrayHasKey('customer_name', $contractData);
-        $this->assertArrayHasKey('days_remaining', $contractData);
-        $this->assertArrayHasKey('formatted_customer_end_date', $contractData);
-        $this->assertArrayHasKey('formatted_customer_estimate', $contractData);
+        $responseAlias->assertStatus(200);
+        $this->assertTrue($responseAlias->json('data.can_view'));
+        $this->assertNotEmpty($responseAlias->json('data.contracts'));
     }
 
     /**
