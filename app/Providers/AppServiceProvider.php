@@ -190,20 +190,30 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Appraisal::class, AppraisalPolicy::class);
 
         Event::listen(NotificationSent::class, function (NotificationSent $event) {
-            if ($event->notification instanceof ProjectNotification && $event->notification->logId) {
-                ProjectNotificationLog::where('id', $event->notification->logId)->update([
-                    'status' => ProjectNotificationLog::STATUS_SENT,
-                    'sent_at' => Carbon::now(),
-                ]);
+            $notification = $event->notification;
+            if (! $notification instanceof ProjectNotification) {
+                return;
             }
+            if ($notification->logId === null) {
+                return;
+            }
+            ProjectNotificationLog::where('id', $notification->logId)->update([
+                'status' => ProjectNotificationLog::STATUS_SENT,
+                'sent_at' => Carbon::now(),
+            ]);
         });
 
         Event::listen(NotificationFailed::class, function (NotificationFailed $event) {
-            if ($event->notification instanceof ProjectNotification && $event->notification->logId) {
-                ProjectNotificationLog::where('id', $event->notification->logId)->update([
-                    'status' => ProjectNotificationLog::STATUS_FAILED,
-                ]);
+            $notification = $event->notification;
+            if (! $notification instanceof ProjectNotification) {
+                return;
             }
+            if ($notification->logId === null) {
+                return;
+            }
+            ProjectNotificationLog::where('id', $notification->logId)->update([
+                'status' => ProjectNotificationLog::STATUS_FAILED,
+            ]);
         });
     }
 
