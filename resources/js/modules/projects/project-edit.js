@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // If <x-form-modal> is used, clicking a button with data-target="#project-edit-modal" and .modal-open opens it.
     // We added the click listener here to populate data BEFORE opening the modal.
     
+    const dynamicallyAddedServiceTypeIds = new Set();
+
     editBtns.forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -118,6 +120,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const serviceTypeSelect = document.getElementById('edit_project_service_type_ids');
             if (serviceTypeSelect && serviceTypeSelect.tomselect) {
+                // Remove previously added dynamic options so deleted service types don't leak across projects
+                dynamicallyAddedServiceTypeIds.forEach(id => {
+                    serviceTypeSelect.tomselect.removeOption(id);
+                });
+                dynamicallyAddedServiceTypeIds.clear();
+
                 const projectServiceTypes = project.service_types || [];
                 projectServiceTypes.forEach(st => {
                     const stId = String(st.id);
@@ -132,11 +140,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             value: stId,
                             text: label
                         });
+                        dynamicallyAddedServiceTypeIds.add(stId);
                     }
                 });
                 const serviceTypeIds = projectServiceTypes.map(st => String(st.id));
                 serviceTypeSelect.tomselect.setValue([...new Set(serviceTypeIds)]);
             } else if (serviceTypeSelect) {
+                serviceTypeSelect.querySelectorAll('option[data-dynamic="true"]').forEach(opt => opt.remove());
+
                 const projectServiceTypes = project.service_types || [];
                 projectServiceTypes.forEach(st => {
                     const stId = String(st.id);
@@ -144,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!opt) {
                         opt = document.createElement('option');
                         opt.value = stId;
+                        opt.setAttribute('data-dynamic', 'true');
                         let label = st.name;
                         if (st.deleted_at) {
                             label += ' (Deleted)';
@@ -169,6 +181,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function closeModal() {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
+
+        const serviceTypeSelect = document.getElementById('edit_project_service_type_ids');
+        if (serviceTypeSelect && serviceTypeSelect.tomselect) {
+            dynamicallyAddedServiceTypeIds.forEach(id => {
+                serviceTypeSelect.tomselect.removeOption(id);
+            });
+            dynamicallyAddedServiceTypeIds.clear();
+        }
     }
 
     const closeBtns = modal.querySelectorAll('.modal-close');

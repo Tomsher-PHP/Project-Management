@@ -310,7 +310,7 @@
 
     @push('modals')
         <!-- Edit Project Modal -->
-        @include('projects.partials.project-edit-modal')
+        @include('projects.partials.project-edit-modal', ['project' => null])
     @endpush
 
     @vite('resources/js/modules/projects/project-delete.js')

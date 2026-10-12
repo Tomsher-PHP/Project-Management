@@ -49,11 +49,14 @@
                 <label for="edit_project_service_type_ids" class="mb-2 block text-left text-sm font-medium text-bgray-600 dark:text-bgray-50">Service Type</label>
                 <select name="service_type_ids[]" id="edit_project_service_type_ids" multiple class="tom-select-multiple w-full">
                     <option value="">Select Service Type</option>
-                    @isset($serviceTypes)
-                        @foreach ($serviceTypes as $serviceType)
-                            <option value="{{ $serviceType->id }}">{{ $serviceType->name }}@if ($serviceType->trashed()) (Deleted)@elseif (!$serviceType->is_active) (Inactive)@endif</option>
-                        @endforeach
-                    @endisset
+                    @php
+                        $modalServiceTypes = (isset($project) && $project instanceof \App\Models\Project)
+                            ? $project->getAvailableServiceTypes()
+                            : ($serviceTypes ?? \App\Models\ServiceType::active()->orderBy('sort_order', 'asc')->get());
+                    @endphp
+                    @foreach ($modalServiceTypes as $serviceType)
+                        <option value="{{ $serviceType->id }}">{{ $serviceType->name }}@if ($serviceType->trashed()) (Deleted)@elseif (!$serviceType->is_active) (Inactive)@endif</option>
+                    @endforeach
                 </select>
             </div>
 
