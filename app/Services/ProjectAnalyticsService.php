@@ -459,10 +459,13 @@ class ProjectAnalyticsService
             ->groupBy('service_type_id')
             ->pluck('count', 'service_type_id');
 
-        $serviceTypes = ServiceType::withTrashed()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'code', 'color']);
+        $serviceTypes = $serviceTypeCounts->isNotEmpty()
+            ? ServiceType::withTrashed()
+                ->whereIn('id', $serviceTypeCounts->keys())
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name', 'code', 'color'])
+            : collect();
 
         $assignedProjectIds = ProjectServiceType::query()
             ->whereIn('project_id', $projectIds)
@@ -478,6 +481,9 @@ class ProjectAnalyticsService
 
         foreach ($serviceTypes as $serviceType) {
             $count = (int) ($serviceTypeCounts->get($serviceType->id) ?? 0);
+            if ($count === 0) {
+                continue;
+            }
             $color = $serviceType->color ?: '#3B82F6';
 
             $labels[] = $serviceType->name;
