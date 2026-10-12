@@ -35,9 +35,9 @@
         </div>
 
         <!-- Table Content -->
-        <div data-content class="hidden overflow-x-auto">
+        <div data-content class="hidden max-h-[380px] overflow-y-auto overflow-x-auto">
             <table class="w-full text-left text-xs text-bgray-600 dark:text-bgray-300">
-                <thead class="border-b border-bgray-200 bg-bgray-50/50 text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500/30 dark:text-bgray-300">
+                <thead class="sticky top-0 z-10 border-b border-bgray-200 bg-bgray-50 text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                     <tr>
                         <th scope="col" class="py-3 px-4">Project</th>
                         <th scope="col" class="py-3 px-4">Service Type</th>
