@@ -206,7 +206,7 @@ export async function loadProjectsByServiceType(filters = getActiveFilters()) {
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <span class="font-bold text-bgray-900 dark:text-white">${count.toLocaleString()}</span>
-                            <span class="text-[11px] text-bgray-500 dark:text-bgray-400">(${percentage}%)</span>
+                            <span class="text-[11px] text-bgray-700 dark:text-bgray-400">(${percentage}%)</span>
                         </div>
                     </div>
                     <div class="h-2 w-full rounded-full bg-bgray-100 dark:bg-darkblack-500 overflow-hidden">
@@ -482,7 +482,7 @@ export async function loadUpcomingContracts(filters = getActiveFilters()) {
                 <tr class="transition-colors hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/30">
                     <td class="py-3 px-4">
                         <div class="font-semibold text-bgray-900 dark:text-white">${escapeHtml(item.project_name)}</div>
-                        <div class="text-[11px] text-bgray-500 dark:text-bgray-400">${escapeHtml(item.project_code || item.customer_name || '')}</div>
+                        <div class="text-[11px] text-bgray-700 dark:text-bgray-400">${escapeHtml(item.project_code || item.customer_name || '')}</div>
                     </td>
                     <td class="py-3 px-4">
                         ${serviceTypeHtml}

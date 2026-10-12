@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between border-b border-bgray-200 bg-bgray-50/80 px-5 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
         <div>
             <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Projects by Stage</h4>
-            <p class="text-xs text-bgray-500 dark:text-bgray-400">Authoritative stage workflow distribution</p>
+            <p class="text-xs text-bgray-700 dark:text-bgray-400">Authoritative stage workflow distribution</p>
         </div>
     </div>
     <div class="flex min-h-[360px] flex-col items-center justify-center p-5">
@@ -21,7 +21,7 @@
                 <img src="{{ asset(config('assets.images.chart_no_data')) }}" alt="No data" class="mx-auto h-28 w-auto opacity-80">
             </div>
             <h4 class="text-sm font-semibold text-bgray-900 dark:text-white">No project stage data</h4>
-            <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-400">
+            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-400">
                 No projects found for the selected filters.
             </p>
         </div>
