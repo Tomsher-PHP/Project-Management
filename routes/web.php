@@ -7,6 +7,7 @@ use App\Http\Controllers\SprintGroupController;
 use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\ProjectNotificationSettingController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
 use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
@@ -114,6 +115,21 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/chart/task-status', [AnalyticsController::class, 'taskStatusChart'])->name('analytics.chart.task-status');
         Route::get('/chart/task-priority', [AnalyticsController::class, 'taskPriorityChart'])->name('analytics.chart.task-priority');
         Route::get('/chart/time-comparison', [AnalyticsController::class, 'timeComparisonChart'])->name('analytics.chart.time-comparison');
+    });
+
+    Route::prefix('project-analytics')->group(function () {
+        Route::get('/', [ProjectAnalyticsController::class, 'index'])->name('project.analytics');
+        Route::get('/summary', [ProjectAnalyticsController::class, 'summary'])->name('project.analytics.summary');
+        Route::get('/search-projects', [ProjectAnalyticsController::class, 'searchProjects'])->name('project.analytics.search-projects');
+        Route::get('/projects-by-service-type', [ProjectAnalyticsController::class, 'projectsByServiceType'])->name('project.analytics.projects-by-service-type');
+        Route::get('/projects-by-flow', [ProjectAnalyticsController::class, 'projectsByFlow'])->name('project.analytics.projects-by-flow');
+        Route::get('/projects-by-status', [ProjectAnalyticsController::class, 'projectsByStatus'])->name('project.analytics.projects-by-status');
+        Route::get('/projects-by-stage', [ProjectAnalyticsController::class, 'projectsByStage'])->name('project.analytics.projects-by-stage');
+        Route::get('/upcoming-contracts', [ProjectAnalyticsController::class, 'upcomingContracts'])->name('project.analytics.upcoming-contracts');
+        Route::get('/project-details', [ProjectAnalyticsController::class, 'projectDetails'])->name('project.analytics.project-details');
+        Route::get('/chart/task-status', [ProjectAnalyticsController::class, 'taskStatusChart'])->name('project.analytics.chart.task-status');
+        Route::get('/chart/task-priority', [ProjectAnalyticsController::class, 'taskPriorityChart'])->name('project.analytics.chart.task-priority');
+        Route::get('/chart/time-comparison', [ProjectAnalyticsController::class, 'timeComparisonChart'])->name('project.analytics.chart.time-comparison');
     });
 
     // Role & Permission Routes

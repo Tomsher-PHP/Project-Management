@@ -51,6 +51,8 @@ export default defineConfig({
                 'resources/js/modules/tasks/schedule-task.js',
                 'resources/js/modules/workspace/workspace-kanban-heights.js',
                 'resources/js/modules/analytics/summary.js',
+                'resources/js/modules/analytics/project-analytics-filters.js',
+                'resources/js/modules/analytics/project-analytics-dashboard.js',
                 'resources/js/dashboard.js',
                 'resources/js/projects-count-chart.js',
                 'resources/js/modules/customer-restore.js',

@@ -117,8 +117,9 @@ class AnalyticsController extends Controller
         }
 
         $date = $this->resolveSelectedDate($request->input('date'));
+        $projectId = $request->integer('project_id') ?: null;
 
-        $data = $summaryService->getTaskLoggedTimeChart($request->user(), $selectedUser, $date);
+        $data = $summaryService->getTaskLoggedTimeChart($request->user(), $selectedUser, $date, $projectId);
 
         return response()->json([
             'success' => true,
