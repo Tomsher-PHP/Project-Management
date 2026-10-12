@@ -8,6 +8,7 @@ use App\Models\ProjectMilestone;
 use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
 use App\Models\ProjectTimeline;
+use App\Models\ProjectServiceType;
 use App\Models\ServiceType;
 use App\Models\Task;
 use App\Models\TaskAssignmentLog;
@@ -452,22 +453,18 @@ class ProjectAnalyticsService
             ];
         }
 
-        $serviceTypeCounts = DB::table('project_service_types')
+        $serviceTypeCounts = ProjectServiceType::query()
             ->whereIn('project_id', $projectIds)
             ->selectRaw('service_type_id, COUNT(DISTINCT project_id) as count')
             ->groupBy('service_type_id')
             ->pluck('count', 'service_type_id');
 
-        $serviceTypes = ServiceType::query()
-            ->where(function ($q) use ($serviceTypeCounts) {
-                $q->where('is_active', true)
-                    ->orWhereIn('id', $serviceTypeCounts->keys());
-            })
+        $serviceTypes = ServiceType::withTrashed()
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'color']);
 
-        $assignedProjectIds = DB::table('project_service_types')
+        $assignedProjectIds = ProjectServiceType::query()
             ->whereIn('project_id', $projectIds)
             ->distinct()
             ->pluck('project_id')

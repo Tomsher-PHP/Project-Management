@@ -8,6 +8,7 @@ use App\Models\ProjectMember;
 use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
 use App\Models\ProjectTimeline;
+use App\Models\ProjectServiceType;
 use App\Models\ServiceGroup;
 use App\Models\ServiceType;
 use App\Models\Task;
@@ -245,6 +246,52 @@ class ProjectAnalyticsBackendTest extends TestCase
         $this->assertNotNull($item2);
         $this->assertEquals(1, $item1['count']);
         $this->assertEquals(1, $item2['count']);
+    }
+
+    /**
+     * Projects by Service Type includes soft-deleted service types.
+     */
+    public function test_projects_by_service_type_includes_soft_deleted_service_types(): void
+    {
+        $group = ServiceGroup::firstOrCreate(
+            ['code' => 'grp_test_soft'],
+            ['name' => 'Test Soft Group', 'sort_order' => 1, 'is_active' => true]
+        );
+
+        $softCode = 'st_soft_' . uniqid();
+        $stSoft = ServiceType::create([
+            'code' => $softCode,
+            'name' => 'Soft Deleted Service Type',
+            'color' => '#EF4444',
+            'service_group_id' => $group->id,
+            'is_active' => true,
+            'sort_order' => 10,
+        ]);
+
+        $project = Project::factory()->create([
+            'added_by' => $this->superAdmin->id,
+            'is_system' => false,
+        ]);
+
+        ProjectServiceType::create([
+            'project_id' => $project->id,
+            'service_type_id' => $stSoft->id,
+        ]);
+
+        // Soft delete the service type
+        $stSoft->delete();
+        $this->assertSoftDeleted('service_types', ['id' => $stSoft->id]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->getJson("/project-analytics/projects-by-service-type?project_id={$project->id}");
+
+        $response->assertStatus(200);
+        $items = collect($response->json('data.items'));
+        $item = $items->firstWhere('id', $stSoft->id);
+
+        $this->assertNotNull($item, 'Soft deleted service type should be included in projects by service type response');
+        $this->assertEquals(1, $item['count']);
+        $this->assertEquals('Soft Deleted Service Type', $item['name']);
     }
 
     /**
@@ -757,4 +804,3 @@ class ProjectAnalyticsBackendTest extends TestCase
         ]);
     }
 }
-
