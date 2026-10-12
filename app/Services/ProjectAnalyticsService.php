@@ -817,7 +817,7 @@ class ProjectAnalyticsService
         // Tasks query
         $taskQuery = Task::accessibleBy($authUser)
             ->whereIn('tasks.project_id', $projectIds)
-            ->where('tasks.request_status', '!=', 'rejected')
+            ->where('tasks.request_status', '!=', Task::REQUEST_REJECTED)
             ->whereNull('tasks.deleted_at');
 
         if ($selectedUser) {
@@ -833,7 +833,7 @@ class ProjectAnalyticsService
             ->pluck('count', 'type')
             ->toArray();
 
-        $totalTasks = (clone $taskQuery)->count();
+        $totalTasks = collect($taskCounts)->sum();
         $pendingTasks = (int) ($taskCounts['pending'] ?? 0);
         $activeTasks = (int) ($taskCounts['active'] ?? 0);
         $archivedTasks = (int) ($taskCounts['archived'] ?? 0);
