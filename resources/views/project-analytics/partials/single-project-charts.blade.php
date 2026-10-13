@@ -45,7 +45,7 @@
     <div class="flex min-h-[380px] max-h-[420px] flex-col overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-single-project-user-wise-section>
         <div class="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2.5 dark:border-darkblack-400 dark:bg-darkblack-500/60">
             <div>
-                <h4 class="text-sm font-bold text-bgray-900 dark:text-white">User Wise</h4>
+                <h4 class="text-sm font-bold text-bgray-900 dark:text-white">User Wise {{ __('label.project.estimated') }} vs {{ __('label.project.spent') }}</h4>
             </div>
             <div class="flex flex-wrap items-center gap-2" data-user-wise-badges>
                 <span class="inline-flex rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300" data-user-wise-spent>

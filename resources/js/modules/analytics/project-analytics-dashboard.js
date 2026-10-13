@@ -119,7 +119,7 @@ async function fetchAnalyticsData(endpointUrl, params = {}) {
         throw new Error(result.message || 'Analytics fetch unsuccessful');
     }
 
-    return result.data;
+    return result.data !== undefined ? result.data : result;
 }
 
 /* ==========================================================================
@@ -1140,7 +1140,8 @@ export async function loadSingleProjectOverview(filters = getActiveFilters()) {
     setSectionLoading(userWiseChartCard, true);
 
     try {
-        const data = await fetchAnalyticsData(overviewUrl, filters);
+        const res = await fetchAnalyticsData(overviewUrl, filters);
+        const data = res?.data !== undefined ? res.data : (res || {});
 
         // 1. Time Progress
         if (timeProgressCard) {
