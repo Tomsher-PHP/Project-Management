@@ -384,7 +384,6 @@ class ProjectAnalyticsController extends Controller
                 'time_progress_html' => view('project-analytics.partials.single-project-time-progress-content', $viewData)->render(),
                 'user_wise_html' => view('project-analytics.partials.single-project-user-wise-content', $viewData)->render(),
                 'burnup_chart' => $milestoneBurnupChart,
-                'assignee_data' => $taskAssigneeOverview->values()->all(),
                 'has_timelines' => $timelineProgressbars->isNotEmpty(),
                 'has_milestones' => ! empty($milestoneBurnupChart['labels']),
                 'has_assignees' => $taskAssigneeOverview->isNotEmpty(),

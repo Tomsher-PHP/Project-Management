@@ -925,241 +925,7 @@ export function renderMilestoneBurnupChart(card, burnupData) {
 }
 
 /**
- * Render User Wise Assignee Horizontal Draggable Bar Chart.
- */
-export function renderAssigneeBarChart(card, chartData) {
-    const canvasId = 'singleProjectAssigneeBarChart';
-    const canvas = document.getElementById(canvasId);
-    if (!canvas || typeof window.Chart === 'undefined') return;
-
-    destroyChart(canvasId);
-
-    const emptyState = card.querySelector('[data-chart-empty-state], [data-assignee-bar-chart-empty-state]');
-    const content = card.querySelector('[data-chart-content], [data-assignee-bar-chart-wrapper]');
-    const scrollContainer = card.querySelector('[data-assignee-chart-scroll]');
-
-    const items = (Array.isArray(chartData) ? chartData : []).filter(item => item && typeof item === 'object');
-
-    if (!items.length) {
-        if (emptyState) emptyState.classList.remove('hidden');
-        if (content) content.classList.add('hidden');
-        return;
-    }
-
-    if (emptyState) emptyState.classList.add('hidden');
-    if (content) content.classList.remove('hidden');
-
-    const isDark = document.documentElement.classList.contains('dark');
-    const labelColor = isDark ? '#E2E8F0' : '#4A5568';
-    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(148, 163, 184, 0.15)';
-
-    const labels = items.map(item => String(item.name || 'Unassigned'));
-    const estimatedHours = items.map(item => Number(item.estimated_time_seconds || 0) / 3600);
-    const workedHours = items.map(item => Number(item.worked_time_seconds || 0) / 3600);
-
-    const workedColors = items.map(item => {
-        const estimated = Number(item.estimated_time_seconds || 0);
-        const worked = Number(item.worked_time_seconds || 0);
-        if (worked === 0) return '#22C55E';
-        if (estimated > 0 && worked > estimated) return '#EF4444';
-        return '#22C55E';
-    });
-
-    const minimumWidth = 650;
-    const widthPerUser = 110;
-    const requiredWidth = Math.max(minimumWidth, labels.length * widthPerUser);
-
-    canvas.style.width = `${requiredWidth}px`;
-    canvas.style.height = '320px';
-
-    if (scrollContainer) {
-        scrollContainer.style.width = '100%';
-        scrollContainer.style.height = '320px';
-        scrollContainer.style.overflowX = 'hidden';
-        scrollContainer.style.overflowY = 'hidden';
-        scrollContainer.style.position = 'relative';
-    }
-
-    const maxValue = Math.max(...estimatedHours, ...workedHours, 1);
-    const yStep = maxValue <= 10 ? 2 : (maxValue <= 25 ? 5 : 10);
-    const yMax = Math.ceil(maxValue / yStep) * yStep;
-
-    const assigneeDragPlugin = {
-        id: 'assigneeDragPlugin',
-        afterInit(chart) {
-            chart.$assigneeDrag = {
-                dragging: false,
-                startX: 0,
-                startOffset: 0,
-                offset: 0,
-            };
-            const canvasElement = chart.canvas;
-            canvasElement.style.cursor = 'grab';
-
-            canvasElement.onmousedown = (event) => {
-                chart.$assigneeDrag.dragging = true;
-                chart.$assigneeDrag.startX = event.clientX;
-                chart.$assigneeDrag.startOffset = chart.$assigneeDrag.offset;
-                canvasElement.style.cursor = 'grabbing';
-            };
-
-            const onMouseMove = (event) => {
-                if (!chart.$assigneeDrag?.dragging) return;
-                const movement = event.clientX - chart.$assigneeDrag.startX;
-                chart.$assigneeDrag.offset = chart.$assigneeDrag.startOffset - movement;
-                const maxOffset = Math.max(0, requiredWidth - (content?.clientWidth || requiredWidth));
-                chart.$assigneeDrag.offset = Math.max(0, Math.min(chart.$assigneeDrag.offset, maxOffset));
-                chart.update('none');
-            };
-
-            const onMouseUp = () => {
-                if (!chart.$assigneeDrag?.dragging) return;
-                chart.$assigneeDrag.dragging = false;
-                canvasElement.style.cursor = 'grab';
-            };
-
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-
-            chart.$cleanupDrag = () => {
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-            };
-        },
-        beforeDestroy(chart) {
-            if (chart.$cleanupDrag) {
-                chart.$cleanupDrag();
-            }
-        },
-        beforeDraw(chart) {
-            const offset = chart.$assigneeDrag?.offset || 0;
-            if (!offset) return;
-            const { ctx } = chart;
-            ctx.save();
-            ctx.translate(-offset, 0);
-        },
-        afterDraw(chart) {
-            const offset = chart.$assigneeDrag?.offset || 0;
-            if (!offset) return;
-            const { ctx, chartArea } = chart;
-            ctx.restore();
-            ctx.save();
-            const yAxisWidth = chartArea.left;
-            ctx.clearRect(0, 0, yAxisWidth, chart.height);
-            ctx.fillStyle = document.documentElement.classList.contains('dark') ? '#1F2937' : '#FFFFFF';
-            ctx.fillRect(0, 0, yAxisWidth, chart.height);
-            const yScale = chart.scales.y;
-            if (yScale) yScale.draw(ctx);
-            ctx.restore();
-        }
-    };
-
-    const estimatedLabel = window.translations?.labels?.estimated || 'Estimated';
-    const spentLabel = window.translations?.labels?.spent || 'Spent';
-    const exceededLabel = window.translations?.labels?.exceeded || 'Exceeded';
-
-    const chart = new window.Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [
-                {
-                    label: estimatedLabel,
-                    data: estimatedHours,
-                    backgroundColor: '#3B82F6',
-                    borderColor: '#3B82F6',
-                    borderWidth: 0,
-                    borderRadius: 0,
-                    barThickness: 23,
-                    maxBarThickness: 23,
-                    categoryPercentage: 0.55,
-                    barPercentage: 1,
-                },
-                {
-                    label: spentLabel,
-                    data: workedHours,
-                    backgroundColor: workedColors,
-                    borderColor: workedColors,
-                    borderWidth: 0,
-                    borderRadius: 0,
-                    barThickness: 23,
-                    maxBarThickness: 23,
-                    categoryPercentage: 0.55,
-                    barPercentage: 1,
-                }
-            ]
-        },
-        options: {
-            responsive: false,
-            maintainAspectRatio: false,
-            animation: false,
-            indexAxis: 'x',
-            layout: { padding: { top: 15, right: 25, bottom: 5, left: 5 } },
-            scales: {
-                x: {
-                    stacked: false,
-                    grid: { display: false },
-                    ticks: {
-                        color: labelColor,
-                        maxRotation: 0,
-                        minRotation: 0,
-                        callback(value) {
-                            const label = this.getLabelForValue(value);
-                            if (!label) return '';
-                            return label.length > 12 ? `${label.substring(0, 12)}...` : label;
-                        }
-                    },
-                    title: { display: false }
-                },
-                y: {
-                    beginAtZero: true,
-                    max: yMax,
-                    ticks: {
-                        color: labelColor,
-                        precision: 0,
-                        callback(value) { return `${value}h`; }
-                    },
-                    grid: { color: gridColor },
-                    title: { display: false }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        color: labelColor,
-                        usePointStyle: true,
-                        boxWidth: 10,
-                        boxHeight: 10,
-                        padding: 18,
-                        generateLabels() {
-                            return [
-                                { text: estimatedLabel, fillStyle: '#3B82F6', strokeStyle: '#3B82F6', pointStyle: 'rect', lineWidth: 0 },
-                                { text: spentLabel, fillStyle: '#22C55E', strokeStyle: '#22C55E', pointStyle: 'rect', lineWidth: 0 },
-                                { text: exceededLabel, fillStyle: '#EF4444', strokeStyle: '#EF4444', pointStyle: 'rect', lineWidth: 0 },
-                            ];
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label(context) {
-                            const value = Number(context.raw) || 0;
-                            return `${context.dataset.label}: ${value.toFixed(2)}h`;
-                        }
-                    }
-                }
-            }
-        },
-        plugins: [assigneeDragPlugin]
-    });
-
-    chartInstances.set(canvasId, chart);
-}
-
-/**
- * Load Single Project Overview Sections (Time Progress, Burn-up chart, User Wise list and bar chart).
+ * Load Single Project Overview Sections (Time Progress, Burn-up chart, and User Wise list).
  */
 export async function loadSingleProjectOverview(filters = getActiveFilters()) {
     const singleProjectView = document.querySelector('[data-single-project-dashboard-view]');
@@ -1170,7 +936,6 @@ export async function loadSingleProjectOverview(filters = getActiveFilters()) {
     const timeProgressCard = document.querySelector('[data-single-project-time-progress-section]');
     const burnupCard = document.querySelector('[data-single-project-burnup-section]');
     const userWiseCard = document.querySelector('[data-single-project-user-wise-section]');
-    const userWiseChartCard = document.querySelector('[data-single-project-assignee-chart-section]');
 
     const setSectionLoading = (card, isLoading) => {
         if (!card) return;
@@ -1190,7 +955,6 @@ export async function loadSingleProjectOverview(filters = getActiveFilters()) {
     setSectionLoading(timeProgressCard, true);
     setSectionLoading(burnupCard, true);
     setSectionLoading(userWiseCard, true);
-    setSectionLoading(userWiseChartCard, true);
 
     try {
         const res = await fetchAnalyticsData(overviewUrl, filters);
@@ -1261,30 +1025,11 @@ export async function loadSingleProjectOverview(filters = getActiveFilters()) {
             }
         }
 
-        // 4. User Wise Bar Chart
-        if (userWiseChartCard) {
-            setSectionLoading(userWiseChartCard, false);
-            const spentBadge = userWiseChartCard.querySelector('[data-user-wise-chart-spent]');
-            const countBadge = userWiseChartCard.querySelector('[data-user-wise-chart-count]');
-
-            if (spentBadge && data.total_worked_formatted) {
-                const spentLabel = window.translations?.labels?.spent || 'Spent';
-                spentBadge.innerText = `${data.total_worked_formatted} ${spentLabel}`;
-            }
-            if (countBadge) {
-                const count = Number(data.assignee_count) || 0;
-                countBadge.innerText = `${count} ${count === 1 ? 'user' : 'users'}`;
-            }
-
-            renderAssigneeBarChart(userWiseChartCard, data.assignee_data || []);
-        }
-
     } catch (err) {
         console.warn('Failed to load single project overview:', err);
         setSectionLoading(timeProgressCard, false);
         setSectionLoading(burnupCard, false);
         setSectionLoading(userWiseCard, false);
-        setSectionLoading(userWiseChartCard, false);
     }
 }
 
@@ -1554,7 +1299,6 @@ export function switchDashboardMode(filters = getActiveFilters()) {
         destroyChart('singleProjectTaskStatusChart');
         destroyChart('singleProjectTimeComparisonChart');
         destroyChart('singleProjectBurnupChart');
-        destroyChart('singleProjectAssigneeBarChart');
 
         // Load Overall Dashboard Sections
         loadAllOverallDashboardSections(filters);

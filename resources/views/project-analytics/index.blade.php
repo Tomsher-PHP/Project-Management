@@ -51,8 +51,6 @@
             <!-- Single Project Charts: Task Status Breakdown, User Wise Section, Time Comparison -->
             @include('project-analytics.partials.single-project-charts')
 
-            <!-- User Wise Bar Chart -->
-            @include('project-analytics.partials.single-project-user-wise-chart')
         </div>
     </main>
 
