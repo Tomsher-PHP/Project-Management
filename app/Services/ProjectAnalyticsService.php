@@ -1146,14 +1146,6 @@ class ProjectAnalyticsService
     }
 
     /**
-     * 8. User/project time comparison
-     */
-    public function getProjectTimeComparisonChart(User $authUser, ?User $selectedUser = null, ?Carbon $date = null, ?int $projectId = null): array
-    {
-        return $this->projectSummaryService->getTaskLoggedTimeChart($authUser, $selectedUser, $date, $projectId);
-    }
-
-    /**
      * Get users involved in projects that auth user is authorized to access,
      * following existing project membership and user authorization rules.
      */

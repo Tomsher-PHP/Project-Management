@@ -48,7 +48,7 @@
             <!-- Milestone Journey Burn-up Chart (Agile only) -->
             @include('project-analytics.partials.single-project-burnup-chart')
 
-            <!-- Single Project Charts: Task Status Breakdown, User Wise Section, Time Comparison -->
+            <!-- Single Project Charts: Task Status Breakdown, User Wise Section -->
             @include('project-analytics.partials.single-project-charts')
 
         </div>

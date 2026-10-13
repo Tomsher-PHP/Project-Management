@@ -1033,219 +1033,6 @@ export async function loadSingleProjectOverview(filters = getActiveFilters()) {
     }
 }
 
-/**
- * Render Single Project Time Comparison Chart.
- */
-function renderSingleProjectTimeComparisonChart(card, canvasId, data) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas || typeof window.Chart === 'undefined') return;
-
-    const values = data.values || [];
-    const formattedValues = data.formatted_values || [];
-    const labels = data.labels || [];
-    const colors = data.colors || [];
-    const hasData = values.some(v => Number(v) > 0);
-
-    const emptyState = card.querySelector('[data-chart-empty-state]');
-    const content = card.querySelector('[data-chart-content]');
-
-    if (!hasData) {
-        destroyChart(canvasId);
-        if (emptyState) emptyState.classList.remove('hidden');
-        if (content) content.classList.add('hidden');
-        return;
-    }
-
-    if (emptyState) emptyState.classList.add('hidden');
-    if (content) content.classList.remove('hidden');
-
-    destroyChart(canvasId);
-
-    // Center display: Worked time
-    const centerValSpan = card.querySelector('[data-chart-total-val]');
-    if (centerValSpan) {
-        const shiftSec = values[0] || 0;
-        const workedSec = values[1] || 0;
-        const isTargetMet = shiftSec > 0 ? (workedSec >= shiftSec) : true;
-        const colorClass = isTargetMet ? 'text-success-500 dark:text-success-400' : 'text-error-400 dark:text-error-400';
-
-        centerValSpan.innerText = formattedValues[1] || '00h 00m';
-        centerValSpan.className = `text-xs font-bold ${colorClass}`;
-    }
-
-    // Legend generation
-    const legendContainer = card.querySelector('[data-chart-legend]');
-    if (legendContainer) {
-        const shiftVal = values[0] || 0;
-
-        legendContainer.innerHTML = labels.map((label, index) => {
-            const val = values[index];
-            const formatted = formattedValues[index] || '00h 00m';
-            const color = colors[index] || '#3B82F6';
-
-            let percentageHtml = '';
-            let valColor = 'text-bgray-900 dark:text-white';
-
-            if (index === 0) {
-                percentageHtml = '';
-            } else if (index === 1) {
-                const pct = shiftVal > 0 ? Math.round((val / shiftVal) * 100) : 0;
-                const isTargetMet = val >= shiftVal;
-                const badgeClass = isTargetMet
-                    ? 'text-success-500 bg-success-50 dark:bg-success-500/10'
-                    : 'text-error-400 bg-error-50 dark:bg-error-500/10';
-                valColor = isTargetMet ? 'text-success-500 dark:text-success-400' : 'text-error-400 dark:text-error-400';
-                percentageHtml = `<span class="rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeClass}">${pct}%</span>`;
-            } else if (index === 2) {
-                const pct = shiftVal > 0 ? Math.round((val / shiftVal) * 100) : 0;
-                percentageHtml = `<span class="rounded-full bg-bgray-50 px-2 py-0.5 text-[10px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">${pct}%</span>`;
-            }
-
-            return `
-                <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 px-4 py-2 dark:border-darkblack-400">
-                    <div class="flex min-w-0 items-center gap-2.5">
-                        <span class="h-2.5 w-2.5 flex-shrink-0 rounded-full" style="background-color: ${escapeHtml(color)};"></span>
-                        <span class="truncate text-xs font-semibold text-bgray-700 dark:text-bgray-300">${escapeHtml(label)}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold ${valColor}">${formatted}</span>
-                        ${percentageHtml}
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    const ctx = canvas.getContext('2d');
-    const chart = new window.Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: values,
-                backgroundColor: colors,
-                borderWidth: 0,
-                hoverOffset: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '72%',
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => {
-                            const index = context.dataIndex;
-                            const formatted = formattedValues[index] || '00h 00m';
-                            return `${context.label}: ${formatted}`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    chartInstances.set(canvasId, chart);
-}
-
-/**
- * Load Single Project Time Comparison Chart.
- */
-export async function loadSingleProjectTimeComparisonChart(filters = getActiveFilters()) {
-    const card = document.querySelector('[data-single-time-comparison-wrapper]');
-    if (!card || !filters.projectId || !filters.userId) return;
-
-    const url = card.dataset.url;
-    if (!url) return;
-
-    const dateInput = card.querySelector('[data-project-time-chart-date]');
-    const loadingState = card.querySelector('[data-loading-state]');
-    const emptyState = card.querySelector('[data-chart-empty-state]');
-    const content = card.querySelector('[data-chart-content]');
-
-    if (loadingState) loadingState.classList.remove('hidden');
-    if (emptyState) emptyState.classList.add('hidden');
-    if (content) content.classList.add('hidden');
-
-    const params = {
-        ...filters,
-        date: dateInput ? dateInput.value : undefined,
-    };
-
-    try {
-        const data = await fetchAnalyticsData(url, params);
-        if (loadingState) loadingState.classList.add('hidden');
-        renderSingleProjectTimeComparisonChart(card, 'singleProjectTimeComparisonChart', data);
-    } catch (err) {
-        console.warn('Failed to load single project time comparison chart:', err);
-        if (loadingState) loadingState.classList.add('hidden');
-        if (emptyState) emptyState.classList.remove('hidden');
-        if (content) content.classList.add('hidden');
-        destroyChart('singleProjectTimeComparisonChart');
-    }
-}
-
-/**
- * Initialize Single Project Time Comparison Filters (Today / Yesterday / Custom).
- */
-function initTimeComparisonFilterButtons() {
-    const card = document.querySelector('[data-single-time-comparison-wrapper]');
-    if (!card) return;
-
-    const filterGroup = card.querySelector('[data-time-filter-group]');
-    const dateInput = card.querySelector('[data-project-time-chart-date]');
-    if (!filterGroup || !dateInput) return;
-
-    const buttons = filterGroup.querySelectorAll('[data-time-filter]');
-
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const type = btn.dataset.timeFilter;
-
-            buttons.forEach(b => {
-                b.setAttribute('aria-pressed', 'false');
-                b.classList.remove('active');
-            });
-            btn.setAttribute('aria-pressed', 'true');
-            btn.classList.add('active');
-
-            if (type === 'today') {
-                const today = new Date().toLocaleDateString('en-CA');
-                dateInput.value = today;
-                if (dateInput._flatpickr) dateInput._flatpickr.setDate(today);
-                loadSingleProjectTimeComparisonChart();
-            } else if (type === 'yesterday') {
-                const yest = new Date();
-                yest.setDate(yest.getDate() - 1);
-                const yestStr = yest.toLocaleDateString('en-CA');
-                dateInput.value = yestStr;
-                if (dateInput._flatpickr) dateInput._flatpickr.setDate(yestStr);
-                loadSingleProjectTimeComparisonChart();
-            } else if (type === 'custom') {
-                if (dateInput._flatpickr) {
-                    dateInput._flatpickr.open();
-                }
-            }
-        });
-    });
-
-    if (typeof initDatepicker === 'function' && !dateInput._flatpickr) {
-        initDatepicker('[data-project-time-chart-date]', {
-            maxDate: 'today',
-            onChange: (selectedDates, dateStr) => {
-                buttons.forEach(b => {
-                    const isActive = b.dataset.timeFilter === 'custom';
-                    b.setAttribute('aria-pressed', isActive);
-                    b.classList.toggle('active', isActive);
-                });
-                loadSingleProjectTimeComparisonChart();
-            }
-        }, card);
-    }
-}
-
 /* ==========================================================================
    DASHBOARD MODE SWITCHER & COORDINATION
    ========================================================================== */
@@ -1278,18 +1065,6 @@ export function switchDashboardMode(filters = getActiveFilters()) {
         loadSingleProjectDetails(filters);
         loadSingleProjectOverview(filters);
         loadSingleProjectTaskStatusChart(filters);
-
-        // Time Comparison: shown ONLY when a specific user is selected
-        const timeWrapper = singleProjectView.querySelector('[data-single-time-comparison-wrapper]');
-        const chartsSection = singleProjectView.querySelector('[data-single-project-charts-section]');
-
-        if (filters.userId) {
-            if (timeWrapper) timeWrapper.classList.remove('hidden');
-            loadSingleProjectTimeComparisonChart(filters);
-        } else {
-            if (timeWrapper) timeWrapper.classList.add('hidden');
-            destroyChart('singleProjectTimeComparisonChart');
-        }
     } else {
         // --- Overall Dashboard Mode ---
         singleProjectView.classList.add('hidden');
@@ -1297,7 +1072,7 @@ export function switchDashboardMode(filters = getActiveFilters()) {
 
         // Destroy single project charts
         destroyChart('singleProjectTaskStatusChart');
-        destroyChart('singleProjectTimeComparisonChart');
+        destroyChart('singleProjectBurnupChart');
         destroyChart('singleProjectBurnupChart');
 
         // Load Overall Dashboard Sections
@@ -1420,9 +1195,6 @@ export function initProjectAnalyticsDashboard() {
 
     // Initialize drill-down tile modal
     initTileDrilldownModal();
-
-    // Initialize time comparison buttons
-    initTimeComparisonFilterButtons();
 
     // Initial load
     switchDashboardMode();

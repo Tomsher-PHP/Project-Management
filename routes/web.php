@@ -131,7 +131,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/project-overview', [ProjectAnalyticsController::class, 'projectOverview'])->name('project.analytics.project-overview');
         Route::get('/chart/task-status', [ProjectAnalyticsController::class, 'taskStatusChart'])->name('project.analytics.chart.task-status');
         Route::get('/chart/task-priority', [ProjectAnalyticsController::class, 'taskPriorityChart'])->name('project.analytics.chart.task-priority');
-        Route::get('/chart/time-comparison', [ProjectAnalyticsController::class, 'timeComparisonChart'])->name('project.analytics.chart.time-comparison');
     });
 
     // Role & Permission Routes

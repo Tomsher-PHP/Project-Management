@@ -330,19 +330,6 @@ class SingleProjectAnalyticsIntegrationTest extends TestCase
         $resDetails->assertStatus(200);
         $this->assertEquals(1, $resDetails->json('data.task_summary.total_tasks'));
         $this->assertEquals(3600, $resDetails->json('data.task_summary.total_worked_seconds'));
-
-        // Call time-comparison chart with both filters
-        $todayStr = now()->toDateString();
-        $resTime = $this->actingAs($this->superAdmin)
-            ->getJson("/project-analytics/chart/time-comparison?project_id={$project1->id}&user_id={$this->memberUser->id}&date={$todayStr}");
-        $resTime->assertStatus(200);
-
-        $data = $resTime->json('data');
-        $this->assertArrayHasKey('values', $data);
-        $this->assertArrayHasKey('labels', $data);
-        $this->assertContains('Shift Work Time', $data['labels']);
-        $this->assertContains('Task Worked Time', $data['labels']);
-        $this->assertContains('Total Break Time', $data['labels']);
     }
 
     /**

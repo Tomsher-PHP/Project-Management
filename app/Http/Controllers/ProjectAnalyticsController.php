@@ -442,32 +442,6 @@ class ProjectAnalyticsController extends Controller
     }
 
     /**
-     * 8. User/project time comparison
-     */
-    public function timeComparisonChart(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
-    {
-        $resolved = $this->resolveFilters($request);
-        if ($resolved instanceof JsonResponse) {
-            return $resolved;
-        }
-
-        [$selectedUser, $project] = $resolved;
-        $date = $this->resolveSelectedDate($request->input('date'));
-
-        $data = $analyticsService->getProjectTimeComparisonChart(
-            $request->user(),
-            $selectedUser,
-            $date,
-            $project?->id
-        );
-
-        return response()->json([
-            'success' => true,
-            'data' => $data,
-        ]);
-    }
-
-    /**
      * Search projects for Tom Select autocomplete, respecting access control and user involvement.
      */
     public function searchProjects(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse

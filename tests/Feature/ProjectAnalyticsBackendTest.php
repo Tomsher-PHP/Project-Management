@@ -507,31 +507,6 @@ class ProjectAnalyticsBackendTest extends TestCase
     }
 
     /**
-     * User/project time comparison endpoint.
-     */
-    public function test_time_comparison_chart_endpoint(): void
-    {
-        $project = Project::factory()->create([
-            'added_by' => $this->superAdmin->id,
-            'is_system' => false,
-        ]);
-
-        $response = $this->actingAs($this->superAdmin)
-            ->getJson("/project-analytics/chart/time-comparison?project_id={$project->id}&date=" . now()->toDateString());
-
-        $response->assertStatus(200);
-        $response->assertJsonStructure([
-            'success',
-            'data' => [
-                'labels',
-                'values',
-                'formatted_values',
-                'colors',
-            ],
-        ]);
-    }
-
-    /**
      * Search projects endpoint for Tom Select autocomplete.
      */
     public function test_search_projects_endpoint(): void
