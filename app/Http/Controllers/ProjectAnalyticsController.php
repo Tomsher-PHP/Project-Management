@@ -329,6 +329,70 @@ class ProjectAnalyticsController extends Controller
     }
 
     /**
+     * Single project overview sections: Time Progress, Milestone Journey burnup, and User Wise breakdown.
+     */
+    public function projectOverview(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+
+        if (! $project) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project ID is required for project overview.',
+            ], 422);
+        }
+
+        $timelineProgressbars = $analyticsService->getTimelineProgressbars($project);
+        $taskAssigneeOverview = $analyticsService->getTaskAssigneeOverview($project);
+        $milestoneBurnupChart = $project->isAgile ? $analyticsService->getMilestoneBurnupChartData($project) : [
+            'labels' => [],
+            'datasets' => [],
+        ];
+
+        $totalTimelineWorked = $timelineProgressbars->sum(fn($b) => (int) $b->get('worked_seconds', 0));
+        $totalTimelineEstimated = $timelineProgressbars->sum(fn($b) => (int) $b->get('estimated_seconds', 0));
+        $totalTimelineCustomerEstimate = $timelineProgressbars->sum(fn($b) => (int) $b->get('customer_estimate_seconds', 0));
+
+        $totalWorkedSeconds = (int) $taskAssigneeOverview->sum('worked_time_seconds');
+        $assigneeCount = $taskAssigneeOverview->whereNotNull('id')->count();
+
+        $formatDuration = fn(?int $seconds): string => $analyticsService->formatDuration((int) $seconds);
+
+        $viewData = [
+            'project' => $project,
+            'timelineProgressbars' => $timelineProgressbars,
+            'totalTimelineWorked' => $totalTimelineWorked,
+            'totalTimelineEstimated' => $totalTimelineEstimated,
+            'totalTimelineCustomerEstimate' => $totalTimelineCustomerEstimate,
+            'taskAssigneeOverview' => $taskAssigneeOverview,
+            'totalWorkedSeconds' => $totalWorkedSeconds,
+            'assigneeCount' => $assigneeCount,
+            'milestoneBurnupChart' => $milestoneBurnupChart,
+            'hasMilestoneBurnupData' => ! empty($milestoneBurnupChart['labels']),
+            'formatDuration' => $formatDuration,
+        ];
+
+        return response()->json([
+            'success' => true,
+            'is_agile' => (bool) $project->isAgile,
+            'time_progress_html' => view('project-analytics.partials.single-project-time-progress-content', $viewData)->render(),
+            'user_wise_html' => view('project-analytics.partials.single-project-user-wise-content', $viewData)->render(),
+            'burnup_chart' => $milestoneBurnupChart,
+            'assignee_data' => $taskAssigneeOverview->values()->all(),
+            'has_timelines' => $timelineProgressbars->isNotEmpty(),
+            'has_milestones' => ! empty($milestoneBurnupChart['labels']),
+            'has_assignees' => $taskAssigneeOverview->isNotEmpty(),
+            'total_worked_formatted' => $formatDuration($totalWorkedSeconds),
+            'assignee_count' => $assigneeCount,
+        ]);
+    }
+
+    /**
      * 7a. Project-specific task analytics: Status chart
      */
     public function taskStatusChart(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse

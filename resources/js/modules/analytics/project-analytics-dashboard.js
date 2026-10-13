@@ -689,34 +689,548 @@ export async function loadSingleProjectTaskStatusChart(filters = getActiveFilter
     }
 }
 
+function formatHourValue(value) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return '0h';
+    const normalizedValue = Number.isInteger(numericValue)
+        ? String(numericValue)
+        : numericValue.toFixed(2).replace(/\.?0+$/, '');
+    return `${normalizedValue}h`;
+}
+
 /**
- * Load Single Project Task Priority Breakdown Chart.
+ * Render Milestone Journey Burn-up Line Chart.
  */
-export async function loadSingleProjectTaskPriorityChart(filters = getActiveFilters()) {
-    const card = document.querySelector('[data-single-project-charts-section] [data-project-chart="task-priority"]');
-    if (!card || !filters.projectId) return;
+export function renderMilestoneBurnupChart(card, burnupData) {
+    const canvasId = 'singleProjectBurnupChart';
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof window.Chart === 'undefined') return;
 
-    const url = card.dataset.url;
-    if (!url) return;
+    destroyChart(canvasId);
 
-    const loadingState = card.querySelector('[data-loading-state]');
-    const emptyState = card.querySelector('[data-chart-empty-state]');
-    const content = card.querySelector('[data-chart-content]');
+    const labels = Array.isArray(burnupData.labels) ? burnupData.labels : [];
+    const datasets = Array.isArray(burnupData.datasets) ? burnupData.datasets : [];
+    const hasBurnupData = labels.length > 0 && datasets.some(d => Array.isArray(d?.data) && d.data.length > 0);
 
-    if (loadingState) loadingState.classList.remove('hidden');
-    if (emptyState) emptyState.classList.add('hidden');
-    if (content) content.classList.add('hidden');
+    const emptyState = card.querySelector('[data-chart-empty-state], [data-single-project-burnup-empty-state]');
+    const content = card.querySelector('[data-chart-content], [data-single-project-burnup-chart-wrapper]');
 
-    try {
-        const data = await fetchAnalyticsData(url, filters);
-        if (loadingState) loadingState.classList.add('hidden');
-        renderDonutChart(card, 'singleProjectTaskPriorityChart', data);
-    } catch (err) {
-        console.warn('Failed to load single project task priority chart:', err);
-        if (loadingState) loadingState.classList.add('hidden');
+    if (!hasBurnupData) {
         if (emptyState) emptyState.classList.remove('hidden');
         if (content) content.classList.add('hidden');
-        destroyChart('singleProjectTaskPriorityChart');
+        return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.remove('hidden');
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const labelColor = isDark ? '#E2E8F0' : '#4A5568';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(148, 163, 184, 0.15)';
+
+    const estimatedDataset = datasets[0] || {};
+    const actualDataset = datasets[1] || {};
+    const endLabel = typeof burnupData.end_label === 'string' ? burnupData.end_label : '__end__';
+    const originLabel = typeof burnupData.origin_label === 'string' ? burnupData.origin_label : '__origin__';
+    const maxHours = Number(burnupData.max_hours) > 0 ? Number(burnupData.max_hours) : undefined;
+    const interval = Number(burnupData.interval) > 0 ? Number(burnupData.interval) : 10;
+    const isOriginPoint = (context) => context?.raw?.y === originLabel;
+
+    const formatMilestoneAxisLabel = (label) => {
+        const chars = Array.from(String(label || ''));
+        return chars.length > 12 ? `${chars.slice(0, 12).join('')}...` : chars.join('');
+    };
+
+    const estimatedHoursByMilestone = new Map(
+        (Array.isArray(estimatedDataset.data) ? estimatedDataset.data : [])
+            .filter((p) => p && typeof p === 'object' && p.y !== originLabel)
+            .map((p) => [p.y, formatHourValue(p.x)])
+    );
+
+    const burnupPointLabels = {
+        id: 'burnupPointLabels',
+        afterDatasetsDraw(chart) {
+            const { ctx, chartArea } = chart;
+            ctx.save();
+            ctx.font = '600 11px sans-serif';
+            ctx.textBaseline = 'middle';
+
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                const meta = chart.getDatasetMeta(datasetIndex);
+                if (!chart.isDatasetVisible(datasetIndex) || meta.hidden) return;
+
+                const color = dataset.borderColor || dataset.backgroundColor || '#111827';
+
+                meta.data.forEach((element, pointIndex) => {
+                    const point = dataset.data?.[pointIndex];
+                    if (!point || point.y === originLabel) return;
+
+                    const text = formatHourValue(point.x);
+                    const textWidth = ctx.measureText(text).width;
+                    const pointPosition = element.tooltipPosition();
+                    const isNearRightEdge = pointPosition.x + textWidth + 10 > chartArea.right;
+                    const yOffset = datasetIndex === 0 ? -12 : 12;
+
+                    ctx.fillStyle = color;
+                    ctx.textAlign = isNearRightEdge ? 'right' : 'left';
+                    ctx.fillText(text, pointPosition.x + (isNearRightEdge ? -8 : 8), pointPosition.y + yOffset);
+                });
+            });
+
+            ctx.restore();
+        }
+    };
+
+    const estimatedHoursLabel = window.translations?.labels?.estimated_hours || 'Estimated Hours';
+    const spentHoursLabel = window.translations?.labels?.spent_hours || 'Spent Hours';
+
+    const chart = new window.Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: estimatedHoursLabel,
+                    data: Array.isArray(estimatedDataset.data) ? estimatedDataset.data : [],
+                    borderColor: '#3B82F6',
+                    backgroundColor: '#3B82F6',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false,
+                    pointRadius(context) { return isOriginPoint(context) ? 0 : 4; },
+                    pointHoverRadius(context) { return isOriginPoint(context) ? 0 : 6; },
+                },
+                {
+                    label: spentHoursLabel,
+                    data: Array.isArray(actualDataset.data) ? actualDataset.data : [],
+                    borderColor: '#22C55E',
+                    backgroundColor: '#22C55E',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false,
+                    pointRadius(context) { return isOriginPoint(context) ? 0 : 4; },
+                    pointHoverRadius(context) { return isOriginPoint(context) ? 0 : 6; },
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            parsing: false,
+            layout: { padding: { right: 44 } },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: maxHours,
+                    grace: '8%',
+                    ticks: {
+                        color: labelColor,
+                        stepSize: interval,
+                        callback(value) { return `${value}h`; }
+                    },
+                    grid: { color: gridColor },
+                    title: { display: false }
+                },
+                y: {
+                    type: 'category',
+                    labels,
+                    ticks: {
+                        color: labelColor,
+                        callback(value, index) {
+                            const label = this.getLabelForValue(value) || labels[index] || '';
+                            if (label === originLabel || label === endLabel) return '';
+                            const estHours = estimatedHoursByMilestone.get(label);
+                            const axisLabel = formatMilestoneAxisLabel(label);
+                            return estHours ? `${axisLabel} (${estHours})` : axisLabel;
+                        }
+                    },
+                    grid: { color: gridColor },
+                    title: { display: false }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    filter(context) { return !isOriginPoint(context); },
+                    callbacks: {
+                        label(context) {
+                            const rawX = Number(context.raw?.x ?? context.parsed?.x ?? 0);
+                            return `${context.dataset.label}: ${rawX}h`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: { color: labelColor }
+                }
+            }
+        },
+        plugins: [burnupPointLabels]
+    });
+
+    chartInstances.set(canvasId, chart);
+}
+
+/**
+ * Render User Wise Assignee Horizontal Draggable Bar Chart.
+ */
+export function renderAssigneeBarChart(card, chartData) {
+    const canvasId = 'singleProjectAssigneeBarChart';
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof window.Chart === 'undefined') return;
+
+    destroyChart(canvasId);
+
+    const emptyState = card.querySelector('[data-chart-empty-state], [data-assignee-bar-chart-empty-state]');
+    const content = card.querySelector('[data-chart-content], [data-assignee-bar-chart-wrapper]');
+    const scrollContainer = card.querySelector('[data-assignee-chart-scroll]');
+
+    const items = (Array.isArray(chartData) ? chartData : []).filter(item => item && typeof item === 'object');
+
+    if (!items.length) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (content) content.classList.add('hidden');
+        return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.remove('hidden');
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const labelColor = isDark ? '#E2E8F0' : '#4A5568';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(148, 163, 184, 0.15)';
+
+    const labels = items.map(item => String(item.name || 'Unassigned'));
+    const estimatedHours = items.map(item => Number(item.estimated_time_seconds || 0) / 3600);
+    const workedHours = items.map(item => Number(item.worked_time_seconds || 0) / 3600);
+
+    const workedColors = items.map(item => {
+        const estimated = Number(item.estimated_time_seconds || 0);
+        const worked = Number(item.worked_time_seconds || 0);
+        if (worked === 0) return '#22C55E';
+        if (estimated > 0 && worked > estimated) return '#EF4444';
+        return '#22C55E';
+    });
+
+    const minimumWidth = 650;
+    const widthPerUser = 110;
+    const requiredWidth = Math.max(minimumWidth, labels.length * widthPerUser);
+
+    canvas.style.width = `${requiredWidth}px`;
+    canvas.style.height = '320px';
+
+    if (scrollContainer) {
+        scrollContainer.style.width = '100%';
+        scrollContainer.style.height = '320px';
+        scrollContainer.style.overflowX = 'hidden';
+        scrollContainer.style.overflowY = 'hidden';
+        scrollContainer.style.position = 'relative';
+    }
+
+    const maxValue = Math.max(...estimatedHours, ...workedHours, 1);
+    const yStep = maxValue <= 10 ? 2 : (maxValue <= 25 ? 5 : 10);
+    const yMax = Math.ceil(maxValue / yStep) * yStep;
+
+    const assigneeDragPlugin = {
+        id: 'assigneeDragPlugin',
+        afterInit(chart) {
+            chart.$assigneeDrag = {
+                dragging: false,
+                startX: 0,
+                startOffset: 0,
+                offset: 0,
+            };
+            const canvasElement = chart.canvas;
+            canvasElement.style.cursor = 'grab';
+
+            canvasElement.onmousedown = (event) => {
+                chart.$assigneeDrag.dragging = true;
+                chart.$assigneeDrag.startX = event.clientX;
+                chart.$assigneeDrag.startOffset = chart.$assigneeDrag.offset;
+                canvasElement.style.cursor = 'grabbing';
+            };
+
+            const onMouseMove = (event) => {
+                if (!chart.$assigneeDrag?.dragging) return;
+                const movement = event.clientX - chart.$assigneeDrag.startX;
+                chart.$assigneeDrag.offset = chart.$assigneeDrag.startOffset - movement;
+                const maxOffset = Math.max(0, requiredWidth - (content?.clientWidth || requiredWidth));
+                chart.$assigneeDrag.offset = Math.max(0, Math.min(chart.$assigneeDrag.offset, maxOffset));
+                chart.update('none');
+            };
+
+            const onMouseUp = () => {
+                if (!chart.$assigneeDrag?.dragging) return;
+                chart.$assigneeDrag.dragging = false;
+                canvasElement.style.cursor = 'grab';
+            };
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+
+            chart.$cleanupDrag = () => {
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            };
+        },
+        beforeDestroy(chart) {
+            if (chart.$cleanupDrag) {
+                chart.$cleanupDrag();
+            }
+        },
+        beforeDraw(chart) {
+            const offset = chart.$assigneeDrag?.offset || 0;
+            if (!offset) return;
+            const { ctx } = chart;
+            ctx.save();
+            ctx.translate(-offset, 0);
+        },
+        afterDraw(chart) {
+            const offset = chart.$assigneeDrag?.offset || 0;
+            if (!offset) return;
+            const { ctx, chartArea } = chart;
+            ctx.restore();
+            ctx.save();
+            const yAxisWidth = chartArea.left;
+            ctx.clearRect(0, 0, yAxisWidth, chart.height);
+            ctx.fillStyle = document.documentElement.classList.contains('dark') ? '#1F2937' : '#FFFFFF';
+            ctx.fillRect(0, 0, yAxisWidth, chart.height);
+            const yScale = chart.scales.y;
+            if (yScale) yScale.draw(ctx);
+            ctx.restore();
+        }
+    };
+
+    const estimatedLabel = window.translations?.labels?.estimated || 'Estimated';
+    const spentLabel = window.translations?.labels?.spent || 'Spent';
+    const exceededLabel = window.translations?.labels?.exceeded || 'Exceeded';
+
+    const chart = new window.Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: estimatedLabel,
+                    data: estimatedHours,
+                    backgroundColor: '#3B82F6',
+                    borderColor: '#3B82F6',
+                    borderWidth: 0,
+                    borderRadius: 0,
+                    barThickness: 23,
+                    maxBarThickness: 23,
+                    categoryPercentage: 0.55,
+                    barPercentage: 1,
+                },
+                {
+                    label: spentLabel,
+                    data: workedHours,
+                    backgroundColor: workedColors,
+                    borderColor: workedColors,
+                    borderWidth: 0,
+                    borderRadius: 0,
+                    barThickness: 23,
+                    maxBarThickness: 23,
+                    categoryPercentage: 0.55,
+                    barPercentage: 1,
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            animation: false,
+            indexAxis: 'x',
+            layout: { padding: { top: 15, right: 25, bottom: 5, left: 5 } },
+            scales: {
+                x: {
+                    stacked: false,
+                    grid: { display: false },
+                    ticks: {
+                        color: labelColor,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        callback(value) {
+                            const label = this.getLabelForValue(value);
+                            if (!label) return '';
+                            return label.length > 12 ? `${label.substring(0, 12)}...` : label;
+                        }
+                    },
+                    title: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: yMax,
+                    ticks: {
+                        color: labelColor,
+                        precision: 0,
+                        callback(value) { return `${value}h`; }
+                    },
+                    grid: { color: gridColor },
+                    title: { display: false }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        color: labelColor,
+                        usePointStyle: true,
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        padding: 18,
+                        generateLabels() {
+                            return [
+                                { text: estimatedLabel, fillStyle: '#3B82F6', strokeStyle: '#3B82F6', pointStyle: 'rect', lineWidth: 0 },
+                                { text: spentLabel, fillStyle: '#22C55E', strokeStyle: '#22C55E', pointStyle: 'rect', lineWidth: 0 },
+                                { text: exceededLabel, fillStyle: '#EF4444', strokeStyle: '#EF4444', pointStyle: 'rect', lineWidth: 0 },
+                            ];
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            const value = Number(context.raw) || 0;
+                            return `${context.dataset.label}: ${value.toFixed(2)}h`;
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [assigneeDragPlugin]
+    });
+
+    chartInstances.set(canvasId, chart);
+}
+
+/**
+ * Load Single Project Overview Sections (Time Progress, Burn-up chart, User Wise list and bar chart).
+ */
+export async function loadSingleProjectOverview(filters = getActiveFilters()) {
+    const singleProjectView = document.querySelector('[data-single-project-dashboard-view]');
+    if (!singleProjectView || !filters.projectId) return;
+
+    const overviewUrl = singleProjectView.dataset.overviewUrl || '/project-analytics/project-overview';
+
+    const timeProgressCard = document.querySelector('[data-single-project-time-progress-section]');
+    const burnupCard = document.querySelector('[data-single-project-burnup-section]');
+    const userWiseCard = document.querySelector('[data-single-project-user-wise-section]');
+    const userWiseChartCard = document.querySelector('[data-single-project-assignee-chart-section]');
+
+    const setSectionLoading = (card, isLoading) => {
+        if (!card) return;
+        const loadingState = card.querySelector('[data-loading-state]');
+        const content = card.querySelector('[data-content], [data-chart-content]');
+        const emptyState = card.querySelector('[data-empty-state], [data-chart-empty-state]');
+
+        if (isLoading) {
+            loadingState?.classList.remove('hidden');
+            content?.classList.add('hidden');
+            emptyState?.classList.add('hidden');
+        } else {
+            loadingState?.classList.add('hidden');
+        }
+    };
+
+    setSectionLoading(timeProgressCard, true);
+    setSectionLoading(burnupCard, true);
+    setSectionLoading(userWiseCard, true);
+    setSectionLoading(userWiseChartCard, true);
+
+    try {
+        const data = await fetchAnalyticsData(overviewUrl, filters);
+
+        // 1. Time Progress
+        if (timeProgressCard) {
+            setSectionLoading(timeProgressCard, false);
+            const content = timeProgressCard.querySelector('[data-content]');
+            const emptyState = timeProgressCard.querySelector('[data-empty-state]');
+            const spentBadge = timeProgressCard.querySelector('[data-time-progress-spent]');
+            const estBadge = timeProgressCard.querySelector('[data-time-progress-estimated]');
+            const custBadge = timeProgressCard.querySelector('[data-time-progress-customer-estimated]');
+            const custWrapper = timeProgressCard.querySelector('[data-time-progress-customer-badge]');
+
+            if (spentBadge && data.total_worked_formatted) spentBadge.innerText = data.total_worked_formatted;
+
+            if (data.has_timelines && data.time_progress_html) {
+                if (content) {
+                    content.innerHTML = data.time_progress_html;
+                    content.classList.remove('hidden');
+                }
+                emptyState?.classList.add('hidden');
+            } else {
+                content?.classList.add('hidden');
+                emptyState?.classList.remove('hidden');
+            }
+        }
+
+        // 2. Milestone Journey Burn-up Chart
+        if (burnupCard) {
+            setSectionLoading(burnupCard, false);
+            if (data.is_agile) {
+                burnupCard.classList.remove('hidden');
+                renderMilestoneBurnupChart(burnupCard, data.burnup_chart || {});
+            } else {
+                burnupCard.classList.add('hidden');
+                destroyChart('singleProjectBurnupChart');
+            }
+        }
+
+        // 3. User Wise Section (Card List)
+        if (userWiseCard) {
+            setSectionLoading(userWiseCard, false);
+            const content = userWiseCard.querySelector('[data-content]');
+            const emptyState = userWiseCard.querySelector('[data-empty-state]');
+            const spentBadge = userWiseCard.querySelector('[data-user-wise-spent]');
+            const countBadge = userWiseCard.querySelector('[data-user-wise-count]');
+
+            if (spentBadge && data.total_worked_formatted) {
+                const spentLabel = window.translations?.labels?.spent || 'Spent';
+                spentBadge.innerText = `${data.total_worked_formatted} ${spentLabel}`;
+            }
+            if (countBadge) {
+                const count = Number(data.assignee_count) || 0;
+                countBadge.innerText = `${count} ${count === 1 ? 'user' : 'users'}`;
+            }
+
+            if (data.has_assignees && data.user_wise_html) {
+                if (content) {
+                    content.innerHTML = data.user_wise_html;
+                    content.classList.remove('hidden');
+                }
+                emptyState?.classList.add('hidden');
+            } else {
+                content?.classList.add('hidden');
+                emptyState?.classList.remove('hidden');
+            }
+        }
+
+        // 4. User Wise Bar Chart
+        if (userWiseChartCard) {
+            setSectionLoading(userWiseChartCard, false);
+            const spentBadge = userWiseChartCard.querySelector('[data-user-wise-chart-spent]');
+            const countBadge = userWiseChartCard.querySelector('[data-user-wise-chart-count]');
+
+            if (spentBadge && data.total_worked_formatted) {
+                const spentLabel = window.translations?.labels?.spent || 'Spent';
+                spentBadge.innerText = `${data.total_worked_formatted} ${spentLabel}`;
+            }
+            if (countBadge) {
+                const count = Number(data.assignee_count) || 0;
+                countBadge.innerText = `${count} ${count === 1 ? 'user' : 'users'}`;
+            }
+
+            renderAssigneeBarChart(userWiseChartCard, data.assignee_data || []);
+        }
+
+    } catch (err) {
+        console.warn('Failed to load single project overview:', err);
+        setSectionLoading(timeProgressCard, false);
+        setSectionLoading(burnupCard, false);
+        setSectionLoading(userWiseCard, false);
+        setSectionLoading(userWiseChartCard, false);
     }
 }
 
@@ -963,8 +1477,8 @@ export function switchDashboardMode(filters = getActiveFilters()) {
 
         // Load Single Project Data
         loadSingleProjectDetails(filters);
+        loadSingleProjectOverview(filters);
         loadSingleProjectTaskStatusChart(filters);
-        loadSingleProjectTaskPriorityChart(filters);
 
         // Time Comparison: shown ONLY when a specific user is selected
         const timeWrapper = singleProjectView.querySelector('[data-single-time-comparison-wrapper]');
@@ -992,8 +1506,9 @@ export function switchDashboardMode(filters = getActiveFilters()) {
 
         // Destroy single project charts
         destroyChart('singleProjectTaskStatusChart');
-        destroyChart('singleProjectTaskPriorityChart');
         destroyChart('singleProjectTimeComparisonChart');
+        destroyChart('singleProjectBurnupChart');
+        destroyChart('singleProjectAssigneeBarChart');
 
         // Load Overall Dashboard Sections
         loadAllOverallDashboardSections(filters);

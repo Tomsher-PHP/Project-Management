@@ -38,12 +38,21 @@
         </div>
 
         <!-- 2. Single Project Analytics View (Shown when a specific project is selected) -->
-        <div class="{{ !$hasProjectSelected ? 'hidden ' : '' }}space-y-4" data-single-project-dashboard-view>
+        <div class="{{ !$hasProjectSelected ? 'hidden ' : '' }}space-y-4" data-single-project-dashboard-view data-overview-url="{{ route('project.analytics.project-overview') }}">
             <!-- Project Metadata Card -->
             @include('project-analytics.partials.single-project-summary')
 
-            <!-- Single Project Charts: Task Status, Task Priority, Time Comparison -->
+            <!-- Project Time Progress -->
+            @include('project-analytics.partials.single-project-time-progress')
+
+            <!-- Milestone Journey Burn-up Chart (Agile only) -->
+            @include('project-analytics.partials.single-project-burnup-chart')
+
+            <!-- Single Project Charts: Task Status Breakdown, User Wise Section, Time Comparison -->
             @include('project-analytics.partials.single-project-charts')
+
+            <!-- User Wise Bar Chart -->
+            @include('project-analytics.partials.single-project-user-wise-chart')
         </div>
     </main>
 
@@ -60,5 +69,15 @@
 @endsection
 
 @push('scripts')
+    <script>
+        window.translations = window.translations || {};
+        window.translations.labels = window.translations.labels || {
+            spent_hours: @json(__('label.project.spent_hours')),
+            spent: @json(__('label.project.spent')),
+            estimated_hours: @json(__('label.project.estimated_hours')),
+            estimated: @json(__('label.project.estimated')),
+            exceeded: @json(__('label.project.exceeded')),
+        };
+    </script>
     @vite(['resources/js/modules/analytics/project-analytics-filters.js', 'resources/js/modules/analytics/project-analytics-dashboard.js'])
 @endpush
