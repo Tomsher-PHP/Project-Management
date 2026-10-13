@@ -56,7 +56,7 @@
                 </div>
 
                 <!-- Service Types & Applicable Dates Grid -->
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 pt-1 text-xs">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 pt-1 text-xs">
                     <div>
                         <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Service Types</span>
                         <div class="mt-1 flex flex-wrap gap-1.5" data-project-service-types>
@@ -73,21 +73,9 @@
                         </div>
                     </div>
                     <div>
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Start Date</span>
-                        <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-start-date>
-                            @appDate($selectedProject?->start_date)
-                        </span>
-                    </div>
-                    <div>
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">End / Deadline Date</span>
-                        <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-end-date>
-                            @appDate($selectedProject?->display_timeline?->end_date ?? $selectedProject?->end_date)
-                        </span>
-                    </div>
-                    <div>
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Timeline Expiration</span>
-                        <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-timeline-date data-project-contract-date>
-                            @appDate($selectedProject?->display_timeline?->end_date ?? $selectedProject?->end_date)
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Date</span>
+                        <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-date-range>
+                            <span data-project-start-date>@appDate($selectedProject?->start_date)</span> to <span data-project-end-date>@appDate($selectedProject?->display_timeline?->end_date ?? $selectedProject?->end_date)</span>
                         </span>
                     </div>
                     @can('project.customer_end_date')

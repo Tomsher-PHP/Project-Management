@@ -666,8 +666,15 @@ export async function loadSingleProjectDetails(filters = getActiveFilters()) {
             }
         }
 
-        if (startDateEl) startDateEl.innerText = data.dates?.formatted_start_date || '--';
-        if (endDateEl) endDateEl.innerText = data.dates?.formatted_end_date || '--';
+        const dateRangeEl = section.querySelector('[data-project-date-range]');
+        const startDateFormatted = data.dates?.formatted_start_date || '--';
+        const endDateFormatted = data.dates?.formatted_end_date || '--';
+        if (startDateEl && endDateEl) {
+            startDateEl.innerText = startDateFormatted;
+            endDateEl.innerText = endDateFormatted;
+        } else if (dateRangeEl) {
+            dateRangeEl.innerHTML = `<span data-project-start-date>${escapeHtml(startDateFormatted)}</span> to <span data-project-end-date>${escapeHtml(endDateFormatted)}</span>`;
+        }
         if (contractDateEl) contractDateEl.innerText = data.dates?.formatted_timeline_end_date || data.dates?.formatted_end_date || data.dates?.formatted_contract_end_date || '--';
 
         const customerEndDateEl = section.querySelector('[data-project-customer-end-date]');
