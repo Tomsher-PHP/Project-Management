@@ -1487,17 +1487,9 @@ export function switchDashboardMode(filters = getActiveFilters()) {
 
         if (filters.userId) {
             if (timeWrapper) timeWrapper.classList.remove('hidden');
-            if (chartsSection) {
-                chartsSection.classList.remove('xl:grid-cols-2');
-                chartsSection.classList.add('xl:grid-cols-3');
-            }
             loadSingleProjectTimeComparisonChart(filters);
         } else {
             if (timeWrapper) timeWrapper.classList.add('hidden');
-            if (chartsSection) {
-                chartsSection.classList.remove('xl:grid-cols-3');
-                chartsSection.classList.add('xl:grid-cols-2');
-            }
             destroyChart('singleProjectTimeComparisonChart');
         }
     } else {

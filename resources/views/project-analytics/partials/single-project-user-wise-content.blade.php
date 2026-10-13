@@ -34,7 +34,7 @@
                     </div>
                 </a>
 
-                <div class="flex items-center justify-end gap-4 text-right">
+                <div class="flex items-center justify-end gap-2.5 sm:gap-4 text-right flex-shrink-0">
                     <div>
                         <p class="text-sm font-bold text-bgray-900 dark:text-white">
                             {{ $formatDuration($estimatedSeconds) }}
