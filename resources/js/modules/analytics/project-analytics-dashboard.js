@@ -598,10 +598,21 @@ export async function loadSingleProjectDetails(filters = getActiveFilters()) {
 
         if (nameEl) nameEl.innerText = data.name || '--';
         if (codeEl) codeEl.innerText = data.project_code || '--';
-        if (customerEl) customerEl.innerText = data.customer_name || '--';
+        if (customerEl) {
+            if (data.customer_url) {
+                customerEl.innerHTML = `<a href="${escapeHtml(data.customer_url)}" class="font-medium text-bgray-700 dark:text-bgray-300 transition hover:text-success-400">${escapeHtml(data.customer_name || '--')}</a>`;
+            } else {
+                customerEl.innerText = data.customer_name || '--';
+            }
+        }
 
         if (statusBadge) {
-            statusBadge.innerText = data.status?.name || '--';
+            const valEl = statusBadge.querySelector('[data-project-status-value]');
+            if (valEl) {
+                valEl.innerText = data.status?.name || '--';
+            } else {
+                statusBadge.innerHTML = `<span>Status :</span> <span data-project-status-value>${escapeHtml(data.status?.name || '--')}</span>`;
+            }
             const color = data.status?.color || '#6B7280';
             statusBadge.style.backgroundColor = `${color}15`;
             statusBadge.style.color = color;
@@ -609,15 +620,36 @@ export async function loadSingleProjectDetails(filters = getActiveFilters()) {
         }
 
         if (stageBadge) {
-            stageBadge.innerText = data.stage?.name || '--';
+            const valEl = stageBadge.querySelector('[data-project-stage-value]');
+            if (valEl) {
+                valEl.innerText = data.stage?.name || '--';
+            } else {
+                stageBadge.innerHTML = `<span>Stage :</span> <span data-project-stage-value>${escapeHtml(data.stage?.name || '--')}</span>`;
+            }
             const color = data.stage?.color || '#64748B';
             stageBadge.style.backgroundColor = `${color}15`;
             stageBadge.style.color = color;
             stageBadge.style.borderColor = `${color}40`;
         }
 
-        if (flowBadge) {
-            flowBadge.innerText = data.project_flow_label || 'Linear';
+        const flowIndicator = section.querySelector('[data-project-flow-indicator], [data-project-flow-wrapper]');
+        if (flowIndicator) {
+            const isAgile = (data.project_flow || '').toLowerCase() === 'agile';
+            const flowLabel = data.project_flow_label || (isAgile ? 'Agile' : 'Linear');
+            const iconColor = isAgile ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400';
+            const svgIcon = isAgile
+                ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>`
+                : `<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>`;
+            flowIndicator.innerHTML = `
+                <div class="inline-flex flex-wrap items-center gap-2 rounded-xl border border-bgray-200 bg-white px-3 py-2 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+                    <span class="inline-flex items-center gap-1 rounded-full px-1 py-1 text-xs font-medium text-bgray-700 dark:text-bgray-300">
+                        <span class="inline-flex shrink-0 items-center justify-center transition duration-150 h-5 w-5 rounded ${iconColor}">
+                            ${svgIcon}
+                        </span>
+                        <span>${escapeHtml(flowLabel)}</span>
+                    </span>
+                </div>
+            `;
         }
 
         if (serviceTypesContainer) {
@@ -626,8 +658,9 @@ export async function loadSingleProjectDetails(filters = getActiveFilters()) {
                 serviceTypesContainer.innerHTML = '<span class="text-bgray-400">Unassigned</span>';
             } else {
                 serviceTypesContainer.innerHTML = types.map(st => `
-                    <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold border" style="background-color: ${escapeHtml(st.color || '#3B82F6')}15; color: ${escapeHtml(st.color || '#3B82F6')}; border-color: ${escapeHtml(st.color || '#3B82F6')}40;">
-                        ${escapeHtml(st.name)}
+                    <span class="inline-flex w-fit items-center gap-1.5 rounded-full border border-bgray-200 px-2.5 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300" title="${escapeHtml(st.code || '')}">
+                        <span class="h-2 w-2 rounded-full" style="background-color: ${escapeHtml(st.color || '#9a9996')}"></span>
+                        <span>${escapeHtml(st.name)}</span>
                     </span>
                 `).join('');
             }
@@ -636,6 +669,19 @@ export async function loadSingleProjectDetails(filters = getActiveFilters()) {
         if (startDateEl) startDateEl.innerText = data.dates?.formatted_start_date || '--';
         if (endDateEl) endDateEl.innerText = data.dates?.formatted_end_date || '--';
         if (contractDateEl) contractDateEl.innerText = data.dates?.formatted_timeline_end_date || data.dates?.formatted_end_date || data.dates?.formatted_contract_end_date || '--';
+
+        const customerEndDateEl = section.querySelector('[data-project-customer-end-date]');
+        const customerEndDateWrapper = section.querySelector('[data-project-customer-end-date-wrapper]');
+        if (customerEndDateWrapper) {
+            if (data.dates?.has_customer_end_date_permission && data.dates?.formatted_customer_end_date && data.dates?.formatted_customer_end_date !== '--') {
+                customerEndDateWrapper.classList.remove('hidden');
+                if (customerEndDateEl) {
+                    customerEndDateEl.innerText = data.dates.formatted_customer_end_date;
+                }
+            } else {
+                customerEndDateWrapper.classList.add('hidden');
+            }
+        }
 
         // Task summary count metrics
         const taskSummary = data.task_summary || {};

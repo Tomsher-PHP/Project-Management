@@ -1280,8 +1280,8 @@ class ProjectAnalyticsService
         $displayTimeline = $project->display_timeline;
         $timelineEndDate = $displayTimeline?->end_date ?? $project->end_date ?? $project->deadline;
         $customerEndDate = null;
-        if ($authUser->can('project.customer_end_date') && $displayTimeline?->customer_end_date) {
-            $customerEndDate = $displayTimeline->customer_end_date;
+        if ($authUser->can('project.customer_end_date')) {
+            $customerEndDate = $displayTimeline?->customer_end_date ?? $project->customer_end_date;
         }
 
         $summaryCounts = $this->getProjectSummaryCounts($authUser, $selectedUser, $project->id);
@@ -1291,6 +1291,7 @@ class ProjectAnalyticsService
             'name' => $project->name,
             'project_code' => $project->project_code ?: '--',
             'customer_name' => $project->customer?->name ?: '--',
+            'customer_url' => $project->customer ? route('customers.show', $project->customer) : null,
             'project_flow' => $project->project_flow ?: 'linear',
             'project_flow_label' => ucfirst($project->project_flow ?: 'linear'),
             'status' => [
@@ -1305,17 +1306,19 @@ class ProjectAnalyticsService
             'service_types' => $project->serviceTypes->map(fn($st) => [
                 'id' => $st->id,
                 'name' => $st->name,
-                'color' => $st->color ?: '#3B82F6',
+                'color' => $st->color ?: '#9a9996',
+                'code' => $st->code ?: '',
             ])->values()->all(),
             'dates' => [
                 'start_date' => $project->start_date?->format('Y-m-d'),
-                'formatted_start_date' => $project->start_date?->format('d M Y') ?: '--',
+                'formatted_start_date' => \App\Providers\AppServiceProvider::formatAppDate($project->start_date),
                 'end_date' => $timelineEndDate?->format('Y-m-d'),
-                'formatted_end_date' => $timelineEndDate?->format('d M Y') ?: '--',
+                'formatted_end_date' => \App\Providers\AppServiceProvider::formatAppDate($timelineEndDate),
                 'timeline_end_date' => $timelineEndDate?->format('Y-m-d'),
-                'formatted_timeline_end_date' => $timelineEndDate?->format('d M Y') ?: '--',
-                'contract_end_date' => $customerEndDate?->format('Y-m-d'),
-                'formatted_contract_end_date' => $customerEndDate?->format('d M Y') ?: '--',
+                'formatted_timeline_end_date' => \App\Providers\AppServiceProvider::formatAppDate($timelineEndDate),
+                'customer_end_date' => $customerEndDate?->format('Y-m-d'),
+                'formatted_customer_end_date' => \App\Providers\AppServiceProvider::formatAppDate($customerEndDate),
+                'has_customer_end_date_permission' => $authUser->can('project.customer_end_date'),
             ],
             'task_summary' => [
                 'total_tasks' => $summaryCounts['total_tasks'],
