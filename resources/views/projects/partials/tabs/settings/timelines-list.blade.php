@@ -34,7 +34,10 @@
             </thead>
             <tbody>
                 @forelse ($projectTimelines as $timeline)
-                    <tr class="border-b dark:border-darkblack-400 {{ $timeline->status === \App\Models\ProjectTimeline::STATUS_ACTIVE ? 'bg-success-50 hover:bg-success-100 dark:bg-success-300/10 dark:hover:bg-success-300/20' : 'bg-white hover:bg-gray-50 dark:bg-darkblack-600 dark:hover:bg-darkblack-500' }}">
+                    @php
+                        $isActive = $timeline->status === \App\Models\ProjectTimeline::STATUS_ACTIVE;
+                    @endphp
+                    <tr class="border-b dark:border-darkblack-400 bg-white hover:bg-gray-50 dark:bg-darkblack-600 dark:hover:bg-darkblack-500" {!! $isActive ? 'style="border-left-width: 4px; border-left-color: rgb(34, 197, 94);"' : '' !!}>
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                             {{ $timeline->name }}
                         </td>

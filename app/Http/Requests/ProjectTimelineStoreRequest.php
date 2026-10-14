@@ -16,8 +16,8 @@ class ProjectTimelineStoreRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'type' => 'required|in:renewal,extension,new',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
             'customer_end_date' => 'nullable|date|after_or_equal:end_date',
             'estimated_time_minutes' => 'nullable|integer|min:0',
             'customer_estimate_minutes' => 'nullable|integer|min:0',
