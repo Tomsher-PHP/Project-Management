@@ -361,7 +361,13 @@ class ProjectAnalyticsController extends Controller
         $totalWorkedSeconds = (int) $taskAssigneeOverview->sum('worked_time_seconds');
         $assigneeCount = $taskAssigneeOverview->whereNotNull('id')->count();
 
-        $formatDuration = fn(?int $seconds): string => $analyticsService->formatDuration((int) $seconds);
+        $formatDuration = function (?int $seconds): string {
+            $seconds = max(0, (int) $seconds);
+            $hours = intdiv($seconds, 3600);
+            $minutes = intdiv($seconds % 3600, 60);
+
+            return sprintf('%02dh : %02dm', $hours, $minutes);
+        };
 
         $viewData = [
             'project' => $project,
@@ -387,6 +393,16 @@ class ProjectAnalyticsController extends Controller
                 'has_timelines' => $timelineProgressbars->isNotEmpty(),
                 'has_milestones' => ! empty($milestoneBurnupChart['labels']),
                 'has_assignees' => $taskAssigneeOverview->isNotEmpty(),
+                'timeline_spent_formatted' => $formatDuration($totalTimelineWorked),
+                'timeline_estimated_formatted' => $formatDuration($totalTimelineEstimated),
+                'timeline_customer_estimate_formatted' => $formatDuration($totalTimelineCustomerEstimate),
+                'total_timeline_worked' => $totalTimelineWorked,
+                'total_timeline_estimated' => $totalTimelineEstimated,
+                'total_timeline_customer_estimate' => $totalTimelineCustomerEstimate,
+                'total_timeline_worked_formatted' => $formatDuration($totalTimelineWorked),
+                'total_timeline_estimated_formatted' => $formatDuration($totalTimelineEstimated),
+                'total_timeline_customer_estimate_formatted' => $formatDuration($totalTimelineCustomerEstimate),
+                'has_customer_estimate' => $totalTimelineCustomerEstimate > 0,
                 'total_worked_formatted' => $formatDuration($totalWorkedSeconds),
                 'assignee_count' => $assigneeCount,
             ],

@@ -1,3 +1,19 @@
+@php
+    $timelineProgressbars = $timelineProgressbars ?? collect();
+    $totalTimelineWorked = $timelineProgressbars->sum(fn($b) => (int) $b->get('worked_seconds', 0));
+    $totalTimelineEstimated = $timelineProgressbars->sum(fn($b) => (int) $b->get('estimated_seconds', 0));
+    $totalTimelineCustomerEstimate = $timelineProgressbars->sum(fn($b) => (int) $b->get('customer_estimate_seconds', 0));
+    $hasTimelines = $timelineProgressbars->isNotEmpty();
+
+    $formatDuration = $formatDuration ?? function (?int $seconds): string {
+        $seconds = max(0, (int) $seconds);
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+
+        return sprintf('%02dh : %02dm', $hours, $minutes);
+    };
+@endphp
+
 <div class="overflow-hidden rounded-[10px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-single-project-time-progress-section>
     <!-- Header -->
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/70 px-5 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
@@ -7,16 +23,16 @@
 
         <div class="flex items-center gap-2 select-text" data-time-progress-header-badges>
             <span title="Spent time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
-                Spent <span class="ml-1" data-time-progress-spent>--</span>
+                Spent <span class="ml-1" data-time-progress-spent>{{ $hasTimelines ? $formatDuration($totalTimelineWorked) : '--' }}</span>
             </span>
 
             <span title="Estimated time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
-                Estimate <span class="ml-1" data-time-progress-estimated>--</span>
+                Estimate <span class="ml-1" data-time-progress-estimated>{{ $hasTimelines ? $formatDuration($totalTimelineEstimated) : '--' }}</span>
             </span>
 
             @if (auth()->user()?->can('project.customer_end_date'))
-                <span title="Customer estimated time" class="hidden inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50" data-time-progress-customer-badge>
-                    Customer Est. <span class="ml-1" data-time-progress-customer-estimated>--</span>
+                <span title="Customer estimated time" class="{{ $hasTimelines && $totalTimelineCustomerEstimate > 0 ? '' : 'hidden ' }}inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50" data-time-progress-customer-badge>
+                    Customer Est. <span class="ml-1" data-time-progress-customer-estimated>{{ $hasTimelines && $totalTimelineCustomerEstimate > 0 ? $formatDuration($totalTimelineCustomerEstimate) : '--' }}</span>
                 </span>
             @endif
         </div>

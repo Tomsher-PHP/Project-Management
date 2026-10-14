@@ -67,6 +67,9 @@ export default defineConfig({
                 'resources/js/modules/attendance/attendance.js',
                 'resources/js/modules/holiday.js',
 
+                'resources/js/modules/analytics/project-analytics-filters.js',
+                'resources/js/modules/analytics/project-analytics-dashboard.js',
+
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',
                 'resources/css/modules/task-running-timer.css',

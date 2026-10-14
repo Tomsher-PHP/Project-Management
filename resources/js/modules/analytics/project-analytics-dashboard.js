@@ -970,7 +970,29 @@ export async function loadSingleProjectOverview(filters = getActiveFilters()) {
             const custBadge = timeProgressCard.querySelector('[data-time-progress-customer-estimated]');
             const custWrapper = timeProgressCard.querySelector('[data-time-progress-customer-badge]');
 
-            if (spentBadge && data.total_worked_formatted) spentBadge.innerText = data.total_worked_formatted;
+            if (data.has_timelines) {
+                if (spentBadge) {
+                    spentBadge.innerText = data.timeline_spent_formatted || data.total_timeline_worked_formatted || '--';
+                }
+                if (estBadge) {
+                    estBadge.innerText = data.timeline_estimated_formatted || data.total_timeline_estimated_formatted || '--';
+                }
+                if (custWrapper) {
+                    const hasCustomerEstimate = Boolean(data.has_customer_estimate || (Number(data.total_timeline_customer_estimate) > 0));
+                    if (hasCustomerEstimate) {
+                        if (custBadge) {
+                            custBadge.innerText = data.timeline_customer_estimate_formatted || data.total_timeline_customer_estimate_formatted || '--';
+                        }
+                        custWrapper.classList.remove('hidden');
+                    } else {
+                        custWrapper.classList.add('hidden');
+                    }
+                }
+            } else {
+                if (spentBadge) spentBadge.innerText = '--';
+                if (estBadge) estBadge.innerText = '--';
+                if (custWrapper) custWrapper.classList.add('hidden');
+            }
 
             if (data.has_timelines && data.time_progress_html) {
                 if (content) {

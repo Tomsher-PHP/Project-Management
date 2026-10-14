@@ -1,11 +1,13 @@
 @php
-    $formatDuration = $formatDuration ?? function (?int $seconds): string {
-        $seconds = max(0, (int) $seconds);
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
+    $formatDuration =
+        $formatDuration ??
+        function (?int $seconds): string {
+            $seconds = max(0, (int) $seconds);
+            $hours = intdiv($seconds, 3600);
+            $minutes = intdiv($seconds % 3600, 60);
 
-        return sprintf('%02dh : %02dm', $hours, $minutes);
-    };
+            return sprintf('%02dh : %02dm', $hours, $minutes);
+        };
 @endphp
 
 @foreach ($timelineProgressbars as $bar)
