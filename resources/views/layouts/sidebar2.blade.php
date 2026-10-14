@@ -172,10 +172,8 @@
                                         </svg>
                                     </span>
                                 </a>
-                                <span class="sidebar-tooltip">Project Analytics</span>
+                                <span class="sidebar-tooltip">Analytics</span>
                             </li>
-
-
 
                             @if ($canViewUsers)
                                 <li class="item px-[43px] py-[11px] {{ $isUsersActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">

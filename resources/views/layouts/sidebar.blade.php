@@ -188,7 +188,7 @@
                                             <path d="M22 12A10 10 0 0 0 12 2v10z" />
                                         </svg>
                                     </span>
-                                    <span class="item-text text-base font-medium leading-none {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : '' }}">Project Analytics</span>
+                                    <span class="item-text text-base font-medium leading-none {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
                                 </div>
                             </div>
                         </a>
@@ -453,8 +453,7 @@
                                     @if ($canViewLeaveChangeRequests)
                                         <!-- Leave Change Requests -->
                                         <li>
-                                            <a href="{{ route('leave-change-requests.index') }}"
-                                            class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                            <a href="{{ route('leave-change-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Change</span>
                                                 @if (($requestMenuBadges['leave_change_requests'] ?? 0) > 0)
                                                     <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
@@ -468,8 +467,7 @@
                                     @if ($canViewLeaveCancelRequests)
                                         <!-- Leave Cancel Requests -->
                                         <li>
-                                            <a href="{{ route('leave-cancellation-requests.index') }}"
-                                            class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                            <a href="{{ route('leave-cancellation-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Cancel</span>
                                                 @if (($requestMenuBadges['leave_cancellation_request'] ?? 0) > 0)
                                                     <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
