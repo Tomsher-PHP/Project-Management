@@ -6,7 +6,7 @@
         </h3>
     </div>
 
-    @if ((request()->routeIs('user.workspace') || request()->routeIs('user.analytics')) && $workspaceSelectableUsers->isNotEmpty())
+    @if (request()->routeIs('user.workspace') && $workspaceSelectableUsers->isNotEmpty())
         <div class="min-w-[240px] max-w-[320px]" data-workspace-user-select-root>
             <label for="workspace-user-select" class="sr-only">Workspace user</label>
             <select id="workspace-user-select" class="tom-select-no-search w-full" data-workspace-user-select>
@@ -21,7 +21,7 @@
     @endif
 
 
-    @if ((request()->routeIs('user.workspace') || request()->routeIs('user.analytics')) && ($pendingHandoffCount ?? 0) > 0)
+    @if (request()->routeIs('user.workspace') && ($pendingHandoffCount ?? 0) > 0)
 
 <a
     href="{{ route('handoff_requests.index') }}"

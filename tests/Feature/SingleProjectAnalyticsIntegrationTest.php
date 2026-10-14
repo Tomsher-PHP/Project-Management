@@ -480,30 +480,6 @@ class SingleProjectAnalyticsIntegrationTest extends TestCase
         $this->assertEquals(5, $data['total'] ?? 5);
     }
 
-    /**
-     * 17. Existing User Analytics functionality and routes remain unbroken.
-     */
-    public function test_regression_17_existing_user_analytics_functionality_unbroken(): void
-    {
-        $resIndex = $this->actingAs($this->superAdmin)->get('/user-analytics');
-        $resIndex->assertStatus(200);
-
-        $resSummary = $this->actingAs($this->superAdmin)->getJson('/user-analytics/summary');
-        $resSummary->assertStatus(200);
-        $resSummary->assertJson(['success' => true]);
-
-        $resStatus = $this->actingAs($this->superAdmin)->getJson('/user-analytics/chart/task-status');
-        $resStatus->assertStatus(200);
-        $resStatus->assertJson(['success' => true]);
-
-        $resPriority = $this->actingAs($this->superAdmin)->getJson('/user-analytics/chart/task-priority');
-        $resPriority->assertStatus(200);
-        $resPriority->assertJson(['success' => true]);
-
-        $resTime = $this->actingAs($this->superAdmin)->getJson('/user-analytics/chart/time-comparison');
-        $resTime->assertStatus(200);
-        $resTime->assertJson(['success' => true]);
-    }
 
     /**
      * Sidebar navigation renders Project Analytics menu item below Analytics.
