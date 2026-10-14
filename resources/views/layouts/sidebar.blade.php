@@ -8,6 +8,8 @@
         'break_requests' => 0,
         'task_time_extend_requests' => 0,
         'leave_requests' => 0,
+        'leave_change_requests' => 0,
+        'leave_cancellation_request' => 0,
         'has_any_pending' => false,
     ];
 
@@ -43,6 +45,8 @@
 
     $canViewAppraisal = $authUser?->can('appraisal.view');
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
+    $canViewLeaveChangeRequests = $authUser?->can('leave_change_request.view');
+    $canViewLeaveCancelRequests = $authUser?->can('leave_cancellation_request.view');
     $canViewAttendance = $authUser?->can('attendance.view');
     $canViewHolidays = $authUser?->can('holidays.view');
     $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
@@ -60,7 +64,7 @@
     };
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses || $canViewLeaveChangeRequests || $canViewLeaveCancelRequests;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
@@ -83,10 +87,13 @@
     $isBreakRequestsActive = request()->routeIs('break-requests.*');
     $isTaskTimeExtendRequestsActive = request()->routeIs('tasks.extend-time-requests.*');
     $isLeaveRequestsActive = request()->routeIs('leave-requests.*');
+    $isLeaveChangeRequestsActive = request()->routeIs('leave-change-requests.*');
+    $isLeaveCancelRequestsActive = request()->routeIs('leave-cancellation-requests.*');
     $isLeaveApprovalRequestsActive = request()->routeIs('leave-requests.pending');
     $isLeavesActive = request()->routeIs('leave-requests.index');
 
-    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive || $isLeaveApprovalRequestsActive;
+    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive || $isLeaveApprovalRequestsActive || $isLeaveChangeRequestsActive || $isLeaveCancelRequestsActive;
+
     $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive && !$isTaskTimeExtendRequestsActive;
 
     $isProjectReportActive = request()->routeIs('reports.projects', 'reports.project.export', 'reports.projects.by-flow');
@@ -340,7 +347,7 @@
                             </li>
                         @endif
 
-                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests || $canViewLeaveRequests)
+                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests || $canViewLeaveRequests || $canViewLeaveChangeRequests || $canViewLeaveCancelRequests)
                             <!-- Requests -->
                             <li class="item py-[8px] {{ $isRequestsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="javascript:void(0)" aria-expanded="{{ $isRequestsMenuActive ? 'true' : 'false' }}">
@@ -444,8 +451,35 @@
                                             </a>
                                         </li>
                                     @endif
+                                    @if ($canViewLeaveChangeRequests)
+                                        <!-- Leave Change Requests -->
+                                        <li>
+                                            <a href="{{ route('leave-change-requests.index') }}"
+                                            class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                <span>Leave Change</span>
+                                                @if (($requestMenuBadges['leave_change_requests'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['leave_change_requests'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
 
-
+                                    @if ($canViewLeaveCancelRequests)
+                                        <!-- Leave Cancel Requests -->
+                                        <li>
+                                            <a href="{{ route('leave-cancellation-requests.index') }}"
+                                            class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                <span>Leave Cancel</span>
+                                                @if (($requestMenuBadges['leave_cancellation_request'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['leave_cancellation_request'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
                                 </ul>
                             </li>
                         @endif
@@ -782,8 +816,8 @@
                     <p class="truncate text-sm font-bold text-bgray-900 dark:text-white">
                         {{ $authUser?->name }}
                     </p>
-                    <p class="truncate text-xs font-medium text-bgray-700 dark:text-bgray-300">
-                        {{ $authUser?->role_name ?? 'No Role' }}
+                    <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">
+                        {{ $authUser?->getRoleNames()->implode(', ') ?: 'No Role' }}
                     </p>
                 </div>
             </div>

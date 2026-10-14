@@ -443,6 +443,12 @@
             />
 
             <x-filters.multi-select
+                name="target_user_id"
+                label="Target User"
+                :options="$users"
+            />
+
+            <x-filters.multi-select
                 name="project_id"
                 label="Project"
                 :options="$projects"

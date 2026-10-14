@@ -128,7 +128,8 @@
                                                 </h4>
                                                 <div class="flex flex-col gap-0.5">
                                                     <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50 sm:text-base">Role:
-                                                        {{ $user->role_name }}</span>
+                                                        {{ $user->getRoleNames()->implode(', ') ?: 'No Role Assigned' }}
+                                                    </span>
                                                     <div class="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-bgray-50 sm:text-sm">
                                                         <span class="shrink-0">Email:</span>
                                                         @if (filled($user->email))
