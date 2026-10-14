@@ -680,10 +680,10 @@ export async function loadSingleProjectDetails(filters = getActiveFilters()) {
         const customerEndDateEl = section.querySelector('[data-project-customer-end-date]');
         const customerEndDateWrapper = section.querySelector('[data-project-customer-end-date-wrapper]');
         if (customerEndDateWrapper) {
-            if (data.dates?.has_customer_end_date_permission && data.dates?.formatted_customer_end_date && data.dates?.formatted_customer_end_date !== '--') {
+            if (data.dates?.has_customer_end_date_permission) {
                 customerEndDateWrapper.classList.remove('hidden');
                 if (customerEndDateEl) {
-                    customerEndDateEl.innerText = data.dates.formatted_customer_end_date;
+                    customerEndDateEl.innerText = data.dates.formatted_customer_end_date || '--';
                 }
             } else {
                 customerEndDateWrapper.classList.add('hidden');

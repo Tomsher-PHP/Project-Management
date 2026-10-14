@@ -356,7 +356,7 @@ class ProjectServices
 
         $startDate = $displayTimeline?->start_date ?? $project->start_date;
         $endDate = $displayTimeline?->end_date ?? $project->end_date;
-        $customerEndDate = $displayTimeline?->customer_end_date ?? $project->customer_end_date;
+        $customerEndDate = $displayTimeline?->customer_end_date;
 
         return [
             'projectTimeline' => $this->buildTimeline($startDate, $endDate),

@@ -48,6 +48,8 @@ class ProjectAnalyticsController extends Controller
             if ($selectedUser && ! in_array($selectedProject->id, $analyticsService->getUserInvolvedProjectIds($selectedUser))) {
                 abort(403, 'This project is not associated with the selected user.');
             }
+
+            $selectedProject->loadMissing(['customer', 'projectStatus', 'projectStage', 'serviceTypes', 'projectTimelines']);
         }
 
         // Show only users involved in projects auth user is authorized to access

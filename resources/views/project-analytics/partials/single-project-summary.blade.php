@@ -72,20 +72,23 @@
                             @endif
                         </div>
                     </div>
+                    @php
+                        $displayTimeline = $selectedProject?->display_timeline;
+                        $displayStartDate = $displayTimeline?->start_date ?? $selectedProject?->start_date;
+                        $displayEndDate = $displayTimeline?->end_date ?? $selectedProject?->end_date;
+                        $displayCustomerEndDate = $displayTimeline?->customer_end_date;
+                    @endphp
                     <div>
                         <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Date</span>
                         <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-date-range>
-                            <span data-project-start-date>@appDate($selectedProject?->start_date)</span> to <span data-project-end-date>@appDate($selectedProject?->display_timeline?->end_date ?? $selectedProject?->end_date)</span>
+                            <span data-project-start-date>@appDate($displayStartDate)</span> to <span data-project-end-date>@appDate($displayEndDate)</span>
                         </span>
                     </div>
                     @can('project.customer_end_date')
-                        @php
-                            $custEndDate = $selectedProject?->display_timeline?->customer_end_date ?? $selectedProject?->customer_end_date;
-                        @endphp
-                        <div data-project-customer-end-date-wrapper class="{{ empty($custEndDate) ? 'hidden' : '' }}">
+                        <div data-project-customer-end-date-wrapper>
                             <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Customer End Date</span>
                             <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-customer-end-date>
-                                @appDate($custEndDate)
+                                @appDate($displayCustomerEndDate)
                             </span>
                         </div>
                     @endcan

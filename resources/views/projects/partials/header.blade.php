@@ -13,7 +13,7 @@
     $displayTimeline = $project->display_timeline;
     $displayStartDate = $displayTimeline?->start_date ?? $project->start_date;
     $displayEndDate = $displayTimeline?->end_date ?? $project->end_date;
-    $displayCustomerEndDate = $displayTimeline?->customer_end_date ?? $project->customer_end_date;
+    $displayCustomerEndDate = $displayTimeline?->customer_end_date;
 
     $projectTimeline = $projectTimeline ?? [
         'percentage' => 0,

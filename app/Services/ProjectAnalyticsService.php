@@ -1270,10 +1270,11 @@ class ProjectAnalyticsService
         ]);
 
         $displayTimeline = $project->display_timeline;
+        $timelineStartDate = $displayTimeline?->start_date ?? $project->start_date;
         $timelineEndDate = $displayTimeline?->end_date ?? $project->end_date ?? $project->deadline;
         $customerEndDate = null;
         if ($authUser->can('project.customer_end_date')) {
-            $customerEndDate = $displayTimeline?->customer_end_date ?? $project->customer_end_date;
+            $customerEndDate = $displayTimeline?->customer_end_date;
         }
 
         $summaryCounts = $this->getProjectSummaryCounts($authUser, $selectedUser, $project->id);
@@ -1302,8 +1303,8 @@ class ProjectAnalyticsService
                 'code' => $st->code ?: '',
             ])->values()->all(),
             'dates' => [
-                'start_date' => $project->start_date?->format('Y-m-d'),
-                'formatted_start_date' => \App\Providers\AppServiceProvider::formatAppDate($project->start_date),
+                'start_date' => $timelineStartDate?->format('Y-m-d'),
+                'formatted_start_date' => \App\Providers\AppServiceProvider::formatAppDate($timelineStartDate),
                 'end_date' => $timelineEndDate?->format('Y-m-d'),
                 'formatted_end_date' => \App\Providers\AppServiceProvider::formatAppDate($timelineEndDate),
                 'timeline_end_date' => $timelineEndDate?->format('Y-m-d'),
