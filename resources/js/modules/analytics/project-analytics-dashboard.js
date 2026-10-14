@@ -547,6 +547,229 @@ export async function loadUpcomingTimelines(filters = getActiveFilters()) {
 export const loadUpcomingContracts = loadUpcomingTimelines;
 
 /**
+ * Load Parent Projects Overview table data.
+ */
+export async function loadParentProjectsOverview(filters = getActiveFilters()) {
+    const card = document.querySelector('[data-project-analytics-section="parent-projects-overview"]');
+    if (!card) return;
+    const url = card.dataset.url;
+    if (!url) return;
+
+    const loadingState = card.querySelector('[data-loading-state]');
+    const emptyState = card.querySelector('[data-empty-state]');
+    const content = card.querySelector('[data-content]');
+    const tbody = card.querySelector('[data-parent-projects-table-body]');
+    const totalCountEl = card.querySelector('[data-parent-projects-total-count]');
+    const emptyTitle = card.querySelector('[data-empty-title]');
+    const emptySubtitle = card.querySelector('[data-empty-subtitle]');
+
+    if (loadingState) loadingState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+
+    try {
+        const data = await fetchAnalyticsData(url, filters);
+        const canView = data.can_view !== false;
+        const projects = data.projects || [];
+
+        if (loadingState) loadingState.classList.add('hidden');
+
+        if (!canView) {
+            if (emptyTitle) emptyTitle.innerText = 'Access Restricted';
+            if (emptySubtitle) emptySubtitle.innerText = 'You do not have permission to view parent projects.';
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (content) content.classList.add('hidden');
+            if (totalCountEl) totalCountEl.innerText = '0';
+            return;
+        }
+
+        if (totalCountEl) totalCountEl.innerText = projects.length.toLocaleString();
+
+        if (projects.length === 0) {
+            if (emptyTitle) emptyTitle.innerText = 'No parent projects found';
+            if (emptySubtitle) emptySubtitle.innerText = 'There are no parent projects with child projects matching the current filter.';
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (content) content.classList.add('hidden');
+            return;
+        }
+
+        if (emptyState) emptyState.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
+        const rowsHtml = projects.map(item => {
+            const serviceTypes = item.service_types || [];
+            let serviceTypeHtml = '<span class="text-bgray-400 text-xs">—</span>';
+            if (serviceTypes.length > 0) {
+                serviceTypeHtml = serviceTypes.map(st => `
+                    <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium border" style="border-color: ${escapeHtml(st.color || '#3B82F6')}40; color: ${escapeHtml(st.color || '#3B82F6')}; background-color: ${escapeHtml(st.color || '#3B82F6')}15;">
+                        ${escapeHtml(st.name)}
+                    </span>
+                `).join(' ');
+            } else if (item.service_type_names && item.service_type_names !== '--') {
+                serviceTypeHtml = `<span class="text-xs text-bgray-700 dark:text-bgray-300">${escapeHtml(item.service_type_names)}</span>`;
+            }
+
+            const isSpentExceeded = item.estimate_seconds > 0 && item.spent_seconds > item.estimate_seconds;
+            const spentColorClass = isSpentExceeded ? 'text-red-500 font-semibold' : 'text-bgray-900 dark:text-white font-semibold';
+
+            return `
+                <tr class="parent-project-row transition-colors hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/40" data-parent-row-id="${item.id}">
+                    <!-- 1. Parent Project Name & Expand Toggle -->
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-2">
+                            <button type="button"
+                                    class="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-bgray-500 hover:bg-bgray-200 hover:text-bgray-900 dark:text-bgray-400 dark:hover:bg-darkblack-500 dark:hover:text-white transition-all duration-200"
+                                    data-parent-project-toggle="${item.id}"
+                                    aria-expanded="false"
+                                    title="Toggle child projects">
+                                <svg class="h-4 w-4 transform transition-transform duration-200" data-toggle-chevron viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <div>
+                                <a href="${escapeHtml(item.url || '#')}" class="font-semibold text-bgray-900 transition hover:text-success-400 hover:underline dark:text-white dark:hover:text-success-300">
+                                    ${escapeHtml(item.name)}
+                                </a>
+                                ${item.project_code ? `<span class="ml-1 text-[11px] text-bgray-700 dark:text-bgray-300">(${escapeHtml(item.project_code)})</span>` : ''}
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- 2. Service -->
+                    <td class="py-3 px-4">
+                        <div class="flex flex-wrap gap-1">
+                            ${serviceTypeHtml}
+                        </div>
+                    </td>
+
+                    <!-- 3. Estimate -->
+                    <td class="py-3 px-4 font-semibold text-bgray-900 dark:text-white">
+                        ${escapeHtml(item.estimate_formatted)}
+                    </td>
+
+                    <!-- 4. Spent -->
+                    <td class="py-3 px-4 ${spentColorClass}">
+                        ${escapeHtml(item.spent_formatted)}
+                    </td>
+
+                    <!-- 5. Child projects count -->
+                    <td class="py-3 px-4 text-center">
+                        <button type="button"
+                                class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
+                                data-parent-project-toggle="${item.id}"
+                                title="Click to view child projects">
+                            <span>${item.child_projects_count}</span>
+                            <span class="text-[11px] font-normal text-blue-500/80 dark:text-blue-400/80">${item.child_projects_count === 1 ? 'child' : 'children'}</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        if (tbody) tbody.innerHTML = rowsHtml;
+    } catch (err) {
+        console.warn('Failed to load parent projects overview:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (content) content.classList.add('hidden');
+    }
+}
+
+/**
+ * Handle toggle and AJAX load of child projects under a parent project.
+ */
+export async function toggleChildProjects(parentId) {
+    const parentRow = document.querySelector(`[data-parent-row-id="${parentId}"]`);
+    if (!parentRow) return;
+
+    const toggleBtns = document.querySelectorAll(`[data-parent-project-toggle="${parentId}"]`);
+    const chevronIcon = parentRow.querySelector('[data-toggle-chevron]');
+    const existingChildRows = document.querySelectorAll(`.child-project-row[data-parent-id="${parentId}"]`);
+
+    const isExpanded = parentRow.getAttribute('data-expanded') === 'true';
+
+    if (isExpanded) {
+        // Collapse: hide all child rows
+        existingChildRows.forEach(row => row.classList.add('hidden'));
+        parentRow.setAttribute('data-expanded', 'false');
+        toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+        if (chevronIcon) {
+            chevronIcon.classList.remove('rotate-90');
+        }
+        return;
+    }
+
+    // Expanding: If child rows already loaded previously, just show them
+    if (existingChildRows.length > 0) {
+        existingChildRows.forEach(row => row.classList.remove('hidden'));
+        parentRow.setAttribute('data-expanded', 'true');
+        toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'));
+        if (chevronIcon) {
+            chevronIcon.classList.add('rotate-90');
+        }
+        return;
+    }
+
+    // Child rows not yet loaded: Fetch via AJAX
+    const loadingRow = document.createElement('tr');
+    loadingRow.className = `child-project-row bg-bgray-50/50 dark:bg-darkblack-500/20 animate-pulse`;
+    loadingRow.setAttribute('data-parent-id', parentId);
+    loadingRow.innerHTML = `
+        <td colspan="5" class="py-3 px-4 pl-12 text-xs text-bgray-500 dark:text-bgray-400">
+            <div class="flex items-center gap-2">
+                <svg class="h-4 w-4 animate-spin text-success-500" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                <span>Loading child projects...</span>
+            </div>
+        </td>
+    `;
+    parentRow.after(loadingRow);
+
+    parentRow.setAttribute('data-expanded', 'true');
+    toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'));
+    if (chevronIcon) {
+        chevronIcon.classList.add('rotate-90');
+    }
+
+    const filters = getActiveFilters();
+    const url = `/project-analytics/parent-projects/${parentId}/children`;
+
+    try {
+        const response = await fetchAnalyticsData(url, filters);
+        loadingRow.remove();
+
+        if (response && response.html) {
+            // Insert returned child rows right after parentRow
+            parentRow.insertAdjacentHTML('afterend', response.html);
+        } else {
+            const emptyChildRow = document.createElement('tr');
+            emptyChildRow.className = `child-project-row bg-bgray-50/40 dark:bg-darkblack-500/20`;
+            emptyChildRow.setAttribute('data-parent-id', parentId);
+            emptyChildRow.innerHTML = `
+                <td colspan="5" class="py-3 px-4 pl-12 text-xs italic text-bgray-500 dark:text-bgray-400">
+                    No child projects found.
+                </td>
+            `;
+            parentRow.after(emptyChildRow);
+        }
+    } catch (err) {
+        console.warn(`Failed to load child projects for parent ${parentId}:`, err);
+        loadingRow.innerHTML = `
+            <td colspan="5" class="py-3 px-4 pl-12 text-xs text-red-500">
+                Failed to load child projects. Click again to retry.
+            </td>
+        `;
+        parentRow.setAttribute('data-expanded', 'false');
+        toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+        if (chevronIcon) {
+            chevronIcon.classList.remove('rotate-90');
+        }
+    }
+}
+
+/**
  * Load all Overall Dashboard sections.
  */
 export function loadAllOverallDashboardSections(filters = getActiveFilters()) {
@@ -556,6 +779,7 @@ export function loadAllOverallDashboardSections(filters = getActiveFilters()) {
     loadProjectsByStatus(filters);
     loadProjectsByStage(filters);
     loadUpcomingTimelines(filters);
+    loadParentProjectsOverview(filters);
 }
 
 /* ==========================================================================
@@ -1217,6 +1441,18 @@ export function initProjectAnalyticsDashboard() {
 
     // Initialize drill-down tile modal
     initTileDrilldownModal();
+
+    // Listen for parent projects accordion toggle
+    dashboardRoot.addEventListener('click', (e) => {
+        const toggleBtn = e.target.closest('[data-parent-project-toggle]');
+        if (toggleBtn) {
+            e.preventDefault();
+            const parentId = toggleBtn.getAttribute('data-parent-project-toggle');
+            if (parentId) {
+                toggleChildProjects(parentId);
+            }
+        }
+    });
 
     // Initial load
     switchDashboardMode();

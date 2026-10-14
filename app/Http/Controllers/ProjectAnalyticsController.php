@@ -460,6 +460,72 @@ class ProjectAnalyticsController extends Controller
     }
 
     /**
+     * Parent projects overview list.
+     */
+    public function parentProjectsOverview(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+
+        $data = $analyticsService->getParentProjectsOverview(
+            $request->user(),
+            $selectedUser,
+            $project?->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Child projects overview list for a given parent project, rendered as HTML partial.
+     */
+    public function childProjectsOverview(Project $project, Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $authUser = $request->user();
+
+        // Check if user has access to this parent project
+        $accessibleProject = Project::query()
+            ->accessibleBy($authUser)
+            ->whereKey($project->id)
+            ->first();
+
+        if (! $accessibleProject) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to view data for this project.',
+            ], 403);
+        }
+
+        $selectedUser = $this->resolveSelectedUser($request);
+        if ($selectedUser instanceof JsonResponse) {
+            return $selectedUser;
+        }
+
+        $children = $analyticsService->getChildProjectsOverview($authUser, $accessibleProject, $selectedUser);
+
+        $html = view('project-analytics.partials.child-projects-rows', [
+            'parentProject' => $accessibleProject,
+            'children' => $children,
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'count' => count($children),
+                'html' => $html,
+            ],
+        ]);
+    }
+
+
+    /**
      * Search projects for Tom Select autocomplete, respecting access control and user involvement.
      */
     public function searchProjects(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse

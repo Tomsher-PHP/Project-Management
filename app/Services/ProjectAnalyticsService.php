@@ -1336,4 +1336,104 @@ class ProjectAnalyticsService
 
         return sprintf('%02dh %02dm', $hours, $minutes);
     }
+
+    /**
+     * Get parent projects overview list with timelines estimate & spent metrics and child count.
+     */
+    public function getParentProjectsOverview(User $authUser, ?User $selectedUser = null, ?int $projectId = null): array
+    {
+        $baseProjects = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId);
+
+        $parentProjects = (clone $baseProjects)
+            ->whereNull('projects.parent_project_id')
+            ->whereHas('reworkProjects')
+            ->with([
+                'serviceTypes:id,name,color',
+                'projectTimelines' => fn($q) => $q->select('id', 'project_id', 'estimated_time_seconds', 'actual_time_seconds'),
+            ])
+            ->withCount([
+                'reworkProjects as child_projects_count' => fn($q) => $q->whereNull('deleted_at'),
+            ])
+            ->orderBy('projects.name', 'asc')
+            ->get();
+
+        $items = $parentProjects->map(function (Project $project) {
+            $estimateSeconds = (int) $project->projectTimelines->sum('estimated_time_seconds');
+            $spentSeconds = (int) $project->projectTimelines->sum('actual_time_seconds');
+
+            return [
+                'id' => $project->id,
+                'name' => $project->name,
+                'project_code' => $project->project_code ?? '',
+                'url' => route('projects.show', $project->id),
+                'service_types' => $project->serviceTypes->map(fn($st) => [
+                    'id' => $st->id,
+                    'name' => $st->name,
+                    'color' => $st->color ?: '#3B82F6',
+                ])->values()->all(),
+                'service_type_names' => $project->serviceTypes->isNotEmpty()
+                    ? $project->serviceTypes->pluck('name')->implode(', ')
+                    : '--',
+                'estimate_seconds' => $estimateSeconds,
+                'estimate_formatted' => $this->formatDuration($estimateSeconds),
+                'spent_seconds' => $spentSeconds,
+                'spent_formatted' => $this->formatDuration($spentSeconds),
+                'child_projects_count' => (int) $project->child_projects_count,
+            ];
+        })->values()->all();
+
+        return [
+            'can_view' => true,
+            'projects' => $items,
+            'total_count' => count($items),
+        ];
+    }
+
+    /**
+     * Get child projects overview list for a given parent project.
+     */
+    public function getChildProjectsOverview(User $authUser, Project $parentProject, ?User $selectedUser = null): array
+    {
+        $childQuery = Project::query()
+            ->accessibleBy($authUser)
+            ->whereNull('projects.deleted_at')
+            ->where('projects.parent_project_id', $parentProject->id);
+
+        if ($selectedUser) {
+            $childQuery->whereIn('projects.id', $this->getUserInvolvedProjectIds($selectedUser));
+        }
+
+        $children = $childQuery
+            ->with([
+                'serviceTypes:id,name,color',
+                'projectTimelines' => fn($q) => $q->select('id', 'project_id', 'estimated_time_seconds', 'actual_time_seconds'),
+            ])
+            ->orderBy('projects.name', 'asc')
+            ->get();
+
+        return $children->map(function (Project $child) {
+            $estimateSeconds = (int) $child->projectTimelines->sum('estimated_time_seconds');
+            $spentSeconds = (int) $child->projectTimelines->sum('actual_time_seconds');
+
+            return [
+                'id' => $child->id,
+                'name' => $child->name,
+                'project_code' => $child->project_code ?? '',
+                'url' => route('projects.show', $child->id),
+                'service_types' => $child->serviceTypes->map(fn($st) => [
+                    'id' => $st->id,
+                    'name' => $st->name,
+                    'color' => $st->color ?: '#3B82F6',
+                ])->values()->all(),
+                'service_type_names' => $child->serviceTypes->isNotEmpty()
+                    ? $child->serviceTypes->pluck('name')->implode(', ')
+                    : '--',
+                'estimate_seconds' => $estimateSeconds,
+                'estimate_formatted' => $this->formatDuration($estimateSeconds),
+                'spent_seconds' => $spentSeconds,
+                'spent_formatted' => $this->formatDuration($spentSeconds),
+            ];
+        })->values()->all();
+    }
 }
+
