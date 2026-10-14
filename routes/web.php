@@ -3,7 +3,6 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
-use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
 use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
@@ -111,13 +110,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
     Route::get('/workspace/daily-timeline/refresh', [UserWorkspaceController::class, 'refreshDailyTimeline'])->name('workspace.daily-timeline.refresh');
 
-    Route::prefix('user-analytics')->group(function () {
-        Route::get('/', [AnalyticsController::class, 'index'])->name('user.analytics');
-        Route::get('/summary', [AnalyticsController::class, 'summary'])->name('analytics.summary');
-        Route::get('/chart/task-status', [AnalyticsController::class, 'taskStatusChart'])->name('analytics.chart.task-status');
-        Route::get('/chart/task-priority', [AnalyticsController::class, 'taskPriorityChart'])->name('analytics.chart.task-priority');
-        Route::get('/chart/time-comparison', [AnalyticsController::class, 'timeComparisonChart'])->name('analytics.chart.time-comparison');
-    });
 
     Route::prefix('project-analytics')->group(function () {
         Route::get('/', [ProjectAnalyticsController::class, 'index'])->name('project.analytics');

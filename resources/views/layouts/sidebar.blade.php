@@ -70,7 +70,6 @@
 
     $isDashboardActive = request()->routeIs('dashboard');
     $isWorkspaceActive = request()->routeIs('user.workspace');
-    $isAnalyticsActive = request()->routeIs('user.analytics');
     $isProjectAnalyticsActive = request()->routeIs('project.analytics*');
     $isRolesActive = request()->routeIs('roles.*');
     $isUsersActive = request()->routeIs('users.*');
@@ -179,22 +178,6 @@
                             </div>
                         </a>
                     </li>
-                    <li class="item py-[8px] {{ $isAnalyticsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                        <a href="{{ route('user.analytics') }}">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="18" y1="20" x2="18" y2="10" />
-                                            <line x1="12" y1="20" x2="12" y2="4" />
-                                            <line x1="6" y1="20" x2="6" y2="14" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-base font-medium leading-none {{ $isAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
                     <li class="item py-[8px] {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                         <a href="{{ route('project.analytics') }}">
                             <div class="flex items-center justify-between">
@@ -205,7 +188,7 @@
                                             <path d="M22 12A10 10 0 0 0 12 2v10z" />
                                         </svg>
                                     </span>
-                                    <span class="item-text text-base font-medium leading-none {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : '' }}">Project Analytics</span>
+                                    <span class="item-text text-base font-medium leading-none {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
                                 </div>
                             </div>
                         </a>
@@ -470,8 +453,7 @@
                                     @if ($canViewLeaveChangeRequests)
                                         <!-- Leave Change Requests -->
                                         <li>
-                                            <a href="{{ route('leave-change-requests.index') }}"
-                                            class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                            <a href="{{ route('leave-change-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Change</span>
                                                 @if (($requestMenuBadges['leave_change_requests'] ?? 0) > 0)
                                                     <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
@@ -485,8 +467,7 @@
                                     @if ($canViewLeaveCancelRequests)
                                         <!-- Leave Cancel Requests -->
                                         <li>
-                                            <a href="{{ route('leave-cancellation-requests.index') }}"
-                                            class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                            <a href="{{ route('leave-cancellation-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Cancel</span>
                                                 @if (($requestMenuBadges['leave_cancellation_request'] ?? 0) > 0)
                                                     <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
