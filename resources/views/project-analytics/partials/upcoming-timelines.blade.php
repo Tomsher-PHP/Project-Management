@@ -41,7 +41,7 @@
                     <tr>
                         <th scope="col" class="py-3 px-4">Project</th>
                         <th scope="col" class="py-3 px-4">Service Type</th>
-                        <th scope="col" class="py-3 px-4">Timeline Start</th>
+                        <th scope="col" class="py-3 px-4">Start</th>
                         <th scope="col" class="py-3 px-4">End Date</th>
                         <th scope="col" class="py-3 px-4">Remaining</th>
                         <th scope="col" class="py-3 px-4">Status</th>
