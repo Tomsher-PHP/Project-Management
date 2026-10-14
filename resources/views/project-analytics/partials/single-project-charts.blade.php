@@ -19,7 +19,7 @@
                     <img src="{{ asset(config('assets.images.chart_no_data')) }}" alt="No data" class="mx-auto h-28 w-auto opacity-80">
                 </div>
                 <h4 class="text-sm font-semibold text-bgray-900 dark:text-white">No task status data</h4>
-                <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-400">
+                <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">
                     No tasks found for this project and active filters.
                 </p>
             </div>
@@ -77,4 +77,3 @@
         </div>
     </div>
 </div>
-

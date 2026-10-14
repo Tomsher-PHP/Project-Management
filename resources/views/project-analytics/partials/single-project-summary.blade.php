@@ -27,7 +27,7 @@
                             <h2 class="text-lg font-bold text-bgray-900 dark:text-white" data-project-name>{{ $selectedProject?->name ?? '--' }}</h2>
                             <span class="rounded bg-bgray-100 px-2 py-0.5 text-xs font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300" data-project-code>{{ $selectedProject?->project_code ?? '--' }}</span>
                         </div>
-                        <p class="text-xs text-bgray-700 dark:text-bgray-400 mt-0.5">
+                        <p class="text-xs text-bgray-700 dark:text-bgray-300 mt-0.5">
                             Customer:
                             <span class="font-medium text-bgray-700 dark:text-bgray-300" data-project-customer>
                                 @if ($selectedProject && $selectedProject->customer && !$selectedProject->customer->trashed())
@@ -58,7 +58,7 @@
                 <!-- Service Types & Applicable Dates Grid -->
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 pt-1 text-xs">
                     <div>
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Service Types</span>
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Service Types</span>
                         <div class="mt-1 flex flex-wrap gap-1.5" data-project-service-types>
                             @if ($selectedProject && $selectedProject->serviceTypes->isNotEmpty())
                                 @foreach ($selectedProject->serviceTypes as $serviceType)
@@ -79,15 +79,15 @@
                         $displayCustomerEndDate = $displayTimeline?->customer_end_date;
                     @endphp
                     <div>
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Date</span>
-                        <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-date-range>
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Date</span>
+                        <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-300" data-project-date-range>
                             <span data-project-start-date>@appDate($displayStartDate)</span> to <span data-project-end-date>@appDate($displayEndDate)</span>
                         </span>
                     </div>
                     @can('project.customer_end_date')
                         <div data-project-customer-end-date-wrapper>
-                            <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Customer End Date</span>
-                            <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-200" data-project-customer-end-date>
+                            <span class="block text-[11px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Customer End Date</span>
+                            <span class="mt-1 block font-semibold text-bgray-800 dark:text-bgray-300" data-project-customer-end-date>
                                 @appDate($displayCustomerEndDate)
                             </span>
                         </div>

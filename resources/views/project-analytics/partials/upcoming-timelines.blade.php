@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between border-b border-bgray-200 bg-bgray-50/80 px-5 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
         <div>
             <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Upcoming Timeline Expirations</h4>
-            <p class="text-xs text-bgray-700 dark:text-bgray-400">Timelines ending in next 45 days</p>
+            <p class="text-xs text-bgray-700 dark:text-bgray-300">Timelines ending in next 45 days</p>
         </div>
         <div class="text-xs font-semibold text-bgray-600 dark:text-bgray-300">
             Total Upcoming: <span data-timelines-total-count data-contracts-total-count class="font-bold text-bgray-900 dark:text-white">—</span>
@@ -29,7 +29,7 @@
                 <img src="{{ asset(config('assets.images.chart_no_data')) }}" alt="No timelines" class="mx-auto h-28 w-auto opacity-80">
             </div>
             <h4 class="text-sm font-semibold text-bgray-900 dark:text-white" data-empty-title>No upcoming timeline expirations</h4>
-            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-400" data-empty-subtitle>
+            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300" data-empty-subtitle>
                 There are no active timelines with upcoming expiration dates.
             </p>
         </div>

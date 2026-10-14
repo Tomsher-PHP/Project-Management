@@ -5,13 +5,15 @@
     $totalTimelineCustomerEstimate = $timelineProgressbars->sum(fn($b) => (int) $b->get('customer_estimate_seconds', 0));
     $hasTimelines = $timelineProgressbars->isNotEmpty();
 
-    $formatDuration = $formatDuration ?? function (?int $seconds): string {
-        $seconds = max(0, (int) $seconds);
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
+    $formatDuration =
+        $formatDuration ??
+        function (?int $seconds): string {
+            $seconds = max(0, (int) $seconds);
+            $hours = intdiv($seconds, 3600);
+            $minutes = intdiv($seconds % 3600, 60);
 
-        return sprintf('%02dh : %02dm', $hours, $minutes);
-    };
+            return sprintf('%02dh : %02dm', $hours, $minutes);
+        };
 @endphp
 
 <div class="overflow-hidden rounded-[10px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-single-project-time-progress-section>
@@ -57,7 +59,7 @@
 
     <!-- Empty State -->
     <div data-empty-state class="hidden flex min-h-[160px] flex-col items-center justify-center p-6 text-center">
-        <p class="text-sm text-bgray-600 dark:text-bgray-400">No time progress data available for this project.</p>
+        <p class="text-sm text-bgray-600 dark:text-bgray-300">No time progress data available for this project.</p>
     </div>
 
     <!-- Task / Time Progress Content -->

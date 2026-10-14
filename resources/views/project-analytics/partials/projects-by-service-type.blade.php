@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between border-b border-bgray-200 bg-bgray-50/80 px-5 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
         <div>
             <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Projects by Service Type</h4>
-            <p class="text-xs text-bgray-700 dark:text-bgray-400">Distribution of projects across service types</p>
+            <p class="text-xs text-bgray-700 dark:text-bgray-300">Distribution of projects across service types</p>
         </div>
         <div class="text-xs font-semibold text-bgray-600 dark:text-bgray-300">
             Total: <span data-service-type-total-count class="font-bold text-bgray-900 dark:text-white">—</span>
@@ -28,7 +28,7 @@
                 <img src="{{ asset(config('assets.images.chart_no_data')) }}" alt="No data" class="mx-auto h-28 w-auto opacity-80">
             </div>
             <h4 class="text-sm font-semibold text-bgray-900 dark:text-white">No service type data</h4>
-            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-400">
+            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
                 No projects found for the selected filters.
             </p>
         </div>
