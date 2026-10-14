@@ -1365,7 +1365,7 @@ class ProjectAnalyticsService
                 'id' => $project->id,
                 'name' => $project->name,
                 'project_code' => $project->project_code ?? '',
-                'url' => route('projects.show', $project->id),
+                'url' => route('projects.edit', $project->id),
                 'service_types' => $project->serviceTypes->map(fn($st) => [
                     'id' => $st->id,
                     'name' => $st->name,
@@ -1419,7 +1419,7 @@ class ProjectAnalyticsService
                 'id' => $child->id,
                 'name' => $child->name,
                 'project_code' => $child->project_code ?? '',
-                'url' => route('projects.show', $child->id),
+                'url' => route('projects.edit', $child->id),
                 'service_types' => $child->serviceTypes->map(fn($st) => [
                     'id' => $st->id,
                     'name' => $st->name,
