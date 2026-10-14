@@ -11,29 +11,25 @@
             <thead>
                 <tr class="border-b border-bgray-200 dark:border-darkblack-400">
                     <th class="px-4 py-3">
-                        <input
-                            type="checkbox"
-                            id="select-all-project-trackings"
-                            class="project-tracking-checkbox"
-                        >
+                        <input type="checkbox" id="select-all-project-trackings" class="project-tracking-checkbox">
                     </th>
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-500">
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-900">
                         Date
                     </th>
 
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-500">
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-900">
                         Title
                     </th>
 
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-500">
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-900">
                         Description
                     </th>
 
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-500">
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-900">
                         Attachments
                     </th>
 
-                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-bgray-500">
+                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase text-bgray-900">
                         Action
                     </th>
                 </tr>
@@ -44,15 +40,11 @@
                 @foreach ($projectTrackings as $tracking)
                     <tr>
                         <td class="px-4 py-3 text-center">
-                            <input
-                                type="checkbox"
-                                value="{{ $tracking->id }}"
-                                class="project-tracking-checkbox project-tracking-row-checkbox"
-                            >
+                            <input type="checkbox" value="{{ $tracking->id }}" class="project-tracking-checkbox project-tracking-row-checkbox">
                         </td>
 
                         <td>
-                            {{ $tracking->date?->format('d M Y') }}
+                            @appDate($tracking->date)
                         </td>
 
                         <td class="px-5 py-4">

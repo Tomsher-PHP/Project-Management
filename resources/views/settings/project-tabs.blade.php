@@ -36,6 +36,18 @@
             'url' => route('settings.agile-sprints.index'),
             'permission' => 'project_settings.view',
         ],
+        [
+            'key' => 'service_types',
+            'label' => 'Service Types',
+            'url' => route('settings.service-types.index'),
+            'permission' => 'project_settings.view',
+        ],
+        [
+            'key' => 'notifications',
+            'label' => 'Notifications',
+            'url' => route('settings.project-notifications.index'),
+            'permission' => 'project_settings.view',
+        ],
     ];
 @endphp
 

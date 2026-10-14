@@ -146,6 +146,30 @@ class Project extends Model
         return $this->belongsToMany(Technology::class, 'project_technology')->withTrashed();
     }
 
+    public function serviceTypes()
+    {
+        return $this->belongsToMany(
+            ServiceType::class,
+            'project_service_types'
+        )->withTimestamps()->withTrashed();
+    }
+
+    /**
+     * Get service types available for editing this project.
+     * Returns all active service types, plus any soft-deleted or inactive service types
+     * that are currently assigned to this project.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAvailableServiceTypes()
+    {
+        $chosenIds = $this->relationLoaded('serviceTypes')
+            ? $this->serviceTypes->pluck('id')
+            : $this->serviceTypes()->pluck('service_types.id');
+
+        return ServiceType::forForm($chosenIds, ['order_by' => 'sort_order'])->get();
+    }
+
     public function statusHistories()
     {
         return $this->hasMany(ProjectStatusHistory::class)->orderBy('added_at', 'desc');
@@ -442,4 +466,50 @@ class Project extends Model
         return $this->hasMany(ProjectTracking::class);
     }
 
+    public function projectTimelines()
+    {
+        return $this->hasMany(ProjectTimeline::class)->orderBy('sort_order');
+    }
+
+    public function timelineHistories()
+    {
+        return $this->hasManyThrough(
+            ProjectTimelineStatusHistory::class,
+            ProjectTimeline::class,
+            'project_id',
+            'project_timeline_id',
+            'id',
+            'id'
+        )->orderBy('project_timeline_status_histories.added_at', 'desc');
+    }
+
+    public function getDisplayTimelineAttribute()
+    {
+        $timelines = $this->projectTimelines;
+
+        if ($timelines->isEmpty()) {
+            return null;
+        }
+
+        if ($timelines->count() === 1) {
+            return $timelines->first();
+        }
+
+        $active = $timelines->firstWhere('status', ProjectTimeline::STATUS_ACTIVE);
+        if ($active) {
+            return $active;
+        }
+
+        $lastCompleted = $timelines->where('status', ProjectTimeline::STATUS_COMPLETED)->last();
+        if ($lastCompleted) {
+            return $lastCompleted;
+        }
+
+        $lastNonCancelled = $timelines->where('status', '!=', ProjectTimeline::STATUS_CANCELLED)->last();
+        if ($lastNonCancelled) {
+            return $lastNonCancelled;
+        }
+
+        return null;
+    }
 }

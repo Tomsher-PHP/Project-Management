@@ -46,7 +46,7 @@ class TaskObserver
     {
         $original = $task->getOriginal();
 
-        if ($task->wasChanged(['project_id', 'parent_task_id', 'project_sprint_id', 'project_milestone_id'])) {
+        if ($task->wasChanged(['project_id', 'parent_task_id', 'project_sprint_id', 'project_milestone_id', 'project_timeline_id'])) {
             $this->projectTimeService->recalculateOldTaskRelations($original);
         }
 
@@ -57,6 +57,7 @@ class TaskObserver
             'parent_task_id',
             'project_sprint_id',
             'project_milestone_id',
+            'project_timeline_id',
             'actual_time_seconds',
         ])) {
             $this->projectTimeService->recalculateByTask($task->id);
@@ -113,6 +114,10 @@ class TaskObserver
     {
         if ($task->parent_task_id) {
             $this->projectTimeService->recalculateTaskDerived((int) $task->parent_task_id);
+        }
+
+        if ($task->project_timeline_id) {
+            $this->projectTimeService->recalculateTimelineTimes((int) $task->project_timeline_id);
         }
 
         if ($task->project_sprint_id) {

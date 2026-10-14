@@ -14,7 +14,7 @@ trait ProjectHeaderTrait
 {
     protected function getProjectHeaderData(Project $project): array
     {
-        $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'salesPerson', 'addedBy', 'parentProject']);
+        $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'salesPerson', 'addedBy', 'parentProject', 'serviceTypes']);
 
         $timelines = $this->projectServices->getTimelines($project);
         $paymentSummary = $this->projectPaymentService->getPaymentSummary($project);

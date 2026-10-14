@@ -5,6 +5,9 @@
     $userRoleName = $authUser?->role_name ?? 'No Role';
     $workspaceSelectableUsers = collect($workspaceSelectableUsers ?? []);
     $workspaceSelectedUserId = (string) ($workspaceSelectedUserId ?? '');
+    $projectSelectableUsers = collect($projectSelectableUsers ?? []);
+    $projectAnalyticsSelectedUserId = (string) ($projectAnalyticsSelectedUserId ?? '');
+    $projectAnalyticsSelectedProjectId = (string) ($projectAnalyticsSelectedProjectId ?? '');
 @endphp
 <header class="header-wrapper fixed z-30 hidden w-full md:block">
     <div class="relative flex h-[60px] w-full items-center justify-between border-b border-bgray-200 bg-white px-8 dark:border-darkblack-500 dark:bg-darkblack-600 xl:px-10 2xl:px-12">

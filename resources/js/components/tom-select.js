@@ -1055,6 +1055,8 @@ export function initTomSelect(root = document) {
             create: false,
             persist: false,
             hideDropdownArrow: false,
+            allowEmptyOption: el.dataset.allowEmptyOption === 'true' || el.querySelector('option[value=""]') !== null,
+            placeholder: el.dataset.placeholder || el.getAttribute('placeholder') || undefined,
 
             plugins: [
                 'dropdown_input',
@@ -1097,7 +1099,7 @@ export function initTomSelect(root = document) {
                                 sub
                                     ? `
                                         <div class="text-sm text-gray-600 dark:text-gray-400">
-                                            ${escape(sub)}
+                                             ${escape(sub)}
                                         </div>
                                     `
                                     : ''
@@ -1137,19 +1139,27 @@ export function initTomSelect(root = document) {
             },
 
             load: function (query, callback) {
-                if (!route) {
+                const currentRoute = el.dataset.route || route;
+                if (!currentRoute) {
                     return callback();
                 }
 
                 const sep =
-                    route.includes('?')
+                    currentRoute.includes('?')
                         ? '&'
                         : '?';
 
                 let fetchUrl =
-                    `${route}${sep}q=${encodeURIComponent(
+                    `${currentRoute}${sep}q=${encodeURIComponent(
                         query || ''
                     )}`;
+
+                if (el.dataset.userId) {
+                    fetchUrl +=
+                        `&user_id=${encodeURIComponent(
+                            el.dataset.userId
+                        )}`;
+                }
 
                 if (el.dataset.excludeId) {
                     fetchUrl +=
@@ -1161,8 +1171,9 @@ export function initTomSelect(root = document) {
                 fetch(fetchUrl)
                     .then(res => res.json())
                     .then(json => {
+                        const items = Array.isArray(json) ? json : (json.data || []);
                         callback(
-                            json.map(c => ({
+                            items.map(c => ({
                                 value: String(
                                     c.value
                                     ?? c.id

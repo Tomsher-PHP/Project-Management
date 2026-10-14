@@ -13,6 +13,7 @@ use App\Models\ProjectStage;
 use App\Models\ProjectStageHistory;
 use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
+use App\Models\ProjectTimeline;
 use App\Models\Task;
 use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
@@ -103,6 +104,21 @@ class ProjectServices
                 'stage_id' => $project->project_stage_id,
             ]);
 
+            // Generate Original Timeline for the new project
+            ProjectTimeline::create([
+                'project_id' => $project->id,
+                'name' => 'Original Timeline',
+                'type' => 'original',
+                'status' => ProjectTimeline::STATUS_ACTIVE,
+                'start_date' => $project->start_date,
+                'end_date' => $project->end_date,
+                'customer_end_date' => $project->customer_end_date,
+                'estimated_time_seconds' => $project->estimated_time_seconds,
+                'customer_estimate_seconds' => $project->customer_estimate_seconds,
+                'sort_order' => 1,
+                'created_by' => auth()->id(),
+            ]);
+
             return $project;
         });
     }
@@ -140,14 +156,23 @@ class ProjectServices
                 'name' => $data['name'],
                 'customer_id' => $data['customer_id'],
                 'priority' => $data['priority'],
-                'start_date' => $data['start_date'] ?? null,
-                'end_date' => $data['end_date'] ?? null,
-                'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
-                'default_task_estimate_seconds' => $data['default_task_estimate_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
                 'default_billable' => $data['default_billable'],
             ];
+
+            if (array_key_exists('start_date', $data)) {
+                $projectData['start_date'] = $data['start_date'];
+            }
+            if (array_key_exists('end_date', $data)) {
+                $projectData['end_date'] = $data['end_date'];
+            }
+            if (array_key_exists('estimated_time_seconds', $data)) {
+                $projectData['estimated_time_seconds'] = $data['estimated_time_seconds'];
+            }
+            if (array_key_exists('default_task_estimate_seconds', $data)) {
+                $projectData['default_task_estimate_seconds'] = $data['default_task_estimate_seconds'];
+            }
 
             if (array_key_exists('project_category_ids', $data)) {
                 $categoryIds = is_array($data['project_category_ids'])
@@ -176,8 +201,22 @@ class ProjectServices
 
             // Attach project technologies
             if (isset($data['project_technology_ids'])) {
-                $project->technologies()->sync($data['project_technology_ids']);
+                $technologyIds = is_array($data['project_technology_ids'])
+                    ? array_values(array_unique(array_filter(array_map('intval', $data['project_technology_ids']))))
+                    : [];
+                $project->technologies()->sync($technologyIds);
             }
+
+            // Attach project service types
+            if (array_key_exists('service_type_ids', $data)) {
+                $serviceTypeIds = is_array($data['service_type_ids'])
+                    ? array_values(array_unique(array_filter(array_map('intval', $data['service_type_ids']))))
+                    : [];
+                $project->serviceTypes()->sync($serviceTypeIds);
+            }
+
+            // Sync original timeline
+            app(ProjectTimelineService::class)->syncOriginalTimelineFromProject($project);
 
             $updatedProject = $project->fresh();
 
@@ -193,7 +232,7 @@ class ProjectServices
         });
     }
 
-    private function buildProjectTimelineChanges(Project $project, array $originalTimelineValues): array
+    public function buildProjectTimelineChanges(Project $project, array $originalTimelineValues): array
     {
         return collect(self::PROJECT_TIMELINE_FIELDS)
             ->filter(fn($label, $field) => $project->isDirty($field))
@@ -293,10 +332,18 @@ class ProjectServices
 
     public function getTimelines(Project $project): array
     {
-        $taskEstimateTotals = Task::query()
+        $displayTimeline = $project->display_timeline;
+
+        $taskEstimateQuery = Task::query()
             ->leftJoin('task_statuses', 'task_statuses.id', '=', 'tasks.status_id')
             ->where('tasks.project_id', $project->id)
-            ->where('tasks.request_status', Task::REQUEST_APPROVED)
+            ->where('tasks.request_status', Task::REQUEST_APPROVED);
+
+        if ($displayTimeline) {
+            $taskEstimateQuery->where('tasks.project_timeline_id', $displayTimeline->id);
+        }
+
+        $taskEstimateTotals = $taskEstimateQuery
             ->selectRaw('COALESCE(SUM(tasks.estimated_time_seconds), 0) as total_estimated_seconds')
             ->selectRaw('COALESCE(SUM(CASE WHEN task_statuses.is_completed = 1 THEN tasks.estimated_time_seconds ELSE 0 END), 0) as completed_estimated_seconds')
             ->first();
@@ -307,9 +354,13 @@ class ProjectServices
             ? (int) round(($completedEstimatedSeconds / $totalEstimatedSeconds) * 100)
             : 0;
 
+        $startDate = $displayTimeline?->start_date ?? $project->start_date;
+        $endDate = $displayTimeline?->end_date ?? $project->end_date;
+        $customerEndDate = $displayTimeline?->customer_end_date;
+
         return [
-            'projectTimeline' => $this->buildTimeline($project->start_date, $project->end_date),
-            'customerTimeline' => $this->buildTimeline($project->start_date, $project->customer_end_date),
+            'projectTimeline' => $this->buildTimeline($startDate, $endDate),
+            'customerTimeline' => $this->buildTimeline($startDate, $customerEndDate),
             'task_progress' => [
                 'percentage' => min(max($taskCompletionPercentage, 0), 100),
                 'completed_hours' => round($completedEstimatedSeconds / 3600, 2),
@@ -599,6 +650,8 @@ class ProjectServices
 
         return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId) {
             $movingTasks = $this->collectTaskTree($task);
+            
+            $targetTimelineId = $targetProject->display_timeline?->id;
 
             foreach ($movingTasks as $t) {
                 // If assigned to a user, add user to target project team if not exists
@@ -620,6 +673,7 @@ class ProjectServices
                 'parent_task_id' => $newParentTaskId,
                 'project_milestone_id' => $resolvedMilestoneId,
                 'project_sprint_id' => $resolvedSprintId,
+                'project_timeline_id' => $targetTimelineId,
                 'sort_order' => Task::nextSortOrder($targetProject->id, $resolvedSprintId ? (int) $resolvedSprintId : null),
             ];
 
@@ -640,7 +694,9 @@ class ProjectServices
                 $resolvedMilestoneId ? (int) $resolvedMilestoneId : null,
                 $resolvedSprintId ? (int) $resolvedSprintId : null,
                 (int) $targetProject->id,
-                $isFlowChanged ? $newStatusId : null
+                $isFlowChanged ? $newStatusId : null,
+                true,
+                $targetTimelineId
             );
 
             return $task->fresh();
@@ -766,18 +822,24 @@ class ProjectServices
         ?int $projectMilestoneId,
         ?int $projectSprintId,
         ?int $projectId = null,
-        ?int $newStatusId = null
+        ?int $newStatusId = null,
+        bool $updateTimeline = false,
+        ?int $targetTimelineId = null
     ): void {
         $targetProjectId = $projectId ?: (int) $task->project_id;
 
         $task->childTasks()
             ->get()
-            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId) {
+            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId, $updateTimeline, $targetTimelineId) {
                 $childUpdateData = [
                     'project_id' => $targetProjectId,
                     'project_milestone_id' => $projectMilestoneId,
                     'project_sprint_id' => $projectSprintId,
                 ];
+
+                if ($updateTimeline) {
+                    $childUpdateData['project_timeline_id'] = $targetTimelineId;
+                }
 
                 if ($newStatusId) {
                     if ((int) $childTask->status_id !== (int) $newStatusId) {
@@ -791,7 +853,7 @@ class ProjectServices
 
                 $childTask->update($childUpdateData);
 
-                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId);
+                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId, $updateTimeline, $targetTimelineId);
             });
     }
 

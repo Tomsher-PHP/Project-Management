@@ -131,9 +131,20 @@ trait Filterable
             }
         }
 
+        // Service type filter
+        $serviceTypeFilter = $filters['service_type_ids'] ?? $filters['service_type_id'] ?? null;
+        if (!empty($serviceTypeFilter)) {
+            $serviceTypeIds = (array) $serviceTypeFilter;
+            $serviceTypeIds = array_values(array_filter($serviceTypeIds, fn($val) => filled($val)));
+
+            if (!empty($serviceTypeIds) && method_exists($query->getModel(), 'serviceTypes')) {
+                $query->whereHas('serviceTypes', fn($q) => $q->whereIn('service_types.id', $serviceTypeIds));
+            }
+        }
+
         // 3. Handle dynamic filters
         $dynamicFilters = collect($filters)
-            ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id', 'start_date', 'end_date', 'date_column', 'project_category_id', 'project_category_ids']);
+            ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id', 'start_date', 'end_date', 'date_column', 'project_category_id', 'project_category_ids', 'service_type_id', 'service_type_ids']);
 
         foreach ($dynamicFilters as $field => $value) {
             if (!Schema::hasColumn($query->getModel()->getTable(), $field) || $value === null || $value === '') {

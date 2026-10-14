@@ -356,6 +356,16 @@ $(document).ready(function () {
         resetModalForm(modal);
     });
 
+    // CLOSE MODAL ON OUTSIDE CLICK
+    $(document).on('click', '.modal-form', function (e) {
+        if ($(e.target).closest('.modal-content').length === 0) {
+            let modal = $(this);
+
+            modal.addClass('hidden');
+            resetModalForm(modal);
+        }
+    });
+
     // SUBMIT FORM
     $(document).on('submit', '.ajax-form', function (e) {
 

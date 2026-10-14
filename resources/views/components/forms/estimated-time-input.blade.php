@@ -28,7 +28,7 @@
         </label>
     @endif
 
-    <input type="hidden" name="{{ $name }}" value="{{ $normalizedTotalMinutes }}" data-estimated-total-minutes>
+    <input type="hidden" name="{{ $name }}" id="{{ $attributes->get('id') ?? $name }}" value="{{ $normalizedTotalMinutes }}" data-estimated-total-minutes>
 
     <div class="{{ $panel ? 'rounded-[8px] border border-bgray-200 bg-bgray-50/80 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/70' : '' }}">
         <div class="grid grid-cols-2 gap-3">

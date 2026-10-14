@@ -687,6 +687,7 @@ class TaskServices
         $resolvedSprintId = $placement['project_sprint_id'];
 
         return [
+            'project_timeline_id' => $project->display_timeline?->id,
             'project_milestone_id' => $placement['project_milestone_id'],
             'project_sprint_id' => $resolvedSprintId,
             'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
