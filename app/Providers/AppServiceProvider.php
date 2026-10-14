@@ -34,6 +34,7 @@ use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Notifications\Events\NotificationFailed;
 use App\Notifications\ProjectNotification;
 use App\Models\ProjectNotificationLog;
+use App\Models\ServiceType;
 use App\Models\Technology;
 
 class AppServiceProvider extends ServiceProvider
@@ -142,6 +143,12 @@ class AppServiceProvider extends ServiceProvider
             $view->with('users', app(\App\Services\UserService::class)->getAccessibleUsers(auth()->user(), [], []));
             $view->with('projectCategories', ProjectCategory::orderBy('sort_order', 'asc')->get());
             $view->with('projectTechnologies', Technology::orderBy('sort_order', 'asc')->get());
+            $project = $view->getData()['project'] ?? null;
+            if ($project instanceof \App\Models\Project) {
+                $view->with('serviceTypes', $project->getAvailableServiceTypes());
+            } else {
+                $view->with('serviceTypes', ServiceType::active()->orderBy('sort_order', 'asc')->get());
+            }
 
             $view->with('nextProjectCategorySortOrder', ((int) ProjectCategory::max('sort_order')) + 1);
             $view->with('nextProjectTechnologySortOrder', ((int) Technology::max('sort_order')) + 1);
@@ -183,20 +190,30 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Appraisal::class, AppraisalPolicy::class);
 
         Event::listen(NotificationSent::class, function (NotificationSent $event) {
-            if ($event->notification instanceof ProjectNotification && $event->notification->logId) {
-                ProjectNotificationLog::where('id', $event->notification->logId)->update([
-                    'status' => ProjectNotificationLog::STATUS_SENT,
-                    'sent_at' => Carbon::now(),
-                ]);
+            $notification = $event->notification;
+            if (! $notification instanceof ProjectNotification) {
+                return;
             }
+            if ($notification->logId === null) {
+                return;
+            }
+            ProjectNotificationLog::where('id', $notification->logId)->update([
+                'status' => ProjectNotificationLog::STATUS_SENT,
+                'sent_at' => Carbon::now(),
+            ]);
         });
 
         Event::listen(NotificationFailed::class, function (NotificationFailed $event) {
-            if ($event->notification instanceof ProjectNotification && $event->notification->logId) {
-                ProjectNotificationLog::where('id', $event->notification->logId)->update([
-                    'status' => ProjectNotificationLog::STATUS_FAILED,
-                ]);
+            $notification = $event->notification;
+            if (! $notification instanceof ProjectNotification) {
+                return;
             }
+            if ($notification->logId === null) {
+                return;
+            }
+            ProjectNotificationLog::where('id', $notification->logId)->update([
+                'status' => ProjectNotificationLog::STATUS_FAILED,
+            ]);
         });
     }
 

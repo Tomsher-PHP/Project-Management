@@ -118,14 +118,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const editTrigger = event.target.closest('.edit-record[data-modal="multi-step-modal"]');
+        const editTrigger = event.target.closest(
+            '.edit-record[data-modal="multi-step-modal"]'
+        );
 
         if (editTrigger) {
+            const questions = parseQuestions(
+                editTrigger.getAttribute('data-questions')
+            );
+
+            // Populate after the existing modal handler fills the form.
             window.setTimeout(() => {
-                setQuestions(parseQuestions(editTrigger.dataset.questions));
-            }, 0);
+                setQuestions(questions);
+            }, 100);
+
             return;
         }
+
 
         if (event.target.closest('#multi-step-modal .modal-close')) {
             window.setTimeout(() => setQuestions(['']), 0);

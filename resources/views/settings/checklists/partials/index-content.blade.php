@@ -70,7 +70,20 @@
                             <td class="px-4 py-5">
                                 <div class="flex items-center gap-3">
                                     @can('checklist_template.edit')
-                                        <x-edit-button action="javascript:void(0)" type="button" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.checklists.update', $checklist->id) }}" data-name="{{ $checklist->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-method="PUT" data-module="Checklist Template" aria-label="Edit checklist template" title="Edit checklist template" />
+                                        {{-- <x-edit-button action="javascript:void(0)" type="button" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.checklists.update', $checklist->id) }}" data-name="{{ $checklist->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-method="PUT" data-module="Checklist Template" aria-label="Edit checklist template" title="Edit checklist template" /> --}}
+                                            <x-edit-button
+                                            action="javascript:void(0)"
+                                            type="button"
+                                            class="edit-record"
+                                            data-modal="multi-step-modal"
+                                            data-url="{{ route('settings.checklists.update', $checklist->id) }}"
+                                            data-name="{{ $checklist->name }}"
+                                            data-questions="{{ json_encode($questionList->values()->all(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}"
+                                            data-method="PUT"
+                                            data-module="Checklist Template"
+                                            aria-label="Edit checklist template"
+                                            title="Edit checklist template"
+                                        />
                                     @endcan
 
                                     @can('checklist_template.delete')

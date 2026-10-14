@@ -28,13 +28,13 @@
     @endphp
     <div class="grid grid-cols-3 gap-4" style="grid-column: 1 / -1;">
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Start Date</label>
-            <input type="text" name="start_date" value="{{ $suggestedStartDate }}" data-min-date="{{ $minDate }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Start Date <x-red-star /></label>
+            <input type="text" name="start_date" value="{{ $suggestedStartDate }}" data-min-date="{{ $minDate }}" required class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">End Date</label>
-            <input type="text" name="end_date" value="{{ $suggestedEndDate }}" data-min-date="{{ $minDate }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">End Date <x-red-star /></label>
+            <input type="text" name="end_date" value="{{ $suggestedEndDate }}" data-min-date="{{ $minDate }}" required class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
 
         @can('project.customer_end_date')
@@ -82,13 +82,13 @@
 
     <div class="grid grid-cols-3 gap-4" style="grid-column: 1 / -1;">
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Start Date</label>
-            <input type="text" name="start_date" id="edit_timeline_start_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Start Date <x-red-star /></label>
+            <input type="text" name="start_date" id="edit_timeline_start_date" required class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">End Date</label>
-            <input type="text" name="end_date" id="edit_timeline_end_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">End Date <x-red-star /></label>
+            <input type="text" name="end_date" id="edit_timeline_end_date" required class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
 
         @can('project.customer_end_date')

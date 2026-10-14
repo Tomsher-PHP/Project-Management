@@ -41,12 +41,13 @@ class DashboardServices
         $taskCounts = Task::accessibleBy($user)
             ->join('task_statuses', 'tasks.status_id', '=', 'task_statuses.id')
             ->whereNull('task_statuses.deleted_at')
+            ->where('tasks.request_status', '!=', Task::REQUEST_REJECTED)
             ->selectRaw('task_statuses.type, count(tasks.id) as count')
             ->groupBy('task_statuses.type')
             ->pluck('count', 'type')
             ->toArray();
 
-        $totalTasks = Task::accessibleBy($user)->count();
+        $totalTasks = collect($taskCounts)->sum();
 
         return [
             // Project counts

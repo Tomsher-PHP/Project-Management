@@ -20,7 +20,9 @@ trait HandoffRequestFilterable
         }
 
         foreach ($this->handoffFilterableColumns() as $column) {
-            $values = $this->normalizeHandoffFilterValues($filters[$column] ?? null);
+            $values = $this->normalizeHandoffFilterValues(
+                $filters[$column] ?? null
+            );
 
             if ($values === []) {
                 continue;
@@ -29,12 +31,15 @@ trait HandoffRequestFilterable
             $query->whereIn($column, $values);
         }
 
+        // Filter by created date range
         if (!empty($filters['date_range'])) {
             $dates = explode(' to ', $filters['date_range']);
+
             if (count($dates) === 2) {
                 try {
                     $start = Carbon::parse($dates[0])->startOfDay();
                     $end = Carbon::parse($dates[1])->endOfDay();
+
                     $query->whereBetween('created_at', [$start, $end]);
                 } catch (\Exception $e) {
                     // Ignore invalid dates
@@ -43,9 +48,10 @@ trait HandoffRequestFilterable
                 try {
                     $start = Carbon::parse($dates[0])->startOfDay();
                     $end = Carbon::parse($dates[0])->endOfDay();
+
                     $query->whereBetween('created_at', [$start, $end]);
                 } catch (\Exception $e) {
-                    // Ignore
+                    // Ignore invalid dates
                 }
             }
         }
@@ -57,6 +63,7 @@ trait HandoffRequestFilterable
     {
         return [
             'user_id',
+            'target_user_id', // Added: Target User filter
             'project_id',
             'project_milestone_id',
             'project_sprint_id',
@@ -65,28 +72,57 @@ trait HandoffRequestFilterable
         ];
     }
 
-    protected function applyHandoffSearch(Builder $query, string $search, string $condition): void
-    {
+    protected function applyHandoffSearch(
+        Builder $query,
+        string $search,
+        string $condition
+    ): void {
         $columns = $this->searchable ?? ['description', 'purpose'];
 
-        $query->where(function (Builder $builder) use ($columns, $search, $condition) {
+        $query->where(function (Builder $builder) use (
+            $columns,
+            $search,
+            $condition
+        ) {
             foreach ((array) $columns as $index => $column) {
                 $method = $index === 0 ? 'where' : 'orWhere';
 
                 match ($condition) {
-                    'starts_with' => $builder->{$method}($column, 'like', $search . '%'),
-                    'ends_with' => $builder->{$method}($column, 'like', '%' . $search),
-                    'not_contains' => $builder->where($column, 'not like', '%' . $search . '%'),
-                    default => $builder->{$method}($column, 'like', '%' . $search . '%'),
+                    'starts_with' => $builder->{$method}(
+                        $column,
+                        'like',
+                        $search . '%'
+                    ),
+                    'ends_with' => $builder->{$method}(
+                        $column,
+                        'like',
+                        '%' . $search
+                    ),
+                    'not_contains' => $builder->where(
+                        $column,
+                        'not like',
+                        '%' . $search . '%'
+                    ),
+                    default => $builder->{$method}(
+                        $column,
+                        'like',
+                        '%' . $search . '%'
+                    ),
                 };
             }
 
             $builder->orWhereHas('user', function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%');
             });
+
+            $builder->orWhereHas('targetUser', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+
             $builder->orWhereHas('project', function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%');
             });
+
             $builder->orWhereHas('sourceTask', function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%');
             });
@@ -96,7 +132,7 @@ trait HandoffRequestFilterable
     protected function normalizeHandoffFilterValues(mixed $value): array
     {
         return collect(is_array($value) ? $value : [$value])
-            ->filter(fn($item) => filled($item))
+            ->filter(fn ($item) => filled($item))
             ->values()
             ->all();
     }

@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use App\Models\HandoffRequest;
 
 class UserWorkspaceController extends Controller
 {
@@ -88,6 +89,13 @@ class UserWorkspaceController extends Controller
             ]
         );
 
+        $pendingHandoffCount = HandoffRequest::where(
+            'target_user_id',
+            auth()->id()
+        )
+            ->where('status', HandoffRequest::STATUS_PENDING)
+            ->count();
+            
         return view('workspace.view', [
             'tasksByStatus' => $tasksByStatus,
             'agileNewTaskCount' => $agileNewTaskCount,
@@ -103,6 +111,7 @@ class UserWorkspaceController extends Controller
             'taskCreateDependencies' => $taskCreateDependencies,
             'workspaceFilterCount' => $workspaceFilterCount,
             'workspaceHasActiveFilters' => $workspaceFilterCount > 0,
+            'pendingHandoffCount' => $pendingHandoffCount,
         ] + $timelineViewData + $filterViewData + $formData);
     }
 

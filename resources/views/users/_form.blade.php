@@ -79,7 +79,7 @@
                         </label>
 
                         <div class="relative" data-password-field>
-                            <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" placeholder="Enter password" data-password-input class="user-password-input w-full rounded-lg border border-gray-300 bg-white p-2 pr-12 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white @if($errors->has('password') && !str_contains(strtolower($errors->first('password')), 'confirm')) border-red-500 focus:ring-red-500 focus:border-red-500 @endif">
+                            <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" placeholder="Enter password" data-password-input class="user-password-input w-full rounded-lg border border-gray-300 bg-white p-2 pr-12 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white @if ($errors->has('password') && !str_contains(strtolower($errors->first('password')), 'confirm')) border-red-500 focus:ring-red-500 focus:border-red-500 @endif">
                             <button type="button" class="absolute inset-y-0 right-4 inline-flex items-center text-bgray-700 transition hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white" data-password-toggle aria-label="Show password" aria-pressed="false">
                                 <svg data-password-icon="show" class="h-5 w-5" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                     <path d="M1 10C2.714 5.83333 6.04733 3.75 11 3.75C15.9527 3.75 19.286 5.83333 21 10C19.286 14.1667 15.9527 16.25 11 16.25C6.04733 16.25 2.714 14.1667 1 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -110,7 +110,7 @@
                         </label>
 
                         <div class="relative" data-password-field>
-                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" value="{{ old('password_confirmation') }}" placeholder="Confirm password" data-password-input class="user-password-input w-full rounded-lg border border-gray-300 bg-white p-2 pr-12 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white @if($errors->has('password_confirmation') || ($errors->has('password') && str_contains(strtolower($errors->first('password')), 'confirm'))) border-red-500 focus:ring-red-500 focus:border-red-500 @endif">
+                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" value="{{ old('password_confirmation') }}" placeholder="Confirm password" data-password-input class="user-password-input w-full rounded-lg border border-gray-300 bg-white p-2 pr-12 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white @if ($errors->has('password_confirmation') || ($errors->has('password') && str_contains(strtolower($errors->first('password')), 'confirm'))) border-red-500 focus:ring-red-500 focus:border-red-500 @endif">
                             <button type="button" class="absolute inset-y-0 right-4 inline-flex items-center text-bgray-700 transition hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white" data-password-toggle aria-label="Show password" aria-pressed="false">
                                 <svg data-password-icon="show" class="h-5 w-5" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                     <path d="M1 10C2.714 5.83333 6.04733 3.75 11 3.75C15.9527 3.75 19.286 5.83333 21 10C19.286 14.1667 15.9527 16.25 11 16.25C6.04733 16.25 2.714 14.1667 1 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -228,28 +228,30 @@
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-                <!-- Role -->
+                <!-- Roles -->
                 <div class="flex flex-col gap-2">
-                    <label for="role" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                        Role <x-red-star />
+                    <label for="roles" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                        Roles <x-red-star />
                     </label>
 
-                    <select name="role" id="role" class="tom-select w-full">
+                    <select name="roles[]" id="roles" class="tom-select w-full" multiple>
+                        @php
+                            $selectedRoles = old('roles', isset($user) ? $user->roles->pluck('id')->toArray() : []);
+                        @endphp
 
-                        <option value="">Select Role</option>
-
-                        @foreach ($roles as $key => $role)
-                            <option value="{{ $role->id }}" {{ old('role', $user->role_id ?? '') == $role->id ? 'selected' : '' }}>
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->id }}" {{ in_array($role->id, $selectedRoles) ? 'selected' : '' }}>
                                 {{ $role->name }}
                             </option>
                         @endforeach
                     </select>
 
-                    @error('role')
-                        <p class="mt-2 text-sm text-error-300">
-                            {{ $message }}
-                        </p>
+                    @error('roles')
+                        <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                    @enderror
+
+                    @error('roles.*')
+                        <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -391,8 +393,7 @@
                     </label>
 
                     <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', isset($user) ? optional($user->details?->joining_date)->format('Y-m-d') : now(config('constants.timezone'))->toDateString()) }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" data-format="{{ $globalDateFormat }}"
-                        placeholder="Select a date">
+                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
 
                     @error('joining_date')
                         <p class="mt-2 text-sm text-error-300">

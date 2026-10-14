@@ -1,11 +1,20 @@
 @props([
     'title' => 'Project Flow',
+    'flow' => null,
 ])
 
 @php
     $flowOptions = collect(config('project_constants.project_flows', []))
         ->only(['agile', 'linear'])
         ->filter();
+
+    if ($flow) {
+        $normalized = strtolower((string) $flow);
+        $filtered = $flowOptions->only([$normalized]);
+        if ($filtered->isNotEmpty()) {
+            $flowOptions = $filtered;
+        }
+    }
 @endphp
 
 <div {{ $attributes->merge([

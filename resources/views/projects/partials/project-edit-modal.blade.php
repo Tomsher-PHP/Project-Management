@@ -36,12 +36,28 @@
             </div>
 
             <!-- Parent Project -->
-            <div class="col-span-1 md:col-span-2">
+            <div>
                 <label for="edit_project_parent_project_id" class="mb-2 block text-left text-sm font-medium text-bgray-600 dark:text-bgray-50">Parent Project / Rework For</label>
                 <select name="parent_project_id" id="edit_project_parent_project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}">
                     <option value="">Search parent project here...</option>
                 </select>
                 <p class="text-xs text-bgray-500 mt-1">Select a completed project only when this project is rework or follow-up work for an earlier delivered project.</p>
+            </div>
+
+            <!-- Service Type -->
+            <div>
+                <label for="edit_project_service_type_ids" class="mb-2 block text-left text-sm font-medium text-bgray-600 dark:text-bgray-50">Service Type</label>
+                <select name="service_type_ids[]" id="edit_project_service_type_ids" multiple class="tom-select-multiple w-full">
+                    <option value="">Select Service Type</option>
+                    @php
+                        $modalServiceTypes = (isset($project) && $project instanceof \App\Models\Project)
+                            ? $project->getAvailableServiceTypes()
+                            : ($serviceTypes ?? \App\Models\ServiceType::active()->orderBy('sort_order', 'asc')->get());
+                    @endphp
+                    @foreach ($modalServiceTypes as $serviceType)
+                        <option value="{{ $serviceType->id }}">{{ $serviceType->name }}@if ($serviceType->trashed()) (Deleted)@elseif (!$serviceType->is_active) (Inactive)@endif</option>
+                    @endforeach
+                </select>
             </div>
 
             <!-- Start Date -->

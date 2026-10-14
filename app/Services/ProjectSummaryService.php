@@ -344,9 +344,10 @@ class ProjectSummaryService
      * @param User $authUser
      * @param User|null $selectedUser
      * @param Carbon|null $date
+     * @param int|null $projectId
      * @return array
      */
-    public function getTaskLoggedTimeChart(User $authUser, ?User $selectedUser = null, ?Carbon $date = null): array
+    public function getTaskLoggedTimeChart(User $authUser, ?User $selectedUser = null, ?Carbon $date = null, ?int $projectId = null): array
     {
         $user = $selectedUser ?: $authUser;
         $date = $date ?: Carbon::today();
@@ -362,7 +363,12 @@ class ProjectSummaryService
             $shiftMinutes = (int) ($assignedShift['timeline_segments'][0]['actual_working_duration_minutes'] ?? 0);
         }
 
-        $workedMinutes = $this->timelineService->getTotalTimelineMinutes($workedTaskSegments);
+        // When project_id is provided, calculate task worked time for that user's tasks in the selected project
+        $displayWorkedSegments = $projectId
+            ? array_values(array_filter($workedTaskSegments, fn($seg) => (int) ($seg['project_id'] ?? 0) === (int) $projectId))
+            : $workedTaskSegments;
+
+        $workedMinutes = $this->timelineService->getTotalTimelineMinutes($displayWorkedSegments);
         $breakMinutes = $this->timelineService->getTotalTimelineMinutes($breakTaskSegments);
 
         $labels = [

@@ -51,19 +51,19 @@
                                         <x-sorting.sortable-column column="customer.name" label="Customer" />
                                     </div>
                                 </td>
+                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
+                                    <div class="flex w-full items-center space-x-2.5">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Service Type</span>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-2 xl:w-[220px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status / Stage</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
+                                <td class="px-6 py-2 xl:w-[220px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
-                                        <x-sorting.sortable-column column="start_date" label="Start Date" />
-                                    </div>
-                                </td>
-                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
-                                    <div class="flex w-full items-center space-x-2.5">
-                                        <x-sorting.sortable-column column="end_date" label="End Date" />
+                                        <x-sorting.sortable-column column="start_date" label="Date" />
                                     </div>
                                 </td>
                                 <td class="px-6 py-2 xl:w-[165px] xl:px-0">
@@ -144,6 +144,18 @@
                                             </span>
                                         </div>
                                     </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full flex-wrap gap-1.5">
+                                            @forelse ($project->serviceTypes as $serviceType)
+                                                <span class="inline-flex w-fit items-center gap-1.5 rounded-full border border-bgray-200 px-2.5 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300" title="{{ $serviceType->code }}">
+                                                    <span class="h-2 w-2 rounded-full" style="background-color: {{ $serviceType->color ?: '#9a9996' }}"></span>
+                                                    <span>{{ $serviceType->name }}</span>
+                                                </span>
+                                            @empty
+                                                <span class="text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">--</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-5 xl:w-[220px] xl:px-0">
                                         <div class="flex w-full flex-col gap-2">
                                             <span class="inline-flex w-fit items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
@@ -156,18 +168,19 @@
                                             </span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex flex-col w-full">
-
-                                            <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
-                                                {{ $displayStartDate?->format($globalDateFormat) ?? '--' }}
-                                            </span>
-
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                    <td class="px-6 py-5 xl:w-[220px] xl:px-0">
                                         <div class="flex w-full items-center">
-                                            <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $displayEndDate?->format($globalDateFormat) ?? '--' }}</span>
+                                            <span class="block rounded-md px-2 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
+                                                @if ($displayStartDate && $displayEndDate)
+                                                    {{ $displayStartDate->format($globalDateFormat) }} to {{ $displayEndDate->format($globalDateFormat) }}
+                                                @elseif ($displayStartDate)
+                                                    {{ $displayStartDate->format($globalDateFormat) }} to --
+                                                @elseif ($displayEndDate)
+                                                    -- to {{ $displayEndDate->format($globalDateFormat) }}
+                                                @else
+                                                    --
+                                                @endif
+                                            </span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -220,6 +233,7 @@
         <x-filters.input-search name="name" label="Name" />
         <x-filters.multi-select name="customer_id" label="Customer" :options="$customers" />
         <x-filters.select name="project_flow" label="Project Flow" :options="$types" />
+        <x-filters.multi-select name="service_type_ids" label="Service Type" :options="$serviceTypes" />
         <x-filters.multi-select name="project_category_ids" label="Project Category" :options="$categoriesFilter" />
         <x-filters.multi-select name="priority" label="Priority" :options="$prioritiesFilter" />
         <x-filters.multi-select name="status_id" label="Project Status" :options="$statuses" />
@@ -296,7 +310,7 @@
 
     @push('modals')
         <!-- Edit Project Modal -->
-        @include('projects.partials.project-edit-modal')
+        @include('projects.partials.project-edit-modal', ['project' => null])
     @endpush
 
     @vite('resources/js/modules/projects/project-delete.js')

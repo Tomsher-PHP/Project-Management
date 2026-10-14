@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             CustomerProfileGradeSeeder::class,
 
             // Project related seeders
+            ServiceGroupSeeder::class,
             ProjectStatusSeeder::class,
             TaskStatusSeeder::class,
             TaskTypeSeeder::class,

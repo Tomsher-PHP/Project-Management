@@ -146,6 +146,30 @@ class Project extends Model
         return $this->belongsToMany(Technology::class, 'project_technology')->withTrashed();
     }
 
+    public function serviceTypes()
+    {
+        return $this->belongsToMany(
+            ServiceType::class,
+            'project_service_types'
+        )->withTimestamps()->withTrashed();
+    }
+
+    /**
+     * Get service types available for editing this project.
+     * Returns all active service types, plus any soft-deleted or inactive service types
+     * that are currently assigned to this project.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAvailableServiceTypes()
+    {
+        $chosenIds = $this->relationLoaded('serviceTypes')
+            ? $this->serviceTypes->pluck('id')
+            : $this->serviceTypes()->pluck('service_types.id');
+
+        return ServiceType::forForm($chosenIds, ['order_by' => 'sort_order'])->get();
+    }
+
     public function statusHistories()
     {
         return $this->hasMany(ProjectStatusHistory::class)->orderBy('added_at', 'desc');
