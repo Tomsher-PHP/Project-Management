@@ -384,13 +384,14 @@ class HandoffServices
             throw new \Exception("Created task project must match handoff request project.");
         }
 
-        if ($handoffRequest->project_milestone_id && $handoffRequest->project_milestone_id !== $createdTask->project_milestone_id) {
+        // As of now the below validation not needed. Hnce commented.
+        /*if ($handoffRequest->project_milestone_id && $handoffRequest->project_milestone_id !== $createdTask->project_milestone_id) {
             throw new \Exception("Created task milestone must match handoff request milestone.");
         }
 
         if ($handoffRequest->project_sprint_id && $handoffRequest->project_sprint_id !== $createdTask->project_sprint_id) {
             throw new \Exception("Created task sprint must match handoff request sprint.");
-        }
+        }*/
 
         $handoffRequest->update([
             'status' => HandoffRequest::STATUS_ASSIGNED,

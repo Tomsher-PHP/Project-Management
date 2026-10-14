@@ -62,7 +62,14 @@ class UserRequest extends FormRequest
             ],
 
             // Role / Department / Designation
-            'role' => ['required', 'exists:roles,id'],
+            // 'role' => ['required', 'exists:roles,id'],
+            'roles'   => ['required', 'array', 'min:1'],
+            'roles.*' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:roles,id',
+            ],
             'department_id' => ['nullable', 'exists:departments,id'],
             'designation_id' => ['nullable', 'exists:designations,id'],
 

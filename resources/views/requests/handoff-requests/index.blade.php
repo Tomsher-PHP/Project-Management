@@ -233,7 +233,7 @@
                                                         'purpose' => $request->purpose ?? '--',
                                                         'status' => $currentStatusLabel,
                                                         'description' => $request->description ?? '--',
-                                                    
+
                                                         'attachments' => $request->attachments->map(function ($attachment) {
                                                                 return [
                                                                     'file_name' => $attachment->file_name ?? 'Attachment',
@@ -283,6 +283,12 @@
             </div>
 
             <x-filters.multi-select name="user_id" label="Requested By" :options="$users" />
+
+            <x-filters.multi-select
+                name="target_user_id"
+                label="Target User"
+                :options="$users"
+            />
 
             <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
 

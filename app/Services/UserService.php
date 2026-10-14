@@ -27,41 +27,59 @@ class UserService
         $this->avatarDisk = env('AVATAR_DISK', 'public');
     }
 
+
     public function createUser(array $data)
     {
         return $this->runInActivityBatch(function () use ($data) {
 
-            // Get user type from role
-            $role = isset($data['role'])
-                ? Role::select('id', 'name')->find($data['role'])
-                : null;
+            // Get selected roles using role IDs
+            $roleNames = !empty($data['roles'])
+                ? Role::whereIn('id', $data['roles'])
+                ->pluck('name')
+                ->toArray()
+                : [];
 
-            // 1. Handle password
+            // Handle password
             $plainPassword = $data['password'];
 
             $user = User::create([
                 ...collect($data)->only(['name', 'email'])->toArray(),
-                'password'  => Hash::make($plainPassword),
+                'password' => Hash::make($plainPassword),
             ]);
 
             $this->createDefaultGeneralSettings($user);
             $this->createDefaultNotificationSettings($user);
 
-            // Assign role to user
-            if ($role) {
+            // Assign multiple roles to the user
+            if (!empty($roleNames)) {
                 $oldRoles = [];
-                $user->assignRole($role->name);
-                $this->logRoleActivity($user, $oldRoles, $this->getRoleNames($user));
+
+                $user->syncRoles($roleNames);
+
+                $this->logRoleActivity(
+                    $user,
+                    $oldRoles,
+                    $this->getRoleNames($user)
+                );
             }
 
-            // 3. Create user details
+            // Create user details
             $user->details()->create(
-                collect($data)->only((new UserDetail())->getFillable())->toArray()
+                collect($data)
+                    ->only((new UserDetail())->getFillable())
+                    ->toArray()
             );
 
-            // 4. Image upload can be handled here if needed
+            // Handle profile image upload
             if (!empty($data['profile_image'])) {
-                $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, $this->avatarDisk, 'public', true);
+                $this->attachmentService->upload(
+                    $data['profile_image'],
+                    'user_profile',
+                    $user,
+                    $this->avatarDisk,
+                    'public',
+                    true
+                );
             }
 
             // KPI sync
@@ -71,11 +89,17 @@ class UserService
 
             $company = Configuration::first();
 
-            // Send mail
-            dispatch(new SendWelcomeMailJob($user, $plainPassword, $company));
+            // Send welcome email
+            dispatch(new SendWelcomeMailJob(
+                $user,
+                $plainPassword,
+                $company
+            ));
+
             return $user;
         });
     }
+
 
     private function createDefaultGeneralSettings(User $user): void
     {
@@ -126,52 +150,77 @@ class UserService
         }
     }
 
+
     public function updateUser(User $user, array $data)
     {
         return $this->runInActivityBatch(function () use ($user, $data) {
 
-            // Resolve Role (if provided)
-            $role = !empty($data['role'])
-                ? Role::select('id', 'name')->find($data['role'])
-                : null;
+            // Get existing role names before updating
             $oldRoles = $this->getRoleNames($user);
 
-            // Prepare & Update User Data
+            // Prepare and update user data
             $userData = collect($data)
                 ->only(['name', 'email', 'password'])
                 ->toArray();
 
-            $user->update($userData);
-
-            // Assign role to user
-            if ($role) {
-                $user->syncRoles($role->name);
-                $this->logRoleActivity($user, $oldRoles, $this->getRoleNames($user));
+            // Avoid overwriting the existing password with an empty value
+            if (empty($userData['password'])) {
+                unset($userData['password']);
+            } else {
+                $userData['password'] = Hash::make($userData['password']);
             }
 
-            // Update or Create User Details (hasOne)
+            $user->update($userData);
+
+            // Synchronize selected roles
+            if (array_key_exists('roles', $data)) {
+                $roleNames = !empty($data['roles'])
+                    ? Role::whereIn('id', $data['roles'])
+                    ->pluck('name')
+                    ->toArray()
+                    : [];
+
+                // Assign selected roles and remove unselected roles
+                $user->syncRoles($roleNames);
+
+                // Log role changes
+                $newRoles = $this->getRoleNames($user);
+
+                if ($oldRoles != $newRoles) {
+                    $this->logRoleActivity(
+                        $user,
+                        $oldRoles,
+                        $newRoles
+                    );
+                }
+            }
+
+            // Update or create user details
             $detailsData = collect($data)
                 ->only((new UserDetail())->getFillable())
                 ->toArray();
 
             $user->details()->updateOrCreate([], $detailsData);
 
-            // kpis
+            // KPI sync
             if (isset($data['kpi_id'])) {
                 $user->kpis()->sync($data['kpi_id'] ?? []);
             }
 
-            // Handle Profile Image Upload or delete existing
+            // Handle profile image upload or removal
             if (!empty($data['profile_image'])) {
-                $this->updateProfileImage($user, $data['profile_image']);
+                $this->updateProfileImage(
+                    $user,
+                    $data['profile_image']
+                );
             } elseif (!empty($data['remove_profile_image'])) {
-                // Delete existing attachments
                 $this->attachmentService->delete($user->attachments);
             }
 
             return $user->load(['details']);
         });
     }
+
 
     private function updateProfileImage(User $user, $image): void
     {

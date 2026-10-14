@@ -3,11 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
-use App\Http\Controllers\SprintGroupController;
-use App\Http\Controllers\ServiceTypeController;
-use App\Http\Controllers\ProjectNotificationSettingController;
 use App\Http\Controllers\AnalyticsController;
-use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
 use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
@@ -24,37 +20,43 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\ExpenseController;
-use App\Http\Controllers\ReimbursementController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
+use App\Http\Controllers\LeaveCancellationRequestController;
+use App\Http\Controllers\LeaveChangeRequestController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\MeetingSettingsController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\ProjectTimelineController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
+use App\Http\Controllers\ProjectNotificationSettingController;
 use App\Http\Controllers\ProjectPaymentController;
 use App\Http\Controllers\ProjectRestoreController;
 use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\ProjectTaskController;
+use App\Http\Controllers\ProjectTimelineController;
 use App\Http\Controllers\ProjectTrackingController;
 use App\Http\Controllers\QuickNoteController;
+use App\Http\Controllers\ReimbursementController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\ScheduleTaskController;
+use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\SprintGroupController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
@@ -731,6 +733,59 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{quickNote}/pin', [QuickNoteController::class, 'togglePin'])->name('pin');
         Route::patch('/{quickNote}/archive', [QuickNoteController::class, 'toggleArchive'])->name('archive');
     });
+
+    Route::prefix('leave-change-requests')
+    ->name('leave-change-requests.')
+    ->group(function () {
+
+        Route::get('/', [LeaveChangeRequestController::class, 'index'])
+            ->name('index');
+
+        Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])
+            ->name('create');
+
+        Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])
+            ->name('store');
+
+        Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])
+            ->name('show');
+
+        Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])
+            ->name('approve');
+
+        Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])
+            ->name('reject');
+
+        Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])
+            ->name('cancel');
+    });
+
+
+
+
+Route::prefix('leave-cancellation-requests')
+    ->name('leave-cancellation-requests.')
+    ->controller(LeaveCancellationRequestController::class)
+    ->group(function () {
+        Route::post('/{leaveRequest}', 'store')
+            ->name('store');
+
+        Route::get('/', 'index')
+            ->name('index');
+
+        Route::get('/{cancellationRequest}/details', 'show')
+            ->name('show');
+
+        Route::post('/{cancellationRequest}/approve', 'approve')
+            ->name('approve');
+
+        Route::post('/{cancellationRequest}/reject', 'reject')
+            ->name('reject');
+
+        Route::post('/{cancellationRequest}/cancel', 'cancel')
+            ->name('cancel');
+    });
+
 
     // Meeting Management routes
     Route::get('/meetings/calendar-data', [MeetingController::class, 'calendarData'])->middleware('permission.type:meeting.view')->name('meetings.calendar-data');

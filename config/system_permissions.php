@@ -106,6 +106,20 @@ return [
     ['name' => 'leave_request.reject', 'label' => 'Leave Request', 'sort_order' => 11070, 'default_checked' => false],
     ['name' => 'leave_request.cancel', 'label' => 'Leave Request', 'sort_order' => 11090, 'default_checked' => true],
 
+    // LEAVE CHANGE REQUEST
+    ['name' => 'leave_change_request.view', 'label' => 'Leave Change Request', 'sort_order' => 11100, 'default_checked' => true],
+    ['name' => 'leave_change_request.create', 'label' => 'Leave Change Request', 'sort_order' => 11120, 'default_checked' => true],
+    ['name' => 'leave_change_request.approve', 'label' => 'Leave Change Request', 'sort_order' => 11140, 'default_checked' => false],
+    ['name' => 'leave_change_request.reject', 'label' => 'Leave Change Request', 'sort_order' => 11160, 'default_checked' => false],
+    ['name' => 'leave_change_request.cancel', 'label' => 'Leave Change Request', 'sort_order' => 11180, 'default_checked' => true],
+
+    // LEAVE CANCELLATION REQUEST
+    ['name' => 'leave_cancellation_request.view', 'label' => 'Leave Cancel Request', 'sort_order' => 11200, 'default_checked' => true],
+    ['name' => 'leave_cancellation_request.create', 'label' => 'Leave Cancel Request', 'sort_order' => 11220, 'default_checked' => true],
+    ['name' => 'leave_cancellation_request.approve', 'label' => 'Leave Cancel Request', 'sort_order' => 11240, 'default_checked' => false],
+    ['name' => 'leave_cancellation_request.reject', 'label' => 'Leave Cancel Request', 'sort_order' => 11260, 'default_checked' => false],
+    ['name' => 'leave_cancellation_request.cancel', 'label' => 'Leave Cancel Request', 'sort_order' => 11280, 'default_checked' => true],
+
     // ATTENDANCE
     ['name' => 'attendance.view', 'label' => 'Attendance', 'sort_order' => 12000, 'default_checked' => true],
     ['name' => 'attendance.create', 'label' => 'Attendance', 'sort_order' => 12020, 'default_checked' => false],

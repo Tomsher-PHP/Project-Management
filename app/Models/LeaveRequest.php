@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\LeaveChangeRequest;
 use App\Traits\Filterable;
 use App\Traits\HasFormOptions;
 use App\Traits\LogsModelActivity;
@@ -293,4 +294,19 @@ class LeaveRequest extends Model
             'link'
         );
     }
+
+    public function changeRequests()
+    {
+        return $this->hasMany(LeaveChangeRequest::class);
+    }
+
+
+    public function cancellationRequests()
+    {
+        return $this->hasMany(
+            \App\Models\LeaveCancellationRequest::class,
+            'leave_request_id'
+        );
+    }
+
 }

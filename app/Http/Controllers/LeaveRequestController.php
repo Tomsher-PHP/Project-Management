@@ -1867,8 +1867,8 @@ class LeaveRequestController extends Controller
                 'reason' =>
                 $request->reason,
 
-                'approver_comment' =>
-                $request->approver_comment,
+                // 'approver_comment' =>
+                // $request->approver_comment,
             ]);
 
             $this->saveAttachment(
