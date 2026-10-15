@@ -52,6 +52,9 @@ class DatabaseSeeder extends Seeder
             // Hosting related seeders
             HostingProviderSeeder::class,
             HostingServiceSeeder::class,
+            HostingServiceStatusSeeder::class,
+            HostingBillingCycleSeeder::class,
+            HostingEnvironmentSeeder::class,
 
             // Appraisal related seeders
             AppraisalQuestionUnitSeeder::class,
