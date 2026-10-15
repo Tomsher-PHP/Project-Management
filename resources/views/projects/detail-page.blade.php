@@ -10,7 +10,7 @@
         $commentsModalUrl = $isDeletedProjectView ? route('projects.restore.comments.modal', ['id' => $project->id]) : route('projects.comments.modal', $project);
     @endphp
 
-    <section class="space-y-6" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}">
+    <section class="space-y-6" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-force-initial-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}">
 
         @if ($isDeletedProjectView)
             <div class="rounded-xl bg-[#FDF9E9] px-4 py-3 text-sm text-warning-300 dark:bg-darkblack-600 dark:text-warning-200">
@@ -26,6 +26,7 @@
             @include('projects.partials.header', [
                 'projectTimeline' => $projectTimeline,
                 'customerTimeline' => $customerTimeline,
+                'initialExpanded' => true,
             ])
         </div>
 
