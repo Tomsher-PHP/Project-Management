@@ -22,6 +22,8 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\HostingProviderController;
+use App\Http\Controllers\HostingServiceController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\LeaveCancellationRequestController;
@@ -250,6 +252,19 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('project-notifications', ProjectNotificationSettingController::class)->middleware('permission.type:project_settings.view')->only(['index']);
         Route::post('project-notifications', [ProjectNotificationSettingController::class, 'store'])->middleware('permission.type:project_settings.create')->name('project-notifications.store');
         Route::put('project-notifications/{project_notification}', [ProjectNotificationSettingController::class, 'update'])->middleware('permission.type:project_settings.edit')->name('project-notifications.update');
+
+        // Server & Hosting Routes
+        Route::patch('/hosting-providers/toggle-status', [HostingProviderController::class, 'toggleStatus'])->middleware('permission.type:server_hosting.edit')->name('hosting-providers.toggleStatus');
+        Route::resource('hosting-providers', HostingProviderController::class)->middleware('permission.type:server_hosting.view')->only(['index']);
+        Route::resource('hosting-providers', HostingProviderController::class)->middleware('permission.type:server_hosting.create')->only(['store']);
+        Route::resource('hosting-providers', HostingProviderController::class)->middleware('permission.type:server_hosting.edit')->only(['update']);
+        Route::resource('hosting-providers', HostingProviderController::class)->middleware('permission.type:server_hosting.delete')->only(['destroy']);
+
+        Route::patch('/hosting-services/toggle-status', [HostingServiceController::class, 'toggleStatus'])->middleware('permission.type:server_hosting.edit')->name('hosting-services.toggleStatus');
+        Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.view')->only(['index']);
+        Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.create')->only(['store']);
+        Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.edit')->only(['update']);
+        Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.delete')->only(['destroy']);
 
         // Task settings routes
         Route::patch('/task-statuses/toggle-status', [TaskSettingsController::class, 'toggleStatusTaskStatus'])->middleware('permission.type:task_settings.edit')->name('task_status.toggleStatus');

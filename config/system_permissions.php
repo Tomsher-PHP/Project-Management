@@ -303,6 +303,12 @@ return [
     ['name' => 'company_expenses.edit',   'label' => 'Settings - Company Expenses', 'sort_order' => 69040, 'default_checked' => false],
     ['name' => 'company_expenses.delete', 'label' => 'Settings - Company Expenses', 'sort_order' => 69060, 'default_checked' => false],
 
+    // Server & Hosting
+    ['name' => 'server_hosting.view',   'label' => 'Settings - Server & Hosting', 'sort_order' => 69100, 'default_checked' => false],
+    ['name' => 'server_hosting.create', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69120, 'default_checked' => false],
+    ['name' => 'server_hosting.edit',   'label' => 'Settings - Server & Hosting', 'sort_order' => 69140, 'default_checked' => false],
+    ['name' => 'server_hosting.delete', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69160, 'default_checked' => false],
+
     // ---------------------------------------------------------------------------------------------------------------------------------
     // CONFIGURATION  -- Last Settings Module
     ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],

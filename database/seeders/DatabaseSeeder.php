@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -49,6 +48,10 @@ class DatabaseSeeder extends Seeder
             AgileSprintStatusSeeder::class,
             KpiSeeder::class,
             HandoffPurposesSeeder::class,
+
+            // Hosting related seeders
+            HostingProviderSeeder::class,
+            HostingServiceSeeder::class,
 
             // Appraisal related seeders
             AppraisalQuestionUnitSeeder::class,
