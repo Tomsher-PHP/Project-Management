@@ -9,7 +9,13 @@
     @endphp
     <tr class="transition-colors hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/30">
         <td class="py-3 px-4">
-            <div class="font-semibold text-bgray-900 dark:text-white">{{ $item['project_name'] }}</div>
+            @if (!empty($item['project_id']))
+                <a href="{{ route('projects.edit', $item['project_id']) }}" class="font-semibold text-bgray-900 transition hover:text-success-400 hover:underline dark:text-white dark:hover:text-success-300">
+                    {{ $item['project_name'] }}
+                </a>
+            @else
+                <div class="font-semibold text-bgray-900 dark:text-white">{{ $item['project_name'] }}</div>
+            @endif
             <div class="text-[11px] text-bgray-700 dark:text-bgray-300">{{ $item['project_code'] ?: $item['customer_name'] ?? '' }}</div>
         </td>
         <td class="py-3 px-4">
