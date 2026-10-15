@@ -1408,6 +1408,9 @@ class ProjectAnalyticsService
                 'serviceTypes:id,name,color',
                 'projectTimelines' => fn($q) => $q->select('id', 'project_id', 'estimated_time_seconds', 'actual_time_seconds'),
             ])
+            ->withCount([
+                'reworkProjects as child_projects_count' => fn($q) => $q->whereNull('deleted_at'),
+            ])
             ->orderBy('projects.name', 'asc')
             ->get();
 
@@ -1432,6 +1435,7 @@ class ProjectAnalyticsService
                 'estimate_formatted' => $this->formatDuration($estimateSeconds),
                 'spent_seconds' => $spentSeconds,
                 'spent_formatted' => $this->formatDuration($spentSeconds),
+                'child_projects_count' => (int) $child->child_projects_count,
             ];
         })->values()->all();
     }

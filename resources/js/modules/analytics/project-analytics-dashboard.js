@@ -676,22 +676,46 @@ export async function loadParentProjectsOverview(filters = getActiveFilters()) {
 }
 
 /**
- * Handle toggle and AJAX load of child projects under a parent project.
+ * Helper to recursively hide or show descendant child rows.
  */
-export async function toggleChildProjects(parentId) {
-    const parentRow = document.querySelector(`[data-parent-row-id="${parentId}"]`);
-    if (!parentRow) return;
+function hideDescendantRows(rowElement) {
+    const rowId = rowElement.getAttribute('data-parent-row-id') || rowElement.getAttribute('data-child-row-id');
+    if (!rowId) return;
 
-    const toggleBtns = document.querySelectorAll(`[data-parent-project-toggle="${parentId}"]`);
-    const chevronIcon = parentRow.querySelector('[data-toggle-chevron]');
-    const existingChildRows = document.querySelectorAll(`.child-project-row[data-parent-id="${parentId}"]`);
+    const directChildren = document.querySelectorAll(`.child-project-row[data-parent-id="${rowId}"]`);
+    directChildren.forEach(child => {
+        child.classList.add('hidden');
+        // If this child was also expanded, collapse its button state and hide its descendants too
+        if (child.getAttribute('data-expanded') === 'true') {
+            child.setAttribute('data-expanded', 'false');
+            const subToggleBtns = child.querySelectorAll(`[data-child-project-toggle="${child.getAttribute('data-child-row-id')}"]`);
+            subToggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+            const chevron = child.querySelector('[data-toggle-chevron]');
+            if (chevron) chevron.classList.remove('rotate-90');
+            hideDescendantRows(child);
+        }
+    });
+}
 
-    const isExpanded = parentRow.getAttribute('data-expanded') === 'true';
+/**
+ * Handle toggle and AJAX load of child projects under a parent or sub-child project.
+ */
+export async function toggleChildProjects(targetId, explicitDepth = null) {
+    // Look for parent row first, then child row
+    const targetRow = document.querySelector(`[data-parent-row-id="${targetId}"]`)
+        || document.querySelector(`[data-child-row-id="${targetId}"]`);
+    if (!targetRow) return;
+
+    const toggleBtns = document.querySelectorAll(`[data-parent-project-toggle="${targetId}"], [data-child-project-toggle="${targetId}"]`);
+    const chevronIcon = targetRow.querySelector('[data-toggle-chevron]');
+    const existingChildRows = document.querySelectorAll(`.child-project-row[data-parent-id="${targetId}"]`);
+
+    const isExpanded = targetRow.getAttribute('data-expanded') === 'true';
 
     if (isExpanded) {
-        // Collapse: hide all child rows
-        existingChildRows.forEach(row => row.classList.add('hidden'));
-        parentRow.setAttribute('data-expanded', 'false');
+        // Collapse: hide all direct and nested descendant rows
+        hideDescendantRows(targetRow);
+        targetRow.setAttribute('data-expanded', 'false');
         toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
         if (chevronIcon) {
             chevronIcon.classList.remove('rotate-90');
@@ -699,10 +723,10 @@ export async function toggleChildProjects(parentId) {
         return;
     }
 
-    // Expanding: If child rows already loaded previously, just show them
+    // Expanding: If child rows already loaded previously, show direct children
     if (existingChildRows.length > 0) {
         existingChildRows.forEach(row => row.classList.remove('hidden'));
-        parentRow.setAttribute('data-expanded', 'true');
+        targetRow.setAttribute('data-expanded', 'true');
         toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'));
         if (chevronIcon) {
             chevronIcon.classList.add('rotate-90');
@@ -710,12 +734,18 @@ export async function toggleChildProjects(parentId) {
         return;
     }
 
+    // Determine depth: parent rows are depth 0 (children depth 1), child rows have data-depth
+    const currentDepth = targetRow.hasAttribute('data-depth') ? parseInt(targetRow.getAttribute('data-depth'), 10) : 0;
+    const nextDepth = explicitDepth ? parseInt(explicitDepth, 10) : currentDepth + 1;
+    const paddingLeftPx = 16 + (nextDepth * 24);
+
     // Child rows not yet loaded: Fetch via AJAX
     const loadingRow = document.createElement('tr');
     loadingRow.className = `child-project-row bg-bgray-50/50 dark:bg-darkblack-500/20 animate-pulse`;
-    loadingRow.setAttribute('data-parent-id', parentId);
+    loadingRow.setAttribute('data-parent-id', targetId);
+    loadingRow.setAttribute('data-depth', nextDepth);
     loadingRow.innerHTML = `
-        <td colspan="5" class="py-3 px-4 pl-12 text-xs text-bgray-500 dark:text-bgray-400">
+        <td colspan="5" class="py-3 px-4 text-xs text-bgray-500 dark:text-bgray-400" style="padding-left: ${paddingLeftPx}px;">
             <div class="flex items-center gap-2">
                 <svg class="h-4 w-4 animate-spin text-success-500" viewBox="0 0 24 24" fill="none">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -725,43 +755,44 @@ export async function toggleChildProjects(parentId) {
             </div>
         </td>
     `;
-    parentRow.after(loadingRow);
+    targetRow.after(loadingRow);
 
-    parentRow.setAttribute('data-expanded', 'true');
+    targetRow.setAttribute('data-expanded', 'true');
     toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'));
     if (chevronIcon) {
         chevronIcon.classList.add('rotate-90');
     }
 
     const filters = getActiveFilters();
-    const url = `/project-analytics/parent-projects/${parentId}/children`;
+    const url = `/project-analytics/parent-projects/${targetId}/children?depth=${nextDepth}`;
 
     try {
         const response = await fetchAnalyticsData(url, filters);
         loadingRow.remove();
 
         if (response && response.html) {
-            // Insert returned child rows right after parentRow
-            parentRow.insertAdjacentHTML('afterend', response.html);
+            // Insert returned child rows right after targetRow
+            targetRow.insertAdjacentHTML('afterend', response.html);
         } else {
             const emptyChildRow = document.createElement('tr');
             emptyChildRow.className = `child-project-row bg-bgray-50/40 dark:bg-darkblack-500/20`;
-            emptyChildRow.setAttribute('data-parent-id', parentId);
+            emptyChildRow.setAttribute('data-parent-id', targetId);
+            emptyChildRow.setAttribute('data-depth', nextDepth);
             emptyChildRow.innerHTML = `
-                <td colspan="5" class="py-3 px-4 pl-12 text-xs italic text-bgray-500 dark:text-bgray-400">
+                <td colspan="5" class="py-3 px-4 text-xs italic text-bgray-500 dark:text-bgray-400" style="padding-left: ${paddingLeftPx}px;">
                     No child projects found.
                 </td>
             `;
-            parentRow.after(emptyChildRow);
+            targetRow.after(emptyChildRow);
         }
     } catch (err) {
-        console.warn(`Failed to load child projects for parent ${parentId}:`, err);
+        console.warn(`Failed to load child projects for project ${targetId}:`, err);
         loadingRow.innerHTML = `
-            <td colspan="5" class="py-3 px-4 pl-12 text-xs text-red-500">
+            <td colspan="5" class="py-3 px-4 text-xs text-red-500" style="padding-left: ${paddingLeftPx}px;">
                 Failed to load child projects. Click again to retry.
             </td>
         `;
-        parentRow.setAttribute('data-expanded', 'false');
+        targetRow.setAttribute('data-expanded', 'false');
         toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
         if (chevronIcon) {
             chevronIcon.classList.remove('rotate-90');
@@ -1442,14 +1473,15 @@ export function initProjectAnalyticsDashboard() {
     // Initialize drill-down tile modal
     initTileDrilldownModal();
 
-    // Listen for parent projects accordion toggle
+    // Listen for parent projects and nested child projects accordion toggle
     dashboardRoot.addEventListener('click', (e) => {
-        const toggleBtn = e.target.closest('[data-parent-project-toggle]');
+        const toggleBtn = e.target.closest('[data-parent-project-toggle], [data-child-project-toggle]');
         if (toggleBtn) {
             e.preventDefault();
-            const parentId = toggleBtn.getAttribute('data-parent-project-toggle');
-            if (parentId) {
-                toggleChildProjects(parentId);
+            const targetId = toggleBtn.getAttribute('data-parent-project-toggle') || toggleBtn.getAttribute('data-child-project-toggle');
+            const depth = toggleBtn.getAttribute('data-depth');
+            if (targetId) {
+                toggleChildProjects(targetId, depth);
             }
         }
     });

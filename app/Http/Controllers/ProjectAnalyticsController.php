@@ -506,11 +506,13 @@ class ProjectAnalyticsController extends Controller
             return $selectedUser;
         }
 
+        $depth = max(1, (int) $request->input('depth', 1));
         $children = $analyticsService->getChildProjectsOverview($authUser, $accessibleProject, $selectedUser);
 
         $html = view('project-analytics.partials.child-projects-rows', [
             'parentProject' => $accessibleProject,
             'children' => $children,
+            'depth' => $depth,
         ])->render();
 
         return response()->json([
