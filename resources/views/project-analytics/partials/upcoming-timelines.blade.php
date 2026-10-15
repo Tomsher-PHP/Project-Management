@@ -5,7 +5,7 @@
             <p class="text-xs text-bgray-700 dark:text-bgray-300">Timelines ending in next 45 days</p>
         </div>
         <div class="text-xs font-semibold text-bgray-600 dark:text-bgray-300">
-            Total Upcoming: <span data-timelines-total-count data-contracts-total-count class="font-bold text-bgray-900 dark:text-white">—</span>
+            Total Upcoming: <span data-timelines-total-count class="font-bold text-bgray-900 dark:text-white">—</span>
         </div>
     </div>
 
@@ -47,7 +47,7 @@
                         <th scope="col" class="py-3 px-4">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-bgray-100 dark:divide-darkblack-400" data-timelines-table-body data-contracts-table-body>
+                <tbody class="divide-y divide-bgray-100 dark:divide-darkblack-400" data-timelines-table-body>
                     <!-- Populated dynamically by JS -->
                 </tbody>
             </table>

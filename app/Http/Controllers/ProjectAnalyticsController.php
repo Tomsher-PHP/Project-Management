@@ -189,6 +189,11 @@ class ProjectAnalyticsController extends Controller
             $project?->id
         );
 
+        $data['html'] = view('project-analytics.partials.render.service-types', [
+            'items' => $data['items'] ?? [],
+            'totalProjects' => $data['total_projects'] ?? 0,
+        ])->render();
+
         return response()->json([
             'success' => true,
             'data' => $data,
@@ -290,6 +295,10 @@ class ProjectAnalyticsController extends Controller
             $endDate,
             $days
         );
+
+        $data['html'] = view('project-analytics.partials.render.upcoming-timelines', [
+            'timelines' => $data['timelines'] ?? [],
+        ])->render();
 
         return response()->json([
             'success' => true,
@@ -475,6 +484,10 @@ class ProjectAnalyticsController extends Controller
             $project?->id
         );
 
+        $data['html'] = view('project-analytics.partials.render.parent-projects', [
+            'projects' => $data['projects'] ?? [],
+        ])->render();
+
         return response()->json([
             'success' => true,
             'data' => $data,
@@ -509,7 +522,7 @@ class ProjectAnalyticsController extends Controller
         $depth = max(1, (int) $request->input('depth', 1));
         $children = $analyticsService->getChildProjectsOverview($authUser, $accessibleProject, $selectedUser);
 
-        $html = view('project-analytics.partials.child-projects-rows', [
+        $html = view('project-analytics.partials.render.child-projects-rows', [
             'parentProject' => $accessibleProject,
             'children' => $children,
             'depth' => $depth,

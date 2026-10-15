@@ -221,32 +221,9 @@ export async function loadProjectsByServiceType(filters = getActiveFilters()) {
         if (emptyState) emptyState.classList.add('hidden');
         if (content) content.classList.remove('hidden');
 
-        const html = items.map(item => {
-            const count = Number(item.count) || 0;
-            const percentage = totalProjects > 0 ? Math.round((count / totalProjects) * 100) : 0;
-            const barWidth = Math.min(100, percentage);
-            const color = item.color || '#3B82F6';
-
-            return `
-                <div class="space-y-1.5" data-service-type-id="${item.id ?? 'none'}">
-                    <div class="flex items-center justify-between text-xs">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background-color: ${escapeHtml(color)}"></span>
-                            <span class="font-semibold text-bgray-900 dark:text-white truncate">${escapeHtml(item.name)}</span>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="font-bold text-bgray-900 dark:text-white">${count.toLocaleString()}</span>
-                            <span class="text-[11px] text-bgray-700 dark:text-bgray-300">(${percentage}%)</span>
-                        </div>
-                    </div>
-                    <div class="h-2 w-full rounded-full bg-bgray-100 dark:bg-darkblack-500 overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-700 ease-out" style="width: ${barWidth}%; background-color: ${escapeHtml(color)};"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        if (listContainer) listContainer.innerHTML = html;
+        if (listContainer) {
+            listContainer.innerHTML = data.html || '';
+        }
     } catch (err) {
         console.warn('Failed to load projects by service type:', err);
         if (loadingState) loadingState.classList.add('hidden');
@@ -438,7 +415,7 @@ export async function loadProjectsByStage(filters = getActiveFilters()) {
  * Load Upcoming Timeline Expirations Table.
  */
 export async function loadUpcomingTimelines(filters = getActiveFilters()) {
-    const card = document.querySelector('[data-project-analytics-section="upcoming-timelines"], [data-project-analytics-section="upcoming-contracts"]');
+    const card = document.querySelector('[data-project-analytics-section="upcoming-timelines"]');
     if (!card) return;
     const url = card.dataset.url;
     if (!url) return;
@@ -446,8 +423,8 @@ export async function loadUpcomingTimelines(filters = getActiveFilters()) {
     const loadingState = card.querySelector('[data-loading-state]');
     const emptyState = card.querySelector('[data-empty-state]');
     const content = card.querySelector('[data-content]');
-    const tbody = card.querySelector('[data-timelines-table-body], [data-contracts-table-body]');
-    const totalCountEl = card.querySelector('[data-timelines-total-count], [data-contracts-total-count]');
+    const tbody = card.querySelector('[data-timelines-table-body]');
+    const totalCountEl = card.querySelector('[data-timelines-total-count]');
     const emptyTitle = card.querySelector('[data-empty-title]');
     const emptySubtitle = card.querySelector('[data-empty-subtitle]');
 
@@ -484,58 +461,9 @@ export async function loadUpcomingTimelines(filters = getActiveFilters()) {
         if (emptyState) emptyState.classList.add('hidden');
         if (content) content.classList.remove('hidden');
 
-        const rowsHtml = timelines.map(item => {
-            const daysLeft = Number(item.days_remaining) || 0;
-            const isSoon = Boolean(item.is_expiring_soon);
-
-            const daysBadge = isSoon
-                ? `<span class="inline-flex items-center rounded-full bg-error-50 px-2.5 py-0.5 text-[11px] font-bold text-error-300 dark:bg-error-500/10">${daysLeft} days left</span>`
-                : `<span class="inline-flex items-center rounded-full bg-bgray-100 px-2.5 py-0.5 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">${daysLeft} days left</span>`;
-
-            const statusColor = item.status === 'active'
-                ? 'bg-success-50 text-success-500 dark:bg-success-500/10'
-                : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
-
-            const serviceTypes = item.service_types || [];
-            let serviceTypeHtml = '<span class="text-bgray-400">—</span>';
-            if (serviceTypes.length > 0) {
-                serviceTypeHtml = serviceTypes.map(st => `
-                    <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium border" style="border-color: ${escapeHtml(st.color || '#3B82F6')}40; color: ${escapeHtml(st.color || '#3B82F6')}; background-color: ${escapeHtml(st.color || '#3B82F6')}10;">
-                        ${escapeHtml(st.name)}
-                    </span>
-                `).join(' ');
-            } else if (item.service_type_names && item.service_type_names !== '--') {
-                serviceTypeHtml = `<span class="text-xs text-bgray-700 dark:text-bgray-300">${escapeHtml(item.service_type_names)}</span>`;
-            }
-
-            return `
-                <tr class="transition-colors hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/30">
-                    <td class="py-3 px-4">
-                        <div class="font-semibold text-bgray-900 dark:text-white">${escapeHtml(item.project_name)}</div>
-                        <div class="text-[11px] text-bgray-700 dark:text-bgray-300">${escapeHtml(item.project_code || item.customer_name || '')}</div>
-                    </td>
-                    <td class="py-3 px-4">
-                        ${serviceTypeHtml}
-                    </td>
-                    <td class="py-3 px-4 font-medium text-bgray-700 dark:text-bgray-300">
-                        ${escapeHtml(item.formatted_start_date || item.start_date || '—')}
-                    </td>
-                    <td class="py-3 px-4 font-semibold text-bgray-900 dark:text-white">
-                        ${escapeHtml(item.formatted_end_date || item.end_date || item.formatted_customer_end_date || item.customer_end_date || '—')}
-                    </td>
-                    <td class="py-3 px-4">
-                        ${daysBadge}
-                    </td>
-                    <td class="py-3 px-4">
-                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor}">
-                            ${escapeHtml(item.status_label || 'Active')}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        if (tbody) tbody.innerHTML = rowsHtml;
+        if (tbody) {
+            tbody.innerHTML = data.html || '';
+        }
     } catch (err) {
         console.warn('Failed to load upcoming timeline expirations:', err);
         if (loadingState) loadingState.classList.add('hidden');
@@ -596,77 +524,9 @@ export async function loadParentProjectsOverview(filters = getActiveFilters()) {
         if (emptyState) emptyState.classList.add('hidden');
         if (content) content.classList.remove('hidden');
 
-        const rowsHtml = projects.map(item => {
-            const serviceTypes = item.service_types || [];
-            let serviceTypeHtml = '<span class="text-bgray-400 text-xs">—</span>';
-            if (serviceTypes.length > 0) {
-                serviceTypeHtml = serviceTypes.map(st => `
-                    <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium border" style="border-color: ${escapeHtml(st.color || '#3B82F6')}40; color: ${escapeHtml(st.color || '#3B82F6')}; background-color: ${escapeHtml(st.color || '#3B82F6')}15;">
-                        ${escapeHtml(st.name)}
-                    </span>
-                `).join(' ');
-            } else if (item.service_type_names && item.service_type_names !== '--') {
-                serviceTypeHtml = `<span class="text-xs text-bgray-700 dark:text-bgray-300">${escapeHtml(item.service_type_names)}</span>`;
-            }
-
-            const isSpentExceeded = item.estimate_seconds > 0 && item.spent_seconds > item.estimate_seconds;
-            const spentColorClass = isSpentExceeded ? 'text-red-500 font-semibold' : 'text-bgray-900 dark:text-white font-semibold';
-
-            return `
-                <tr class="parent-project-row transition-colors hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/40" data-parent-row-id="${item.id}">
-                    <!-- 1. Parent Project Name & Expand Toggle -->
-                    <td class="py-3 px-4">
-                        <div class="flex items-center gap-2">
-                            <button type="button"
-                                    class="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-bgray-500 hover:bg-bgray-200 hover:text-bgray-900 dark:text-bgray-400 dark:hover:bg-darkblack-500 dark:hover:text-white transition-all duration-200"
-                                    data-parent-project-toggle="${item.id}"
-                                    aria-expanded="false"
-                                    title="Toggle child projects">
-                                <svg class="h-4 w-4 transform transition-transform duration-200" data-toggle-chevron viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                            <div>
-                                <a href="${escapeHtml(item.url || '#')}" class="font-semibold text-bgray-900 transition hover:text-success-400 hover:underline dark:text-white dark:hover:text-success-300">
-                                    ${escapeHtml(item.name)}
-                                </a>
-                                ${item.project_code ? `<span class="ml-1 text-[11px] text-bgray-700 dark:text-bgray-300">(${escapeHtml(item.project_code)})</span>` : ''}
-                            </div>
-                        </div>
-                    </td>
-
-                    <!-- 2. Service -->
-                    <td class="py-3 px-4">
-                        <div class="flex flex-wrap gap-1">
-                            ${serviceTypeHtml}
-                        </div>
-                    </td>
-
-                    <!-- 3. Estimate -->
-                    <td class="py-3 px-4 font-semibold text-bgray-900 dark:text-white">
-                        ${escapeHtml(item.estimate_formatted)}
-                    </td>
-
-                    <!-- 4. Spent -->
-                    <td class="py-3 px-4 ${spentColorClass}">
-                        ${escapeHtml(item.spent_formatted)}
-                    </td>
-
-                    <!-- 5. Child projects count -->
-                    <td class="py-3 px-4 text-center">
-                        <button type="button"
-                                class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
-                                data-parent-project-toggle="${item.id}"
-                                title="Click to view child projects">
-                            <span>${item.child_projects_count}</span>
-                            <span class="text-[11px] font-normal text-blue-500/80 dark:text-blue-400/80">${item.child_projects_count === 1 ? 'child' : 'children'}</span>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        if (tbody) tbody.innerHTML = rowsHtml;
+        if (tbody) {
+            tbody.innerHTML = data.html || '';
+        }
     } catch (err) {
         console.warn('Failed to load parent projects overview:', err);
         if (loadingState) loadingState.classList.add('hidden');
