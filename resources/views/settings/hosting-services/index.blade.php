@@ -97,7 +97,7 @@
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
                                             @can('server_hosting.edit')
-                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.hosting-services.update', $hostingService->id) }}" data-name="{{ $hostingService->name }}" data-code="{{ $hostingService->code }}" data-description="{{ $hostingService->description }}" data-is_default="{{ (int) $hostingService->is_default }}" data-sort_order="{{ $hostingService->sort_order }}" data-method="PUT" data-module="Hosting Service" title="Edit Hosting Service" />
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.hosting-services.update', $hostingService->id) }}" data-name="{{ $hostingService->name }}" data-description="{{ $hostingService->description }}" data-is_default="{{ (int) $hostingService->is_default }}" data-sort_order="{{ $hostingService->sort_order }}" data-method="PUT" data-module="Hosting Service" title="Edit Hosting Service" />
                                             @endcan
                                             @can('server_hosting.delete')
                                                 @if (!$hostingService->is_system)
@@ -125,12 +125,6 @@
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-        </div>
-
-        <div class="code-field-wrapper hidden">
-            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Code <x-red-star /></label>
-            <input type="text" name="code" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" pattern="[0-9]{6}" maxlength="6" autocomplete="off">
-            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">6-digit unique number.</p>
         </div>
 
         <div>
@@ -181,36 +175,3 @@
     <!-- Filter drawer end -->
 
 @endsection
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById('multi-step-modal');
-            if (!modal) return;
-
-            const codeWrapper = modal.querySelector('.code-field-wrapper');
-            const codeInput = modal.querySelector('input[name="code"]');
-
-            const updateCodeVisibility = () => {
-                const methodInput = modal.querySelector('.form-method');
-                const isEdit = methodInput && methodInput.value === 'PUT';
-                if (codeWrapper) {
-                    if (isEdit) {
-                        codeWrapper.classList.remove('hidden');
-                        if (codeInput) codeInput.required = true;
-                    } else {
-                        codeWrapper.classList.add('hidden');
-                        if (codeInput) {
-                            codeInput.required = false;
-                            codeInput.value = '';
-                        }
-                    }
-                }
-            };
-
-            $(document).on('click', '.modal-open[data-target="#multi-step-modal"], .edit-record[data-modal="multi-step-modal"]', function () {
-                setTimeout(updateCodeVisibility, 50);
-            });
-        });
-    </script>
-@endpush

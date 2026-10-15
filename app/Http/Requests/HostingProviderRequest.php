@@ -18,7 +18,7 @@ class HostingProviderRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->isMethod('post') && empty($this->input('code'))) {
+        if ($this->isMethod('post')) {
             $this->merge([
                 'code' => HostingProvider::generateUniqueCode(),
             ]);
@@ -52,12 +52,6 @@ class HostingProviderRequest extends FormRequest
                 'required',
                 'digits:6',
                 Rule::unique('hosting_providers', 'code')->whereNull('deleted_at'),
-            ];
-        } else {
-            $rules['code'] = [
-                'required',
-                'digits:6',
-                Rule::unique('hosting_providers', 'code')->ignore($id)->whereNull('deleted_at'),
             ];
         }
 
