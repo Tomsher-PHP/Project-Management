@@ -522,7 +522,6 @@ class ProjectAnalyticsController extends Controller
         ]);
     }
 
-
     /**
      * Search projects for Tom Select autocomplete, respecting access control and user involvement.
      */

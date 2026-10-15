@@ -461,10 +461,10 @@ class ProjectAnalyticsService
 
         $serviceTypes = $serviceTypeCounts->isNotEmpty()
             ? ServiceType::withTrashed()
-                ->whereIn('id', $serviceTypeCounts->keys())
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name', 'code', 'color'])
+            ->whereIn('id', $serviceTypeCounts->keys())
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'code', 'color'])
             : collect();
 
         $assignedProjectIds = ProjectServiceType::query()
@@ -1436,4 +1436,3 @@ class ProjectAnalyticsService
         })->values()->all();
     }
 }
-

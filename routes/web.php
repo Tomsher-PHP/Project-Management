@@ -69,6 +69,7 @@ use App\Http\Controllers\UserLeaveBalanceImportController;
 use App\Http\Controllers\UserLoginActivityController;
 use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 
@@ -109,7 +110,6 @@ Route::middleware(['auth'])->group(function () {
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
     Route::get('/workspace/daily-timeline/refresh', [UserWorkspaceController::class, 'refreshDailyTimeline'])->name('workspace.daily-timeline.refresh');
-
 
     Route::prefix('project-analytics')->group(function () {
         Route::get('/', [ProjectAnalyticsController::class, 'index'])->name('project.analytics');
@@ -729,56 +729,56 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::prefix('leave-change-requests')
-    ->name('leave-change-requests.')
-    ->group(function () {
+        ->name('leave-change-requests.')
+        ->group(function () {
 
-        Route::get('/', [LeaveChangeRequestController::class, 'index'])
-            ->name('index');
+            Route::get('/', [LeaveChangeRequestController::class, 'index'])
+                ->name('index');
 
-        Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])
-            ->name('create');
+            Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])
+                ->name('create');
 
-        Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])
-            ->name('store');
+            Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])
+                ->name('store');
 
-        Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])
-            ->name('show');
+            Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])
+                ->name('show');
 
-        Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])
-            ->name('approve');
+            Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])
+                ->name('approve');
 
-        Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])
-            ->name('reject');
+            Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])
+                ->name('reject');
 
-        Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])
-            ->name('cancel');
-    });
-
-
+            Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])
+                ->name('cancel');
+        });
 
 
-Route::prefix('leave-cancellation-requests')
-    ->name('leave-cancellation-requests.')
-    ->controller(LeaveCancellationRequestController::class)
-    ->group(function () {
-        Route::post('/{leaveRequest}', 'store')
-            ->name('store');
 
-        Route::get('/', 'index')
-            ->name('index');
 
-        Route::get('/{cancellationRequest}/details', 'show')
-            ->name('show');
+    Route::prefix('leave-cancellation-requests')
+        ->name('leave-cancellation-requests.')
+        ->controller(LeaveCancellationRequestController::class)
+        ->group(function () {
+            Route::post('/{leaveRequest}', 'store')
+                ->name('store');
 
-        Route::post('/{cancellationRequest}/approve', 'approve')
-            ->name('approve');
+            Route::get('/', 'index')
+                ->name('index');
 
-        Route::post('/{cancellationRequest}/reject', 'reject')
-            ->name('reject');
+            Route::get('/{cancellationRequest}/details', 'show')
+                ->name('show');
 
-        Route::post('/{cancellationRequest}/cancel', 'cancel')
-            ->name('cancel');
-    });
+            Route::post('/{cancellationRequest}/approve', 'approve')
+                ->name('approve');
+
+            Route::post('/{cancellationRequest}/reject', 'reject')
+                ->name('reject');
+
+            Route::post('/{cancellationRequest}/cancel', 'cancel')
+                ->name('cancel');
+        });
 
 
     // Meeting Management routes
