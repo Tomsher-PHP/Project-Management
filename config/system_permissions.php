@@ -76,7 +76,6 @@ return [
     ['name' => 'project_hosting.create',  'label' => 'Project Hosting', 'sort_order' => 6320, 'default_checked' => false],
     ['name' => 'project_hosting.edit',    'label' => 'Project Hosting', 'sort_order' => 6340, 'default_checked' => false],
     ['name' => 'project_hosting.delete',  'label' => 'Project Hosting', 'sort_order' => 6360, 'default_checked' => false],
-    ['name' => 'project_hosting.export',  'label' => 'Project Hosting', 'sort_order' => 6380, 'default_checked' => false],
 
     // TASK
     ['name' => 'task.view_all_tasks',     'label' => 'Task', 'sort_order' => 7000, 'default_checked' => false],
