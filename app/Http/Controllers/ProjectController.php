@@ -208,6 +208,7 @@ class ProjectController extends Controller
             'checklists',
             'meetings',
             'history',
+            'hosting',
             'settings',
             'payments'
         ];
@@ -464,6 +465,7 @@ class ProjectController extends Controller
             'notes' => $this->renderNotesTab($project, $request),
             'meetings' => $this->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
+            'hosting' => app(\App\Http\Controllers\ProjectHostingController::class)->renderHostingTab($project),
             'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),

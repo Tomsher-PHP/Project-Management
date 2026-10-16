@@ -71,6 +71,13 @@ return [
     ['name' => 'project_tracking.delete',  'label' => 'Project Tracking', 'sort_order' => 6260, 'default_checked' => false],
     ['name' => 'project_tracking.export',  'label' => 'Project Tracking', 'sort_order' => 6280, 'default_checked' => false],
 
+    // PROJECT HOSTING
+    ['name' => 'project_hosting.view',    'label' => 'Project Hosting', 'sort_order' => 6300, 'default_checked' => false],
+    ['name' => 'project_hosting.create',  'label' => 'Project Hosting', 'sort_order' => 6320, 'default_checked' => false],
+    ['name' => 'project_hosting.edit',    'label' => 'Project Hosting', 'sort_order' => 6340, 'default_checked' => false],
+    ['name' => 'project_hosting.delete',  'label' => 'Project Hosting', 'sort_order' => 6360, 'default_checked' => false],
+    ['name' => 'project_hosting.export',  'label' => 'Project Hosting', 'sort_order' => 6380, 'default_checked' => false],
+
     // TASK
     ['name' => 'task.view_all_tasks',     'label' => 'Task', 'sort_order' => 7000, 'default_checked' => false],
     ['name' => 'task.view',               'label' => 'Task', 'sort_order' => 7020, 'default_checked' => true],

@@ -78,6 +78,12 @@
                             History
                         </button>
 
+                        @can('project_hosting.view')
+                            <button type="button" data-project-tab-trigger="hosting" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
+                                Hosting
+                            </button>
+                        @endcan
+
                         <button type="button" data-project-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                             Settings
                         </button>
@@ -133,6 +139,9 @@
                 @endif
                 <div class="hidden" data-project-tab-panel="meetings" data-loaded="false"></div>
                 <div class="hidden" data-project-tab-panel="history" data-loaded="false"></div>
+                @can('project_hosting.view')
+                    <div class="hidden" data-project-tab-panel="hosting" data-loaded="false"></div>
+                @endcan
                 <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
             </div>
         </div>

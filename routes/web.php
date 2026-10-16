@@ -36,6 +36,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
+use App\Http\Controllers\ProjectHostingController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
@@ -471,6 +472,13 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('trackings/{projectTracking}', [ProjectTrackingController::class, 'destroy'])->middleware(['permission.type:project_tracking.delete', 'can:update,project'])->name('projects.trackings.destroy');
         Route::post('trackings/bulk-export', [ProjectTrackingController::class, 'bulkExport'])->name('projects.trackings.bulk-export');
         Route::get('trackings/attachments/{attachment}/download', [ProjectTrackingController::class, 'downloadAttachment'])->name('projects.trackings.attachments.download');
+
+        // Project Hosting routes
+        Route::get('hosting', [ProjectHostingController::class, 'index'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.index');
+        Route::post('hosting', [ProjectHostingController::class, 'store'])->middleware(['permission.type:project_hosting.create', 'can:update,project'])->name('projects.hosting.store');
+        Route::get('hosting/{hostingRecord}', [ProjectHostingController::class, 'show'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.show');
+        Route::put('hosting/{hostingRecord}', [ProjectHostingController::class, 'update'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.update');
+        Route::delete('hosting/{hostingRecord}', [ProjectHostingController::class, 'destroy'])->middleware(['permission.type:project_hosting.delete', 'can:update,project'])->name('projects.hosting.destroy');
     });
 
     // Project task routes

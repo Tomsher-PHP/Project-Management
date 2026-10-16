@@ -466,6 +466,11 @@ class Project extends Model
         return $this->hasMany(ProjectTracking::class);
     }
 
+    public function hostingRecords()
+    {
+        return $this->hasMany(ProjectHostingRecord::class);
+    }
+
     public function projectTimelines()
     {
         return $this->hasMany(ProjectTimeline::class)->orderBy('sort_order');
