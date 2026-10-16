@@ -1,4 +1,4 @@
-<div id="project-hosting-history" class="overflow-x-auto">
+<div class="overflow-x-auto">
     @if ($hostingRecords->isEmpty())
         <div class="p-5">
             <div class="rounded-xl border border-dashed border-bgray-300 px-4 py-8 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
@@ -137,7 +137,7 @@
                                 @endcan
 
                                 @can('project_hosting.delete')
-                                    <x-delete-form :action="route('projects.hosting.destroy', [$project, $record])" :id="$record->id" ajax="true" render-target="#project-hosting-history" render-mode="replace_outer" form-class="project-hosting-delete-form" confirm-title="Delete Hosting Record" confirm-message="Are you sure you want to delete this hosting record?" data-project-hosting-delete title="Delete" />
+                                    <x-delete-form :action="route('projects.hosting.destroy', [$project, $record])" :id="$record->id" ajax="true" renderTarget="#project-hosting-history" renderMode="replace_inner" formClass="delete-form project-hosting-delete-form" confirmTitle="Delete Hosting Record" confirmMessage="Are you sure you want to delete this hosting record?" data-project-hosting-delete title="Delete" />
                                 @endcan
                             </div>
                         </td>

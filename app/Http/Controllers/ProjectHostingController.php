@@ -198,15 +198,19 @@ class ProjectHostingController extends Controller
             DB::commit();
 
             return response()->json([
+                'status' => true,
                 'success' => true,
                 'message' => 'Hosting record deleted successfully.',
                 'html' => $this->renderHostingList($project),
+                'render_target' => '#project-hosting-history',
+                'render_mode' => 'replace_inner',
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
 
             return response()->json([
+                'status' => false,
                 'success' => false,
                 'message' => 'Unable to delete hosting record. Please try again.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
