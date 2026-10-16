@@ -17,6 +17,17 @@ const projectHostingState = {
 const projectHostingModal = {
     modal: null,
 
+    getModal() {
+        if (!this.modal || !document.contains(this.modal)) {
+            this.modal = document.querySelector('[data-project-hosting-modal]');
+            if (this.modal) {
+                this.bindCloseButtons();
+                this.bindEscape();
+            }
+        }
+        return this.modal;
+    },
+
     initialize(root = document) {
         this.modal = root?.querySelector
             ? root.querySelector('[data-project-hosting-modal]')
@@ -35,11 +46,12 @@ const projectHostingModal = {
     },
 
     bindCloseButtons() {
-        if (!this.modal) {
+        const modal = this.getModal();
+        if (!modal) {
             return;
         }
 
-        const closeButtons = this.modal.querySelectorAll('[data-project-hosting-modal-close]');
+        const closeButtons = modal.querySelectorAll('[data-project-hosting-modal-close]');
         closeButtons.forEach((button) => {
             if (button.dataset.projectHostingModalBound === 'true') {
                 return;
@@ -54,44 +66,49 @@ const projectHostingModal = {
     },
 
     bindEscape() {
-        if (!this.modal || this.modal.dataset.projectHostingEscapeBound === 'true') {
+        const modal = this.getModal();
+        if (!modal || modal.dataset.projectHostingEscapeBound === 'true') {
             return;
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.key !== 'Escape' || !this.modal || this.modal.classList.contains('hidden')) {
+            const currentModal = this.getModal();
+            if (event.key !== 'Escape' || !currentModal || currentModal.classList.contains('hidden')) {
                 return;
             }
             this.close();
         });
 
-        this.modal.dataset.projectHostingEscapeBound = 'true';
+        modal.dataset.projectHostingEscapeBound = 'true';
     },
 
     open() {
-        if (!this.modal) {
+        const modal = this.getModal();
+        if (!modal) {
+            console.error('Project hosting modal element not found in DOM.');
             return;
         }
 
-        this.modal.classList.remove('hidden');
-        this.modal.classList.add('flex');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
         document.body.classList.add('overflow-hidden');
 
         // Initialize pickers and selects inside the modal
-        initDatepicker('.datepicker', {}, this.modal);
-        initTomSelect(this.modal);
+        initDatepicker('.datepicker', {}, modal);
+        initTomSelect(modal);
     },
 
     close() {
-        if (!this.modal) {
+        const modal = this.getModal();
+        if (!modal) {
             return;
         }
 
-        this.modal.classList.add('hidden');
-        this.modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         document.body.classList.remove('overflow-hidden');
 
-        const form = this.modal.querySelector('[data-project-hosting-form]');
+        const form = modal.querySelector('[data-project-hosting-form]');
         if (form) {
             this.resetForm(form);
         }
@@ -115,12 +132,13 @@ const projectHostingModal = {
             form.action = storeAction;
         }
 
-        const titleEl = this.modal.querySelector('[data-project-hosting-modal-title]');
+        const modal = this.getModal();
+        const titleEl = modal?.querySelector('[data-project-hosting-modal-title]');
         if (titleEl) {
             titleEl.textContent = 'Add Hosting Record';
         }
 
-        const descEl = this.modal.querySelector('[data-project-hosting-modal-description]');
+        const descEl = modal?.querySelector('[data-project-hosting-modal-description]');
         if (descEl) {
             descEl.textContent = 'Add a hosting or server record associated with this project.';
         }
@@ -128,8 +146,17 @@ const projectHostingModal = {
         // Reset TomSelect controls if present
         form.querySelectorAll('select').forEach((select) => {
             if (select.tomselect) {
-                const defaultVal = select.id === 'project_hosting_ownership' ? 'company' : '';
+                const defaultVal = select.id === 'project_hosting_ownership'
+                    ? 'company'
+                    : (select.id === 'project_hosting_currency_code' ? (select.querySelector('option[selected]')?.value || 'AED') : '');
                 select.tomselect.setValue(defaultVal, true);
+            }
+        });
+
+        // Clear Flatpickr date inputs if present
+        form.querySelectorAll('input.datepicker').forEach((input) => {
+            if (input._flatpickr) {
+                input._flatpickr.clear();
             }
         });
 
@@ -139,7 +166,7 @@ const projectHostingModal = {
             el.classList.add('hidden');
         });
 
-        const saveButton = this.modal.querySelector('[data-project-hosting-save]');
+        const saveButton = modal?.querySelector('[data-project-hosting-save]');
         if (saveButton) {
             saveButton.disabled = false;
             saveButton.textContent = 'Save';
@@ -154,6 +181,17 @@ const projectHostingModal = {
 */
 const projectHostingViewModal = {
     modal: null,
+
+    getModal() {
+        if (!this.modal || !document.contains(this.modal)) {
+            this.modal = document.querySelector('[data-project-hosting-view-modal]');
+            if (this.modal) {
+                this.bindCloseButtons();
+                this.bindEscape();
+            }
+        }
+        return this.modal;
+    },
 
     initialize(root = document) {
         this.modal = root?.querySelector
@@ -173,11 +211,12 @@ const projectHostingViewModal = {
     },
 
     bindCloseButtons() {
-        if (!this.modal) {
+        const modal = this.getModal();
+        if (!modal) {
             return;
         }
 
-        const closeButtons = this.modal.querySelectorAll('[data-project-hosting-view-modal-close]');
+        const closeButtons = modal.querySelectorAll('[data-project-hosting-view-modal-close]');
         closeButtons.forEach((button) => {
             if (button.dataset.projectHostingViewModalBound === 'true') {
                 return;
@@ -192,42 +231,47 @@ const projectHostingViewModal = {
     },
 
     bindEscape() {
-        if (!this.modal || this.modal.dataset.projectHostingViewEscapeBound === 'true') {
+        const modal = this.getModal();
+        if (!modal || modal.dataset.projectHostingViewEscapeBound === 'true') {
             return;
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.key !== 'Escape' || !this.modal || this.modal.classList.contains('hidden')) {
+            const currentModal = this.getModal();
+            if (event.key !== 'Escape' || !currentModal || currentModal.classList.contains('hidden')) {
                 return;
             }
             this.close();
         });
 
-        this.modal.dataset.projectHostingViewEscapeBound = 'true';
+        modal.dataset.projectHostingViewEscapeBound = 'true';
     },
 
     open(contentHtml = null) {
-        if (!this.modal) {
+        const modal = this.getModal();
+        if (!modal) {
+            console.error('Project hosting view modal element not found in DOM.');
             return;
         }
 
-        const content = this.modal.querySelector('[data-project-hosting-view-content]');
+        const content = modal.querySelector('[data-project-hosting-view-content]');
         if (content && contentHtml) {
             content.innerHTML = contentHtml;
         }
 
-        this.modal.classList.remove('hidden');
-        this.modal.classList.add('flex');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
         document.body.classList.add('overflow-hidden');
     },
 
     close() {
-        if (!this.modal) {
+        const modal = this.getModal();
+        if (!modal) {
             return;
         }
 
-        this.modal.classList.add('hidden');
-        this.modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         document.body.classList.remove('overflow-hidden');
     },
 };
@@ -547,10 +591,14 @@ if (typeof document !== 'undefined') {
         initProjectHosting(document);
     }
 
-    // Tab activation event listener
-    document.addEventListener('project-tab-loaded', (event) => {
+    // Tab activation event listeners (project-tabs.js dispatches 'project-tab:loaded')
+    const handleTabSwitch = (event) => {
         if (event.detail?.tab === 'hosting') {
-            initProjectHosting(document);
+            const root = event.detail?.panel || document;
+            initProjectHosting(root);
         }
-    });
+    };
+
+    document.addEventListener('project-tab:loaded', handleTabSwitch);
+    document.addEventListener('project-tab-loaded', handleTabSwitch);
 }

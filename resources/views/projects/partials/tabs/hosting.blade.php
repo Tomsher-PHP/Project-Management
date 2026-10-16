@@ -7,7 +7,7 @@
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                         Hosting & Server Management
                     </h4>
-                    <p class="text-xs text-bgray-600 dark:text-bgray-300">
+                    <p class="text-xs text-bgray-700 dark:text-bgray-300">
                         Manage servers, cloud services, domains, and hosting configurations for this project.
                     </p>
                 </div>

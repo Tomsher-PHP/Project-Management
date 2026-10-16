@@ -120,7 +120,7 @@
                             </div>
 
                             <!-- Bottom Metadata Legend with Dots -->
-                            <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-bgray-600 dark:text-darkblack-200">
+                            <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-bgray-700 dark:text-darkblack-200">
                                 <!-- Spent Legend -->
                                 <div class="flex items-center gap-1.5">
                                     <span class="h-2 w-2 rounded-full {{ $workedSeconds > $estimatedSeconds ? 'bg-rose-500' : 'bg-emerald-500' }}"></span>
@@ -226,7 +226,7 @@
 
                                 <div class="flex items-center gap-3">
                                     <span class="text-sm font-bold text-bgray-900 dark:text-white">{{ $status['count'] }}</span>
-                                    <span class="rounded-full bg-bgray-50 px-2.5 py-1 text-xs font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">
+                                    <span class="rounded-full bg-bgray-50 px-2.5 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                         {{ $percentage }}%
                                     </span>
                                 </div>

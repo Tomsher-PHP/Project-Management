@@ -18,7 +18,7 @@
                         </p>
                     </div>
 
-                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 dark:hover:bg-darkblack-500 dark:hover:text-white" data-project-hosting-view-modal-close aria-label="Close">
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:hover:bg-darkblack-500 dark:hover:text-white" data-project-hosting-view-modal-close aria-label="Close">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -28,7 +28,7 @@
                 <!-- Content -->
                 <div class="max-h-[80vh] overflow-y-auto px-6 py-6 sm:px-7" data-project-hosting-view-content>
                     <div class="flex items-center justify-center py-12">
-                        <span class="text-sm text-bgray-500 dark:text-bgray-400">
+                        <span class="text-sm text-bgray-700 dark:text-bgray-400">
                             Loading...
                         </span>
                     </div>

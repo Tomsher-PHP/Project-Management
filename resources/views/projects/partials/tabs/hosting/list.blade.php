@@ -25,7 +25,7 @@
                         Environment
                     </th>
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-900 dark:text-white">
-                        Expiry / Renewal
+                        Date
                     </th>
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase text-bgray-900 dark:text-white">
                         Billing
@@ -47,7 +47,7 @@
                                 {{ $record->name }}
                             </div>
                             @if ($record->domain)
-                                <div class="mt-0.5 text-xs text-bgray-500 dark:text-bgray-400">
+                                <div class="mt-0.5 text-xs text-bgray-700 dark:text-bgray-300">
                                     <span class="inline-flex items-center gap-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
@@ -57,23 +57,25 @@
                                 </div>
                             @endif
                             @if ($record->hostingService)
-                                <div class="mt-0.5 text-xs text-bgray-600 dark:text-bgray-400">
+                                <div class="mt-0.5 text-xs text-bgray-700 dark:text-bgray-300">
                                     {{ $record->hostingService->name }}
                                 </div>
                             @endif
                         </td>
                         <td class="px-5 py-4">
-                            <span class="text-sm font-medium text-bgray-800 dark:text-bgray-200">
+                            <span class="text-sm font-medium text-bgray-800 dark:text-bgray-300">
                                 {{ $record->hostingProvider?->name ?? '--' }}
                             </span>
                         </td>
                         <td class="px-5 py-4">
                             @if ($isCompany)
-                                <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></span>
                                     {{ $ownershipLabel }}
                                 </span>
                             @else
-                                <span class="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-purple-600 dark:bg-purple-400"></span>
                                     {{ $ownershipLabel }}
                                 </span>
                             @endif
@@ -84,7 +86,7 @@
                                     {{ $record->hostingServiceStatus->name }}
                                 </span>
                             @else
-                                <span class="text-sm text-bgray-500 dark:text-bgray-400">--</span>
+                                <span class="text-sm text-bgray-700 dark:text-bgray-300">--</span>
                             @endif
                         </td>
                         <td class="px-5 py-4">
@@ -94,16 +96,19 @@
                         </td>
                         <td class="px-5 py-4">
                             <div class="text-sm text-bgray-900 dark:text-white">
+                                @if ($record->start_date)
+                                    <div><span class="text-xs text-bgray-700 dark:text-bgray-300">Start:</span> @appDate($record->start_date)</div>
+                                @endif
                                 @if ($record->expiry_date)
-                                    <div><span class="text-xs text-bgray-500 dark:text-bgray-400">Exp:</span> @appDate($record->expiry_date)</div>
+                                    <div><span class="text-xs text-bgray-700 dark:text-bgray-300">Exp:</span> @appDate($record->expiry_date)</div>
                                 @endif
                                 @if ($record->next_renewal_date)
-                                    <div class="text-xs text-bgray-500 dark:text-bgray-400">
+                                    <div class="text-xs text-bgray-700 dark:text-bgray-300">
                                         Ren: @appDate($record->next_renewal_date)
                                     </div>
                                 @endif
-                                @if (!$record->expiry_date && !$record->next_renewal_date)
-                                    <span class="text-bgray-500 dark:text-bgray-400">--</span>
+                                @if (!$record->start_date && !$record->expiry_date && !$record->next_renewal_date)
+                                    <span class="text-bgray-700 dark:text-bgray-300">--</span>
                                 @endif
                             </div>
                         </td>
@@ -113,12 +118,12 @@
                                     {{ $record->currency_code ? $record->currency_code . ' ' : '' }}{{ number_format((float) $record->billing_amount, 2) }}
                                 </div>
                                 @if ($record->hostingBillingCycle)
-                                    <div class="text-xs text-bgray-500 dark:text-bgray-400">
+                                    <div class="text-xs text-bgray-700 dark:text-bgray-300">
                                         / {{ $record->hostingBillingCycle->name }}
                                     </div>
                                 @endif
                             @else
-                                <span class="text-sm text-bgray-500 dark:text-bgray-400">--</span>
+                                <span class="text-sm text-bgray-700 dark:text-bgray-300">--</span>
                             @endif
                         </td>
                         <td class="px-5 py-4 text-right">
