@@ -148,11 +148,8 @@ class ProjectHostingController extends Controller
     /**
      * Update an existing hosting record.
      */
-    public function update(
-        ProjectHostingRecordRequest $request,
-        Project $project,
-        ProjectHostingRecord $hostingRecord
-    ): JsonResponse {
+    public function update(ProjectHostingRecordRequest $request, Project $project, ProjectHostingRecord $hostingRecord): JsonResponse
+    {
         abort_unless(auth()->user()?->can('project_hosting.edit'), Response::HTTP_FORBIDDEN);
         $this->ensureHostingRecordBelongsToProject($project, $hostingRecord);
 
