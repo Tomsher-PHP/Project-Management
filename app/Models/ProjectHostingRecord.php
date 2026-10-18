@@ -32,6 +32,7 @@ class ProjectHostingRecord extends Model
         'start_date',
         'expiry_date',
         'next_renewal_date',
+        'last_renewed_date',
         'billing_amount',
         'currency_code',
         'description',
@@ -46,6 +47,7 @@ class ProjectHostingRecord extends Model
             'start_date' => 'date',
             'expiry_date' => 'date',
             'next_renewal_date' => 'date',
+            'last_renewed_date' => 'date',
             'billing_amount' => 'decimal:2',
         ];
     }

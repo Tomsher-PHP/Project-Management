@@ -36,11 +36,12 @@
             <div class="text-xs font-medium uppercase text-bgray-700 dark:text-bgray-300">Ownership & Status</div>
             <div class="mt-2 flex items-center gap-2">
                 @if ($isCompany)
-                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-bgray-800 dark:bg-darkblack-500/30 dark:text-bgray-300">
                         {{ $ownershipLabel }}
                     </span>
                 @else
-                    <span class="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                    <span class="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-bgray-800 dark:bg-darkblack-500/30 dark:text-bgray-300">
+                        <span class="h-1.5 w-1.5 rounded-full bg-purple-600 dark:bg-purple-400"></span>
                         {{ $ownershipLabel }}
                     </span>
                 @endif
@@ -86,7 +87,7 @@
     </div>
 
     <!-- Service Dates Grid -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
             <div class="text-xs font-medium uppercase text-bgray-700 dark:text-bgray-300">Start Date</div>
             <div class="mt-1 text-sm font-medium text-bgray-900 dark:text-white">

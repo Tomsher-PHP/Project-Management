@@ -40,13 +40,14 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('expiry_date')->nullable();
             $table->date('next_renewal_date')->nullable();
+            $table->date('last_renewed_date')->nullable();
 
             // Billing information
             $table->decimal('billing_amount', 12, 2)->nullable();
             $table->string('currency_code', 3)->nullable();
 
             // Additional information
-            $table->text('description')->nullable();
+            $table->longText('description')->nullable();
             $table->text('notes')->nullable();
 
             // Audit fields
