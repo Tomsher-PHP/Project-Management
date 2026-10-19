@@ -1517,6 +1517,69 @@ function resetAllFilters() {
 | Delegated Global Event Listeners
 |--------------------------------------------------------------------------
 */
+const closeAllHostingRowMenus = (exceptDropdown = null) => {
+    document.querySelectorAll('[data-project-hosting-row-dropdown]').forEach((dropdown) => {
+        if (exceptDropdown && dropdown === exceptDropdown) {
+            return;
+        }
+
+        const menu = dropdown.querySelector('[data-project-hosting-row-menu]');
+        if (menu) {
+            menu.classList.add('hidden');
+            menu.style.position = '';
+            menu.style.top = '';
+            menu.style.left = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.visibility = '';
+        }
+
+        dropdown.querySelector('[data-project-hosting-row-menu-trigger]')?.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const positionHostingRowMenu = (trigger, menu) => {
+    if (!trigger || !menu) {
+        return;
+    }
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const gutter = 8;
+    menu.style.position = 'fixed';
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+    menu.style.top = '0px';
+    menu.style.left = '0px';
+    menu.style.minWidth = `${Math.round(Math.max(155, triggerRect.width + 115))}px`;
+    menu.style.width = 'max-content';
+
+    const measuredRect = menu.getBoundingClientRect();
+    const menuWidth = Math.max(measuredRect.width || 0, 155);
+    const menuHeight = measuredRect.height || 0;
+
+    let left = triggerRect.right - menuWidth;
+    let top = triggerRect.top + triggerRect.height + 4;
+
+    if (left < gutter) {
+        left = gutter;
+    }
+
+    if ((left + menuWidth) > (viewportWidth - gutter)) {
+        left = Math.max(gutter, viewportWidth - menuWidth - gutter);
+    }
+
+    if ((top + menuHeight) > (viewportHeight - gutter)) {
+        top = Math.max(gutter, triggerRect.top - menuHeight - 4);
+    }
+
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(top)}px`;
+};
+
 function bindDelegatedEvents() {
     if (projectHostingState.listenersBound) {
         return;
@@ -1653,6 +1716,58 @@ function bindDelegatedEvents() {
             return;
         }
 
+        // Hosting row 3-dots dropdown menu trigger
+        const rowMenuTrigger = event.target.closest('[data-project-hosting-row-menu-trigger]');
+        if (rowMenuTrigger) {
+            event.preventDefault();
+            const dropdown = rowMenuTrigger.closest('[data-project-hosting-row-dropdown]');
+            const menu = dropdown?.querySelector('[data-project-hosting-row-menu]');
+            if (!dropdown || !menu) return;
+
+            const shouldOpen = menu.classList.contains('hidden');
+            closeAllHostingRowMenus(dropdown);
+
+            if (shouldOpen) {
+                menu.style.position = 'fixed';
+                menu.style.top = '0px';
+                menu.style.left = '0px';
+                menu.style.right = 'auto';
+                menu.style.bottom = 'auto';
+                menu.style.visibility = 'hidden';
+                menu.classList.remove('hidden');
+
+                window.requestAnimationFrame(() => {
+                    positionHostingRowMenu(rowMenuTrigger, menu);
+                    menu.style.visibility = '';
+                });
+
+                rowMenuTrigger.setAttribute('aria-expanded', 'true');
+            } else {
+                menu.classList.add('hidden');
+                rowMenuTrigger.setAttribute('aria-expanded', 'false');
+            }
+            return;
+        }
+
+        // Hosting row delete trigger in dropdown
+        const deleteTrigger = event.target.closest('[data-project-hosting-delete-trigger]');
+        if (deleteTrigger) {
+            event.preventDefault();
+            closeAllHostingRowMenus();
+            const targetFormId = deleteTrigger.dataset.targetForm;
+            const form = targetFormId ? document.getElementById(targetFormId) : null;
+            if (form) {
+                $(form).trigger('click');
+            }
+            return;
+        }
+
+        // Close dropdown when any item inside the menu is clicked
+        const menuItemClicked = event.target.closest('[data-project-hosting-row-menu] button');
+        if (menuItemClicked) {
+            closeAllHostingRowMenus();
+        }
+
         // Reset Filters Button
         const resetBtn = event.target.closest('[data-project-hosting-reset]');
         if (resetBtn) {
@@ -1672,6 +1787,21 @@ function bindDelegatedEvents() {
             }
             return;
         }
+    });
+
+    // Close hosting row dropdowns on outside click or scroll
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('[data-project-hosting-row-dropdown]')) {
+            closeAllHostingRowMenus();
+        }
+    });
+
+    window.addEventListener('scroll', () => {
+        closeAllHostingRowMenus();
+    }, true);
+
+    window.addEventListener('resize', () => {
+        closeAllHostingRowMenus();
     });
 
     // Delegated Change (for dropdown filters in filter bar)
