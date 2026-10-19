@@ -1,14 +1,22 @@
 <!-- Project Hosting Tab -->
 @can('project_hosting.view')
     <div class="space-y-6" data-project-hosting-root>
+        {{-- Summary Cards --}}
+        @include('projects.partials.tabs.hosting.summary-cards', [
+            'project' => $project,
+            'summaryMetrics' => $summaryMetrics,
+        ])
+
+        {{-- Main Hosting Section --}}
         <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+            <!-- Header -->
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">
-                        Hosting & Server Management
+                        Server & Hosting
                     </h4>
                     <p class="text-xs text-bgray-700 dark:text-bgray-300">
-                        Manage servers, cloud services, domains, and hosting configurations for this project.
+                        Manage project hosting services, providers, billing, and renewal dates.
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -23,7 +31,14 @@
                 </div>
             </div>
 
-            <div id="project-hosting-history" data-project-hosting-container data-index-url="{{ route('projects.hosting.index', $project) }}">
+            <!-- Search & Filters Toolbar -->
+            @include('projects.partials.tabs.hosting.filters', [
+                'project' => $project,
+                'filterOptions' => $filterOptions,
+            ])
+
+            <!-- Records List & Pagination Container -->
+            <div id="project-hosting-history" data-project-hosting-container data-index-url="{{ route('projects.hosting.index', $project) }}" class="relative min-h-[160px]">
                 @include('projects.partials.tabs.hosting.list', [
                     'project' => $project,
                     'hostingRecords' => $hostingRecords,
@@ -31,15 +46,22 @@
             </div>
         </section>
 
-        @can('project_hosting.create')
+        @if(auth()->user()?->can('project_hosting.create') || auth()->user()?->can('project_hosting.edit'))
             @include('projects.partials.tabs.hosting.form-modal', [
                 'project' => $project,
                 'formOptions' => $formOptions,
             ])
-        @endcan
+        @endif
 
         @include('projects.partials.tabs.hosting.view-modal', [
             'project' => $project,
         ])
+
+        @can('project_hosting.edit')
+            @include('projects.partials.tabs.hosting.renewal-modal', [
+                'project' => $project,
+                'formOptions' => $formOptions,
+            ])
+        @endcan
     </div>
 @endcan

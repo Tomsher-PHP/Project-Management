@@ -478,6 +478,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('hosting', [ProjectHostingController::class, 'store'])->middleware(['permission.type:project_hosting.create', 'can:update,project'])->name('projects.hosting.store');
         Route::get('hosting/{hostingRecord}', [ProjectHostingController::class, 'show'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.show');
         Route::put('hosting/{hostingRecord}', [ProjectHostingController::class, 'update'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.update');
+        Route::post('hosting/{hostingRecord}/renew', [ProjectHostingController::class, 'renew'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.renew');
         Route::delete('hosting/{hostingRecord}', [ProjectHostingController::class, 'destroy'])->middleware(['permission.type:project_hosting.delete', 'can:update,project'])->name('projects.hosting.destroy');
     });
 

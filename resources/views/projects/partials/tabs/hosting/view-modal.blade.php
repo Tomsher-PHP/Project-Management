@@ -1,46 +1,21 @@
-<!-- Project Hosting View Modal -->
-<div class="modal fixed inset-0 z-[80] hidden items-center justify-center overflow-y-auto" data-project-hosting-view-modal>
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-hosting-view-modal-close></div>
+<!-- Project Hosting Details Right-Side Drawer Shell -->
+<div class="fixed inset-0 z-[80] hidden overflow-hidden" data-project-hosting-drawer aria-labelledby="project-hosting-drawer-title" role="dialog" aria-modal="true">
+    <!-- Backdrop overlay -->
+    <div class="fixed inset-0 bg-gray-900/50 dark:bg-black/60 opacity-0 transition-opacity duration-300" data-project-hosting-drawer-backdrop data-project-hosting-drawer-close></div>
 
-    <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
-        <div class="relative z-10 w-full max-w-3xl">
-            <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
-
-                <!-- Header -->
-                <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
-                    <div>
-                        <h4 class="text-xl font-semibold text-bgray-900 dark:text-white">
-                            Hosting Details
-                        </h4>
-                        <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
-                            Service and infrastructure details
-                        </p>
-                    </div>
-
-                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:hover:bg-darkblack-500 dark:hover:text-white" data-project-hosting-view-modal-close aria-label="Close">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+    <div class="fixed inset-y-0 right-0 flex max-w-full pl-6 sm:pl-10 pointer-events-none">
+        <!-- Right Drawer Panel -->
+        <div class="pointer-events-auto w-screen max-w-lg sm:max-w-xl md:max-w-2xl bg-white dark:bg-darkblack-600 shadow-2xl flex flex-col h-full transform translate-x-full transition-transform duration-300 ease-in-out" data-project-hosting-drawer-panel>
+            <!-- Dynamic Drawer Body (loaded via AJAX) -->
+            <div class="flex-1 flex flex-col min-h-0 overflow-y-auto" data-project-hosting-drawer-content>
+                <!-- Initial Loading State Placeholder -->
+                <div class="flex flex-col items-center justify-center py-24 text-center">
+                    <svg class="h-9 w-9 animate-spin text-success-300" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="mt-4 text-sm font-medium text-bgray-600 dark:text-bgray-300">Loading hosting details...</span>
                 </div>
-
-                <!-- Content -->
-                <div class="max-h-[80vh] overflow-y-auto px-6 py-6 sm:px-7" data-project-hosting-view-content>
-                    <div class="flex items-center justify-center py-12">
-                        <span class="text-sm text-bgray-700 dark:text-bgray-400">
-                            Loading...
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <div class="flex justify-end border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
-                    <button type="button" class="rounded-lg border border-bgray-300 bg-white px-5 py-2.5 text-sm font-medium text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-view-modal-close>
-                        Close
-                    </button>
-                </div>
-
             </div>
         </div>
     </div>
