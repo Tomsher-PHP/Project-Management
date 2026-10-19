@@ -743,6 +743,10 @@ async function handleRenewalFormSubmit(event) {
 }
 
 /*
+|--------------------------------------------------------------------------
+| View & Edit Record Actions
+|--------------------------------------------------------------------------
+*/
 let activeViewRequestSeq = 0;
 let activeViewAbortController = null;
 
