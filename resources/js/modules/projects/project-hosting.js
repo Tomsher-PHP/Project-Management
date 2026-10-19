@@ -412,6 +412,292 @@ const projectHostingRenewalModal = {
 
 /*
 |--------------------------------------------------------------------------
+| Renewal History Modal
+|--------------------------------------------------------------------------
+*/
+const projectHostingRenewalHistoryModal = {
+    modal: null,
+    body: null,
+    currentRecordId: null,
+    currentActionUrl: null,
+
+    getModal() {
+        if (!this.modal || !document.contains(this.modal)) {
+            this.modal = document.querySelector('[data-project-hosting-renewal-history-modal]');
+            if (this.modal) {
+                this.body = this.modal.querySelector('[data-project-hosting-renewal-history-body]');
+                this.bindCloseButtons();
+                this.bindEscape();
+            }
+        }
+        return this.modal;
+    },
+
+    initialize(root = document) {
+        this.modal = root?.querySelector
+            ? root.querySelector('[data-project-hosting-renewal-history-modal]')
+            : null;
+
+        if (!this.modal) {
+            this.modal = document.querySelector('[data-project-hosting-renewal-history-modal]');
+        }
+
+        if (!this.modal) {
+            return;
+        }
+
+        this.body = this.modal.querySelector('[data-project-hosting-renewal-history-body]');
+        this.bindCloseButtons();
+        this.bindEscape();
+    },
+
+    bindCloseButtons() {
+        const modal = this.getModal();
+        if (!modal) return;
+
+        const closeButtons = modal.querySelectorAll('[data-project-hosting-renewal-history-modal-close]');
+        closeButtons.forEach((button) => {
+            if (button.dataset.projectHostingRenewalHistoryBound === 'true') {
+                return;
+            }
+
+            button.addEventListener('click', () => {
+                this.close();
+            });
+
+            button.dataset.projectHostingRenewalHistoryBound = 'true';
+        });
+    },
+
+    bindEscape() {
+        const modal = this.getModal();
+        if (!modal || modal.dataset.projectHostingRenewalHistoryEscapeBound === 'true') {
+            return;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const currentModal = this.getModal();
+            if (event.key !== 'Escape' || !currentModal || currentModal.classList.contains('hidden')) {
+                return;
+            }
+            this.close();
+        });
+
+        modal.dataset.projectHostingRenewalHistoryEscapeBound = 'true';
+    },
+
+    open(recordId, recordName = '', actionUrl = '') {
+        const modal = this.getModal();
+        if (!modal) {
+            console.error('Project hosting renewal history modal not found in DOM.');
+            return;
+        }
+
+        this.currentRecordId = recordId ? String(recordId) : null;
+        this.currentActionUrl = actionUrl || null;
+
+        const nameEl = modal.querySelector('[data-renewal-history-record-name]');
+        if (nameEl) {
+            nameEl.textContent = recordName || 'Hosting Service';
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+
+        if (actionUrl) {
+            fetchRenewalHistory(actionUrl);
+        }
+    },
+
+    close() {
+        if (typeof activeRenewalHistoryAbortController !== 'undefined' && activeRenewalHistoryAbortController) {
+            activeRenewalHistoryAbortController.abort();
+            activeRenewalHistoryAbortController = null;
+        }
+        if (typeof activeRenewalHistorySeq !== 'undefined') {
+            activeRenewalHistorySeq++;
+        }
+
+        const modal = this.getModal();
+        if (!modal || modal.classList.contains('hidden')) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+
+        // Only remove overflow-hidden if drawer and status history modal are not open
+        const { drawer } = projectHostingDrawer.getElements();
+        const statusModal = projectHostingStatusHistoryModal.getModal();
+        const renewalModal = projectHostingRenewalModal.getModal();
+
+        const isAnyOtherOpen = (drawer && !drawer.classList.contains('hidden')) ||
+            (statusModal && !statusModal.classList.contains('hidden')) ||
+            (renewalModal && !renewalModal.classList.contains('hidden'));
+
+        if (!isAnyOtherOpen) {
+            document.body.classList.remove('overflow-hidden');
+        }
+    },
+
+    isOpenForRecord(recordId) {
+        const modal = this.getModal();
+        if (!modal || modal.classList.contains('hidden')) {
+            return false;
+        }
+        return this.currentRecordId !== null && String(this.currentRecordId) === String(recordId);
+    },
+
+    refresh() {
+        if (this.currentActionUrl) {
+            fetchRenewalHistory(this.currentActionUrl);
+        }
+    },
+};
+
+/*
+|--------------------------------------------------------------------------
+| Status History Modal
+|--------------------------------------------------------------------------
+*/
+const projectHostingStatusHistoryModal = {
+    modal: null,
+    body: null,
+    currentRecordId: null,
+    currentActionUrl: null,
+
+    getModal() {
+        if (!this.modal || !document.contains(this.modal)) {
+            this.modal = document.querySelector('[data-project-hosting-status-history-modal]');
+            if (this.modal) {
+                this.body = this.modal.querySelector('[data-project-hosting-status-history-body]');
+                this.bindCloseButtons();
+                this.bindEscape();
+            }
+        }
+        return this.modal;
+    },
+
+    initialize(root = document) {
+        this.modal = root?.querySelector
+            ? root.querySelector('[data-project-hosting-status-history-modal]')
+            : null;
+
+        if (!this.modal) {
+            this.modal = document.querySelector('[data-project-hosting-status-history-modal]');
+        }
+
+        if (!this.modal) {
+            return;
+        }
+
+        this.body = this.modal.querySelector('[data-project-hosting-status-history-body]');
+        this.bindCloseButtons();
+        this.bindEscape();
+    },
+
+    bindCloseButtons() {
+        const modal = this.getModal();
+        if (!modal) return;
+
+        const closeButtons = modal.querySelectorAll('[data-project-hosting-status-history-modal-close]');
+        closeButtons.forEach((button) => {
+            if (button.dataset.projectHostingStatusHistoryBound === 'true') {
+                return;
+            }
+
+            button.addEventListener('click', () => {
+                this.close();
+            });
+
+            button.dataset.projectHostingStatusHistoryBound = 'true';
+        });
+    },
+
+    bindEscape() {
+        const modal = this.getModal();
+        if (!modal || modal.dataset.projectHostingStatusHistoryEscapeBound === 'true') {
+            return;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const currentModal = this.getModal();
+            if (event.key !== 'Escape' || !currentModal || currentModal.classList.contains('hidden')) {
+                return;
+            }
+            this.close();
+        });
+
+        modal.dataset.projectHostingStatusHistoryEscapeBound = 'true';
+    },
+
+    open(recordId, recordName = '', actionUrl = '') {
+        const modal = this.getModal();
+        if (!modal) {
+            console.error('Project hosting status history modal not found in DOM.');
+            return;
+        }
+
+        this.currentRecordId = recordId ? String(recordId) : null;
+        this.currentActionUrl = actionUrl || null;
+
+        const nameEl = modal.querySelector('[data-status-history-record-name]');
+        if (nameEl) {
+            nameEl.textContent = recordName || 'Hosting Service';
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+
+        if (actionUrl) {
+            fetchStatusHistory(actionUrl);
+        }
+    },
+
+    close() {
+        if (typeof activeStatusHistoryAbortController !== 'undefined' && activeStatusHistoryAbortController) {
+            activeStatusHistoryAbortController.abort();
+            activeStatusHistoryAbortController = null;
+        }
+        if (typeof activeStatusHistorySeq !== 'undefined') {
+            activeStatusHistorySeq++;
+        }
+
+        const modal = this.getModal();
+        if (!modal || modal.classList.contains('hidden')) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+
+        // Only remove overflow-hidden if drawer and renewal history modal are not open
+        const { drawer } = projectHostingDrawer.getElements();
+        const renewalHistoryModal = projectHostingRenewalHistoryModal.getModal();
+        const renewalModal = projectHostingRenewalModal.getModal();
+
+        const isAnyOtherOpen = (drawer && !drawer.classList.contains('hidden')) ||
+            (renewalHistoryModal && !renewalHistoryModal.classList.contains('hidden')) ||
+            (renewalModal && !renewalModal.classList.contains('hidden'));
+
+        if (!isAnyOtherOpen) {
+            document.body.classList.remove('overflow-hidden');
+        }
+    },
+
+    isOpenForRecord(recordId) {
+        const modal = this.getModal();
+        if (!modal || modal.classList.contains('hidden')) {
+            return false;
+        }
+        return this.currentRecordId !== null && String(this.currentRecordId) === String(recordId);
+    },
+};
+
+/*
+|--------------------------------------------------------------------------
 | View Details Right-Side Drawer
 |--------------------------------------------------------------------------
 */
@@ -626,12 +912,8 @@ async function handleHostingFormSubmit(event) {
 
         projectHostingModal.close();
 
-        // Update list & summary counts
-        if (data.html) {
-            updateHostingList(data.html);
-        } else {
-            fetchHostingList();
-        }
+        // Refresh list with current active filters & update summary counts
+        fetchHostingList();
 
         if (data.summary) {
             updateSummaryCards(data.summary);
@@ -711,12 +993,8 @@ async function handleRenewalFormSubmit(event) {
         // Close renewal modal
         projectHostingRenewalModal.close();
 
-        // Update list & summary cards
-        if (data.html) {
-            updateHostingList(data.html);
-        } else {
-            fetchHostingList();
-        }
+        // Refresh list with current active filters & update summary cards
+        fetchHostingList();
 
         if (data.summary) {
             updateSummaryCards(data.summary);
@@ -729,6 +1007,12 @@ async function handleRenewalFormSubmit(event) {
                 projectHostingDrawer.open(data.drawer_html);
             }
         }
+
+        // Refresh renewal history if Renewal History modal is currently open for this hosting record
+        const renewalHostingId = form.querySelector('[data-renewal-hosting-id]')?.value;
+        if (renewalHostingId && projectHostingRenewalHistoryModal.isOpenForRecord(renewalHostingId)) {
+            projectHostingRenewalHistoryModal.refresh();
+        }
     } catch (error) {
         console.error('Error renewing hosting record:', error);
         if (window.Toast) {
@@ -738,6 +1022,180 @@ async function handleRenewalFormSubmit(event) {
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Confirm Renewal';
+        }
+    }
+}
+
+let activeRenewalHistorySeq = 0;
+let activeRenewalHistoryAbortController = null;
+
+async function fetchRenewalHistory(url) {
+    if (activeRenewalHistoryAbortController) {
+        activeRenewalHistoryAbortController.abort();
+    }
+    activeRenewalHistoryAbortController = new AbortController();
+    const currentSeq = ++activeRenewalHistorySeq;
+
+    const modal = projectHostingRenewalHistoryModal.getModal();
+    const body = modal?.querySelector('[data-project-hosting-renewal-history-body]');
+
+    if (body) {
+        body.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-16 text-center" data-project-hosting-renewal-history-loading>
+                <svg class="h-8 w-8 animate-spin text-success-300" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="mt-3 text-xs font-medium text-bgray-600 dark:text-bgray-300">Loading renewal history...</span>
+            </div>
+        `;
+    }
+
+    try {
+        const response = await fetch(url, {
+            signal: activeRenewalHistoryAbortController.signal,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to load renewal history (${response.status})`);
+        }
+
+        const data = await response.json();
+
+        if (currentSeq !== activeRenewalHistorySeq) {
+            return;
+        }
+
+        const currentModal = projectHostingRenewalHistoryModal.getModal();
+        if (!currentModal || currentModal.classList.contains('hidden')) {
+            return;
+        }
+
+        if (body && data.html) {
+            body.innerHTML = data.html;
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            return;
+        }
+
+        if (currentSeq !== activeRenewalHistorySeq) {
+            return;
+        }
+
+        console.error('Error fetching renewal history:', error);
+        if (body) {
+            body.innerHTML = `
+                <div class="py-12 text-center" data-project-hosting-renewal-history-error>
+                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-error-50 text-error-300 dark:bg-darkblack-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h5 class="mt-3 text-sm font-semibold text-bgray-900 dark:text-white">
+                        Unable to load renewal history
+                    </h5>
+                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
+                        An error occurred while retrieving renewal history. Please try again.
+                    </p>
+                    <div class="mt-4">
+                        <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-retry-renewal-history data-action="${url}">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+
+let activeStatusHistorySeq = 0;
+let activeStatusHistoryAbortController = null;
+
+async function fetchStatusHistory(url) {
+    if (activeStatusHistoryAbortController) {
+        activeStatusHistoryAbortController.abort();
+    }
+    activeStatusHistoryAbortController = new AbortController();
+    const currentSeq = ++activeStatusHistorySeq;
+
+    const modal = projectHostingStatusHistoryModal.getModal();
+    const body = modal?.querySelector('[data-project-hosting-status-history-body]');
+
+    if (body) {
+        body.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-16 text-center" data-project-hosting-status-history-loading>
+                <svg class="h-8 w-8 animate-spin text-success-300" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="mt-3 text-xs font-medium text-bgray-600 dark:text-bgray-300">Loading status history...</span>
+            </div>
+        `;
+    }
+
+    try {
+        const response = await fetch(url, {
+            signal: activeStatusHistoryAbortController.signal,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to load status history (${response.status})`);
+        }
+
+        const data = await response.json();
+
+        if (currentSeq !== activeStatusHistorySeq) {
+            return;
+        }
+
+        const currentModal = projectHostingStatusHistoryModal.getModal();
+        if (!currentModal || currentModal.classList.contains('hidden')) {
+            return;
+        }
+
+        if (body && data.html) {
+            body.innerHTML = data.html;
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            return;
+        }
+
+        if (currentSeq !== activeStatusHistorySeq) {
+            return;
+        }
+
+        console.error('Error fetching status history:', error);
+        if (body) {
+            body.innerHTML = `
+                <div class="py-12 text-center" data-project-hosting-status-history-error>
+                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-error-50 text-error-300 dark:bg-darkblack-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h5 class="mt-3 text-sm font-semibold text-bgray-900 dark:text-white">
+                        Unable to load status history
+                    </h5>
+                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
+                        An error occurred while retrieving status history. Please try again.
+                    </p>
+                    <div class="mt-4">
+                        <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-retry-status-history data-action="${url}">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            `;
         }
     }
 }
@@ -1135,6 +1593,66 @@ function bindDelegatedEvents() {
             return;
         }
 
+        // Open Renewal History modal
+        const renewalHistoryBtn = event.target.closest('[data-project-hosting-renewal-history]');
+        if (renewalHistoryBtn) {
+            event.preventDefault();
+            const recordId = renewalHistoryBtn.dataset.hostingId;
+            const recordName = renewalHistoryBtn.dataset.hostingName || '';
+            const actionUrl = renewalHistoryBtn.getAttribute('href') || renewalHistoryBtn.dataset.action;
+            projectHostingRenewalHistoryModal.open(recordId, recordName, actionUrl);
+            return;
+        }
+
+        // Open Status History modal
+        const statusHistoryBtn = event.target.closest('[data-project-hosting-status-history]');
+        if (statusHistoryBtn) {
+            event.preventDefault();
+            const recordId = statusHistoryBtn.dataset.hostingId;
+            const recordName = statusHistoryBtn.dataset.hostingName || '';
+            const actionUrl = statusHistoryBtn.getAttribute('href') || statusHistoryBtn.dataset.action;
+            projectHostingStatusHistoryModal.open(recordId, recordName, actionUrl);
+            return;
+        }
+
+        // Retry Renewal History
+        const retryRenewalBtn = event.target.closest('[data-project-hosting-retry-renewal-history]');
+        if (retryRenewalBtn) {
+            event.preventDefault();
+            const actionUrl = retryRenewalBtn.dataset.action;
+            if (actionUrl) {
+                fetchRenewalHistory(actionUrl);
+            }
+            return;
+        }
+
+        // Retry Status History
+        const retryStatusBtn = event.target.closest('[data-project-hosting-retry-status-history]');
+        if (retryStatusBtn) {
+            event.preventDefault();
+            const actionUrl = retryStatusBtn.dataset.action;
+            if (actionUrl) {
+                fetchStatusHistory(actionUrl);
+            }
+            return;
+        }
+
+        // Close Renewal History modal buttons
+        const renewalHistoryCloseBtn = event.target.closest('[data-project-hosting-renewal-history-modal-close]');
+        if (renewalHistoryCloseBtn) {
+            event.preventDefault();
+            projectHostingRenewalHistoryModal.close();
+            return;
+        }
+
+        // Close Status History modal buttons
+        const statusHistoryCloseBtn = event.target.closest('[data-project-hosting-status-history-modal-close]');
+        if (statusHistoryCloseBtn) {
+            event.preventDefault();
+            projectHostingStatusHistoryModal.close();
+            return;
+        }
+
         // Reset Filters Button
         const resetBtn = event.target.closest('[data-project-hosting-reset]');
         if (resetBtn) {
@@ -1200,6 +1718,8 @@ function bindDelegatedEvents() {
 export function initProjectHosting(root = document) {
     projectHostingModal.initialize(root);
     projectHostingRenewalModal.initialize(root);
+    projectHostingRenewalHistoryModal.initialize(root);
+    projectHostingStatusHistoryModal.initialize(root);
     projectHostingDrawer.initialize(root);
 
     // Initialize TomSelect for the filter dropdowns if present

@@ -339,6 +339,56 @@ class ProjectHostingController extends Controller
     }
 
     /**
+     * Get renewal history for a hosting record via AJAX.
+     */
+    public function renewalHistory(Request $request, Project $project, ProjectHostingRecord $hostingRecord): JsonResponse
+    {
+        abort_unless(auth()->user()?->can('project_hosting.view'), Response::HTTP_FORBIDDEN);
+        $this->ensureHostingRecordBelongsToProject($project, $hostingRecord);
+
+        $renewals = $hostingRecord->renewalHistories()
+            ->with(['billingCycle', 'renewedBy'])
+            ->orderByDesc('renewal_date')
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'html' => view('projects.partials.tabs.hosting.renewal-history-modal-content', [
+                'project' => $project,
+                'record' => $hostingRecord,
+                'renewals' => $renewals,
+            ])->render(),
+            'count' => $renewals->count(),
+        ]);
+    }
+
+    /**
+     * Get status history for a hosting record via AJAX.
+     */
+    public function statusHistory(Request $request, Project $project, ProjectHostingRecord $hostingRecord): JsonResponse
+    {
+        abort_unless(auth()->user()?->can('project_hosting.view'), Response::HTTP_FORBIDDEN);
+        $this->ensureHostingRecordBelongsToProject($project, $hostingRecord);
+
+        $statuses = $hostingRecord->statusHistories()
+            ->with(['fromStatus', 'toStatus', 'changedBy'])
+            ->orderByDesc('changed_at')
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'html' => view('projects.partials.tabs.hosting.status-history-modal-content', [
+                'project' => $project,
+                'record' => $hostingRecord,
+                'statuses' => $statuses,
+            ])->render(),
+            'count' => $statuses->count(),
+        ]);
+    }
+
+    /**
      * Delete a hosting record.
      */
     public function destroy(Request $request, Project $project, ProjectHostingRecord $hostingRecord): JsonResponse

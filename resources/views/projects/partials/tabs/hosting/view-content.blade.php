@@ -63,26 +63,19 @@
         <div class="flex items-center gap-2 shrink-0">
             <!-- Renew Action -->
             @can('project_hosting.edit')
-                <button
-                    type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-success-300 bg-success-50 px-2.5 text-xs font-semibold text-success-400 shadow-sm transition hover:bg-success-100 hover:text-success-500 dark:border-success-400 dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400"
-                    data-project-hosting-renew
-                    data-action="{{ route('projects.hosting.renew', [$project, $record]) }}"
-                    data-record-json="{{ json_encode([
-                        'id' => $record->id,
-                        'name' => $record->name,
-                        'domain' => $record->domain,
-                        'expiry_date' => $record->expiry_date?->format('Y-m-d'),
-                        'expiry_date_formatted' => $record->expiry_date ? $record->expiry_date->format('d M Y') : '—',
-                        'start_date' => $record->start_date?->format('Y-m-d'),
-                        'hosting_billing_cycle_id' => $record->hosting_billing_cycle_id,
-                        'billing_amount' => $record->billing_amount,
-                        'currency_code' => $record->currency_code,
-                        'reference' => $record->reference,
-                        'renew_url' => route('projects.hosting.renew', [$project, $record]),
-                    ]) }}"
-                    title="Renew Hosting Record"
-                >
+                <button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-success-300 bg-success-50 px-2.5 text-xs font-semibold text-success-400 shadow-sm transition hover:bg-success-100 hover:text-success-500 dark:border-success-400 dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400" data-project-hosting-renew data-action="{{ route('projects.hosting.renew', [$project, $record]) }}" data-record-json="{{ json_encode([
+                    'id' => $record->id,
+                    'name' => $record->name,
+                    'domain' => $record->domain,
+                    'expiry_date' => $record->expiry_date?->format('Y-m-d'),
+                    'expiry_date_formatted' => $record->expiry_date ? $record->expiry_date->format('d M Y') : '—',
+                    'start_date' => $record->start_date?->format('Y-m-d'),
+                    'hosting_billing_cycle_id' => $record->hosting_billing_cycle_id,
+                    'billing_amount' => $record->billing_amount,
+                    'currency_code' => $record->currency_code,
+                    'reference' => $record->reference,
+                    'renew_url' => route('projects.hosting.renew', [$project, $record]),
+                ]) }}" title="Renew Hosting Record">
                     <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -92,14 +85,7 @@
 
             <!-- Edit Action -->
             @can('project_hosting.edit')
-                <button
-                    type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-2.5 text-xs font-semibold text-bgray-700 shadow-sm transition hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300"
-                    data-project-hosting-edit
-                    data-action="{{ $editActionUrl }}"
-                    data-hosting-id="{{ $record->id }}"
-                    title="Edit Hosting Record"
-                >
+                <button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-2.5 text-xs font-semibold text-bgray-700 shadow-sm transition hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-hosting-edit data-action="{{ $editActionUrl }}" data-hosting-id="{{ $record->id }}" title="Edit Hosting Record">
                     <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
@@ -304,17 +290,26 @@
     </div>
 
     <!-- Drawer Footer -->
-    <div class="flex items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 shrink-0 bg-bgray-50/50 dark:bg-darkblack-500/30">
-        <button type="button" class="rounded-lg border border-bgray-300 bg-white px-4 py-2 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-drawer-close>
-            Close
-        </button>
-        @can('project_hosting.edit')
-            <button
-                type="button"
-                class="rounded-lg border border-success-300 bg-success-50 px-4 py-2 text-xs font-semibold text-success-400 transition hover:bg-success-100 hover:text-success-500 dark:border-success-400 dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400"
-                data-project-hosting-renew
-                data-action="{{ route('projects.hosting.renew', [$project, $record]) }}"
-                data-record-json="{{ json_encode([
+    <div class="flex items-center justify-between gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 shrink-0 bg-bgray-50/50 dark:bg-darkblack-500/30">
+        <!-- History Buttons -->
+        <div class="flex items-center gap-2">
+            @can('project_hosting.view')
+                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-3.5 py-2 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-renewal-history data-hosting-id="{{ $record->id }}" data-hosting-name="{{ $record->name }}" data-action="{{ route('projects.hosting.renewal-history', [$project, $record]) }}">
+                    Renewal History
+                </button>
+                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-3.5 py-2 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-status-history data-hosting-id="{{ $record->id }}" data-hosting-name="{{ $record->name }}" data-action="{{ route('projects.hosting.status-history', [$project, $record]) }}">
+                    Status History
+                </button>
+            @endcan
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2.5">
+            <button type="button" class="rounded-lg border border-bgray-300 bg-white px-4 py-2 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-drawer-close>
+                Close
+            </button>
+            @can('project_hosting.edit')
+                <button type="button" class="rounded-lg border border-success-300 bg-success-50 px-4 py-2 text-xs font-semibold text-success-400 transition hover:bg-success-100 hover:text-success-500 dark:border-success-400 dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400" data-project-hosting-renew data-action="{{ route('projects.hosting.renew', [$project, $record]) }}" data-record-json="{{ json_encode([
                     'id' => $record->id,
                     'name' => $record->name,
                     'domain' => $record->domain,
@@ -326,20 +321,14 @@
                     'currency_code' => $record->currency_code,
                     'reference' => $record->reference,
                     'renew_url' => route('projects.hosting.renew', [$project, $record]),
-                ]) }}"
-            >
-                Renew Service
-            </button>
-            <button
-                type="button"
-                class="rounded-lg bg-success-300 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-success-400"
-                data-project-hosting-edit
-                data-action="{{ $editActionUrl }}"
-                data-hosting-id="{{ $record->id }}"
-            >
-                Edit Record
-            </button>
-        @endcan
+                ]) }}">
+                    Renew Service
+                </button>
+                <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-success-400" data-project-hosting-edit data-action="{{ $editActionUrl }}" data-hosting-id="{{ $record->id }}">
+                    Edit Record
+                </button>
+            @endcan
+        </div>
     </div>
 
 </div>

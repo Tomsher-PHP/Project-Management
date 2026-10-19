@@ -57,6 +57,14 @@
             'project' => $project,
         ])
 
+        @include('projects.partials.tabs.hosting.renewal-history-modal', [
+            'project' => $project,
+        ])
+
+        @include('projects.partials.tabs.hosting.status-history-modal', [
+            'project' => $project,
+        ])
+
         @can('project_hosting.edit')
             @include('projects.partials.tabs.hosting.renewal-modal', [
                 'project' => $project,

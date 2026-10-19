@@ -1,12 +1,7 @@
 @php
     $today = now()->startOfDay();
     $in30Days = now()->addDays(30)->endOfDay();
-    $isFiltering = request()->filled('search')
-        || request()->filled('hosting_provider_id')
-        || request()->filled('hosting_service_id')
-        || request()->filled('hosting_service_status_id')
-        || request()->filled('ownership_type')
-        || request()->filled('expiry_status');
+    $isFiltering = request()->filled('search') || request()->filled('hosting_provider_id') || request()->filled('hosting_service_id') || request()->filled('hosting_service_status_id') || request()->filled('ownership_type') || request()->filled('expiry_status');
 @endphp
 
 <div>
@@ -26,11 +21,7 @@
                     We couldn't find any hosting records matching your active filters or search query.
                 </p>
                 <div class="mt-4">
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white"
-                        data-project-hosting-reset
-                    >
+                    <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-hosting-reset>
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
@@ -52,11 +43,7 @@
                 </p>
                 @can('project_hosting.create')
                     <div class="mt-4">
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-2 rounded-lg bg-success-300 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-success-400"
-                            data-project-hosting-modal-open
-                        >
+                        <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-success-300 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-success-400" data-project-hosting-modal-open>
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                             </svg>
@@ -148,7 +135,7 @@
                                     </div>
                                 @endif
                                 @if ($record->hostingEnvironment)
-                                    <div class="mt-0.5 text-[11px] text-bgray-500 dark:text-bgray-400">
+                                    <div class="mt-0.5 text-[11px] text-bgray-700 dark:text-bgray-400">
                                         Env: {{ $record->hostingEnvironment->name }}
                                     </div>
                                 @endif
