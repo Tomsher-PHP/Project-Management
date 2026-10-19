@@ -26,7 +26,6 @@
 
     <!-- Modal content start -->
     <x-add-form-modal modalId="multi-step-modal" module="Contact" formId="customerContactForm" action="#" button="Add">
-
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
             <!-- Name -->
@@ -71,9 +70,37 @@
                 </label>
                 <input type="text" id="extra_contact_whatsapp" name="whatsapp" placeholder="Enter WhatsApp number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
-
         </div>
 
+        <div class="contact-person-item grid grid-cols-1 gap-4 md:grid-cols-2">
+
+            <div class="flex flex-col gap-2">
+                <div class="form-group">
+                    <label class="d-flex align-items-center gap-2">
+                        <input type="checkbox" name="needs_login" value="1" class="contact-needs-login">
+                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">This contact person needs login access</span>
+                    </label>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2">&nbsp;</div>
+
+
+            {{-- Password --}}
+            <div class="contact-login-fields flex flex-col gap-2" style="display: none;">
+                <label for="contact_password_0" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Password <span class="text-danger">*</span>
+                </label>
+                <input type="password" name="password" id="contact_password_0" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" placeholder="Enter password" autocomplete="new-password" disabled>
+            </div>
+
+            {{-- Confirm Password --}}
+            <div class="contact-login-fields flex flex-col gap-2" style="display: none;">
+                <label for="contact_password_confirmation_0" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Confirm Password <span class="text-danger">*</span>
+                </label>
+                <input type="password" name="password_confirmation" id="contact_password_confirmation_0" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" placeholder="Confirm password" autocomplete="new-password" disabled>
+            </div>
+        </div>
     </x-add-form-modal>
 @endsection
 

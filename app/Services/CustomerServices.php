@@ -111,35 +111,53 @@ class CustomerServices
     {
         $existingIds = [];
 
-        // Primary Contact (force update)
+        // Primary Contact
+        $primaryData = [
+            'name' => $data['primary_name'],
+            'email' => $data['primary_email'] ?? null,
+            'designation' => $data['primary_designation'] ?? null,
+            'mobile' => $data['primary_mobile'] ?? null,
+            'landline' => $data['primary_landline'] ?? null,
+            'whatsapp' => $data['primary_whatsapp'] ?? null,
+            'is_primary' => 1,
+        ];
+
+        // Save primary contact password only when supplied.
+        if (!empty($data['primary_password'])) {
+            $primaryData['password'] = $data['primary_password'];
+        }
+
         $primary = $customer->contacts()->updateOrCreate(
             ['is_primary' => 1],
-            [
-                'name' => $data['primary_name'],
-                'email' => $data['primary_email'] ?? null,
-                'designation' => $data['primary_designation'] ?? null,
-                'mobile' => $data['primary_mobile'] ?? null,
-                'landline' => $data['primary_landline'] ?? null,
-                'whatsapp' => $data['primary_whatsapp'] ?? null,
-            ]
+            $primaryData
         );
 
         $existingIds[] = $primary->id;
 
         // Additional Contacts
-        if (! empty($data['contacts'])) {
+        if (!empty($data['contacts'])) {
             foreach ($data['contacts'] as $contact) {
+                $contactData = [
+                    'name' => $contact['name'],
+                    'email' => $contact['email'] ?? null,
+                    'designation' => $contact['designation'] ?? null,
+                    'mobile' => $contact['mobile'] ?? null,
+                    'landline' => $contact['landline'] ?? null,
+                    'whatsapp' => $contact['whatsapp'] ?? null,
+                    'is_primary' => 0,
+                ];
+
+                // Save password only when a new password is supplied.
+                if (
+                    !empty($contact['needs_login']) &&
+                    !empty($contact['password'])
+                ) {
+                    $contactData['password'] = $contact['password'];
+                }
+
                 $record = $customer->contacts()->updateOrCreate(
-                    ['id' => $contact['id'] ?? null], // important for edit
-                    [
-                        'name' => $contact['name'],
-                        'email' => $contact['email'] ?? null,
-                        'designation' => $contact['designation'] ?? null,
-                        'mobile' => $contact['mobile'] ?? null,
-                        'landline' => $contact['landline'] ?? null,
-                        'whatsapp' => $contact['whatsapp'] ?? null,
-                        'is_primary' => 0,
-                    ]
+                    ['id' => $contact['id'] ?? null],
+                    $contactData
                 );
 
                 $existingIds[] = $record->id;

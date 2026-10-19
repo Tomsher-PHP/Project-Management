@@ -71,7 +71,53 @@
                 </label>
                 <input type="text" id="extra_contact_whatsapp" name="whatsapp" placeholder="Enter WhatsApp number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
+            {{-- Contact Person Login Access --}}
+            <div class="mt-4">
+                <label class="inline-flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        name="contacts[0][needs_login]"
+                        value="1"
+                        class="contact-needs-login"
+                        onchange="toggleContactLoginFields(this)"
+                    >
 
+                    <span>This contact person needs login access</span>
+                </label>
+            </div>
+
+            {{-- Login fields --}}
+            <div class="contact-login-fields mt-4 hidden">
+                <div class="mb-3">
+                    <label for="contact_password_0" class="form-label">
+                        Password <span class="text-danger">*</span>
+                    </label>
+
+                    <input
+                        type="password"
+                        name="contacts[0][password]"
+                        id="contact_password_0"
+                        class="form-control"
+                        autocomplete="new-password"
+                        disabled
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label for="contact_password_confirmation_0" class="form-label">
+                        Confirm Password <span class="text-danger">*</span>
+                    </label>
+
+                    <input
+                        type="password"
+                        name="contacts[0][password_confirmation]"
+                        id="contact_password_confirmation_0"
+                        class="form-control"
+                        autocomplete="new-password"
+                        disabled
+                    >
+                </div>
+            </div>
         </div>
 
     </x-add-form-modal>

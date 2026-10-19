@@ -215,12 +215,11 @@
             </div>
         </div>
 
-        <div class="pt-6 flex justify-left dark:border-darkblack-400 dark:text-white">
+        <div class="pt-6 flex justify-left dark:border-darkblack-400 dark:text-white mb-2">
             <button type="button" data-target="#multi-step-modal" data-module="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
                 + Extra Contacts
             </button>
         </div>
-
     </div>
 
     <div id="extraContactsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
