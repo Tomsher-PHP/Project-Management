@@ -3,10 +3,13 @@
     $providers = $formOptions['providers'] ?? [];
     $services = $formOptions['services'] ?? [];
     $statuses = $formOptions['statuses'] ?? [];
+    $defaultStatusId = $formOptions['defaultStatusId'] ?? (collect($statuses)->firstWhere('is_default', true)?->id ?? null);
     $billingCycles = $formOptions['billingCycles'] ?? [];
     $environments = $formOptions['environments'] ?? [];
-    $currencies = $formOptions['currencies'] ?? [];
     $defaultCurrency = $formOptions['defaultCurrency'] ?? config('constants.currency', 'AED');
+    $currencyOption = $formOptions['currencyOption'] ?? null;
+    $selectedCurrency = old('currency_code', $defaultCurrency);
+    $selectedCurrencyLabel = isset($currencyOption) && $currencyOption['id'] === $selectedCurrency ? $currencyOption['name'] : $selectedCurrency;
 @endphp
 
 <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-project-hosting-modal>
@@ -65,7 +68,7 @@
                             </div>
 
                             <!-- Provider, Service & Status -->
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div class="grid grid-cols-3 gap-4">
                                 <div>
                                     <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                         Hosting Provider <span class="text-error-300">*</span>
@@ -96,10 +99,10 @@
                                     <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                         Service Status <span class="text-error-300">*</span>
                                     </label>
-                                    <select id="project_hosting_status" name="hosting_service_status_id" required class="tom-select-no-search w-full" data-project-hosting-field="hosting_service_status_id">
+                                    <select id="project_hosting_status" name="hosting_service_status_id" required class="tom-select-no-search w-full" data-project-hosting-field="hosting_service_status_id" data-default-value="{{ $defaultStatusId ?? '' }}">
                                         <option value="">Select Status</option>
                                         @foreach ($statuses as $status)
-                                            <option value="{{ $status->id }}">{{ $status->name }}</option>
+                                            <option value="{{ $status->id }}" {{ (string) $defaultStatusId === (string) $status->id ? 'selected' : '' }}>{{ $status->name }}</option>
                                         @endforeach
                                     </select>
                                     <p data-project-hosting-error="hosting_service_status_id" class="mt-1 hidden text-xs text-error-300"></p>
@@ -155,7 +158,7 @@
                             </div>
 
                             <!-- Dates: Start, Expiry, Renewal -->
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div class="grid grid-cols-3 gap-4">
                                 <div>
                                     <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                         Start Date
@@ -195,13 +198,13 @@
                                     <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                         Currency Code
                                     </label>
-                                    <select id="project_hosting_currency_code" name="currency_code" class="tom-select w-full" data-project-hosting-field="currency_code">
+                                    <select id="project_hosting_currency_code" name="currency_code" class="tom-select-lazy w-full" data-project-hosting-field="currency_code" data-route="{{ route('currencies.search') }}" data-placeholder="Start typing to search currency...">
                                         <option value="">Select Currency</option>
-                                        @foreach ($currencies as $curr)
-                                            <option value="{{ $curr['code'] }}" @selected($curr['code'] === $defaultCurrency)>
-                                                {{ $curr['label'] }}
+                                        @if ($selectedCurrency)
+                                            <option value="{{ $selectedCurrency }}" selected>
+                                                {{ $selectedCurrencyLabel }}
                                             </option>
-                                        @endforeach
+                                        @endif
                                     </select>
                                     <p data-project-hosting-error="currency_code" class="mt-1 hidden text-xs text-error-300"></p>
                                 </div>

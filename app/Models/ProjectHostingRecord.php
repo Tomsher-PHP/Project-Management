@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProjectHostingRecord extends Model
@@ -90,5 +91,15 @@ class ProjectHostingRecord extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function renewalHistories(): HasMany
+    {
+        return $this->hasMany(ProjectHostingRenewalHistory::class, 'project_hosting_record_id');
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(ProjectHostingStatusHistory::class, 'project_hosting_record_id');
     }
 }

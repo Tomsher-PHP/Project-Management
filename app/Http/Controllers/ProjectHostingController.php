@@ -11,6 +11,8 @@ use App\Models\HostingService;
 use App\Models\HostingServiceStatus;
 use App\Models\Project;
 use App\Models\ProjectHostingRecord;
+use App\Models\ProjectHostingRenewalHistory;
+use App\Models\ProjectHostingStatusHistory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -121,11 +123,22 @@ class ProjectHostingController extends Controller
         $validated['project_id'] = $project->id;
         $validated['created_by'] = auth()->id();
         $validated['updated_by'] = auth()->id();
+        unset($validated['last_renewed_date']);
 
         DB::beginTransaction();
 
         try {
             $record = ProjectHostingRecord::create($validated);
+
+            ProjectHostingStatusHistory::create([
+                'project_hosting_record_id' => $record->id,
+                'from_status_id' => null,
+                'to_status_id' => $record->hosting_service_status_id,
+                'changed_at' => now(),
+                'changed_by' => auth()->id(),
+                'reason' => 'Initial status',
+                'notes' => null,
+            ]);
 
             DB::commit();
 
@@ -155,11 +168,32 @@ class ProjectHostingController extends Controller
 
         $validated = $request->validated();
         $validated['updated_by'] = auth()->id();
+        unset($validated['last_renewed_date']);
 
         DB::beginTransaction();
 
         try {
-            $hostingRecord->update($validated);
+            /** @var ProjectHostingRecord $lockedRecord */
+            $lockedRecord = ProjectHostingRecord::where('id', $hostingRecord->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $oldStatusId = (int) $lockedRecord->hosting_service_status_id;
+            $newStatusId = isset($validated['hosting_service_status_id']) ? (int) $validated['hosting_service_status_id'] : null;
+
+            $lockedRecord->update($validated);
+
+            if ($newStatusId !== null && $oldStatusId !== $newStatusId) {
+                ProjectHostingStatusHistory::create([
+                    'project_hosting_record_id' => $lockedRecord->id,
+                    'from_status_id' => $oldStatusId,
+                    'to_status_id' => $newStatusId,
+                    'changed_at' => now(),
+                    'changed_by' => auth()->id(),
+                    'reason' => 'Status changed',
+                    'notes' => null,
+                ]);
+            }
 
             DB::commit();
 
@@ -257,27 +291,28 @@ class ProjectHostingController extends Controller
         $billingCycles = HostingBillingCycle::active()->orderBy('sort_order')->orderBy('name')->get();
         $environments = HostingEnvironment::active()->orderBy('sort_order')->orderBy('name')->get();
 
-        // Currencies from Country model
-        $currencies = Country::select('currency', 'currency_symbol')
-            ->whereNotNull('currency')
-            ->where('currency', '!=', '')
-            ->groupBy('currency', 'currency_symbol')
-            ->orderBy('currency')
-            ->get()
-            ->map(fn($item) => [
-                'code' => $item->currency,
-                'label' => $item->currency_symbol ? "{$item->currency} ({$item->currency_symbol})" : $item->currency,
-            ]);
-
         $defaultCurrency = config('constants.currency', 'AED');
+        $currencyOption = null;
+        if (!blank($defaultCurrency)) {
+            $country = Country::where('currency', $defaultCurrency)->first();
+            $currencyOption = [
+                'id' => $defaultCurrency,
+                'name' => $country && $country->currency_symbol
+                    ? "{$defaultCurrency} ({$country->currency_symbol})"
+                    : $defaultCurrency,
+            ];
+        }
+
+        $defaultStatus = $statuses->firstWhere('is_default', true) ?? HostingServiceStatus::where('is_default', true)->first();
 
         return [
             'providers' => $providers,
             'services' => $services,
             'statuses' => $statuses,
+            'defaultStatusId' => $defaultStatus?->id,
             'billingCycles' => $billingCycles,
             'environments' => $environments,
-            'currencies' => $currencies,
+            'currencyOption' => $currencyOption,
             'defaultCurrency' => $defaultCurrency,
             'ownershipTypes' => ProjectHostingRecord::OWNERSHIP_TYPES,
         ];

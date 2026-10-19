@@ -19,12 +19,14 @@ class HostingServiceStatus extends Model
         'sort_order',
         'is_active',
         'is_system',
+        'is_default',
     ];
 
     protected $casts = [
         'sort_order' => 'integer',
         'is_active' => 'boolean',
         'is_system' => 'boolean',
+        'is_default' => 'boolean',
     ];
 
     public function scopeActive($query)

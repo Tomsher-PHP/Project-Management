@@ -146,9 +146,14 @@ const projectHostingModal = {
         // Reset TomSelect controls if present
         form.querySelectorAll('select').forEach((select) => {
             if (select.tomselect) {
-                const defaultVal = select.id === 'project_hosting_ownership'
-                    ? 'company'
-                    : (select.id === 'project_hosting_currency_code' ? (select.querySelector('option[selected]')?.value || 'AED') : '');
+                let defaultVal = '';
+                if (select.id === 'project_hosting_ownership') {
+                    defaultVal = 'company';
+                } else if (select.id === 'project_hosting_status') {
+                    defaultVal = select.dataset.defaultValue || select.querySelector('option[selected]')?.value || '';
+                } else if (select.id === 'project_hosting_currency_code') {
+                    defaultVal = select.querySelector('option[selected]')?.value || 'AED';
+                }
                 select.tomselect.setValue(defaultVal, true);
             }
         });
@@ -451,6 +456,12 @@ async function handleEditRecord(url) {
             if (!input) return;
 
             if (input.tagName === 'SELECT' && input.tomselect) {
+                if (value && !input.tomselect.options[value]) {
+                    input.tomselect.addOption({
+                        value: String(value),
+                        text: String(value),
+                    });
+                }
                 input.tomselect.setValue(value ?? '', true);
             } else if (input._flatpickr) {
                 input._flatpickr.setDate(value || '', true);
