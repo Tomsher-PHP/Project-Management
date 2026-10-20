@@ -108,7 +108,15 @@
         <!-- Status & Ownership Badges Bar -->
         <div class="flex flex-wrap items-center gap-2">
             @if ($record->hostingServiceStatus)
-                <span class="inline-flex items-center rounded-full bg-bgray-100 px-3 py-1 text-xs font-semibold text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-200">
+                @php
+                    $statusColor = $record->hostingServiceStatus->color ?? null;
+                    $statusBg = $statusColor ? $statusColor . '1a' : null;
+                @endphp
+                <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold {{ !$statusColor ? 'bg-bgray-100 text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-200' : '' }}"
+                    style="{{ $statusColor ? 'background-color: ' . $statusBg . '; color: ' . $statusColor . ';' : '' }}">
+                    @if ($statusColor)
+                        <span class="h-1.5 w-1.5 rounded-full" style="background-color: {{ $statusColor }};"></span>
+                    @endif
                     Status: {{ $record->hostingServiceStatus->name }}
                 </span>
             @endif
