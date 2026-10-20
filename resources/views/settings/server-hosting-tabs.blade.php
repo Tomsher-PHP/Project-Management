@@ -12,6 +12,12 @@
             'url' => route('settings.hosting-services.index'),
             'permission' => 'server_hosting.view',
         ],
+        [
+            'key' => 'notifications',
+            'label' => 'Notifications',
+            'url' => route('settings.server-hosting-notifications.index'),
+            'permission' => 'server_hosting.view',
+        ],
     ];
 @endphp
 

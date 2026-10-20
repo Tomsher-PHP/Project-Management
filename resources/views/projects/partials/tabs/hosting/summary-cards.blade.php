@@ -39,7 +39,7 @@
     @foreach ($cards as $card)
         <div class="flex items-center justify-between rounded-[8px] border border-bgray-200 bg-white px-3.5 py-2.5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="min-w-0 pr-2">
-                <p class="truncate text-[11px] font-medium tracking-wide text-bgray-500 dark:text-bgray-400">
+                <p class="truncate text-[11px] font-medium tracking-wide text-bgray-700 dark:text-bgray-300">
                     {{ $card['label'] }}
                 </p>
                 <div class="mt-0.5 flex items-baseline">

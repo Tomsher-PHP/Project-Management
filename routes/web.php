@@ -55,6 +55,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\ScheduleTaskController;
+use App\Http\Controllers\ServerHostingNotificationSettingController;
 use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
@@ -269,6 +270,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.create')->only(['store']);
         Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.edit')->only(['update']);
         Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.delete')->only(['destroy']);
+
+        // Server & Hosting Notifications Routes
+        Route::resource('server-hosting-notifications', ServerHostingNotificationSettingController::class)->middleware('permission.type:server_hosting.view')->only(['index']);
+        Route::post('server-hosting-notifications', [ServerHostingNotificationSettingController::class, 'store'])->middleware('permission.type:server_hosting.create')->name('server-hosting-notifications.store');
+        Route::put('server-hosting-notifications/{server_hosting_notification}', [ServerHostingNotificationSettingController::class, 'update'])->middleware('permission.type:server_hosting.edit')->name('server-hosting-notifications.update');
 
         // Task settings routes
         Route::patch('/task-statuses/toggle-status', [TaskSettingsController::class, 'toggleStatusTaskStatus'])->middleware('permission.type:task_settings.edit')->name('task_status.toggleStatus');
