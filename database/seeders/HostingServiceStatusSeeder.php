@@ -15,14 +15,14 @@ class HostingServiceStatusSeeder extends Seeder
                 'code' => 'pending',
                 'color' => '#F59E0B',
                 'description' => 'Service setup or activation is awaiting completion.',
-                'is_default' => true,
+                'is_default' => false,
             ],
             [
                 'name' => 'Active',
                 'code' => 'active',
                 'color' => '#22C55E',
                 'description' => 'Service is currently active.',
-                'is_default' => false,
+                'is_default' => true,
             ],
             [
                 'name' => 'Suspended',
