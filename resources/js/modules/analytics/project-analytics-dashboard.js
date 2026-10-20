@@ -688,25 +688,17 @@ export async function loadExpiringHosting(filters = getActiveFilters()) {
 
         if (loadingState) loadingState.classList.add('hidden');
 
-        if (!canView) {
-            if (emptyTitle) emptyTitle.innerText = 'Access Restricted';
-            if (emptySubtitle) emptySubtitle.innerText = 'You do not have permission to view hosting records.';
-            if (emptyState) emptyState.classList.remove('hidden');
+        if (!canView || records.length === 0) {
+            // Do not show the box if no data or no access
+            card.classList.add('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
             if (content) content.classList.add('hidden');
             if (totalCountEl) totalCountEl.innerText = '0';
             return;
         }
 
+        card.classList.remove('hidden');
         if (totalCountEl) totalCountEl.innerText = records.length.toLocaleString();
-
-        if (records.length === 0) {
-            if (emptyTitle) emptyTitle.innerText = 'No expiring hosting records found';
-            if (emptySubtitle) emptySubtitle.innerText = 'There are no server or hosting records expiring in the next 45 days.';
-            if (emptyState) emptyState.classList.remove('hidden');
-            if (content) content.classList.add('hidden');
-            return;
-        }
-
         if (emptyState) emptyState.classList.add('hidden');
         if (content) content.classList.remove('hidden');
 
@@ -716,8 +708,59 @@ export async function loadExpiringHosting(filters = getActiveFilters()) {
     } catch (err) {
         console.warn('Failed to load expiring hosting records:', err);
         if (loadingState) loadingState.classList.add('hidden');
-        if (emptyState) emptyState.classList.remove('hidden');
-        if (content) content.classList.add('hidden');
+        card.classList.add('hidden');
+    }
+}
+
+/**
+ * Load Server & Hosting Expired table data.
+ */
+export async function loadExpiredHosting(filters = getActiveFilters()) {
+    const card = document.querySelector('[data-project-analytics-section="expired-hosting"]');
+    if (!card) return;
+    const url = card.dataset.url;
+    if (!url) return;
+
+    const loadingState = card.querySelector('[data-loading-state]');
+    const emptyState = card.querySelector('[data-empty-state]');
+    const content = card.querySelector('[data-content]');
+    const tbody = card.querySelector('[data-expired-hosting-table-body]');
+    const totalCountEl = card.querySelector('[data-expired-hosting-total-count]');
+    const emptyTitle = card.querySelector('[data-empty-title]');
+    const emptySubtitle = card.querySelector('[data-empty-subtitle]');
+
+    if (loadingState) loadingState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+
+    try {
+        const data = await fetchAnalyticsData(url, filters);
+        const canView = data.can_view !== false;
+        const records = data.records || [];
+
+        if (loadingState) loadingState.classList.add('hidden');
+
+        if (!canView || records.length === 0) {
+            // Do not show the box if no data or no access
+            card.classList.add('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+            if (content) content.classList.add('hidden');
+            if (totalCountEl) totalCountEl.innerText = '0';
+            return;
+        }
+
+        card.classList.remove('hidden');
+        if (totalCountEl) totalCountEl.innerText = records.length.toLocaleString();
+        if (emptyState) emptyState.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
+        if (tbody) {
+            tbody.innerHTML = data.html || '';
+        }
+    } catch (err) {
+        console.warn('Failed to load expired hosting records:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        card.classList.add('hidden');
     }
 }
 
@@ -732,6 +775,7 @@ export function loadAllOverallDashboardSections(filters = getActiveFilters()) {
     loadProjectsByStage(filters);
     loadUpcomingTimelines(filters);
     loadExpiringHosting(filters);
+    loadExpiredHosting(filters);
     loadParentProjectsOverview(filters);
 }
 

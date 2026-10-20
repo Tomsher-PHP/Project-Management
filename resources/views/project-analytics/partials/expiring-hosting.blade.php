@@ -1,4 +1,4 @@
-<div class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600"
+<div class="hidden overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600"
      data-project-analytics-section="expiring-hosting"
      data-url="{{ route('project.analytics.expiring-hosting') }}">
 

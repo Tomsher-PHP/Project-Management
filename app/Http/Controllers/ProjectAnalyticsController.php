@@ -525,6 +525,34 @@ class ProjectAnalyticsController extends Controller
     }
 
     /**
+     * Server & Hosting expired records overview list.
+     */
+    public function expiredHosting(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+
+        $data = $analyticsService->getExpiredHostingRecords(
+            $request->user(),
+            $selectedUser,
+            $project?->id
+        );
+
+        $data['html'] = view('project-analytics.partials.render.expired-hosting', [
+            'records' => $data['records'] ?? [],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
      * Child projects overview list for a given parent project, rendered as HTML partial.
      */
     public function childProjectsOverview(Project $project, Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
