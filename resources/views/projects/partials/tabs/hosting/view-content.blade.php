@@ -112,8 +112,7 @@
                     $statusColor = $record->hostingServiceStatus->color ?? null;
                     $statusBg = $statusColor ? $statusColor . '1a' : null;
                 @endphp
-                <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold {{ !$statusColor ? 'bg-bgray-100 text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-200' : '' }}"
-                    style="{{ $statusColor ? 'background-color: ' . $statusBg . '; color: ' . $statusColor . ';' : '' }}">
+                <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold {{ !$statusColor ? 'bg-bgray-100 text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-200' : '' }}" style="{{ $statusColor ? 'background-color: ' . $statusBg . '; color: ' . $statusColor . ';' : '' }}">
                     @if ($statusColor)
                         <span class="h-1.5 w-1.5 rounded-full" style="background-color: {{ $statusColor }};"></span>
                     @endif
@@ -145,27 +144,27 @@
             </h4>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Service Name</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Service Name</span>
                     <p class="mt-0.5 text-sm font-semibold text-bgray-900 dark:text-white">{{ $record->name }}</p>
                 </div>
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Provider</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Provider</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-800 dark:text-bgray-200">{{ $record->hostingProvider?->name ?? '—' }}</p>
                 </div>
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Service Type</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Service Type</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-800 dark:text-bgray-200">{{ $record->hostingService?->name ?? '—' }}</p>
                 </div>
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Environment</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Environment</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-800 dark:text-bgray-200">{{ $record->hostingEnvironment?->name ?? '—' }}</p>
                 </div>
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Domain / URL</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Domain / URL</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-800 dark:text-bgray-200">
                         @if ($record->domain)
                             <a href="{{ str_starts_with($record->domain, 'http') ? $record->domain : 'https://' . $record->domain }}" target="_blank" rel="noopener noreferrer" class="text-success-400 hover:underline">
@@ -178,7 +177,7 @@
                 </div>
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Reference / Account ID</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Reference / Account ID</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-800 dark:text-bgray-200">{{ $record->reference ?? '—' }}</p>
                 </div>
             </div>
@@ -191,7 +190,7 @@
             </h4>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Start Date</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Start Date</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-900 dark:text-white">
                         @if ($record->start_date)
                             @appDate($record->start_date)
@@ -202,7 +201,7 @@
                 </div>
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Expiry Date</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Expiry Date</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-900 dark:text-white">
                         @if ($record->expiry_date)
                             @appDate($record->expiry_date)
@@ -213,7 +212,7 @@
                 </div>
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Next Renewal Date</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Next Renewal Date</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-900 dark:text-white">
                         @if ($record->next_renewal_date)
                             @appDate($record->next_renewal_date)
@@ -225,7 +224,7 @@
 
                 @if ($record->last_renewed_date)
                     <div>
-                        <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Last Renewed Date</span>
+                        <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Last Renewed Date</span>
                         <p class="mt-0.5 text-sm font-medium text-bgray-900 dark:text-white">
                             @appDate($record->last_renewed_date)
                         </p>
@@ -233,7 +232,7 @@
                 @endif
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Billing Amount</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Billing Amount</span>
                     <p class="mt-0.5 text-sm font-semibold text-bgray-900 dark:text-white">
                         @if ($record->billing_amount !== null)
                             {{ $record->currency_code ? $record->currency_code . ' ' : '' }}{{ number_format((float) $record->billing_amount, 2) }}
@@ -244,7 +243,7 @@
                 </div>
 
                 <div>
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Billing Cycle</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Billing Cycle</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-800 dark:text-bgray-200">
                         {{ $record->hostingBillingCycle?->name ?? '—' }}
                     </p>
@@ -302,20 +301,17 @@
         <!-- History Buttons -->
         <div class="flex items-center gap-2">
             @can('project_hosting.view')
-                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-3.5 py-2 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-renewal-history data-hosting-id="{{ $record->id }}" data-hosting-name="{{ $record->name }}" data-action="{{ route('projects.hosting.renewal-history', [$project, $record]) }}">
-                    Renewal History
+                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-2 py-2 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-renewal-history data-hosting-id="{{ $record->id }}" data-hosting-name="{{ $record->name }}" data-action="{{ route('projects.hosting.renewal-history', [$project, $record]) }}">
+                    Renewals
                 </button>
-                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-3.5 py-2 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-status-history data-hosting-id="{{ $record->id }}" data-hosting-name="{{ $record->name }}" data-action="{{ route('projects.hosting.status-history', [$project, $record]) }}">
-                    Status History
+                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-2 py-2 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-status-history data-hosting-id="{{ $record->id }}" data-hosting-name="{{ $record->name }}" data-action="{{ route('projects.hosting.status-history', [$project, $record]) }}">
+                    Statuses
                 </button>
             @endcan
         </div>
 
         <!-- Action Buttons -->
         <div class="flex items-center gap-2.5">
-            <button type="button" class="rounded-lg border border-bgray-300 bg-white px-4 py-2 text-xs font-semibold text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-project-hosting-drawer-close>
-                Close
-            </button>
             @can('project_hosting.edit')
                 <button type="button" class="rounded-lg border border-success-300 bg-success-50 px-4 py-2 text-xs font-semibold text-success-400 transition hover:bg-success-100 hover:text-success-500 dark:border-success-400 dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400" data-project-hosting-renew data-action="{{ route('projects.hosting.renew', [$project, $record]) }}" data-record-json="{{ json_encode([
                     'id' => $record->id,
