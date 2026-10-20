@@ -132,6 +132,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/parent-projects/{project}/children', [ProjectAnalyticsController::class, 'childProjectsOverview'])->name('project.analytics.parent-projects.children');
         Route::get('/expiring-hosting', [ProjectAnalyticsController::class, 'expiringHosting'])->name('project.analytics.expiring-hosting');
         Route::get('/expired-hosting', [ProjectAnalyticsController::class, 'expiredHosting'])->name('project.analytics.expired-hosting');
+        Route::get('/project-hosting', [ProjectAnalyticsController::class, 'projectHosting'])->name('project.analytics.project-hosting');
     });
 
     // Role & Permission Routes

@@ -1276,6 +1276,67 @@ export async function loadSingleProjectOverview(filters = getActiveFilters()) {
     }
 }
 
+/**
+ * Load Server & Hosting records for a single project.
+ */
+export async function loadSingleProjectHosting(filters = getActiveFilters()) {
+    const card = document.querySelector('[data-single-project-hosting-section]');
+    if (!card) return;
+
+    if (!filters.projectId) {
+        card.classList.add('hidden');
+        return;
+    }
+
+    const url = card.dataset.url || '/project-analytics/project-hosting';
+    const loadingState = card.querySelector('[data-loading-state]');
+    const emptyState = card.querySelector('[data-empty-state]');
+    const content = card.querySelector('[data-content], [data-single-project-hosting-content]');
+    const countBadge = card.querySelector('[data-single-project-hosting-count]');
+
+    // Show card and loading skeleton
+    card.classList.remove('hidden');
+    if (loadingState) loadingState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+
+    try {
+        const res = await fetchAnalyticsData(url, filters);
+        const data = res?.data !== undefined ? res.data : (res || {});
+        const canView = data.can_view !== false;
+        const count = Number(data.count) || 0;
+
+        if (loadingState) loadingState.classList.add('hidden');
+
+        if (!canView) {
+            card.classList.add('hidden');
+            return;
+        }
+
+        if (countBadge) {
+            countBadge.innerText = count.toLocaleString();
+        }
+
+        if (content && data.html) {
+            content.innerHTML = data.html;
+
+            // Remove Action column in single project analytics page
+            content.querySelectorAll('table thead tr th:last-child').forEach(th => th.remove());
+            content.querySelectorAll('table tbody tr td:last-child').forEach(td => td.remove());
+
+            content.classList.remove('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+        } else {
+            if (content) content.classList.add('hidden');
+            if (emptyState) emptyState.classList.remove('hidden');
+        }
+    } catch (err) {
+        console.warn('Failed to load single project hosting records:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        card.classList.add('hidden');
+    }
+}
+
 /* ==========================================================================
    DASHBOARD MODE SWITCHER & COORDINATION
    ========================================================================== */
@@ -1308,10 +1369,17 @@ export function switchDashboardMode(filters = getActiveFilters()) {
         loadSingleProjectDetails(filters);
         loadSingleProjectOverview(filters);
         loadSingleProjectTaskStatusChart(filters);
+        loadSingleProjectHosting(filters);
     } else {
         // --- Overall Dashboard Mode ---
         singleProjectView.classList.add('hidden');
         overallView.classList.remove('hidden');
+
+        // Hide single project hosting section if still visible
+        const singleProjectHostingCard = document.querySelector('[data-single-project-hosting-section]');
+        if (singleProjectHostingCard) {
+            singleProjectHostingCard.classList.add('hidden');
+        }
 
         // Destroy single project charts
         destroyChart('singleProjectTaskStatusChart');

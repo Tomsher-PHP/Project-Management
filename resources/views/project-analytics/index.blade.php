@@ -66,6 +66,11 @@
             <!-- Single Project Charts: Task Status Breakdown, User Wise Section -->
             @include('project-analytics.partials.single-project-charts')
 
+            <!-- Single Project Server & Hosting Section -->
+            @can('project_hosting.view')
+                @include('project-analytics.partials.single-project-hosting')
+            @endcan
+
         </div>
     </main>
 
@@ -79,6 +84,11 @@
             </div>
         </div>
     </div>
+
+    <!-- Project Hosting View Drawer -->
+    @can('project_hosting.view')
+        @include('projects.partials.tabs.hosting.view-modal')
+    @endcan
 @endsection
 
 @push('scripts')
