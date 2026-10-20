@@ -37,5 +37,11 @@ class ProjectNotificationSetting extends Model
     {
         return $this->hasMany(ProjectNotificationSettingUser::class, 'project_notification_setting_id');
     }
+
+    public function emailRecipients()
+    {
+        return $this->hasMany(ProjectNotificationSettingUser::class, 'project_notification_setting_id')
+            ->whereNotNull('email');
+    }
 }
 
