@@ -495,6 +495,36 @@ class ProjectAnalyticsController extends Controller
     }
 
     /**
+     * Server & Hosting expiring in 45 days overview list.
+     */
+    public function expiringHosting(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+        $days = $request->integer('days') ?: 45;
+
+        $data = $analyticsService->getExpiringHostingRecords(
+            $request->user(),
+            $selectedUser,
+            $project?->id,
+            $days
+        );
+
+        $data['html'] = view('project-analytics.partials.render.expiring-hosting', [
+            'records' => $data['records'] ?? [],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
      * Child projects overview list for a given parent project, rendered as HTML partial.
      */
     public function childProjectsOverview(Project $project, Request $request, ProjectAnalyticsService $analyticsService): JsonResponse

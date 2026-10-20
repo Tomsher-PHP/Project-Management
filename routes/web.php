@@ -130,6 +130,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/chart/task-priority', [ProjectAnalyticsController::class, 'taskPriorityChart'])->name('project.analytics.chart.task-priority');
         Route::get('/parent-projects', [ProjectAnalyticsController::class, 'parentProjectsOverview'])->name('project.analytics.parent-projects');
         Route::get('/parent-projects/{project}/children', [ProjectAnalyticsController::class, 'childProjectsOverview'])->name('project.analytics.parent-projects.children');
+        Route::get('/expiring-hosting', [ProjectAnalyticsController::class, 'expiringHosting'])->name('project.analytics.expiring-hosting');
     });
 
     // Role & Permission Routes

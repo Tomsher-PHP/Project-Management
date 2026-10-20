@@ -36,6 +36,13 @@
                 </div>
             </div>
 
+            <!-- Server & Hosting Expire Soon (Permission: project_hosting.view) -->
+            @can('project_hosting.view')
+                <div>
+                    @include('project-analytics.partials.expiring-hosting')
+                </div>
+            @endcan
+
             <!-- Parent Projects Overview -->
             <div>
                 @include('project-analytics.partials.parent-projects-overview')
