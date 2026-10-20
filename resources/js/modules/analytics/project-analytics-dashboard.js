@@ -1321,8 +1321,8 @@ export async function loadSingleProjectHosting(filters = getActiveFilters()) {
             content.innerHTML = data.html;
 
             // Remove Action column in single project analytics page
-            content.querySelectorAll('table thead tr th:last-child').forEach(th => th.remove());
-            content.querySelectorAll('table tbody tr td:last-child').forEach(td => td.remove());
+            // content.querySelectorAll('table thead tr th:last-child').forEach(th => th.remove());
+            // content.querySelectorAll('table tbody tr td:last-child').forEach(td => td.remove());
 
             content.classList.remove('hidden');
             if (emptyState) emptyState.classList.add('hidden');
