@@ -35,22 +35,22 @@
     ];
 @endphp
 
-<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" data-project-hosting-summary-cards>
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-project-hosting-summary-cards>
     @foreach ($cards as $card)
-        <div class="rounded-[8px] border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-300">
+        <div class="flex items-center justify-between rounded-[8px] border border-bgray-200 bg-white px-3.5 py-2.5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+            <div class="min-w-0 pr-2">
+                <p class="truncate text-[11px] font-medium tracking-wide text-bgray-500 dark:text-bgray-400">
                     {{ $card['label'] }}
-                </span>
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg {{ $card['badge'] }}">
-                    {!! $card['icon'] !!}
-                </span>
+                </p>
+                <div class="mt-0.5 flex items-baseline">
+                    <span class="text-lg font-bold leading-none {{ $card['color'] }}" data-summary-count="{{ $card['key'] }}">
+                        {{ $card['count'] }}
+                    </span>
+                </div>
             </div>
-            <div class="mt-2 flex items-baseline gap-2">
-                <span class="text-2xl font-bold {{ $card['color'] }}" data-summary-count="{{ $card['key'] }}">
-                    {{ $card['count'] }}
-                </span>
-            </div>
+            <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md {{ $card['badge'] }}">
+                {!! $card['icon'] !!}
+            </span>
         </div>
     @endforeach
 </div>

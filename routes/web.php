@@ -478,6 +478,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('hosting', [ProjectHostingController::class, 'store'])->middleware(['permission.type:project_hosting.create', 'can:update,project'])->name('projects.hosting.store');
         Route::get('hosting/{hostingRecord}', [ProjectHostingController::class, 'show'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.show');
         Route::put('hosting/{hostingRecord}', [ProjectHostingController::class, 'update'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.update');
+        Route::patch('hosting/{hostingRecord}/status', [ProjectHostingController::class, 'updateStatus'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.status');
         Route::post('hosting/{hostingRecord}/renew', [ProjectHostingController::class, 'renew'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.renew');
         Route::get('hosting/{hostingRecord}/renewal-history', [ProjectHostingController::class, 'renewalHistory'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.renewal-history');
         Route::get('hosting/{hostingRecord}/status-history', [ProjectHostingController::class, 'statusHistory'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.status-history');

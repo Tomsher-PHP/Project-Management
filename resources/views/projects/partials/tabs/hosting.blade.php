@@ -1,13 +1,13 @@
 <!-- Project Hosting Tab -->
 @can('project_hosting.view')
-    <div class="space-y-6" data-project-hosting-root>
-        {{-- Summary Cards --}}
+    <div class="space-y-4" data-project-hosting-root>
+        <!-- Summary Cards -->
         @include('projects.partials.tabs.hosting.summary-cards', [
             'project' => $project,
             'summaryMetrics' => $summaryMetrics,
         ])
 
-        {{-- Main Hosting Section --}}
+        <!-- Main Hosting Section -->
         <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <!-- Header -->
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
@@ -42,11 +42,12 @@
                 @include('projects.partials.tabs.hosting.list', [
                     'project' => $project,
                     'hostingRecords' => $hostingRecords,
+                    'formOptions' => $formOptions,
                 ])
             </div>
         </section>
 
-        @if(auth()->user()?->can('project_hosting.create') || auth()->user()?->can('project_hosting.edit'))
+        @if (auth()->user()?->can('project_hosting.create') || auth()->user()?->can('project_hosting.edit'))
             @include('projects.partials.tabs.hosting.form-modal', [
                 'project' => $project,
                 'formOptions' => $formOptions,

@@ -1413,6 +1413,67 @@ function showTableLoading(show = true) {
     }
 }
 
+async function handleStatusUpdate(updateUrl, statusId, statusOptionBtn) {
+    if (!updateUrl || !statusId) return;
+
+    const dropdown = statusOptionBtn?.closest('[data-project-hosting-status-dropdown]');
+    const trigger = dropdown?.querySelector('[data-project-hosting-status-trigger]');
+    const allOptions = dropdown?.querySelectorAll('[data-project-hosting-status-option]');
+
+    if (allOptions) {
+        allOptions.forEach((opt) => (opt.disabled = true));
+    }
+    if (trigger) {
+        trigger.classList.add('opacity-50', 'pointer-events-none');
+    }
+
+    try {
+        const response = await fetch(updateUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            body: JSON.stringify({ hosting_service_status_id: statusId }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && (data.success || data.status)) {
+            if (data.html) {
+                updateHostingList(data.html);
+            }
+            if (data.summary) {
+                updateSummaryCards(data.summary);
+            }
+            if (window.Toast) {
+                window.Toast.success(data.message || 'Hosting status updated successfully.');
+            }
+        } else {
+            const errorMsg = data.message || 'Failed to update hosting status.';
+            if (window.Toast) {
+                window.Toast.error(errorMsg);
+            } else {
+                alert(errorMsg);
+            }
+        }
+    } catch (error) {
+        console.error('Failed to update hosting status:', error);
+        if (window.Toast) {
+            window.Toast.error('An unexpected error occurred while updating status.');
+        }
+    } finally {
+        if (allOptions) {
+            allOptions.forEach((opt) => (opt.disabled = false));
+        }
+        if (trigger) {
+            trigger.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    }
+}
+
 async function fetchHostingList() {
     if (projectHostingState.isRequestPending) return;
 
@@ -1538,6 +1599,69 @@ const closeAllHostingRowMenus = (exceptDropdown = null) => {
 
         dropdown.querySelector('[data-project-hosting-row-menu-trigger]')?.setAttribute('aria-expanded', 'false');
     });
+};
+
+const closeAllHostingStatusMenus = (exceptDropdown = null) => {
+    document.querySelectorAll('[data-project-hosting-status-dropdown]').forEach((dropdown) => {
+        if (exceptDropdown && dropdown === exceptDropdown) {
+            return;
+        }
+
+        const menu = dropdown.querySelector('[data-project-hosting-status-menu]');
+        if (menu) {
+            menu.classList.add('hidden');
+            menu.style.position = '';
+            menu.style.top = '';
+            menu.style.left = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.visibility = '';
+        }
+
+        dropdown.querySelector('[data-project-hosting-status-trigger]')?.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const positionHostingStatusMenu = (trigger, menu) => {
+    if (!trigger || !menu) {
+        return;
+    }
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const gutter = 8;
+    menu.style.position = 'fixed';
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+    menu.style.top = '0px';
+    menu.style.left = '0px';
+    menu.style.minWidth = `${Math.round(Math.max(150, triggerRect.width))}px`;
+    menu.style.width = 'max-content';
+
+    const measuredRect = menu.getBoundingClientRect();
+    const menuWidth = Math.max(measuredRect.width || 0, 150);
+    const menuHeight = measuredRect.height || 0;
+
+    let left = triggerRect.left;
+    let top = triggerRect.bottom + 4;
+
+    if (left < gutter) {
+        left = gutter;
+    }
+
+    if ((left + menuWidth) > (viewportWidth - gutter)) {
+        left = Math.max(gutter, viewportWidth - menuWidth - gutter);
+    }
+
+    if ((top + menuHeight) > (viewportHeight - gutter)) {
+        top = Math.max(gutter, triggerRect.top - menuHeight - 4);
+    }
+
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(top)}px`;
 };
 
 const positionHostingRowMenu = (trigger, menu) => {
@@ -1749,6 +1873,61 @@ function bindDelegatedEvents() {
             return;
         }
 
+        // Hosting status dropdown trigger
+        const statusTrigger = event.target.closest('[data-project-hosting-status-trigger]');
+        if (statusTrigger) {
+            event.preventDefault();
+            event.stopPropagation();
+            const dropdown = statusTrigger.closest('[data-project-hosting-status-dropdown]');
+            const menu = dropdown?.querySelector('[data-project-hosting-status-menu]');
+            if (!dropdown || !menu) return;
+
+            const shouldOpen = menu.classList.contains('hidden');
+            closeAllHostingStatusMenus(dropdown);
+            closeAllHostingRowMenus();
+
+            if (shouldOpen) {
+                menu.style.position = 'fixed';
+                menu.style.top = '0px';
+                menu.style.left = '0px';
+                menu.style.right = 'auto';
+                menu.style.bottom = 'auto';
+                menu.style.visibility = 'hidden';
+                menu.classList.remove('hidden');
+
+                window.requestAnimationFrame(() => {
+                    positionHostingStatusMenu(statusTrigger, menu);
+                    menu.style.visibility = '';
+                });
+
+                statusTrigger.setAttribute('aria-expanded', 'true');
+            } else {
+                menu.classList.add('hidden');
+                statusTrigger.setAttribute('aria-expanded', 'false');
+            }
+            return;
+        }
+
+        // Hosting status option click
+        const statusOption = event.target.closest('[data-project-hosting-status-option]');
+        if (statusOption) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const statusId = statusOption.dataset.statusId;
+            const currentStatusId = statusOption.dataset.currentStatusId;
+            const updateUrl = statusOption.dataset.updateUrl;
+
+            closeAllHostingStatusMenus();
+
+            if (!statusId || !updateUrl || statusId === currentStatusId) {
+                return;
+            }
+
+            handleStatusUpdate(updateUrl, statusId, statusOption);
+            return;
+        }
+
         // Hosting row delete trigger in dropdown
         const deleteTrigger = event.target.closest('[data-project-hosting-delete-trigger]');
         if (deleteTrigger) {
@@ -1789,19 +1968,24 @@ function bindDelegatedEvents() {
         }
     });
 
-    // Close hosting row dropdowns on outside click or scroll
+    // Close hosting dropdowns on outside click or scroll
     document.addEventListener('click', (event) => {
         if (!event.target.closest('[data-project-hosting-row-dropdown]')) {
             closeAllHostingRowMenus();
+        }
+        if (!event.target.closest('[data-project-hosting-status-dropdown]')) {
+            closeAllHostingStatusMenus();
         }
     });
 
     window.addEventListener('scroll', () => {
         closeAllHostingRowMenus();
+        closeAllHostingStatusMenus();
     }, true);
 
     window.addEventListener('resize', () => {
         closeAllHostingRowMenus();
+        closeAllHostingStatusMenus();
     });
 
     // Delegated Change (for dropdown filters in filter bar)

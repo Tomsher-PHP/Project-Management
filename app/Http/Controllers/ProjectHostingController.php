@@ -58,6 +58,7 @@ class ProjectHostingController extends Controller
             'html' => view('projects.partials.tabs.hosting.list', [
                 'project' => $project,
                 'hostingRecords' => $hostingRecords,
+                'formOptions' => $this->getFormOptions(),
             ])->render(),
             'count' => $hostingRecords->total(),
             'summary' => $summaryMetrics,
@@ -220,6 +221,70 @@ class ProjectHostingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to update hosting record. Please try again.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Update status for a hosting record via AJAX.
+     */
+    public function updateStatus(Request $request, Project $project, ProjectHostingRecord $hostingRecord): JsonResponse
+    {
+        abort_unless(auth()->user()?->can('project_hosting.edit'), Response::HTTP_FORBIDDEN);
+        $this->ensureHostingRecordBelongsToProject($project, $hostingRecord);
+
+        $request->validate([
+            'hosting_service_status_id' => ['required', 'integer', 'exists:hosting_service_statuses,id'],
+        ]);
+
+        $newStatusId = (int) $request->input('hosting_service_status_id');
+
+        DB::beginTransaction();
+
+        try {
+            /** @var ProjectHostingRecord $lockedRecord */
+            $lockedRecord = ProjectHostingRecord::where('id', $hostingRecord->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $oldStatusId = (int) $lockedRecord->hosting_service_status_id;
+
+            if ($oldStatusId !== $newStatusId) {
+                $lockedRecord->update([
+                    'hosting_service_status_id' => $newStatusId,
+                    'updated_by' => auth()->id(),
+                ]);
+
+                ProjectHostingStatusHistory::create([
+                    'project_hosting_record_id' => $lockedRecord->id,
+                    'from_status_id' => $oldStatusId,
+                    'to_status_id' => $newStatusId,
+                    'changed_at' => now(),
+                    'changed_by' => auth()->id(),
+                    'reason' => 'Status changed via dropdown',
+                    'notes' => null,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'success' => true,
+                'message' => 'Hosting status updated successfully.',
+                'hosting_service_status_id' => $newStatusId,
+                'status_name' => $lockedRecord->fresh()->hostingServiceStatus?->name,
+                'html' => $this->renderHostingList($project, $request),
+                'summary' => $this->calculateSummaryMetrics($project),
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+
+            return response()->json([
+                'status' => false,
+                'success' => false,
+                'message' => 'Unable to update hosting status. Please try again.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -435,6 +500,7 @@ class ProjectHostingController extends Controller
         return view('projects.partials.tabs.hosting.list', [
             'project' => $project,
             'hostingRecords' => $hostingRecords,
+            'formOptions' => $this->getFormOptions(),
         ])->render();
     }
 
