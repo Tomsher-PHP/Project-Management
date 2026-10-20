@@ -1428,7 +1428,14 @@ async function handleStatusUpdate(updateUrl, statusId, statusOptionBtn) {
     }
 
     try {
-        const response = await fetch(updateUrl, {
+        const url = new URL(updateUrl, window.location.origin);
+        Object.entries(projectHostingState.activeFilters).forEach(([key, val]) => {
+            if (val !== '' && val !== null && val !== undefined) {
+                url.searchParams.set(key, val);
+            }
+        });
+
+        const response = await fetch(url.toString(), {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

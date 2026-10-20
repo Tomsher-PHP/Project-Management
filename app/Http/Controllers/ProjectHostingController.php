@@ -268,13 +268,19 @@ class ProjectHostingController extends Controller
 
             DB::commit();
 
+            $listRequest = Request::create(
+                $request->url(),
+                'GET',
+                $request->query()
+            );
+
             return response()->json([
                 'status' => true,
                 'success' => true,
                 'message' => 'Hosting status updated successfully.',
                 'hosting_service_status_id' => $newStatusId,
                 'status_name' => $lockedRecord->fresh()->hostingServiceStatus?->name,
-                'html' => $this->renderHostingList($project, $request),
+                'html' => $this->renderHostingList($project, $listRequest),
                 'summary' => $this->calculateSummaryMetrics($project),
             ]);
         } catch (\Throwable $e) {
