@@ -15,6 +15,7 @@ class HostingServiceStatus extends Model
     protected $fillable = [
         'name',
         'code',
+        'color',
         'description',
         'sort_order',
         'is_active',

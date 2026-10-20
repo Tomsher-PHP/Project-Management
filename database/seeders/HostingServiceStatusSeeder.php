@@ -13,50 +13,57 @@ class HostingServiceStatusSeeder extends Seeder
             [
                 'name' => 'Pending',
                 'code' => 'pending',
+                'color' => '#F59E0B',
                 'description' => 'Service setup or activation is awaiting completion.',
                 'is_default' => true,
             ],
             [
                 'name' => 'Active',
                 'code' => 'active',
+                'color' => '#22C55E',
                 'description' => 'Service is currently active.',
                 'is_default' => false,
             ],
             [
                 'name' => 'Suspended',
                 'code' => 'suspended',
+                'color' => '#F97316',
                 'description' => 'Service is temporarily suspended.',
                 'is_default' => false,
             ],
             [
                 'name' => 'Expired',
                 'code' => 'expired',
+                'color' => '#EF4444',
                 'description' => 'Service has reached its expiration date.',
                 'is_default' => false,
             ],
             [
                 'name' => 'Cancelled',
                 'code' => 'cancelled',
+                'color' => '#64748B',
                 'description' => 'Service has been cancelled.',
                 'is_default' => false,
             ],
             [
                 'name' => 'Terminated',
                 'code' => 'terminated',
+                'color' => '#475569',
                 'description' => 'Service has been permanently terminated.',
                 'is_default' => false,
             ],
         ];
 
         foreach ($statuses as $index => $status) {
-            $exists = DB::table('hosting_service_statuses')
+            $existing = DB::table('hosting_service_statuses')
                 ->where('code', $status['code'])
-                ->exists();
+                ->first();
 
-            if (! $exists) {
+            if (! $existing) {
                 DB::table('hosting_service_statuses')->insert([
                     'name' => $status['name'],
                     'code' => $status['code'],
+                    'color' => $status['color'],
                     'description' => $status['description'],
                     'sort_order' => $index + 1,
                     'is_active' => true,
@@ -65,6 +72,13 @@ class HostingServiceStatusSeeder extends Seeder
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+            } else {
+                DB::table('hosting_service_statuses')
+                    ->where('id', $existing->id)
+                    ->update([
+                        'color' => $status['color'],
+                        'updated_at' => now(),
+                    ]);
             }
         }
     }

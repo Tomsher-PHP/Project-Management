@@ -176,32 +176,15 @@
                             <td class="px-5 py-4">
                                 @php
                                     $currentStatus = $record->hostingServiceStatus;
-                                    $currentStatusCode = $currentStatus?->code ?? '';
                                     $currentStatusName = $currentStatus?->name ?? '--';
+                                    $statusColor = $currentStatus?->color ?: '#6B7280';
                                     $updateStatusUrl = route('projects.hosting.status', [$project, $record]);
-
-                                    $statusDotClass = match ($currentStatusCode) {
-                                        'active' => 'bg-success-400',
-                                        'pending' => 'bg-amber-400',
-                                        'suspended' => 'bg-warning-400',
-                                        'expired' => 'bg-error-400',
-                                        'cancelled', 'terminated' => 'bg-bgray-400',
-                                        default => 'bg-bgray-500',
-                                    };
-                                    $statusBadgeClass = match ($currentStatusCode) {
-                                        'active' => 'bg-success-50 text-success-500 border border-success-200 dark:bg-darkblack-500 dark:text-success-400 dark:border-success-900/40',
-                                        'pending' => 'bg-amber-50 text-amber-600 border border-amber-200 dark:bg-darkblack-500 dark:text-amber-400 dark:border-amber-900/40',
-                                        'suspended' => 'bg-warning-50 text-warning-500 border border-warning-200 dark:bg-darkblack-500 dark:text-warning-400 dark:border-warning-900/40',
-                                        'expired' => 'bg-error-50 text-error-400 border border-error-200 dark:bg-darkblack-500 dark:text-error-300 dark:border-error-900/40',
-                                        'cancelled', 'terminated' => 'bg-bgray-100 text-bgray-600 border border-bgray-200 dark:bg-darkblack-500 dark:text-bgray-400 dark:border-darkblack-400',
-                                        default => 'bg-bgray-100 text-bgray-800 border border-bgray-200 dark:bg-darkblack-500 dark:text-bgray-300 dark:border-darkblack-400',
-                                    };
                                 @endphp
 
                                 @if ($canEditHosting && $serviceStatuses->isNotEmpty())
                                     <div class="relative inline-block" data-project-hosting-status-dropdown>
-                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm transition hover:opacity-90 {{ $statusBadgeClass }}" data-project-hosting-status-trigger aria-expanded="false">
-                                            <span class="inline-flex h-2 w-2 rounded-full {{ $statusDotClass }}"></span>
+                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm transition hover:opacity-90" data-project-hosting-status-trigger aria-expanded="false" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">
+                                            <span class="inline-flex h-2 w-2 rounded-full" style="background-color: {{ $statusColor }};"></span>
                                             <span data-project-hosting-status-label class="truncate">{{ $currentStatusName }}</span>
                                             <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" class="transition-transform duration-200">
                                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -213,19 +196,12 @@
                                                 @foreach ($serviceStatuses as $statusOption)
                                                     @php
                                                         $isCurrent = (int) ($record->hosting_service_status_id ?? 0) === (int) $statusOption->id;
-                                                        $optDotClass = match ($statusOption->code) {
-                                                            'active' => 'bg-success-400',
-                                                            'pending' => 'bg-amber-400',
-                                                            'suspended' => 'bg-warning-400',
-                                                            'expired' => 'bg-error-400',
-                                                            'cancelled', 'terminated' => 'bg-bgray-400',
-                                                            default => 'bg-bgray-500',
-                                                        };
+                                                        $optColor = $statusOption->color ?: '#6B7280';
                                                     @endphp
                                                     <li>
                                                         <button type="button" class="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-medium transition hover:bg-bgray-100 dark:hover:bg-darkblack-400 {{ $isCurrent ? 'bg-bgray-100 font-semibold text-bgray-900 dark:bg-darkblack-400 dark:text-white' : 'text-bgray-700 dark:text-bgray-300' }}" data-project-hosting-status-option data-status-id="{{ $statusOption->id }}" data-current-status-id="{{ $record->hosting_service_status_id ?? '' }}" data-update-url="{{ $updateStatusUrl }}">
                                                             <span class="flex items-center gap-2">
-                                                                <span class="inline-flex h-2 w-2 rounded-full {{ $optDotClass }}"></span>
+                                                                <span class="inline-flex h-2 w-2 rounded-full" style="background-color: {{ $optColor }};"></span>
                                                                 <span>{{ $statusOption->name }}</span>
                                                             </span>
                                                             @if ($isCurrent)
@@ -241,8 +217,8 @@
                                     </div>
                                 @else
                                     @if ($record->hostingServiceStatus)
-                                        <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium {{ $statusBadgeClass }}">
-                                            <span class="inline-flex h-2 w-2 rounded-full {{ $statusDotClass }}"></span>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">
+                                            <span class="inline-flex h-2 w-2 rounded-full" style="background-color: {{ $statusColor }};"></span>
                                             {{ $currentStatusName }}
                                         </span>
                                     @else

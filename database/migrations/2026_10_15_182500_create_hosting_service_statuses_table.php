@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->string('name');
             $table->string('code')->unique();
+            $table->string('color', 50)->nullable();
             $table->text('description')->nullable();
 
             $table->unsignedInteger('sort_order')->default(1);
