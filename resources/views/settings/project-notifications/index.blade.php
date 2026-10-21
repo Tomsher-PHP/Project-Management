@@ -99,7 +99,7 @@
                                         $currentSelectedUsers = old('user_ids', $selectedUsers);
                                     @endphp
                                     @foreach ($users as $user)
-                                        <option value="{{ $user->id }}" {{ in_array($user->id, $currentSelectedUsers) ? 'selected' : '' }}>
+                                        <option value="{{ $user->id }}" {{ in_array($user->id, $currentSelectedUsers) ? 'selected' : '' }} @if(!empty($user->email)) data-subtype="{{ $user->email }}" @endif>
                                             {{ $user->name }}
                                         </option>
                                     @endforeach
