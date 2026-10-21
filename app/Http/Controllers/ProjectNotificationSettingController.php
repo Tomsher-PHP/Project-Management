@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectNotificationSettingRequest;
+use App\Models\Project;
 use App\Models\ProjectNotificationDefault;
+use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectNotificationSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -74,6 +76,10 @@ class ProjectNotificationSettingController extends Controller
             $this->syncDays($setting, $data['days_before'] ?? []);
             $this->syncRecipients($setting, $data['user_ids'] ?? [], $data['emails'] ?? []);
             $this->syncDefaults($request->input('defaults', []));
+
+            if (!empty($data['apply_to_existing_projects'])) {
+                $this->applyDefaultsToExistingProjects();
+            }
         });
 
         return redirect()->route('settings.project-notifications.index')
@@ -97,6 +103,10 @@ class ProjectNotificationSettingController extends Controller
             $this->syncDays($project_notification, $data['days_before'] ?? []);
             $this->syncRecipients($project_notification, $data['user_ids'] ?? [], $data['emails'] ?? []);
             $this->syncDefaults($request->input('defaults', []));
+
+            if (!empty($data['apply_to_existing_projects'])) {
+                $this->applyDefaultsToExistingProjects();
+            }
         });
 
         return redirect()->route('settings.project-notifications.index')
@@ -134,6 +144,39 @@ class ProjectNotificationSettingController extends Controller
                     ]);
                 }
             }
+        }
+    }
+
+    /**
+     * Apply timeline ending soon notification defaults to all existing projects.
+     */
+    protected function applyDefaultsToExistingProjects(): void
+    {
+        $timelineKey = ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON;
+
+        $timelineDefaults = ProjectNotificationDefault::where('setting_key', $timelineKey)->get();
+
+        $agileDefault = $timelineDefaults->first(fn($d) => ($d->conditions['project_flow'] ?? null) === 'agile');
+        $linearDefault = $timelineDefaults->first(fn($d) => ($d->conditions['project_flow'] ?? null) === 'linear');
+
+        $agileEnabled = !empty($agileDefault->setting_value['is_enabled']);
+        $linearEnabled = !empty($linearDefault->setting_value['is_enabled']);
+
+        // Update or create preferences for all projects according to their flow
+        $projects = Project::all(['id', 'project_flow']);
+
+        foreach ($projects as $project) {
+            $isEnabled = ($project->project_flow === 'linear') ? $linearEnabled : $agileEnabled;
+
+            ProjectNotificationPreference::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'notification_type' => $timelineKey,
+                ],
+                [
+                    'is_enabled' => $isEnabled,
+                ]
+            );
         }
     }
 

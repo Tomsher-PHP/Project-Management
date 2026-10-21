@@ -30,6 +30,7 @@ class ProjectNotificationSettingRequest extends FormRequest
             'defaults' => ['nullable', 'array'],
             'defaults.agile' => ['nullable', 'boolean'],
             'defaults.linear' => ['nullable', 'boolean'],
+            'apply_to_existing_projects' => ['nullable', 'boolean'],
         ];
     }
 
@@ -124,6 +125,7 @@ class ProjectNotificationSettingRequest extends FormRequest
             'is_enabled' => filter_var($this->input('is_enabled', false), FILTER_VALIDATE_BOOLEAN),
             'emails' => $parsedEmails,
             'days_before' => $parsedDays,
+            'apply_to_existing_projects' => filter_var($this->input('apply_to_existing_projects', false), FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 

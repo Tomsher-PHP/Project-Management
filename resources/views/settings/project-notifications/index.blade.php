@@ -64,7 +64,7 @@
                                                     </svg>
                                                 </span>
                                             @else
-                                                <button type="button" class="remove-interval-btn inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-bgray-500 hover:bg-gray-100 hover:text-error-300 dark:border-darkblack-400 dark:text-bgray-400 dark:hover:bg-darkblack-500" title="Remove interval">
+                                                <button type="button" class="remove-interval-btn inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-bgray-700 hover:bg-gray-100 hover:text-error-300 dark:border-darkblack-400 dark:text-bgray-400 dark:hover:bg-darkblack-500" title="Remove interval">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                     </svg>
@@ -74,7 +74,7 @@
                                     @endforeach
                                 </div>
 
-                                <span class="mt-1 block text-xs text-bgray-500 dark:text-bgray-400">
+                                <span class="mt-1 block text-xs text-bgray-700 dark:text-bgray-400">
                                     Primary reminder interval required. Maximum 5 additional intervals (up to 6 total).
                                 </span>
 
@@ -121,7 +121,7 @@
 
                                 <textarea name="emails" id="emails" rows="4" placeholder="Enter one email address per line&#10;admin@example.com&#10;accounts@example.com" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ old('emails', $selectedEmails) }}</textarea>
 
-                                <span class="mt-1 block text-xs text-bgray-500 dark:text-bgray-400">
+                                <span class="mt-1 block text-xs text-bgray-700 dark:text-bgray-400">
                                     Enter one email address per line.
                                 </span>
 
@@ -140,7 +140,7 @@
                         <!-- Project Notification Defaults Section -->
                         <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
                             <h4 class="text-sm font-semibold text-bgray-900 dark:text-white">Project Notification Defaults</h4>
-                            <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">
+                            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
                                 Default notification behavior configured for new or uncustomized projects:
                             </p>
 
@@ -157,7 +157,7 @@
                                 <div class="flex items-center justify-between rounded-lg bg-white p-3 dark:bg-darkblack-600">
                                     <div>
                                         <span class="text-sm font-semibold text-bgray-900 dark:text-white">Project flow: Agile</span>
-                                        <p class="text-xs text-bgray-500 dark:text-bgray-400">Timeline ending notifications default for agile projects</p>
+                                        <p class="text-xs text-bgray-600 dark:text-bgray-400">Timeline ending notifications default for agile projects</p>
                                     </div>
                                     <div class="flex items-center gap-3">
                                         <input type="hidden" name="defaults[agile]" id="default_agile_hidden" value="{{ $agileEnabled ? '1' : '0' }}">
@@ -171,7 +171,7 @@
                                 <div class="flex items-center justify-between rounded-lg bg-white p-3 dark:bg-darkblack-600">
                                     <div>
                                         <span class="text-sm font-semibold text-bgray-900 dark:text-white">Project flow: Linear</span>
-                                        <p class="text-xs text-bgray-500 dark:text-bgray-400">Timeline ending notifications default for linear projects</p>
+                                        <p class="text-xs text-bgray-600 dark:text-bgray-400">Timeline ending notifications default for linear projects</p>
                                     </div>
                                     <div class="flex items-center gap-3">
                                         <input type="hidden" name="defaults[linear]" id="default_linear_hidden" value="{{ $linearEnabled ? '1' : '0' }}">
@@ -179,6 +179,14 @@
                                             <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                         </button>
                                     </div>
+                                </div>
+
+                                <!-- Apply to existing projects checkbox -->
+                                <div class="mt-3 flex items-start gap-2 pt-1">
+                                    <input type="checkbox" name="apply_to_existing_projects" id="apply_to_existing_projects" value="1" class="mt-0.5 h-4 w-4 cursor-pointer rounded border-gray-300 text-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+                                    <label for="apply_to_existing_projects" class="cursor-pointer text-xs text-bgray-700 dark:text-bgray-300">
+                                        Apply these defaults to all existing projects
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -249,7 +257,7 @@
                         <div class="relative flex-1">
                             <input type="number" name="days_before[]" value="" min="0" placeholder="e.g. 15" required class="h-[42px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                         </div>
-                        <button type="button" class="remove-interval-btn inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-bgray-500 hover:bg-gray-100 hover:text-error-300 dark:border-darkblack-400 dark:text-bgray-400 dark:hover:bg-darkblack-500" title="Remove interval">
+                        <button type="button" class="remove-interval-btn inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-bgray-700 hover:bg-gray-100 hover:text-error-300 dark:border-darkblack-400 dark:text-bgray-400 dark:hover:bg-darkblack-500" title="Remove interval">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
