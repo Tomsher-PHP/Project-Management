@@ -36,6 +36,7 @@ class ProjectNotificationService
         }
 
         // 2. Notification Delivery Dates: Evaluate active timelines
+        // $timezone = Configuration::
         $today = Carbon::today(config('app.timezone'));
         $daysBefore = max(1, (int) $setting->days_before);
 

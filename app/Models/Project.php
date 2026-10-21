@@ -471,6 +471,11 @@ class Project extends Model
         return $this->hasMany(ProjectHostingRecord::class);
     }
 
+    public function notificationPreferences()
+    {
+        return $this->hasMany(ProjectNotificationPreference::class);
+    }
+
     public function projectTimelines()
     {
         return $this->hasMany(ProjectTimeline::class)->orderBy('sort_order');

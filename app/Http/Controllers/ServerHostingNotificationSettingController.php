@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ServerHostingNotificationSettingRequest;
+use App\Models\ProjectNotificationDefault;
 use App\Models\ProjectNotificationSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -20,22 +21,26 @@ class ServerHostingNotificationSettingController extends Controller
 
     public function index()
     {
-        $setting = ProjectNotificationSetting::where('notification_type', ProjectNotificationSetting::NOTIFICATION_TYPE_HOSTING_ENDING_SOON)->first();
+        $setting = ProjectNotificationSetting::with(['days', 'users', 'recipients'])
+            ->where('notification_type', ProjectNotificationSetting::NOTIFICATION_TYPE_HOSTING_ENDING_SOON)
+            ->first();
 
         if (!$setting) {
             $setting = new ProjectNotificationSetting([
                 'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_HOSTING_ENDING_SOON,
                 'is_enabled' => true,
-                'days_before' => 30,
             ]);
             $selectedUsers = [];
-            $selectedEmails = [];
+            $selectedEmails = '';
+            $selectedDays = [30];
         } else {
             $selectedUsers = $setting->users->pluck('id')->toArray();
-            $selectedEmails = $setting->recipients()
+            $emailsList = $setting->recipients()
                 ->whereNotNull('email')
                 ->pluck('email')
                 ->toArray();
+            $selectedEmails = implode("\n", $emailsList);
+            $selectedDays = $setting->days->pluck('days_before')->sortDesc()->values()->toArray();
         }
 
         $users = User::active()->get();
@@ -45,6 +50,7 @@ class ServerHostingNotificationSettingController extends Controller
             'users' => $users,
             'selectedUsers' => $selectedUsers,
             'selectedEmails' => $selectedEmails,
+            'selectedDays' => $selectedDays,
             'currentTab' => 'notifications',
             'createPermission' => 'server_hosting.create',
             'editPermission' => 'server_hosting.edit',
@@ -59,10 +65,10 @@ class ServerHostingNotificationSettingController extends Controller
             $setting = ProjectNotificationSetting::create([
                 'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_HOSTING_ENDING_SOON,
                 'is_enabled' => $data['is_enabled'],
-                'days_before' => $data['days_before'],
                 'created_by' => auth()->id(),
             ]);
 
+            $this->syncDays($setting, $data['days_before'] ?? []);
             $this->syncRecipients($setting, $data['user_ids'] ?? [], $data['emails'] ?? []);
         });
 
@@ -82,14 +88,49 @@ class ServerHostingNotificationSettingController extends Controller
         DB::transaction(function () use ($server_hosting_notification, $data) {
             $server_hosting_notification->update([
                 'is_enabled' => $data['is_enabled'],
-                'days_before' => $data['days_before'],
             ]);
 
+            $this->syncDays($server_hosting_notification, $data['days_before'] ?? []);
             $this->syncRecipients($server_hosting_notification, $data['user_ids'] ?? [], $data['emails'] ?? []);
         });
 
         return redirect()->route('settings.server-hosting-notifications.index')
             ->with('success', 'Notification settings updated successfully.');
+    }
+
+    /**
+     * Synchronize reminder intervals in project_notification_setting_days safely within transaction.
+     */
+    protected function syncDays(ProjectNotificationSetting $setting, array $days): void
+    {
+        $normalizedDays = [];
+        foreach ($days as $day) {
+            $intDay = (int) $day;
+            if ($intDay >= 0 && !in_array($intDay, $normalizedDays, true)) {
+                $normalizedDays[] = $intDay;
+            }
+        }
+
+        // Fetch existing day rows
+        $existingRows = $setting->days()->get();
+
+        // Delete day rows not in submitted list
+        foreach ($existingRows as $row) {
+            if (!in_array($row->days_before, $normalizedDays, true)) {
+                $row->delete();
+            }
+        }
+
+        $storedDays = $existingRows->pluck('days_before')->toArray();
+
+        // Create new entries
+        foreach ($normalizedDays as $day) {
+            if (!in_array($day, $storedDays, true)) {
+                $setting->days()->create([
+                    'days_before' => $day,
+                ]);
+            }
+        }
     }
 
     /**

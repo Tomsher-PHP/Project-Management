@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectNotificationSettingRequest;
+use App\Models\ProjectNotificationDefault;
 use App\Models\ProjectNotificationSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -20,31 +21,40 @@ class ProjectNotificationSettingController extends Controller
 
     public function index()
     {
-        $setting = ProjectNotificationSetting::where('notification_type', ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON)->first();
+        $setting = ProjectNotificationSetting::with(['days', 'users', 'recipients'])
+            ->where('notification_type', ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON)
+            ->first();
 
         if (!$setting) {
             $setting = new ProjectNotificationSetting([
                 'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON,
                 'is_enabled' => true,
-                'days_before' => 3,
             ]);
             $selectedUsers = [];
-            $selectedEmails = [];
+            $selectedEmails = '';
+            $selectedDays = [3];
         } else {
             $selectedUsers = $setting->users->pluck('id')->toArray();
-            $selectedEmails = $setting->recipients()
+            $emailsList = $setting->recipients()
                 ->whereNotNull('email')
                 ->pluck('email')
                 ->toArray();
+            $selectedEmails = implode("\n", $emailsList);
+            $selectedDays = $setting->days->pluck('days_before')->sortDesc()->values()->toArray();
         }
 
         $users = User::active()->get();
+
+        // Load project notification defaults for display
+        $timelineDefaults = ProjectNotificationDefault::where('setting_key', ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON)->get();
 
         return view('settings.project-notifications.index', [
             'setting' => $setting,
             'users' => $users,
             'selectedUsers' => $selectedUsers,
             'selectedEmails' => $selectedEmails,
+            'selectedDays' => $selectedDays,
+            'timelineDefaults' => $timelineDefaults,
             'currentTab' => 'notifications',
             'createPermission' => 'project_settings.create',
             'editPermission' => 'project_settings.edit',
@@ -59,11 +69,12 @@ class ProjectNotificationSettingController extends Controller
             $setting = ProjectNotificationSetting::create([
                 'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON,
                 'is_enabled' => $data['is_enabled'],
-                'days_before' => $data['days_before'],
                 'created_by' => auth()->id(),
             ]);
 
+            $this->syncDays($setting, $data['days_before'] ?? []);
             $this->syncRecipients($setting, $data['user_ids'] ?? [], $data['emails'] ?? []);
+            $this->syncDefaults($request->input('defaults', []));
         });
 
         return redirect()->route('settings.project-notifications.index')
@@ -79,17 +90,87 @@ class ProjectNotificationSettingController extends Controller
 
         $data = $request->validated();
 
-        DB::transaction(function () use ($project_notification, $data) {
+        DB::transaction(function () use ($project_notification, $data, $request) {
             $project_notification->update([
                 'is_enabled' => $data['is_enabled'],
-                'days_before' => $data['days_before'],
             ]);
 
+            $this->syncDays($project_notification, $data['days_before'] ?? []);
             $this->syncRecipients($project_notification, $data['user_ids'] ?? [], $data['emails'] ?? []);
+            $this->syncDefaults($request->input('defaults', []));
         });
 
         return redirect()->route('settings.project-notifications.index')
             ->with('success', 'Notification settings updated successfully.');
+    }
+
+    /**
+     * Synchronize Project Notification Defaults for agile and linear flows.
+     */
+    protected function syncDefaults(array $defaults): void
+    {
+        if (empty($defaults)) {
+            return;
+        }
+
+        $timelineKey = ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON;
+
+        foreach (['agile', 'linear'] as $flow) {
+            if (array_key_exists($flow, $defaults)) {
+                $isEnabled = filter_var($defaults[$flow], FILTER_VALIDATE_BOOLEAN);
+
+                $record = ProjectNotificationDefault::where('setting_key', $timelineKey)
+                    ->where('conditions->project_flow', $flow)
+                    ->first();
+
+                if ($record) {
+                    $record->update([
+                        'setting_value' => ['is_enabled' => $isEnabled],
+                    ]);
+                } else {
+                    ProjectNotificationDefault::create([
+                        'setting_key' => $timelineKey,
+                        'conditions' => ['project_flow' => $flow],
+                        'setting_value' => ['is_enabled' => $isEnabled],
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Synchronize reminder intervals in project_notification_setting_days safely within transaction.
+     */
+    protected function syncDays(ProjectNotificationSetting $setting, array $days): void
+    {
+        $normalizedDays = [];
+        foreach ($days as $day) {
+            $intDay = (int) $day;
+            if ($intDay >= 0 && !in_array($intDay, $normalizedDays, true)) {
+                $normalizedDays[] = $intDay;
+            }
+        }
+
+        // Fetch existing day rows
+        $existingRows = $setting->days()->get();
+
+        // Delete day rows not in submitted list
+        foreach ($existingRows as $row) {
+            if (!in_array($row->days_before, $normalizedDays, true)) {
+                $row->delete();
+            }
+        }
+
+        $storedDays = $existingRows->pluck('days_before')->toArray();
+
+        // Create new entries
+        foreach ($normalizedDays as $day) {
+            if (!in_array($day, $storedDays, true)) {
+                $setting->days()->create([
+                    'days_before' => $day,
+                ]);
+            }
+        }
     }
 
     /**
