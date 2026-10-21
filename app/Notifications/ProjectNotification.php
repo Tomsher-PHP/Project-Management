@@ -87,12 +87,12 @@ class ProjectNotification extends Notification implements ShouldQueue
         ];
     }
 
-    public function databaseColumns(object $notifiable): array
+    public function databaseColumns(?object $notifiable = null): array
     {
         return [
             'project_id' => $this->projectId,
-            // Fallback for user_id so it does not fail if database schema expects it
-            'user_id' => $notifiable->id,
+            // Fallback for user_id so it does not fail if database schema expects it or if notifiable is anonymous / null
+            'user_id' => is_object($notifiable) ? ($notifiable->id ?? null) : null,
         ];
     }
 
