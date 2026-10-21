@@ -102,4 +102,9 @@ class ProjectHostingRecord extends Model
     {
         return $this->hasMany(ProjectHostingStatusHistory::class, 'project_hosting_record_id');
     }
+
+    public function notificationLogs()
+    {
+        return $this->morphMany(ProjectNotificationLog::class, 'link');
+    }
 }
