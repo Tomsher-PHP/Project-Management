@@ -58,7 +58,7 @@
                                                 <input type="number" name="days_before[]" value="{{ $day }}" min="0" placeholder="e.g. 15" required class="h-[42px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                             </div>
                                             @if ($index === 0)
-                                                <span class="inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-transparent text-bgray-300 dark:text-bgray-600" title="Primary reminder interval cannot be removed">
+                                                <span class="inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-darkblack-400" title="Primary reminder interval cannot be removed">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                                                     </svg>
@@ -99,7 +99,7 @@
                                         $currentSelectedUsers = old('user_ids', $selectedUsers);
                                     @endphp
                                     @foreach ($users as $user)
-                                        <option value="{{ $user->id }}" {{ in_array($user->id, $currentSelectedUsers) ? 'selected' : '' }} @if(!empty($user->email)) data-subtype="{{ $user->email }}" @endif>
+                                        <option value="{{ $user->id }}" {{ in_array($user->id, $currentSelectedUsers) ? 'selected' : '' }} @if (!empty($user->email)) data-subtype="{{ $user->email }}" @endif>
                                             {{ $user->name }}
                                         </option>
                                     @endforeach
@@ -216,7 +216,7 @@
             }, 10);
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('interval-container');
             const addBtn = document.getElementById('add-interval-btn');
             const MAX_TOTAL = 6; // 1 primary + 5 additional max
@@ -236,7 +236,7 @@
             if (addBtn && container) {
                 updateAddBtnState();
 
-                addBtn.addEventListener('click', function () {
+                addBtn.addEventListener('click', function() {
                     const currentRows = container.querySelectorAll('.interval-row').length;
                     if (currentRows >= MAX_TOTAL) {
                         alert('You can add a maximum of 5 additional reminder intervals (6 total).');
@@ -260,7 +260,7 @@
                     updateAddBtnState();
                 });
 
-                container.addEventListener('click', function (e) {
+                container.addEventListener('click', function(e) {
                     const removeBtn = e.target.closest('.remove-interval-btn');
                     if (removeBtn) {
                         const row = removeBtn.closest('.interval-row');

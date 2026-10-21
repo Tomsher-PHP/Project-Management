@@ -6,7 +6,6 @@ use App\Http\Requests\ProjectNotificationSettingRequest;
 use App\Models\ProjectNotificationDefault;
 use App\Models\ProjectNotificationSetting;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProjectNotificationSettingController extends Controller
@@ -65,7 +64,7 @@ class ProjectNotificationSettingController extends Controller
     {
         $data = $request->validated();
 
-        DB::transaction(function () use ($data) {
+        DB::transaction(function () use ($data, $request) {
             $setting = ProjectNotificationSetting::create([
                 'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON,
                 'is_enabled' => $data['is_enabled'],
