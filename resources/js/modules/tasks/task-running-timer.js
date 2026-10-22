@@ -38,6 +38,7 @@ const getElements = () => {
 
     return {
         root,
+        pulse: root.querySelector('.running-task-bar__pulse'),
         taskName: root.querySelector('[data-running-task-name]'),
         timer: root.querySelector('[data-running-task-time]'),
         toggle: root.querySelector('[data-running-task-toggle]'),
@@ -58,18 +59,22 @@ const getStateFromDataset = (root) => ({
     state: root.dataset.runningTaskState === 'running' ? 'running' : 'stopped',
 });
 
-const normalizeNavbarState = (payload = {}) => ({
-    active: payload.active === true || payload.active === '1' || payload.shouldShowTimer === true,
-    taskId: payload.taskId ? String(payload.taskId) : '',
-    taskName: payload.taskName || '',
-    seconds: parseSeconds(payload.seconds),
-    baseSeconds: parseSeconds(payload.baseSeconds ?? payload.seconds),
-    estimatedSeconds: parseSeconds(payload.estimatedSeconds),
-    startedAt: payload.startedAt || '',
-    startUrl: payload.startUrl || '',
-    stopUrl: payload.stopUrl || '',
-    state: payload.state === 'running' ? 'running' : 'stopped',
-});
+const normalizeNavbarState = (payload = {}) => {
+    const taskId = payload.taskId ? String(payload.taskId) : '';
+
+    return {
+        active: payload.active === true || payload.active === '1' || payload.shouldShowTimer === true,
+        taskId,
+        taskName: payload.taskName || '',
+        seconds: parseSeconds(payload.seconds),
+        baseSeconds: parseSeconds(payload.baseSeconds ?? payload.seconds),
+        estimatedSeconds: parseSeconds(payload.estimatedSeconds),
+        startedAt: payload.startedAt || '',
+        startUrl: payload.startUrl || (taskId ? `/tasks/${taskId}/start` : ''),
+        stopUrl: payload.stopUrl || (taskId ? `/tasks/${taskId}/stop` : ''),
+        state: payload.state === 'running' ? 'running' : 'stopped',
+    };
+};
 
 const setDatasetState = (root, state) => {
     root.dataset.runningTaskActive = state.active ? '1' : '0';
@@ -88,6 +93,12 @@ const renderState = (elements, state) => {
     setDatasetState(elements.root, state);
 
     elements.root.classList.toggle('hidden', !state.active);
+
+    const isRunning = state.state === 'running';
+
+    if (elements.pulse) {
+        elements.pulse.setAttribute('title', isRunning ? 'Task timer running' : 'Task timer paused');
+    }
 
     if (elements.taskName) {
         elements.taskName.textContent = state.taskName || 'Running task';
@@ -114,16 +125,16 @@ const renderState = (elements, state) => {
     }
 
     if (elements.toggleIcon) {
-        elements.toggleIcon.innerHTML = state.state === 'running' ? STOP_ICON : PLAY_ICON;
+        elements.toggleIcon.innerHTML = isRunning ? STOP_ICON : PLAY_ICON;
     }
 
     if (elements.toggle) {
-        const canStop = state.state === 'running' && state.active && !!state.stopUrl;
-        const canStart = state.state === 'stopped' && state.active && !!state.startUrl;
+        const canStop = isRunning && state.active && !!state.stopUrl;
+        const canStart = !isRunning && state.active && !!state.startUrl;
 
         elements.toggle.disabled = !(canStop || canStart);
-        elements.toggle.setAttribute('aria-label', canStop ? 'Stop running task' : 'Start task timer');
-        elements.toggle.setAttribute('title', canStop ? 'Stop running task' : 'Start task timer');
+        elements.toggle.setAttribute('aria-label', canStop ? 'Stop running task' : 'Resume task timer');
+        elements.toggle.setAttribute('title', canStop ? 'Stop running task' : 'Resume task timer');
     }
 };
 
@@ -145,9 +156,35 @@ const initRunningTaskTimer = () => {
     let isDestroyed = false;
 
     const update = (nextState = {}) => {
+        const nextTaskId = Object.prototype.hasOwnProperty.call(nextState, 'taskId')
+            ? (nextState.taskId ? String(nextState.taskId) : '')
+            : state.taskId;
+        const isTaskChanging = nextTaskId !== state.taskId;
+
+        let nextStartUrl = state.startUrl;
+        if (Object.prototype.hasOwnProperty.call(nextState, 'startUrl')) {
+            nextStartUrl = nextState.startUrl || '';
+        } else if (isTaskChanging) {
+            nextStartUrl = nextTaskId ? `/tasks/${nextTaskId}/start` : '';
+        } else if (!nextStartUrl && nextTaskId) {
+            nextStartUrl = `/tasks/${nextTaskId}/start`;
+        }
+
+        let nextStopUrl = state.stopUrl;
+        if (Object.prototype.hasOwnProperty.call(nextState, 'stopUrl')) {
+            nextStopUrl = nextState.stopUrl || '';
+        } else if (isTaskChanging) {
+            nextStopUrl = nextTaskId ? `/tasks/${nextTaskId}/stop` : '';
+        } else if (!nextStopUrl && nextTaskId) {
+            nextStopUrl = `/tasks/${nextTaskId}/stop`;
+        }
+
         state = {
             ...state,
             ...nextState,
+            taskId: nextTaskId,
+            startUrl: nextStartUrl,
+            stopUrl: nextStopUrl,
             seconds: Object.prototype.hasOwnProperty.call(nextState, 'seconds')
                 ? parseSeconds(nextState.seconds)
                 : state.seconds,

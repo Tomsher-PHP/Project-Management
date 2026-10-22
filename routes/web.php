@@ -518,6 +518,7 @@ Route::middleware(['auth'])->group(function () {
         // Task timer routes
         Route::post('/start', [TaskController::class, 'start'])->name('start');
         Route::post('/stop', [TaskController::class, 'stop'])->name('stop');
+        Route::post('/switch', [TaskController::class, 'switch'])->name('switch');
 
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('edit');
     });

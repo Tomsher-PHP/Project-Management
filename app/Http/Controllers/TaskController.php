@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\TaskTimerAlreadyRunningException;
+use App\Exceptions\TaskTimerStateConflictException;
 use App\Http\Requests\TaskNoteRequest;
 use App\Http\Requests\TaskCommentRequest;
 use App\Http\Requests\TaskQuickStoreRequest;
@@ -854,32 +856,98 @@ class TaskController extends Controller
 
     /** Task timer functions */
 
-    public function start(Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
+    public function start(Request $request, Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
     {
+        if ($request->boolean('confirmed_switch')) {
+            return $this->switch($request, $task, $taskServices, $runningTaskNavbarService);
+        }
+
         $startRestriction = $taskServices->getStartRestriction($task);
 
         if ($startRestriction) {
-            $response = ['message' => $startRestriction['message']];
-
-            if (($startRestriction['reason'] ?? null) === 'running_timer_exists') {
-                $response['requires_confirmation'] = true;
-                $response['running_task_id'] = $startRestriction['running_task_id'] ?? null;
-                $response['running_task_name'] = $startRestriction['running_task_name'] ?? null;
-                $response['running_task_assignee_name'] = $startRestriction['running_task_assignee_name'] ?? null;
-            }
-
-            return response()->json(
-                $response,
-                $startRestriction['status']
-            );
+            return $this->buildStartRestrictionResponse($startRestriction);
         }
 
-        $taskServices->startTimer($task, auth()->id());
+        try {
+            $taskServices->startTimer($task, auth()->id());
+        } catch (TaskTimerAlreadyRunningException $e) {
+            return $this->buildStartRestrictionResponse($e->getRestriction());
+        }
 
         return response()->json([
             'message' => 'Timer started',
             'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser(auth()->id()),
         ], Response::HTTP_OK);
+    }
+
+    public function switch(Request $request, Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $expectedRunningTaskId = $request->filled('expected_running_task_id')
+            ? (int) $request->input('expected_running_task_id')
+            : ($request->filled('running_task_id') ? (int) $request->input('running_task_id') : null);
+
+        $confirmedNonAssigneeStop = $request->boolean('confirmed_non_assignee_stop');
+
+        try {
+            $result = $taskServices->switchTimer($task, $user, $expectedRunningTaskId, $confirmedNonAssigneeStop);
+
+            $responsePayload = [
+                'message' => $result['message'] ?? 'Timer switched successfully.',
+                'status' => $result['status'] ?? 'switched',
+                'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser($user->id),
+            ];
+
+            if (! empty($result['stopped_time_log'])) {
+                $responsePayload['stopped_task'] = [
+                    'task_id' => (int) $result['stopped_time_log']->task_id,
+                    'duration_seconds' => (int) $result['stopped_time_log']->duration_seconds,
+                ];
+            }
+
+            if (! empty($result['running_time_log'])) {
+                $responsePayload['started_task'] = [
+                    'task_id' => (int) $result['running_time_log']->task_id,
+                    'started_at' => $result['running_time_log']->started_at?->toISOString(),
+                ];
+            }
+
+            return response()->json($responsePayload, Response::HTTP_OK);
+        } catch (TaskTimerAlreadyRunningException $e) {
+            return $this->buildStartRestrictionResponse($e->getRestriction());
+        } catch (TaskTimerStateConflictException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'conflict' => true,
+                'current_running_task_id' => $e->getCurrentRunningTaskId(),
+                'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser($user->id),
+            ], Response::HTTP_CONFLICT);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage() ?: 'Failed to switch task timer.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    private function buildStartRestrictionResponse(array $startRestriction): JsonResponse
+    {
+        $response = ['message' => $startRestriction['message']];
+
+        if (($startRestriction['reason'] ?? null) === 'running_timer_exists') {
+            $response['requires_confirmation'] = true;
+            $response['running_task_id'] = $startRestriction['running_task_id'] ?? null;
+            $response['running_task_name'] = $startRestriction['running_task_name'] ?? null;
+            $response['running_task_assignee_name'] = $startRestriction['running_task_assignee_name'] ?? null;
+        }
+
+        return response()->json(
+            $response,
+            $startRestriction['status'] ?? Response::HTTP_UNPROCESSABLE_ENTITY
+        );
     }
 
     public function stop(Request $request, Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
