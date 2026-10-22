@@ -20,6 +20,7 @@ use App\Services\ProjectServices;
 use App\Services\TaskRequestServices;
 use App\Services\TaskServices;
 use App\Services\TaskTimeExtendService;
+use App\Services\Task\RunningTaskNavbarService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -269,7 +270,7 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService, TaskServices $taskService): JsonResponse
+    public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService, TaskServices $taskService, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless($this->canEditTaskModal($task), Response::HTTP_FORBIDDEN);
@@ -288,6 +289,7 @@ class ProjectTaskController extends Controller
             'status' => true,
             'message' => 'Task updated successfully.',
             'html' => $this->renderTasksTab($project, $this->resolveTaskGroupKey($project, $task)),
+            'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser(auth()->id()),
         ], Response::HTTP_OK);
     }
 

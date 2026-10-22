@@ -233,15 +233,16 @@ const initRunningTaskTimer = () => {
             return;
         }
 
-        if (state.state === 'running') {
-            return;
-        }
-
         if (navbarTimer && typeof navbarTimer === 'object') {
             const nextNavbarState = normalizeNavbarState(navbarTimer);
 
             if (nextNavbarState.active) {
                 update(nextNavbarState);
+                if (nextNavbarState.state === 'running') {
+                    startLiveSync();
+                } else {
+                    clearLiveSync();
+                }
                 return;
             }
 
