@@ -35,6 +35,11 @@
                     @include('project-analytics.partials.upcoming-timelines')
                 </div>
             </div>
+
+            <!-- Parent Projects Overview -->
+            <div>
+                @include('project-analytics.partials.parent-projects-overview')
+            </div>
         </div>
 
         <!-- 2. Single Project Analytics View (Shown when a specific project is selected) -->

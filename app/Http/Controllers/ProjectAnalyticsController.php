@@ -5,10 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\User;
 use App\Services\ProjectAnalyticsService;
-use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 
 class ProjectAnalyticsController extends Controller
@@ -191,6 +189,11 @@ class ProjectAnalyticsController extends Controller
             $project?->id
         );
 
+        $data['html'] = view('project-analytics.partials.render.service-types', [
+            'items' => $data['items'] ?? [],
+            'totalProjects' => $data['total_projects'] ?? 0,
+        ])->render();
+
         return response()->json([
             'success' => true,
             'data' => $data,
@@ -292,6 +295,10 @@ class ProjectAnalyticsController extends Controller
             $endDate,
             $days
         );
+
+        $data['html'] = view('project-analytics.partials.render.upcoming-timelines', [
+            'timelines' => $data['timelines'] ?? [],
+        ])->render();
 
         return response()->json([
             'success' => true,
@@ -456,6 +463,77 @@ class ProjectAnalyticsController extends Controller
         return response()->json([
             'success' => true,
             'data' => $data,
+        ]);
+    }
+
+    /**
+     * Parent projects overview list.
+     */
+    public function parentProjectsOverview(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+
+        $data = $analyticsService->getParentProjectsOverview(
+            $request->user(),
+            $selectedUser,
+            $project?->id
+        );
+
+        $data['html'] = view('project-analytics.partials.render.parent-projects', [
+            'projects' => $data['projects'] ?? [],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Child projects overview list for a given parent project, rendered as HTML partial.
+     */
+    public function childProjectsOverview(Project $project, Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $authUser = $request->user();
+
+        // Check if user has access to this parent project
+        $accessibleProject = Project::query()
+            ->accessibleBy($authUser)
+            ->whereKey($project->id)
+            ->first();
+
+        if (! $accessibleProject) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to view data for this project.',
+            ], 403);
+        }
+
+        $selectedUser = $this->resolveSelectedUser($request);
+        if ($selectedUser instanceof JsonResponse) {
+            return $selectedUser;
+        }
+
+        $depth = max(1, (int) $request->input('depth', 1));
+        $children = $analyticsService->getChildProjectsOverview($authUser, $accessibleProject, $selectedUser);
+
+        $html = view('project-analytics.partials.render.child-projects-rows', [
+            'parentProject' => $accessibleProject,
+            'children' => $children,
+            'depth' => $depth,
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'count' => count($children),
+                'html' => $html,
+            ],
         ]);
     }
 

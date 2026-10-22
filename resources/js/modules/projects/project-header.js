@@ -402,8 +402,9 @@ const syncProjectHeaderExpandedState = (headerRoot = document.getElementById('pr
     }
 
     const projectId = headerCard.dataset.projectId;
+    const forceInitialExpanded = headerCard.dataset.initialExpanded === 'true';
     const savedState = projectId ? window.localStorage.getItem(getProjectHeaderStorageKey(projectId)) : null;
-    const isExpanded = savedState === 'true';
+    const isExpanded = savedState !== null ? savedState === 'true' : (forceInitialExpanded || true);
 
     applyProjectHeaderExpandedState(headerCard, isExpanded);
 };

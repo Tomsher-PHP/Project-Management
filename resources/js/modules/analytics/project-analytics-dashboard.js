@@ -221,32 +221,9 @@ export async function loadProjectsByServiceType(filters = getActiveFilters()) {
         if (emptyState) emptyState.classList.add('hidden');
         if (content) content.classList.remove('hidden');
 
-        const html = items.map(item => {
-            const count = Number(item.count) || 0;
-            const percentage = totalProjects > 0 ? Math.round((count / totalProjects) * 100) : 0;
-            const barWidth = Math.min(100, percentage);
-            const color = item.color || '#3B82F6';
-
-            return `
-                <div class="space-y-1.5" data-service-type-id="${item.id ?? 'none'}">
-                    <div class="flex items-center justify-between text-xs">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background-color: ${escapeHtml(color)}"></span>
-                            <span class="font-semibold text-bgray-900 dark:text-white truncate">${escapeHtml(item.name)}</span>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="font-bold text-bgray-900 dark:text-white">${count.toLocaleString()}</span>
-                            <span class="text-[11px] text-bgray-700 dark:text-bgray-300">(${percentage}%)</span>
-                        </div>
-                    </div>
-                    <div class="h-2 w-full rounded-full bg-bgray-100 dark:bg-darkblack-500 overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-700 ease-out" style="width: ${barWidth}%; background-color: ${escapeHtml(color)};"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        if (listContainer) listContainer.innerHTML = html;
+        if (listContainer) {
+            listContainer.innerHTML = data.html || '';
+        }
     } catch (err) {
         console.warn('Failed to load projects by service type:', err);
         if (loadingState) loadingState.classList.add('hidden');
@@ -438,7 +415,7 @@ export async function loadProjectsByStage(filters = getActiveFilters()) {
  * Load Upcoming Timeline Expirations Table.
  */
 export async function loadUpcomingTimelines(filters = getActiveFilters()) {
-    const card = document.querySelector('[data-project-analytics-section="upcoming-timelines"], [data-project-analytics-section="upcoming-contracts"]');
+    const card = document.querySelector('[data-project-analytics-section="upcoming-timelines"]');
     if (!card) return;
     const url = card.dataset.url;
     if (!url) return;
@@ -446,8 +423,8 @@ export async function loadUpcomingTimelines(filters = getActiveFilters()) {
     const loadingState = card.querySelector('[data-loading-state]');
     const emptyState = card.querySelector('[data-empty-state]');
     const content = card.querySelector('[data-content]');
-    const tbody = card.querySelector('[data-timelines-table-body], [data-contracts-table-body]');
-    const totalCountEl = card.querySelector('[data-timelines-total-count], [data-contracts-total-count]');
+    const tbody = card.querySelector('[data-timelines-table-body]');
+    const totalCountEl = card.querySelector('[data-timelines-total-count]');
     const emptyTitle = card.querySelector('[data-empty-title]');
     const emptySubtitle = card.querySelector('[data-empty-subtitle]');
 
@@ -484,58 +461,9 @@ export async function loadUpcomingTimelines(filters = getActiveFilters()) {
         if (emptyState) emptyState.classList.add('hidden');
         if (content) content.classList.remove('hidden');
 
-        const rowsHtml = timelines.map(item => {
-            const daysLeft = Number(item.days_remaining) || 0;
-            const isSoon = Boolean(item.is_expiring_soon);
-
-            const daysBadge = isSoon
-                ? `<span class="inline-flex items-center rounded-full bg-error-50 px-2.5 py-0.5 text-[11px] font-bold text-error-300 dark:bg-error-500/10">${daysLeft} days left</span>`
-                : `<span class="inline-flex items-center rounded-full bg-bgray-100 px-2.5 py-0.5 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">${daysLeft} days left</span>`;
-
-            const statusColor = item.status === 'active'
-                ? 'bg-success-50 text-success-500 dark:bg-success-500/10'
-                : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
-
-            const serviceTypes = item.service_types || [];
-            let serviceTypeHtml = '<span class="text-bgray-400">—</span>';
-            if (serviceTypes.length > 0) {
-                serviceTypeHtml = serviceTypes.map(st => `
-                    <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium border" style="border-color: ${escapeHtml(st.color || '#3B82F6')}40; color: ${escapeHtml(st.color || '#3B82F6')}; background-color: ${escapeHtml(st.color || '#3B82F6')}10;">
-                        ${escapeHtml(st.name)}
-                    </span>
-                `).join(' ');
-            } else if (item.service_type_names && item.service_type_names !== '--') {
-                serviceTypeHtml = `<span class="text-xs text-bgray-700 dark:text-bgray-300">${escapeHtml(item.service_type_names)}</span>`;
-            }
-
-            return `
-                <tr class="transition-colors hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/30">
-                    <td class="py-3 px-4">
-                        <div class="font-semibold text-bgray-900 dark:text-white">${escapeHtml(item.project_name)}</div>
-                        <div class="text-[11px] text-bgray-700 dark:text-bgray-300">${escapeHtml(item.project_code || item.customer_name || '')}</div>
-                    </td>
-                    <td class="py-3 px-4">
-                        ${serviceTypeHtml}
-                    </td>
-                    <td class="py-3 px-4 font-medium text-bgray-700 dark:text-bgray-300">
-                        ${escapeHtml(item.formatted_start_date || item.start_date || '—')}
-                    </td>
-                    <td class="py-3 px-4 font-semibold text-bgray-900 dark:text-white">
-                        ${escapeHtml(item.formatted_end_date || item.end_date || item.formatted_customer_end_date || item.customer_end_date || '—')}
-                    </td>
-                    <td class="py-3 px-4">
-                        ${daysBadge}
-                    </td>
-                    <td class="py-3 px-4">
-                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor}">
-                            ${escapeHtml(item.status_label || 'Active')}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        if (tbody) tbody.innerHTML = rowsHtml;
+        if (tbody) {
+            tbody.innerHTML = data.html || '';
+        }
     } catch (err) {
         console.warn('Failed to load upcoming timeline expirations:', err);
         if (loadingState) loadingState.classList.add('hidden');
@@ -547,6 +475,192 @@ export async function loadUpcomingTimelines(filters = getActiveFilters()) {
 export const loadUpcomingContracts = loadUpcomingTimelines;
 
 /**
+ * Load Parent Projects Overview table data.
+ */
+export async function loadParentProjectsOverview(filters = getActiveFilters()) {
+    const card = document.querySelector('[data-project-analytics-section="parent-projects-overview"]');
+    if (!card) return;
+    const url = card.dataset.url;
+    if (!url) return;
+
+    const loadingState = card.querySelector('[data-loading-state]');
+    const emptyState = card.querySelector('[data-empty-state]');
+    const content = card.querySelector('[data-content]');
+    const tbody = card.querySelector('[data-parent-projects-table-body]');
+    const totalCountEl = card.querySelector('[data-parent-projects-total-count]');
+    const emptyTitle = card.querySelector('[data-empty-title]');
+    const emptySubtitle = card.querySelector('[data-empty-subtitle]');
+
+    if (loadingState) loadingState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+
+    try {
+        const data = await fetchAnalyticsData(url, filters);
+        const canView = data.can_view !== false;
+        const projects = data.projects || [];
+
+        if (loadingState) loadingState.classList.add('hidden');
+
+        if (!canView) {
+            if (emptyTitle) emptyTitle.innerText = 'Access Restricted';
+            if (emptySubtitle) emptySubtitle.innerText = 'You do not have permission to view parent projects.';
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (content) content.classList.add('hidden');
+            if (totalCountEl) totalCountEl.innerText = '0';
+            return;
+        }
+
+        if (totalCountEl) totalCountEl.innerText = projects.length.toLocaleString();
+
+        if (projects.length === 0) {
+            if (emptyTitle) emptyTitle.innerText = 'No parent projects found';
+            if (emptySubtitle) emptySubtitle.innerText = 'There are no parent projects with child projects matching the current filter.';
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (content) content.classList.add('hidden');
+            return;
+        }
+
+        if (emptyState) emptyState.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
+        if (tbody) {
+            tbody.innerHTML = data.html || '';
+        }
+    } catch (err) {
+        console.warn('Failed to load parent projects overview:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (content) content.classList.add('hidden');
+    }
+}
+
+/**
+ * Helper to recursively hide or show descendant child rows.
+ */
+function hideDescendantRows(rowElement) {
+    const rowId = rowElement.getAttribute('data-parent-row-id') || rowElement.getAttribute('data-child-row-id');
+    if (!rowId) return;
+
+    const directChildren = document.querySelectorAll(`.child-project-row[data-parent-id="${rowId}"]`);
+    directChildren.forEach(child => {
+        child.classList.add('hidden');
+        // If this child was also expanded, collapse its button state and hide its descendants too
+        if (child.getAttribute('data-expanded') === 'true') {
+            child.setAttribute('data-expanded', 'false');
+            const subToggleBtns = child.querySelectorAll(`[data-child-project-toggle="${child.getAttribute('data-child-row-id')}"]`);
+            subToggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+            const chevron = child.querySelector('[data-toggle-chevron]');
+            if (chevron) chevron.classList.remove('rotate-90');
+            hideDescendantRows(child);
+        }
+    });
+}
+
+/**
+ * Handle toggle and AJAX load of child projects under a parent or sub-child project.
+ */
+export async function toggleChildProjects(targetId, explicitDepth = null) {
+    // Look for parent row first, then child row
+    const targetRow = document.querySelector(`[data-parent-row-id="${targetId}"]`)
+        || document.querySelector(`[data-child-row-id="${targetId}"]`);
+    if (!targetRow) return;
+
+    const toggleBtns = document.querySelectorAll(`[data-parent-project-toggle="${targetId}"], [data-child-project-toggle="${targetId}"]`);
+    const chevronIcon = targetRow.querySelector('[data-toggle-chevron]');
+    const existingChildRows = document.querySelectorAll(`.child-project-row[data-parent-id="${targetId}"]`);
+
+    const isExpanded = targetRow.getAttribute('data-expanded') === 'true';
+
+    if (isExpanded) {
+        // Collapse: hide all direct and nested descendant rows
+        hideDescendantRows(targetRow);
+        targetRow.setAttribute('data-expanded', 'false');
+        toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+        if (chevronIcon) {
+            chevronIcon.classList.remove('rotate-90');
+        }
+        return;
+    }
+
+    // Expanding: If child rows already loaded previously, show direct children
+    if (existingChildRows.length > 0) {
+        existingChildRows.forEach(row => row.classList.remove('hidden'));
+        targetRow.setAttribute('data-expanded', 'true');
+        toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'));
+        if (chevronIcon) {
+            chevronIcon.classList.add('rotate-90');
+        }
+        return;
+    }
+
+    // Determine depth: parent rows are depth 0 (children depth 1), child rows have data-depth
+    const currentDepth = targetRow.hasAttribute('data-depth') ? parseInt(targetRow.getAttribute('data-depth'), 10) : 0;
+    const nextDepth = explicitDepth ? parseInt(explicitDepth, 10) : currentDepth + 1;
+    const paddingLeftPx = 16 + (nextDepth * 24);
+
+    // Child rows not yet loaded: Fetch via AJAX
+    const loadingRow = document.createElement('tr');
+    loadingRow.className = `child-project-row bg-bgray-50/50 dark:bg-darkblack-500/20 animate-pulse`;
+    loadingRow.setAttribute('data-parent-id', targetId);
+    loadingRow.setAttribute('data-depth', nextDepth);
+    loadingRow.innerHTML = `
+        <td colspan="5" class="py-3 px-4 text-xs text-bgray-500 dark:text-bgray-400" style="padding-left: ${paddingLeftPx}px;">
+            <div class="flex items-center gap-2">
+                <svg class="h-4 w-4 animate-spin text-success-500" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                <span>Loading child projects...</span>
+            </div>
+        </td>
+    `;
+    targetRow.after(loadingRow);
+
+    targetRow.setAttribute('data-expanded', 'true');
+    toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'));
+    if (chevronIcon) {
+        chevronIcon.classList.add('rotate-90');
+    }
+
+    const filters = getActiveFilters();
+    const url = `/project-analytics/parent-projects/${targetId}/children?depth=${nextDepth}`;
+
+    try {
+        const response = await fetchAnalyticsData(url, filters);
+        loadingRow.remove();
+
+        if (response && response.html) {
+            // Insert returned child rows right after targetRow
+            targetRow.insertAdjacentHTML('afterend', response.html);
+        } else {
+            const emptyChildRow = document.createElement('tr');
+            emptyChildRow.className = `child-project-row bg-bgray-50/40 dark:bg-darkblack-500/20`;
+            emptyChildRow.setAttribute('data-parent-id', targetId);
+            emptyChildRow.setAttribute('data-depth', nextDepth);
+            emptyChildRow.innerHTML = `
+                <td colspan="5" class="py-3 px-4 text-xs italic text-bgray-500 dark:text-bgray-400" style="padding-left: ${paddingLeftPx}px;">
+                    No child projects found.
+                </td>
+            `;
+            targetRow.after(emptyChildRow);
+        }
+    } catch (err) {
+        console.warn(`Failed to load child projects for project ${targetId}:`, err);
+        loadingRow.innerHTML = `
+            <td colspan="5" class="py-3 px-4 text-xs text-red-500" style="padding-left: ${paddingLeftPx}px;">
+                Failed to load child projects. Click again to retry.
+            </td>
+        `;
+        targetRow.setAttribute('data-expanded', 'false');
+        toggleBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+        if (chevronIcon) {
+            chevronIcon.classList.remove('rotate-90');
+        }
+    }
+}
+
+/**
  * Load all Overall Dashboard sections.
  */
 export function loadAllOverallDashboardSections(filters = getActiveFilters()) {
@@ -556,6 +670,7 @@ export function loadAllOverallDashboardSections(filters = getActiveFilters()) {
     loadProjectsByStatus(filters);
     loadProjectsByStage(filters);
     loadUpcomingTimelines(filters);
+    loadParentProjectsOverview(filters);
 }
 
 /* ==========================================================================
@@ -1217,6 +1332,19 @@ export function initProjectAnalyticsDashboard() {
 
     // Initialize drill-down tile modal
     initTileDrilldownModal();
+
+    // Listen for parent projects and nested child projects accordion toggle
+    dashboardRoot.addEventListener('click', (e) => {
+        const toggleBtn = e.target.closest('[data-parent-project-toggle], [data-child-project-toggle]');
+        if (toggleBtn) {
+            e.preventDefault();
+            const targetId = toggleBtn.getAttribute('data-parent-project-toggle') || toggleBtn.getAttribute('data-child-project-toggle');
+            const depth = toggleBtn.getAttribute('data-depth');
+            if (targetId) {
+                toggleChildProjects(targetId, depth);
+            }
+        }
+    });
 
     // Initial load
     switchDashboardMode();
