@@ -64,7 +64,7 @@
                                                     </svg>
                                                 </span>
                                             @else
-                                                <button type="button" class="remove-interval-btn inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-bgray-500 hover:bg-gray-100 hover:text-error-300 dark:border-darkblack-400 dark:text-bgray-400 dark:hover:bg-darkblack-500" title="Remove interval">
+                                                <button type="button" class="remove-interval-btn inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-bgray-700 hover:bg-gray-100 hover:text-error-300 dark:border-darkblack-400 dark:text-bgray-400 dark:hover:bg-darkblack-500" title="Remove interval">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                     </svg>
@@ -74,7 +74,7 @@
                                     @endforeach
                                 </div>
 
-                                <span class="mt-1 block text-xs text-bgray-500 dark:text-bgray-400">
+                                <span class="mt-1 block text-xs text-bgray-700 dark:text-bgray-400">
                                     Primary reminder interval required. Maximum 5 additional intervals (up to 6 total).
                                 </span>
 
@@ -99,7 +99,7 @@
                                         $currentSelectedUsers = old('user_ids', $selectedUsers);
                                     @endphp
                                     @foreach ($users as $user)
-                                        <option value="{{ $user->id }}" {{ in_array($user->id, $currentSelectedUsers) ? 'selected' : '' }} @if(!empty($user->email)) data-subtype="{{ $user->email }}" @endif>
+                                        <option value="{{ $user->id }}" {{ in_array($user->id, $currentSelectedUsers) ? 'selected' : '' }} @if (!empty($user->email)) data-subtype="{{ $user->email }}" @endif>
                                             {{ $user->name }}
                                         </option>
                                     @endforeach
@@ -121,7 +121,7 @@
 
                                 <textarea name="emails" id="emails" rows="4" placeholder="Enter one email address per line&#10;admin@example.com&#10;accounts@example.com" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ old('emails', $selectedEmails) }}</textarea>
 
-                                <span class="mt-1 block text-xs text-bgray-500 dark:text-bgray-400">
+                                <span class="mt-1 block text-xs text-bgray-700 dark:text-bgray-400">
                                     Enter one email address per line.
                                 </span>
 
@@ -159,7 +159,7 @@
             }, 10);
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('interval-container');
             const addBtn = document.getElementById('add-interval-btn');
             const MAX_TOTAL = 6; // 1 primary + 5 additional max
@@ -179,7 +179,7 @@
             if (addBtn && container) {
                 updateAddBtnState();
 
-                addBtn.addEventListener('click', function () {
+                addBtn.addEventListener('click', function() {
                     const currentRows = container.querySelectorAll('.interval-row').length;
                     if (currentRows >= MAX_TOTAL) {
                         alert('You can add a maximum of 5 additional reminder intervals (6 total).');
@@ -192,7 +192,7 @@
                         <div class="relative flex-1">
                             <input type="number" name="days_before[]" value="" min="0" placeholder="e.g. 30" required class="h-[42px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                         </div>
-                        <button type="button" class="remove-interval-btn inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-bgray-500 hover:bg-gray-100 hover:text-error-300 dark:border-darkblack-400 dark:text-bgray-400 dark:hover:bg-darkblack-500" title="Remove interval">
+                        <button type="button" class="remove-interval-btn inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 text-bgray-700 hover:bg-gray-100 hover:text-error-300 dark:border-darkblack-400 dark:text-bgray-400 dark:hover:bg-darkblack-500" title="Remove interval">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
@@ -203,7 +203,7 @@
                     updateAddBtnState();
                 });
 
-                container.addEventListener('click', function (e) {
+                container.addEventListener('click', function(e) {
                     const removeBtn = e.target.closest('.remove-interval-btn');
                     if (removeBtn) {
                         const row = removeBtn.closest('.interval-row');
