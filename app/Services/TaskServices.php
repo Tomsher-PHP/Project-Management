@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Exceptions\TaskTimerAlreadyRunningException;
+use App\Exceptions\TaskTimerStateConflictException;
 use App\Models\Project;
 use App\Models\Tag;
 use App\Models\Task;
@@ -897,34 +899,135 @@ class TaskServices
     public function startTimer(Task $task, int $userId)
     {
         return DB::transaction(function () use ($task, $userId) {
+            // Lock user row to serialize concurrent timer start requests for this user
+            $user = User::query()->where('id', $userId)->lockForUpdate()->first();
+            if (! $user) {
+                throw new \InvalidArgumentException('User not found');
+            }
 
-            // Check if already running
-            $running = TaskTimeLog::where('task_id', $task->id)
+            // Verify task eligibility inside the transaction
+            $eligibility = $this->getTaskEligibilityRestriction($task, $user);
+            if ($eligibility) {
+                throw new TaskTimerAlreadyRunningException($eligibility);
+            }
+
+            // Lock and inspect any existing running timer for this user across all tasks
+            $runningTimer = TaskTimeLog::query()
+                ->with([
+                    'task:id,name,code,current_assignee_id',
+                    'task.currentAssignee:id,name',
+                ])
                 ->where('user_id', $userId)
                 ->where('is_running', 1)
+                ->lockForUpdate()
+                ->latest('started_at')
                 ->first();
 
-            if ($running) {
-                throw new \Exception('Timer already running');
+            if ($runningTimer) {
+                $restriction = $this->buildRunningTimerRestriction($task, $runningTimer);
+                throw new TaskTimerAlreadyRunningException($restriction);
             }
 
-            $assignment = TaskAssignmentLog::where('task_id', $task->id)
-                ->where('user_id', $userId)
-                ->where('is_current', 1)
+            return $this->createRunningTimeLog($task, $userId);
+        });
+    }
+
+    /**
+     * Atomically switch user's running timer from current task to another task within a single transaction.
+     */
+    public function switchTimer(
+        Task $newTask,
+        User $user,
+        ?int $expectedCurrentTaskId = null,
+        bool $confirmedNonAssigneeStop = false
+    ): array {
+        return DB::transaction(function () use ($newTask, $user, $expectedCurrentTaskId, $confirmedNonAssigneeStop) {
+            // 1. Lock user row first to serialize concurrent timer operations for this user
+            $lockedUser = User::query()->where('id', $user->id)->lockForUpdate()->first();
+            if (! $lockedUser) {
+                throw new \InvalidArgumentException('User not found');
+            }
+
+            // 2. Validate eligibility for the target task inside the transaction
+            $eligibility = $this->getTaskEligibilityRestriction($newTask, $lockedUser);
+            if ($eligibility) {
+                throw new TaskTimerAlreadyRunningException($eligibility);
+            }
+
+            // 3. Lock and find the user's currently running timer across all tasks
+            $runningTimer = TaskTimeLog::query()
+                ->with([
+                    'task:id,name,code,current_assignee_id,actual_time_seconds,status_id',
+                    'task.currentAssignee:id,name',
+                ])
+                ->where('user_id', $user->id)
+                ->where('is_running', 1)
+                ->lockForUpdate()
+                ->latest('started_at')
                 ->first();
 
-            if (!$assignment) {
-                throw new \Exception('Assignment not found');
+            // 4. Handle Case: Requested task is ALREADY the user's running task
+            if ($runningTimer && (int) $runningTimer->task_id === (int) $newTask->id) {
+                return [
+                    'status' => 'already_running',
+                    'message' => 'Timer already running for this task.',
+                    'running_task' => $newTask,
+                    'running_time_log' => $runningTimer,
+                    'stopped_time_log' => null,
+                    'stopped_task' => null,
+                ];
             }
 
-            return TaskTimeLog::create([
-                'task_id' => $task->id,
-                'user_id' => $userId,
-                'task_assignment_log_id' => $assignment->id,
-                'started_at' => now(),
-                'is_running' => 1,
-                'is_approved' => ($task->request_status === 'approved'),
-            ]);
+            // 5. Handle Case: Stale confirmation check
+            // If the caller expected a specific running task ID from the confirmation prompt,
+            // verify the database state has not changed since the prompt was displayed.
+            if ($expectedCurrentTaskId !== null) {
+                $actualRunningTaskId = $runningTimer ? (int) $runningTimer->task_id : null;
+                if ($actualRunningTaskId !== (int) $expectedCurrentTaskId) {
+                    throw new TaskTimerStateConflictException(
+                        'The running task timer state has changed. Please review and try again.',
+                        $actualRunningTaskId
+                    );
+                }
+            }
+
+            // 6. Stop the currently running timer if one exists
+            $stoppedLog = null;
+            $stoppedTask = null;
+            if ($runningTimer) {
+                $stoppedTask = $runningTimer->task ?: Task::query()->find($runningTimer->task_id);
+
+                if (
+                    $stoppedTask
+                    && $this->requiresNonAssigneeStopConfirmation($stoppedTask, $lockedUser)
+                    && ! $confirmedNonAssigneeStop
+                ) {
+                    throw new TaskTimerAlreadyRunningException([
+                        'message' => "Stopping '{$stoppedTask->name}' requires non-assignee confirmation.",
+                        'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+                        'reason' => 'non_assignee_confirmation_required',
+                        'requires_confirmation' => true,
+                        'requires_non_assignee_stop' => true,
+                        'running_task_id' => $stoppedTask->id,
+                        'running_task_name' => $stoppedTask->name,
+                        'running_task_assignee_name' => $stoppedTask->currentAssignee?->name,
+                    ]);
+                }
+
+                $stoppedLog = $this->recordTimeLogStop($runningTimer, $stoppedTask, $lockedUser);
+            }
+
+            // 7. Start the new timer for $newTask
+            $newLog = $this->createRunningTimeLog($newTask, $user->id);
+
+            return [
+                'status' => $stoppedLog ? 'switched' : 'started',
+                'message' => $stoppedLog ? 'Timer switched successfully.' : 'Timer started.',
+                'running_task' => $newTask,
+                'running_time_log' => $newLog,
+                'stopped_time_log' => $stoppedLog,
+                'stopped_task' => $stoppedTask,
+            ];
         });
     }
 
@@ -932,15 +1035,10 @@ class TaskServices
     public function stopTimer(Task $task, User $actor)
     {
         return DB::transaction(function () use ($task, $actor) {
-            $task->loadMissing([
-                'project:id,name',
-                'currentAssignee:id,name',
-            ]);
-
-            $stoppedByNonAssignee = $this->requiresNonAssigneeStopConfirmation($task, $actor);
             $runningLogQuery = TaskTimeLog::query()
                 ->where('task_id', $task->id)
-                ->where('is_running', 1);
+                ->where('is_running', 1)
+                ->lockForUpdate();
 
             $log = null;
 
@@ -968,31 +1066,69 @@ class TaskServices
                 throw new \RuntimeException('Timer not found');
             }
 
-            $stoppedAt = now();
-            $duration = max(0, $log->started_at?->diffInSeconds($stoppedAt) ?? 0);
-
-            // Update time log
-            $log->update([
-                'ended_at' => $stoppedAt,
-                'duration_seconds' => $duration,
-                'is_running' => 0,
-            ]);
-
-            // Update assignment log
-            if ($log->task_assignment_log_id) {
-                TaskAssignmentLog::where('id', $log->task_assignment_log_id)
-                    ->increment('worked_time_seconds', $duration);
-            }
-
-            // Update task total time
-            $task->increment('actual_time_seconds', $duration);
-
-            if ($stoppedByNonAssignee) {
-                $this->notificationService->notifyTaskTimerStoppedByOtherUser($task, $actor);
-            }
-
-            return $log;
+            return $this->recordTimeLogStop($log, $task, $actor);
         });
+    }
+
+    /**
+     * Stop and record duration for a specific running time log.
+     */
+    public function recordTimeLogStop(TaskTimeLog $log, Task $task, User $actor, ?\DateTimeInterface $stoppedAt = null): TaskTimeLog
+    {
+        $task->loadMissing([
+            'project:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $stoppedByNonAssignee = $this->requiresNonAssigneeStopConfirmation($task, $actor);
+        $stoppedAt = $stoppedAt ?: now();
+        $duration = max(0, $log->started_at?->diffInSeconds($stoppedAt) ?? 0);
+
+        // Update time log
+        $log->update([
+            'ended_at' => $stoppedAt,
+            'duration_seconds' => $duration,
+            'is_running' => 0,
+        ]);
+
+        // Update assignment log
+        if ($log->task_assignment_log_id) {
+            TaskAssignmentLog::where('id', $log->task_assignment_log_id)
+                ->increment('worked_time_seconds', $duration);
+        }
+
+        // Update task total time
+        $task->increment('actual_time_seconds', $duration);
+
+        if ($stoppedByNonAssignee) {
+            $this->notificationService->notifyTaskTimerStoppedByOtherUser($task, $actor);
+        }
+
+        return $log;
+    }
+
+    /**
+     * Create a running TaskTimeLog for a given task and user.
+     */
+    public function createRunningTimeLog(Task $task, int $userId): TaskTimeLog
+    {
+        $assignment = TaskAssignmentLog::where('task_id', $task->id)
+            ->where('user_id', $userId)
+            ->where('is_current', 1)
+            ->first();
+
+        if (! $assignment) {
+            throw new \RuntimeException('Assignment not found');
+        }
+
+        return TaskTimeLog::create([
+            'task_id' => $task->id,
+            'user_id' => $userId,
+            'task_assignment_log_id' => $assignment->id,
+            'started_at' => now(),
+            'is_running' => 1,
+            'is_approved' => ($task->request_status === 'approved'),
+        ]);
     }
 
     // Check whether current user can start timer on this task
@@ -1001,8 +1137,7 @@ class TaskServices
         return $this->getStartRestriction($task) === null;
     }
 
-    // Get restriction message and status if user cannot start timer on this task, otherwise return null
-    public function getStartRestriction(Task $task, ?User $user = null): ?array
+    public function getTaskEligibilityRestriction(Task $task, ?User $user = null): ?array
     {
         $user ??= auth()->user();
 
@@ -1041,20 +1176,11 @@ class TaskServices
             );
         }
 
-        $runningTimer = TaskTimeLog::query()
-            ->with([
-                'task:id,name,code,current_assignee_id',
-                'task.currentAssignee:id,name',
-            ])
-            ->where('user_id', $user->id)
-            ->where('is_running', 1)
-            ->latest('started_at')
-            ->first();
+        return null;
+    }
 
-        if (! $runningTimer) {
-            return null;
-        }
-
+    public function buildRunningTimerRestriction(Task $task, TaskTimeLog $runningTimer): array
+    {
         if ((int) $runningTimer->task_id === (int) $task->id) {
             return $this->buildTaskStartRestriction(
                 'Timer already running for this task.',
@@ -1076,6 +1202,37 @@ class TaskServices
                 'running_task_assignee_name' => $runningTimer->task?->currentAssignee?->name,
             ]
         );
+    }
+
+    // Get restriction message and status if user cannot start timer on this task, otherwise return null
+    public function getStartRestriction(Task $task, ?User $user = null): ?array
+    {
+        $user ??= auth()->user();
+
+        $eligibility = $this->getTaskEligibilityRestriction($task, $user);
+        if ($eligibility) {
+            return $eligibility;
+        }
+
+        if (! $user) {
+            return null;
+        }
+
+        $runningTimer = TaskTimeLog::query()
+            ->with([
+                'task:id,name,code,current_assignee_id',
+                'task.currentAssignee:id,name',
+            ])
+            ->where('user_id', $user->id)
+            ->where('is_running', 1)
+            ->latest('started_at')
+            ->first();
+
+        if (! $runningTimer) {
+            return null;
+        }
+
+        return $this->buildRunningTimerRestriction($task, $runningTimer);
     }
 
     private function buildTaskStartRestriction(string $message, int $status, array $extra = []): array

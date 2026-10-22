@@ -16,7 +16,7 @@ class RunningTaskNavbarService
             return $state;
         }
 
-        $selectedTimeLog = TaskTimeLog::query()
+        $runningTimeLog = TaskTimeLog::query()
             ->with([
                 'task:id,name,estimated_time_seconds,status_id',
                 'task.status:id,type',
@@ -26,36 +26,51 @@ class RunningTaskNavbarService
             ->latest('started_at')
             ->first();
 
-        if (! $selectedTimeLog) {
-            $selectedTimeLog = TaskTimeLog::query()
+        $selectedTimeLog = null;
+
+        if ($runningTimeLog) {
+            if ($runningTimeLog->task?->status?->type === 'active') {
+                $selectedTimeLog = $runningTimeLog;
+            } else {
+                return $state;
+            }
+        } else {
+            $latestStoppedLog = TaskTimeLog::query()
                 ->with([
                     'task:id,name,estimated_time_seconds,status_id',
                     'task.status:id,type',
                 ])
                 ->where('user_id', $userId)
                 ->where('is_running', false)
-                ->whereHas('task.status', function ($query) {
-                    $query->where('type', 'active');
-                })
                 ->latest('ended_at')
                 ->latest('updated_at')
                 ->first();
+
+            if ($latestStoppedLog && $latestStoppedLog->task?->status?->type === 'active') {
+                $selectedTimeLog = $latestStoppedLog;
+            }
         }
 
-        $runningTask = $selectedTimeLog?->task;
-        $trackedSeconds = $runningTask
-            ? (int) TaskTimeLog::query()
-                ->where('task_id', $runningTask->id)
-                ->where('user_id', $userId)
-                ->where('is_running', false)
-                ->sum('duration_seconds')
-            : 0;
+        if (! $selectedTimeLog) {
+            return $state;
+        }
+
+        $runningTask = $selectedTimeLog->task;
+        if (! $runningTask) {
+            return $state;
+        }
+
+        $trackedSeconds = (int) TaskTimeLog::query()
+            ->where('task_id', $runningTask->id)
+            ->where('user_id', $userId)
+            ->where('is_running', false)
+            ->sum('duration_seconds');
 
         return $this->buildState(
             $selectedTimeLog,
             $runningTask,
             $trackedSeconds,
-            $selectedTimeLog !== null && $runningTask !== null
+            true
         );
     }
 
