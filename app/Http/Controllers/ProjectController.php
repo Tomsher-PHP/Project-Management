@@ -22,7 +22,6 @@ use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
 use App\Models\ServiceType;
-use App\Models\Technology;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
@@ -209,7 +208,7 @@ class ProjectController extends Controller
             'meetings',
             'history',
             'hosting',
-            'settings',
+            'timelines',
             'payments'
         ];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
@@ -466,7 +465,7 @@ class ProjectController extends Controller
             'meetings' => $this->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
             'hosting' => app(\App\Http\Controllers\ProjectHostingController::class)->renderHostingTab($project),
-            'settings' => $this->renderSettingsTab($project),
+            'timelines' => $this->renderTimelinesTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
             default => abort(Response::HTTP_NOT_FOUND),
@@ -516,7 +515,7 @@ class ProjectController extends Controller
 
         $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
         $agileSprints = AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get();
-        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function($q) {
+        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function ($q) {
             $q->active()->orderBy('sort_order', 'asc');
         }])->orderBy('sort_order', 'asc')->get();
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
@@ -770,13 +769,13 @@ class ProjectController extends Controller
 
         // Project Tracking
         $projectTrackings = $project->trackings()
-        ->with([
-            'attachments',
-            'attachments.addedBy:id,name',
-        ])
-        ->latest('date')
-        ->latest('id')
-        ->get();
+            ->with([
+                'attachments',
+                'attachments.addedBy:id,name',
+            ])
+            ->latest('date')
+            ->latest('id')
+            ->get();
 
         $currentStatus = [
             'label' => $project->projectStatus?->name ?? 'No Status',
@@ -822,9 +821,9 @@ class ProjectController extends Controller
         ))->render();
     }
 
-    private function renderSettingsTab(Project $project): string
+    private function renderTimelinesTab(Project $project): string
     {
-        return view('projects.partials.tabs.settings', compact('project'))->render();
+        return view('projects.partials.tabs.timelines', compact('project'))->render();
     }
 
     private function applyProjectChangeDateValidation($validator, ?string $changeDate, ?Carbon $minimumDate): void
