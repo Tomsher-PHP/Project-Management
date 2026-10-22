@@ -29,7 +29,7 @@
                             <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
                                 {{ $typeLabel }}
                             </h4>
-                            <p class="mt-0.5 text-xs text-bgray-700 dark:text-bgray-400">
+                            <p class="mt-0.5 text-xs text-bgray-700 dark:text-bgray-300">
                                 @if ($typeKey === 'timeline_ending_soon')
                                     Receive alerts when project timelines are approaching their end dates.
                                 @elseif ($typeKey === 'hosting_ending_soon')
