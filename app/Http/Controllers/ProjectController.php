@@ -18,6 +18,7 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
+use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
@@ -209,6 +210,7 @@ class ProjectController extends Controller
             'history',
             'hosting',
             'timelines',
+            'settings',
             'payments'
         ];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
@@ -466,6 +468,7 @@ class ProjectController extends Controller
             'history' => $this->renderHistoryTab($project),
             'hosting' => app(\App\Http\Controllers\ProjectHostingController::class)->renderHostingTab($project),
             'timelines' => $this->renderTimelinesTab($project),
+            'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
             default => abort(Response::HTTP_NOT_FOUND),
@@ -824,6 +827,42 @@ class ProjectController extends Controller
     private function renderTimelinesTab(Project $project): string
     {
         return view('projects.partials.tabs.timelines', compact('project'))->render();
+    }
+
+    private function renderSettingsTab(Project $project): string
+    {
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $preferences = $project->notificationPreferences()
+            ->get()
+            ->keyBy('notification_type');
+
+        return view('projects.partials.tabs.settings', compact('project', 'notificationTypes', 'preferences'))->render();
+    }
+
+    public function updateNotificationSettings(Request $request, Project $project): JsonResponse
+    {
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $notifications = $request->input('notifications', []);
+
+        foreach ($notificationTypes as $typeKey => $label) {
+            $isEnabled = filter_var($notifications[$typeKey] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+            ProjectNotificationPreference::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'notification_type' => $typeKey,
+                ],
+                [
+                    'is_enabled' => $isEnabled,
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification settings updated successfully.',
+            'notifications' => $project->notificationPreferences()->pluck('is_enabled', 'notification_type'),
+        ], Response::HTTP_OK);
     }
 
     private function applyProjectChangeDateValidation($validator, ?string $changeDate, ?Carbon $minimumDate): void

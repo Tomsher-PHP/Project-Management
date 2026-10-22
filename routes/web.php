@@ -418,6 +418,7 @@ Route::middleware(['auth'])->group(function () {
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
         Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
+        Route::put('settings/notifications', [ProjectController::class, 'updateNotificationSettings'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.settings.notifications.update');
         Route::get('delete-summary', [ProjectController::class, 'deleteSummary'])->middleware(['permission.type:project.delete', 'can:delete,project'])->name('projects.delete-summary');
 
         // Project Timeline routes

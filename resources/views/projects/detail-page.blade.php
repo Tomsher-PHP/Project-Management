@@ -87,6 +87,10 @@
                         <button type="button" data-project-tab-trigger="timelines" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                             Timelines
                         </button>
+
+                        <button type="button" data-project-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
+                            Settings
+                        </button>
                     </div>
                 </div>
 
@@ -143,6 +147,7 @@
                     <div class="hidden" data-project-tab-panel="hosting" data-loaded="false"></div>
                 @endcan
                 <div class="hidden" data-project-tab-panel="timelines" data-loaded="false"></div>
+                <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
             </div>
         </div>
     </section>
