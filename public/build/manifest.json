@@ -79,7 +79,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-D3aWVROy.css",
+    "file": "assets/app-CcReIpfJ.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -169,7 +169,7 @@
     "isEntry": true
   },
   "resources/js/modules/analytics/project-analytics-dashboard.js": {
-    "file": "assets/project-analytics-dashboard-DWYkQDk_.js",
+    "file": "assets/project-analytics-dashboard-ClOiXQWL.js",
     "name": "project-analytics-dashboard",
     "src": "resources/js/modules/analytics/project-analytics-dashboard.js",
     "isEntry": true,
@@ -325,7 +325,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-CuaUbr40.js",
+    "file": "assets/project-detail-C8FADgvk.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
