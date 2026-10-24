@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\HostingServiceStatus;
+use App\Models\Project;
 use App\Models\ProjectHostingRecord;
+use App\Models\ProjectNotificationDefault;
+use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectNotificationSetting;
 use App\Models\ProjectNotificationLog;
 use App\Models\ProjectTimeline;
@@ -20,7 +23,7 @@ class ProjectNotificationService
      */
     public function processTimelineEndingSoon(): void
     {
-        $setting = ProjectNotificationSetting::with(['users', 'emailRecipients'])
+        $setting = ProjectNotificationSetting::with(['days', 'users', 'emailRecipients'])
             ->where('notification_type', ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON)
             ->first();
 
@@ -29,19 +32,30 @@ class ProjectNotificationService
             return;
         }
 
-        // 3. Recipients: Retrieve and deduplicate recipients
+        // 2. Retrieve all configured days_before values, normalize to positive integers, unique
+        $configuredDays = $setting->days
+            ->pluck('days_before')
+            ->map(fn($day) => (int) $day)
+            ->filter(fn($day) => $day > 0)
+            ->unique()
+            ->sortDesc()
+            ->values()
+            ->all();
+
+        // 3. Recipients: Retrieve and deduplicate recipients (active, non-deleted users + external emails)
         $recipients = $this->getRecipients($setting);
         if ($recipients['users']->isEmpty() && empty($recipients['additional_emails'])) {
             return;
         }
 
-        // 2. Notification Delivery Dates: Evaluate active timelines
-        // $timezone = Configuration::
+        // 4. Notification Delivery Dates: Evaluate active timelines
         $today = Carbon::today(config('app.timezone'));
-        $daysBefore = max(1, (int) $setting->days_before);
+
+        // Load project defaults once to avoid queries inside the loop
+        $timelineDefaults = ProjectNotificationDefault::where('setting_key', ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON)->get();
 
         // Fetch eligible active timelines with valid end dates and active projects
-        $timelines = ProjectTimeline::with('project')
+        $timelines = ProjectTimeline::with(['project.notificationPreferences'])
             ->where('status', ProjectTimeline::STATUS_ACTIVE)
             ->whereNotNull('end_date')
             ->whereHas('project', function ($query) {
@@ -51,7 +65,17 @@ class ProjectNotificationService
             ->get();
 
         foreach ($timelines as $timeline) {
-            $occasion = $this->determineDueOccasionForToday($timeline, $today, $daysBefore);
+            $project = $timeline->project;
+            if (!$project) {
+                continue;
+            }
+
+            // Enforce project-level notification preferences
+            if (!$this->isTimelineNotificationEnabledForProject($project, $timelineDefaults)) {
+                continue;
+            }
+
+            $occasion = $this->determineDueOccasionForToday($timeline, $today, $configuredDays);
 
             if ($occasion !== null) {
                 $this->dispatchNotificationForTimeline($timeline, $setting, $today->toDateString(), $occasion, $recipients);
@@ -60,11 +84,53 @@ class ProjectNotificationService
     }
 
     /**
+     * Check whether timeline notification is enabled for a given project.
+     * Checks project_notification_preferences first. If missing, resolves via ProjectNotificationDefault policy.
+     */
+    protected function isTimelineNotificationEnabledForProject(Project $project, $timelineDefaults): bool
+    {
+        $type = ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON;
+
+        $preference = $project->notificationPreferences
+            ->firstWhere('notification_type', $type);
+
+        if ($preference !== null) {
+            return (bool) $preference->is_enabled;
+        }
+
+        // Policy for missing preference: resolve via ProjectNotificationDefault for timeline_ending_soon
+        // 1. Try flow-specific condition matching project_flow
+        $flow = $project->project_flow;
+        if (!empty($flow)) {
+            $matchingDefault = $timelineDefaults->first(function ($defaultRecord) use ($flow) {
+                $conditions = $defaultRecord->conditions ?? [];
+                return isset($conditions['project_flow']) && $conditions['project_flow'] === $flow;
+            });
+
+            if ($matchingDefault) {
+                return (bool) data_get($matchingDefault->setting_value, 'is_enabled', false);
+            }
+        }
+
+        // 2. Try general fallback default (conditions = [] or empty)
+        $generalDefault = $timelineDefaults->first(function ($defaultRecord) {
+            return empty($defaultRecord->conditions ?? []);
+        });
+
+        if ($generalDefault) {
+            return (bool) data_get($generalDefault->setting_value, 'is_enabled', false);
+        }
+
+        // 3. If no matching default exists, use false
+        return false;
+    }
+
+    /**
      * Process hosting expiry notifications based on global settings.
      */
     public function processHostingExpiryNotifications(): void
     {
-        $setting = ProjectNotificationSetting::with(['users', 'emailRecipients'])
+        $setting = ProjectNotificationSetting::with(['days', 'users', 'emailRecipients'])
             ->where('notification_type', ProjectNotificationSetting::NOTIFICATION_TYPE_HOSTING_ENDING_SOON)
             ->first();
 
@@ -73,22 +139,33 @@ class ProjectNotificationService
             return;
         }
 
-        // 2. Recipients: Retrieve and deduplicate recipients
+        // 2. Retrieve all configured days_before values, normalize to positive integers, unique
+        $configuredDays = $setting->days
+            ->pluck('days_before')
+            ->map(fn($day) => (int) $day)
+            ->filter(fn($day) => $day > 0)
+            ->unique()
+            ->sortDesc()
+            ->values()
+            ->all();
+
+        // 3. Recipients: Retrieve and deduplicate recipients (active, non-deleted users + external emails)
         $recipients = $this->getRecipients($setting);
         if ($recipients['users']->isEmpty() && empty($recipients['additional_emails'])) {
             return;
         }
 
-        // 3. Date & days_before calculation
+        // 4. Date & eligible hosting records
         $today = Carbon::today(config('app.timezone'));
-        $daysBefore = max(1, (int) $setting->days_before);
 
-        // 4. Eligible hosting records:
+        // Load project defaults for hosting_ending_soon once to avoid queries inside the loop
+        $hostingDefaults = ProjectNotificationDefault::where('setting_key', ProjectNotificationSetting::NOTIFICATION_TYPE_HOSTING_ENDING_SOON)->get();
+
         // Exclude cancelled and terminated records; must have expiry_date; project not deleted.
         $ineligibleStatusIds = HostingServiceStatus::whereIn('code', ['cancelled', 'terminated'])
             ->pluck('id');
 
-        $hostingRecords = ProjectHostingRecord::with(['project', 'hostingProvider', 'hostingService', 'hostingServiceStatus'])
+        $hostingRecords = ProjectHostingRecord::with(['project.notificationPreferences', 'hostingProvider', 'hostingService', 'hostingServiceStatus'])
             ->whereNotNull('expiry_date')
             ->when($ineligibleStatusIds->isNotEmpty(), function ($query) use ($ineligibleStatusIds) {
                 $query->whereNotIn('hosting_service_status_id', $ineligibleStatusIds);
@@ -99,7 +176,17 @@ class ProjectNotificationService
             ->get();
 
         foreach ($hostingRecords as $record) {
-            $occasion = $this->determineHostingDueOccasionForToday($record, $today, $daysBefore);
+            $project = $record->project;
+            if (!$project) {
+                continue;
+            }
+
+            // Enforce project-level notification preferences for hosting_ending_soon
+            if (!$this->isHostingNotificationEnabledForProject($project, $hostingDefaults)) {
+                continue;
+            }
+
+            $occasion = $this->determineHostingDueOccasionForToday($record, $today, $configuredDays);
 
             if ($occasion !== null) {
                 $this->dispatchNotificationForHostingRecord($record, $setting, $today->toDateString(), $occasion, $recipients);
@@ -108,18 +195,49 @@ class ProjectNotificationService
     }
 
     /**
+     * Check whether hosting notification is enabled for a given project.
+     * Checks project_notification_preferences first. If missing, resolves via ProjectNotificationDefault policy.
+     */
+    protected function isHostingNotificationEnabledForProject(Project $project, $hostingDefaults): bool
+    {
+        $type = ProjectNotificationSetting::NOTIFICATION_TYPE_HOSTING_ENDING_SOON;
+
+        $preference = $project->notificationPreferences
+            ->firstWhere('notification_type', $type);
+
+        if ($preference !== null) {
+            return (bool) $preference->is_enabled;
+        }
+
+        // Policy for missing preference: resolve via ProjectNotificationDefault for hosting_ending_soon
+        // 1. Check general fallback default (conditions = [] or empty)
+        $generalDefault = $hostingDefaults->first(function ($defaultRecord) {
+            return empty($defaultRecord->conditions ?? []);
+        });
+
+        if ($generalDefault) {
+            return (bool) data_get($generalDefault->setting_value, 'is_enabled', false);
+        }
+
+        // 2. If no matching default exists, use false
+        return false;
+    }
+
+    /**
      * Determine if today matches any notification occasion for the given timeline.
      * Returns the occasion key/name if due today, or null if not due today.
      *
-     * Occasions:
-     * 1. The configured number of days before the timeline expires, using days_before.
-     * 2. One day before the expiry date.
-     * 3. On the expiry date.
-     * 4. One day after the expiry date.
+     * Precedence:
+     * 1. on_expiry_date
+     * 2. 1_day_after
+     * 3. Configured interval reminder
      *
-     * If notification dates overlap (e.g. days_before = 1), only one notification is sent for that date.
+     * @param ProjectTimeline $timeline
+     * @param Carbon $today
+     * @param int|array<int, int> $daysBefore Single interval (legacy) or list of configured intervals
+     * @return string|null
      */
-    public function determineDueOccasionForToday(ProjectTimeline $timeline, Carbon $today, int $daysBefore): ?string
+    public function determineDueOccasionForToday(ProjectTimeline $timeline, Carbon $today, int|array $daysBefore): ?string
     {
         if (!$timeline->end_date) {
             return null;
@@ -128,29 +246,49 @@ class ProjectNotificationService
         $endDate = Carbon::parse($timeline->end_date, config('app.timezone'))->startOfDay();
         $todayDate = $today->copy()->startOfDay();
 
-        // Calculate occasion dates
-        $configuredDate = $endDate->copy()->subDays($daysBefore)->toDateString();
-        $oneDayBeforeDate = $endDate->copy()->subDays(1)->toDateString();
+        $todayStr = $todayDate->toDateString();
         $expiryDate = $endDate->toDateString();
         $oneDayAfterDate = $endDate->copy()->addDays(1)->toDateString();
 
-        $todayStr = $todayDate->toDateString();
-
-        // Match with precedence (if days_before == 1, configuredDate == oneDayBeforeDate; return single occasion)
-        if ($todayStr === $configuredDate) {
-            return 'days_before_' . $daysBefore;
-        }
-
-        if ($todayStr === $oneDayBeforeDate) {
-            return '1_day_before';
-        }
-
+        // 1. on_expiry_date has highest precedence
         if ($todayStr === $expiryDate) {
             return 'on_expiry_date';
         }
 
+        // 2. 1_day_after has second highest precedence
         if ($todayStr === $oneDayAfterDate) {
             return '1_day_after';
+        }
+
+        // Backward compatibility if called with an integer (e.g. legacy unit tests)
+        if (is_int($daysBefore)) {
+            $configuredDate = $endDate->copy()->subDays($daysBefore)->toDateString();
+            $oneDayBeforeDate = $endDate->copy()->subDays(1)->toDateString();
+
+            if ($todayStr === $configuredDate) {
+                return 'days_before_' . $daysBefore;
+            }
+
+            if ($todayStr === $oneDayBeforeDate) {
+                return '1_day_before';
+            }
+
+            return null;
+        }
+
+        // 3. Configured intervals: evaluate each interval against today
+        $intervals = collect($daysBefore)
+            ->map(fn($d) => (int) $d)
+            ->filter(fn($d) => $d > 0)
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        foreach ($intervals as $days) {
+            $targetDate = $endDate->copy()->subDays($days)->toDateString();
+            if ($todayStr === $targetDate) {
+                return 'days_before_' . $days;
+            }
         }
 
         return null;
@@ -160,15 +298,17 @@ class ProjectNotificationService
      * Determine if today matches any notification occasion for the given hosting record.
      * Returns the occasion key/name if due today, or null if not due today.
      *
-     * Occasions:
-     * 1. The configured number of days before expiry, using days_before.
-     * 2. One day before expiry.
-     * 3. On the expiry date.
-     * 4. One day after expiry.
+     * Precedence:
+     * 1. on_expiry_date
+     * 2. 1_day_after
+     * 3. Configured interval reminder
      *
-     * If notification dates overlap (e.g. days_before = 1), only one notification is sent for that date.
+     * @param ProjectHostingRecord $record
+     * @param Carbon $today
+     * @param int|array<int, int> $daysBefore Single interval (legacy) or list of configured intervals
+     * @return string|null
      */
-    public function determineHostingDueOccasionForToday(ProjectHostingRecord $record, Carbon $today, int $daysBefore): ?string
+    public function determineHostingDueOccasionForToday(ProjectHostingRecord $record, Carbon $today, int|array $daysBefore): ?string
     {
         if (!$record->expiry_date) {
             return null;
@@ -177,29 +317,49 @@ class ProjectNotificationService
         $expiry = Carbon::parse($record->expiry_date, config('app.timezone'))->startOfDay();
         $todayDate = $today->copy()->startOfDay();
 
-        // Calculate occasion dates
-        $configuredDate = $expiry->copy()->subDays($daysBefore)->toDateString();
-        $oneDayBeforeDate = $expiry->copy()->subDays(1)->toDateString();
+        $todayStr = $todayDate->toDateString();
         $expiryDate = $expiry->toDateString();
         $oneDayAfterDate = $expiry->copy()->addDays(1)->toDateString();
 
-        $todayStr = $todayDate->toDateString();
-
-        // Match with precedence (if days_before == 1, configuredDate == oneDayBeforeDate; return single occasion)
-        if ($todayStr === $configuredDate) {
-            return 'days_before_' . $daysBefore;
-        }
-
-        if ($todayStr === $oneDayBeforeDate) {
-            return '1_day_before';
-        }
-
+        // 1. on_expiry_date has highest precedence
         if ($todayStr === $expiryDate) {
             return 'on_expiry_date';
         }
 
+        // 2. 1_day_after has second highest precedence
         if ($todayStr === $oneDayAfterDate) {
             return '1_day_after';
+        }
+
+        // Backward compatibility if called with an integer (e.g. legacy unit tests)
+        if (is_int($daysBefore)) {
+            $configuredDate = $expiry->copy()->subDays($daysBefore)->toDateString();
+            $oneDayBeforeDate = $expiry->copy()->subDays(1)->toDateString();
+
+            if ($todayStr === $configuredDate) {
+                return 'days_before_' . $daysBefore;
+            }
+
+            if ($todayStr === $oneDayBeforeDate) {
+                return '1_day_before';
+            }
+
+            return null;
+        }
+
+        // 3. Configured intervals: evaluate each interval against today
+        $intervals = collect($daysBefore)
+            ->map(fn($d) => (int) $d)
+            ->filter(fn($d) => $d > 0)
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        foreach ($intervals as $days) {
+            $targetDate = $expiry->copy()->subDays($days)->toDateString();
+            if ($todayStr === $targetDate) {
+                return 'days_before_' . $days;
+            }
         }
 
         return null;
@@ -279,21 +439,31 @@ class ProjectNotificationService
 
     /**
      * Retrieve and deduplicate recipients between PMS users and additional emails.
+     * Excludes inactive or deleted users.
      *
      * @return array{users: EloquentCollection<int, \App\Models\User>, additional_emails: array<int, string>}
      */
     public function getRecipients(ProjectNotificationSetting $setting): array
     {
-        // 1. PMS Users: Retrieve selected users through existing relationship
+        // 1. PMS Users: Retrieve selected users through existing relationship, excluding inactive and deleted users
         $users = $setting->users()
             ->whereNotNull('users.email')
             ->where('users.email', '!=', '')
+            ->where('users.is_active', true)
+            ->where(function ($q) {
+                $q->where('users.delete_status', false)
+                  ->orWhereNull('users.delete_status');
+            })
             ->get();
 
         $seenEmails = [];
         $validUsers = new EloquentCollection();
 
         foreach ($users as $user) {
+            if (!$user->is_active || (bool) $user->delete_status) {
+                continue;
+            }
+
             $normalizedEmail = strtolower(trim((string) $user->email));
             if (filter_var($normalizedEmail, FILTER_VALIDATE_EMAIL)) {
                 $seenEmails[$normalizedEmail] = true;

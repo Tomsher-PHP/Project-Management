@@ -38,6 +38,120 @@ class ProjectNotification extends Notification implements ShouldQueue
     }
 
     /**
+     * Determine if the notification should be sent.
+     * Prevents stale queued timeline and hosting notifications from being delivered late.
+     */
+    public function shouldSend(object $notifiable, string $channel): bool
+    {
+        if ($this->logId === null) {
+            return true;
+        }
+
+        $log = ProjectNotificationLog::find($this->logId);
+        if (!$log) {
+            return false;
+        }
+
+        $todayStr = Carbon::today(config('app.timezone'))->toDateString();
+
+        // 1. Freshness check for timeline notifications
+        if ($log->link_type === \App\Models\ProjectTimeline::class) {
+            // Verify that the timeline exists
+            $timeline = \App\Models\ProjectTimeline::find($log->link_id);
+            if (!$timeline) {
+                if ($log->status !== ProjectNotificationLog::STATUS_FAILED && $log->status !== ProjectNotificationLog::STATUS_SENT) {
+                    $log->update(['status' => ProjectNotificationLog::STATUS_FAILED]);
+                }
+                return false;
+            }
+
+            $scheduledDateStr = $log->scheduled_for
+                ? Carbon::parse($log->scheduled_for, config('app.timezone'))->toDateString()
+                : null;
+
+            // If scheduled date is not today in app timezone, notification is stale
+            if ($scheduledDateStr !== $todayStr) {
+                if ($log->status !== ProjectNotificationLog::STATUS_FAILED && $log->status !== ProjectNotificationLog::STATUS_SENT) {
+                    $log->update([
+                        'status' => ProjectNotificationLog::STATUS_FAILED,
+                    ]);
+                }
+
+                return false;
+            }
+        }
+
+        // 2. Freshness and validity check for hosting notifications
+        if ($log->link_type === \App\Models\ProjectHostingRecord::class) {
+            $hostingRecord = \App\Models\ProjectHostingRecord::with('hostingServiceStatus')->find($log->link_id);
+            if (!$hostingRecord) {
+                if ($log->status !== ProjectNotificationLog::STATUS_FAILED && $log->status !== ProjectNotificationLog::STATUS_SENT) {
+                    $log->update(['status' => ProjectNotificationLog::STATUS_FAILED]);
+                }
+                return false;
+            }
+
+            // Exclude cancelled or terminated hosting records
+            if ($hostingRecord->hostingServiceStatus && in_array($hostingRecord->hostingServiceStatus->code, ['cancelled', 'terminated'])) {
+                if ($log->status !== ProjectNotificationLog::STATUS_FAILED && $log->status !== ProjectNotificationLog::STATUS_SENT) {
+                    $log->update(['status' => ProjectNotificationLog::STATUS_FAILED]);
+                }
+                return false;
+            }
+
+            $scheduledDateStr = $log->scheduled_for
+                ? Carbon::parse($log->scheduled_for, config('app.timezone'))->toDateString()
+                : null;
+
+            // If scheduled date is not today in app timezone, notification is stale
+            if ($scheduledDateStr !== $todayStr) {
+                if ($log->status !== ProjectNotificationLog::STATUS_FAILED && $log->status !== ProjectNotificationLog::STATUS_SENT) {
+                    $log->update([
+                        'status' => ProjectNotificationLog::STATUS_FAILED,
+                    ]);
+                }
+                return false;
+            }
+
+            // Check if record has valid expiry date
+            $expiryDate = $hostingRecord->expiry_date
+                ? Carbon::parse($hostingRecord->expiry_date, config('app.timezone'))->startOfDay()
+                : null;
+
+            if (!$expiryDate) {
+                if ($log->status !== ProjectNotificationLog::STATUS_FAILED && $log->status !== ProjectNotificationLog::STATUS_SENT) {
+                    $log->update(['status' => ProjectNotificationLog::STATUS_FAILED]);
+                }
+                return false;
+            }
+
+            // Verify that occasion is still valid for current expiry date (e.g. not renewed in the meantime)
+            $occasion = $log->reminder_occasion;
+            $isOccasionValid = false;
+
+            if ($occasion === 'on_expiry_date') {
+                $isOccasionValid = ($expiryDate->toDateString() === $todayStr);
+            } elseif ($occasion === '1_day_after') {
+                $isOccasionValid = ($expiryDate->copy()->addDays(1)->toDateString() === $todayStr);
+            } elseif (str_starts_with((string) $occasion, 'days_before_')) {
+                $days = (int) substr($occasion, strlen('days_before_'));
+                $isOccasionValid = ($expiryDate->copy()->subDays($days)->toDateString() === $todayStr);
+            } elseif ($occasion === '1_day_before') {
+                $isOccasionValid = ($expiryDate->copy()->subDays(1)->toDateString() === $todayStr);
+            }
+
+            if (!$isOccasionValid) {
+                if ($log->status !== ProjectNotificationLog::STATUS_FAILED && $log->status !== ProjectNotificationLog::STATUS_SENT) {
+                    $log->update(['status' => ProjectNotificationLog::STATUS_FAILED]);
+                }
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Get the notification's delivery channels.
      *
      * @return array<int, string>

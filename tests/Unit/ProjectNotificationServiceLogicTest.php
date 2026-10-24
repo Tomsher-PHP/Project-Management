@@ -5,8 +5,8 @@ namespace Tests\Unit;
 use App\Models\ProjectHostingRecord;
 use App\Models\ProjectTimeline;
 use App\Services\ProjectNotificationService;
-use Carbon\Carbon;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
 
 class ProjectNotificationServiceLogicTest extends TestCase
 {
