@@ -18,11 +18,11 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
+use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
 use App\Models\ServiceType;
-use App\Models\Technology;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
@@ -208,6 +208,8 @@ class ProjectController extends Controller
             'checklists',
             'meetings',
             'history',
+            'hosting',
+            'timelines',
             'settings',
             'payments'
         ];
@@ -464,6 +466,8 @@ class ProjectController extends Controller
             'notes' => $this->renderNotesTab($project, $request),
             'meetings' => $this->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
+            'hosting' => app(\App\Http\Controllers\ProjectHostingController::class)->renderHostingTab($project),
+            'timelines' => $this->renderTimelinesTab($project),
             'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
@@ -514,7 +518,7 @@ class ProjectController extends Controller
 
         $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
         $agileSprints = AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get();
-        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function($q) {
+        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function ($q) {
             $q->active()->orderBy('sort_order', 'asc');
         }])->orderBy('sort_order', 'asc')->get();
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
@@ -768,13 +772,13 @@ class ProjectController extends Controller
 
         // Project Tracking
         $projectTrackings = $project->trackings()
-        ->with([
-            'attachments',
-            'attachments.addedBy:id,name',
-        ])
-        ->latest('date')
-        ->latest('id')
-        ->get();
+            ->with([
+                'attachments',
+                'attachments.addedBy:id,name',
+            ])
+            ->latest('date')
+            ->latest('id')
+            ->get();
 
         $currentStatus = [
             'label' => $project->projectStatus?->name ?? 'No Status',
@@ -820,9 +824,45 @@ class ProjectController extends Controller
         ))->render();
     }
 
+    private function renderTimelinesTab(Project $project): string
+    {
+        return view('projects.partials.tabs.timelines', compact('project'))->render();
+    }
+
     private function renderSettingsTab(Project $project): string
     {
-        return view('projects.partials.tabs.settings', compact('project'))->render();
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $preferences = $project->notificationPreferences()
+            ->get()
+            ->keyBy('notification_type');
+
+        return view('projects.partials.tabs.settings', compact('project', 'notificationTypes', 'preferences'))->render();
+    }
+
+    public function updateNotificationSettings(Request $request, Project $project): JsonResponse
+    {
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $notifications = $request->input('notifications', []);
+
+        foreach ($notificationTypes as $typeKey => $label) {
+            $isEnabled = filter_var($notifications[$typeKey] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+            ProjectNotificationPreference::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'notification_type' => $typeKey,
+                ],
+                [
+                    'is_enabled' => $isEnabled,
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification settings updated successfully.',
+            'notifications' => $project->notificationPreferences()->pluck('is_enabled', 'notification_type'),
+        ], Response::HTTP_OK);
     }
 
     private function applyProjectChangeDateValidation($validator, ?string $changeDate, ?Carbon $minimumDate): void

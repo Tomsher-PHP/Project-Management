@@ -495,6 +495,116 @@ class ProjectAnalyticsController extends Controller
     }
 
     /**
+     * Server & Hosting expiring in 45 days overview list.
+     */
+    public function expiringHosting(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+        $days = $request->integer('days') ?: 45;
+
+        $data = $analyticsService->getExpiringHostingRecords(
+            $request->user(),
+            $selectedUser,
+            $project?->id,
+            $days
+        );
+
+        $data['html'] = view('project-analytics.partials.render.expiring-hosting', [
+            'records' => $data['records'] ?? [],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Server & Hosting expired records overview list.
+     */
+    public function expiredHosting(Request $request, ProjectAnalyticsService $analyticsService): JsonResponse
+    {
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+
+        $data = $analyticsService->getExpiredHostingRecords(
+            $request->user(),
+            $selectedUser,
+            $project?->id
+        );
+
+        $data['html'] = view('project-analytics.partials.render.expired-hosting', [
+            'records' => $data['records'] ?? [],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Hosting records overview list for a single project.
+     */
+    public function projectHosting(Request $request): JsonResponse
+    {
+        $authUser = $request->user();
+        if (! $authUser->can('project_hosting.view')) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'can_view' => false,
+                    'html' => '',
+                    'count' => 0,
+                    'summary' => [],
+                ],
+            ]);
+        }
+
+        $resolved = $this->resolveFilters($request);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        [$selectedUser, $project] = $resolved;
+
+        if (! $project) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'can_view' => true,
+                    'html' => '',
+                    'count' => 0,
+                    'summary' => [],
+                ],
+            ]);
+        }
+
+        $projectHostingController = app(ProjectHostingController::class);
+        $hostingResponse = $projectHostingController->index($request, $project);
+        $responseData = $hostingResponse->getData(true);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'can_view' => true,
+                'html' => $responseData['html'] ?? '',
+                'count' => $responseData['count'] ?? 0,
+                'summary' => $responseData['summary'] ?? [],
+            ],
+        ]);
+    }
+
+    /**
      * Child projects overview list for a given parent project, rendered as HTML partial.
      */
     public function childProjectsOverview(Project $project, Request $request, ProjectAnalyticsService $analyticsService): JsonResponse

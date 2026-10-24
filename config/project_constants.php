@@ -126,4 +126,9 @@ return [
         'extension' => 'Extension',
         'new' => 'New'
     ],
+
+    'project_notification_types' => [
+        'timeline_ending_soon' => 'Timeline Ending Soon',
+        'hosting_ending_soon' => 'Server & Hosting Expiry',
+    ]
 ];

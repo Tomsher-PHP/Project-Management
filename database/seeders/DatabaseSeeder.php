@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -50,6 +49,13 @@ class DatabaseSeeder extends Seeder
             KpiSeeder::class,
             HandoffPurposesSeeder::class,
 
+            // Hosting related seeders
+            HostingProviderSeeder::class,
+            HostingServiceSeeder::class,
+            HostingServiceStatusSeeder::class,
+            HostingBillingCycleSeeder::class,
+            HostingEnvironmentSeeder::class,
+
             // Appraisal related seeders
             AppraisalQuestionUnitSeeder::class,
 
@@ -60,6 +66,9 @@ class DatabaseSeeder extends Seeder
             // Country related seeders
             CountrySeeder::class,
             LeaveTypeSeeder::class,
+
+            // Notification related seeders
+            ProjectNotificationDefaultSeeder::class,
         ]);
     }
 }

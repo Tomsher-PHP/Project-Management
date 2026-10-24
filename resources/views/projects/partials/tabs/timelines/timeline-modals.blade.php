@@ -9,8 +9,8 @@
     <div>
         <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Type <x-red-star /></label>
         <select name="type" required class="tom-select-no-search w-full">
-            @foreach(config('project_constants.project_timeline_types') as $key => $label)
-                @if($key !== 'original')
+            @foreach (config('project_constants.project_timeline_types') as $key => $label)
+                @if ($key !== 'original')
                     <option value="{{ $key }}" {{ $key === \App\Models\ProjectTimeline::DEFAULT_TYPE ? 'selected' : '' }}>{{ $label }}</option>
                 @endif
             @endforeach
@@ -20,9 +20,7 @@
     <!-- Dates (3 columns) -->
     @php
         $latestTimeline = $project->projectTimelines->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)->sortByDesc('end_date')->first();
-        $suggestedStartDate = $latestTimeline && $latestTimeline->end_date 
-            ? \Carbon\Carbon::parse($latestTimeline->end_date)->addDay()->format('Y-m-d')
-            : ($project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('Y-m-d') : now()->format('Y-m-d'));
+        $suggestedStartDate = $latestTimeline && $latestTimeline->end_date ? \Carbon\Carbon::parse($latestTimeline->end_date)->addDay()->format('Y-m-d') : ($project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('Y-m-d') : now()->format('Y-m-d'));
         $suggestedEndDate = \Carbon\Carbon::parse($suggestedStartDate)->addDays(30)->format('Y-m-d');
         $minDate = $latestTimeline && $latestTimeline->end_date ? \Carbon\Carbon::parse($latestTimeline->end_date)->addDay()->format('Y-m-d') : '';
     @endphp
@@ -72,7 +70,7 @@
     <div>
         <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Type <x-red-star /></label>
         <select name="type" id="edit_timeline_type" required class="tom-select-no-search w-full">
-            @foreach(config('project_constants.project_timeline_types') as $key => $label)
+            @foreach (config('project_constants.project_timeline_types') as $key => $label)
                 <option value="{{ $key }}">{{ $label }}</option>
             @endforeach
         </select>
@@ -114,4 +112,3 @@
         <textarea name="notes" id="edit_timeline_notes" rows="3" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400"></textarea>
     </div>
 </x-form-modal>
-

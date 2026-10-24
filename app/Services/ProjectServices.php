@@ -8,6 +8,8 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
+use App\Models\ProjectNotificationDefault;
+use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStage;
 use App\Models\ProjectStageHistory;
@@ -19,7 +21,6 @@ use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
 use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
-use App\Models\User;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -118,6 +119,9 @@ class ProjectServices
                 'sort_order' => 1,
                 'created_by' => auth()->id(),
             ]);
+
+            // Default Project Notification Preferences
+            $this->getNotificationDefaultsForProject($project);
 
             return $project;
         });
@@ -650,7 +654,7 @@ class ProjectServices
 
         return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId) {
             $movingTasks = $this->collectTaskTree($task);
-            
+
             $targetTimelineId = $targetProject->display_timeline?->id;
 
             foreach ($movingTasks as $t) {
@@ -857,7 +861,7 @@ class ProjectServices
             });
     }
 
-    private function buildTimeline($startDate, $targetDate): array
+    private function buildTimeline(?Carbon $startDate, ?Carbon $targetDate): array
     {
         $dateFormat = config('constants.date_format');
         $today = now(config('constants.timezone'))->startOfDay();
@@ -1019,5 +1023,39 @@ class ProjectServices
             'pending_requests_count' => $project->tasks()->where('request_status', 'pending')->count(),
             'scope_files_count' => $project->attachments()->where('category', 'scope_files')->count(),
         ];
+    }
+
+    /**
+     * Get default notification preferences for a project.
+     * 
+     * @param  Project  $project
+     */
+    public function getNotificationDefaultsForProject(Project $project): void
+    {
+        $notifications = config('project_constants.project_notification_types', []);
+
+        foreach ($notifications as $key => $value) {
+            // Find a default matching the project's flow first.
+            $default = ProjectNotificationDefault::query()
+                ->where('setting_key', $key)
+                ->whereJsonContains('conditions->project_flow', $project->project_flow)
+                ->first();
+
+            // If no flow-specific default exists, use the general default (conditions = []).
+            if (!$default) {
+                $default = ProjectNotificationDefault::query()
+                    ->where('setting_key', $key)
+                    ->first();
+            }
+
+            // Use false only when no matching default exists.
+            $isEnabled = data_get($default?->setting_value, 'is_enabled', false);
+
+            ProjectNotificationPreference::create([
+                'project_id' => $project->id,
+                'notification_type' => $key,
+                'is_enabled' => $isEnabled,
+            ]);
+        }
     }
 }

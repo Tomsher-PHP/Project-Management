@@ -75,6 +75,7 @@ return [
         'technology.view',
         'industry.view',
         'project_settings.view',
+        'server_hosting.view',
         'task_settings.view',
         'kpi.view',
         'checklist_template.view',

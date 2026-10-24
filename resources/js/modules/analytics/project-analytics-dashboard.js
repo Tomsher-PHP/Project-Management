@@ -661,6 +661,110 @@ export async function toggleChildProjects(targetId, explicitDepth = null) {
 }
 
 /**
+ * Load Server & Hosting Expire Soon table data.
+ */
+export async function loadExpiringHosting(filters = getActiveFilters()) {
+    const card = document.querySelector('[data-project-analytics-section="expiring-hosting"]');
+    if (!card) return;
+    const url = card.dataset.url;
+    if (!url) return;
+
+    const loadingState = card.querySelector('[data-loading-state]');
+    const emptyState = card.querySelector('[data-empty-state]');
+    const content = card.querySelector('[data-content]');
+    const tbody = card.querySelector('[data-expiring-hosting-table-body]');
+    const totalCountEl = card.querySelector('[data-expiring-hosting-total-count]');
+    const emptyTitle = card.querySelector('[data-empty-title]');
+    const emptySubtitle = card.querySelector('[data-empty-subtitle]');
+
+    if (loadingState) loadingState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+
+    try {
+        const data = await fetchAnalyticsData(url, filters);
+        const canView = data.can_view !== false;
+        const records = data.records || [];
+
+        if (loadingState) loadingState.classList.add('hidden');
+
+        if (!canView || records.length === 0) {
+            // Do not show the box if no data or no access
+            card.classList.add('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+            if (content) content.classList.add('hidden');
+            if (totalCountEl) totalCountEl.innerText = '0';
+            return;
+        }
+
+        card.classList.remove('hidden');
+        if (totalCountEl) totalCountEl.innerText = records.length.toLocaleString();
+        if (emptyState) emptyState.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
+        if (tbody) {
+            tbody.innerHTML = data.html || '';
+        }
+    } catch (err) {
+        console.warn('Failed to load expiring hosting records:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        card.classList.add('hidden');
+    }
+}
+
+/**
+ * Load Server & Hosting Expired table data.
+ */
+export async function loadExpiredHosting(filters = getActiveFilters()) {
+    const card = document.querySelector('[data-project-analytics-section="expired-hosting"]');
+    if (!card) return;
+    const url = card.dataset.url;
+    if (!url) return;
+
+    const loadingState = card.querySelector('[data-loading-state]');
+    const emptyState = card.querySelector('[data-empty-state]');
+    const content = card.querySelector('[data-content]');
+    const tbody = card.querySelector('[data-expired-hosting-table-body]');
+    const totalCountEl = card.querySelector('[data-expired-hosting-total-count]');
+    const emptyTitle = card.querySelector('[data-empty-title]');
+    const emptySubtitle = card.querySelector('[data-empty-subtitle]');
+
+    if (loadingState) loadingState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+
+    try {
+        const data = await fetchAnalyticsData(url, filters);
+        const canView = data.can_view !== false;
+        const records = data.records || [];
+
+        if (loadingState) loadingState.classList.add('hidden');
+
+        if (!canView || records.length === 0) {
+            // Do not show the box if no data or no access
+            card.classList.add('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+            if (content) content.classList.add('hidden');
+            if (totalCountEl) totalCountEl.innerText = '0';
+            return;
+        }
+
+        card.classList.remove('hidden');
+        if (totalCountEl) totalCountEl.innerText = records.length.toLocaleString();
+        if (emptyState) emptyState.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
+        if (tbody) {
+            tbody.innerHTML = data.html || '';
+        }
+    } catch (err) {
+        console.warn('Failed to load expired hosting records:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        card.classList.add('hidden');
+    }
+}
+
+/**
  * Load all Overall Dashboard sections.
  */
 export function loadAllOverallDashboardSections(filters = getActiveFilters()) {
@@ -670,6 +774,8 @@ export function loadAllOverallDashboardSections(filters = getActiveFilters()) {
     loadProjectsByStatus(filters);
     loadProjectsByStage(filters);
     loadUpcomingTimelines(filters);
+    loadExpiringHosting(filters);
+    loadExpiredHosting(filters);
     loadParentProjectsOverview(filters);
 }
 
@@ -1170,6 +1276,67 @@ export async function loadSingleProjectOverview(filters = getActiveFilters()) {
     }
 }
 
+/**
+ * Load Server & Hosting records for a single project.
+ */
+export async function loadSingleProjectHosting(filters = getActiveFilters()) {
+    const card = document.querySelector('[data-single-project-hosting-section]');
+    if (!card) return;
+
+    if (!filters.projectId) {
+        card.classList.add('hidden');
+        return;
+    }
+
+    const url = card.dataset.url || '/project-analytics/project-hosting';
+    const loadingState = card.querySelector('[data-loading-state]');
+    const emptyState = card.querySelector('[data-empty-state]');
+    const content = card.querySelector('[data-content], [data-single-project-hosting-content]');
+    const countBadge = card.querySelector('[data-single-project-hosting-count]');
+
+    // Show card and loading skeleton
+    card.classList.remove('hidden');
+    if (loadingState) loadingState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+
+    try {
+        const res = await fetchAnalyticsData(url, filters);
+        const data = res?.data !== undefined ? res.data : (res || {});
+        const canView = data.can_view !== false;
+        const count = Number(data.count) || 0;
+
+        if (loadingState) loadingState.classList.add('hidden');
+
+        if (!canView) {
+            card.classList.add('hidden');
+            return;
+        }
+
+        if (countBadge) {
+            countBadge.innerText = count.toLocaleString();
+        }
+
+        if (content && data.html) {
+            content.innerHTML = data.html;
+
+            // Remove Action column in single project analytics page
+            // content.querySelectorAll('table thead tr th:last-child').forEach(th => th.remove());
+            // content.querySelectorAll('table tbody tr td:last-child').forEach(td => td.remove());
+
+            content.classList.remove('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+        } else {
+            if (content) content.classList.add('hidden');
+            if (emptyState) emptyState.classList.remove('hidden');
+        }
+    } catch (err) {
+        console.warn('Failed to load single project hosting records:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        card.classList.add('hidden');
+    }
+}
+
 /* ==========================================================================
    DASHBOARD MODE SWITCHER & COORDINATION
    ========================================================================== */
@@ -1202,10 +1369,17 @@ export function switchDashboardMode(filters = getActiveFilters()) {
         loadSingleProjectDetails(filters);
         loadSingleProjectOverview(filters);
         loadSingleProjectTaskStatusChart(filters);
+        loadSingleProjectHosting(filters);
     } else {
         // --- Overall Dashboard Mode ---
         singleProjectView.classList.add('hidden');
         overallView.classList.remove('hidden');
+
+        // Hide single project hosting section if still visible
+        const singleProjectHostingCard = document.querySelector('[data-single-project-hosting-section]');
+        if (singleProjectHostingCard) {
+            singleProjectHostingCard.classList.add('hidden');
+        }
 
         // Destroy single project charts
         destroyChart('singleProjectTaskStatusChart');

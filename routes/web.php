@@ -22,6 +22,8 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\HostingProviderController;
+use App\Http\Controllers\HostingServiceController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\LeaveCancellationRequestController;
@@ -34,6 +36,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
+use App\Http\Controllers\ProjectHostingController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
@@ -52,6 +55,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\ScheduleTaskController;
+use App\Http\Controllers\ServerHostingNotificationSettingController;
 use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
@@ -127,6 +131,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/chart/task-priority', [ProjectAnalyticsController::class, 'taskPriorityChart'])->name('project.analytics.chart.task-priority');
         Route::get('/parent-projects', [ProjectAnalyticsController::class, 'parentProjectsOverview'])->name('project.analytics.parent-projects');
         Route::get('/parent-projects/{project}/children', [ProjectAnalyticsController::class, 'childProjectsOverview'])->name('project.analytics.parent-projects.children');
+        Route::get('/expiring-hosting', [ProjectAnalyticsController::class, 'expiringHosting'])->name('project.analytics.expiring-hosting');
+        Route::get('/expired-hosting', [ProjectAnalyticsController::class, 'expiredHosting'])->name('project.analytics.expired-hosting');
+        Route::get('/project-hosting', [ProjectAnalyticsController::class, 'projectHosting'])->name('project.analytics.project-hosting');
     });
 
     // Role & Permission Routes
@@ -250,6 +257,24 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('project-notifications', ProjectNotificationSettingController::class)->middleware('permission.type:project_settings.view')->only(['index']);
         Route::post('project-notifications', [ProjectNotificationSettingController::class, 'store'])->middleware('permission.type:project_settings.create')->name('project-notifications.store');
         Route::put('project-notifications/{project_notification}', [ProjectNotificationSettingController::class, 'update'])->middleware('permission.type:project_settings.edit')->name('project-notifications.update');
+
+        // Server & Hosting Routes
+        Route::patch('/hosting-providers/toggle-status', [HostingProviderController::class, 'toggleStatus'])->middleware('permission.type:server_hosting.edit')->name('hosting-providers.toggleStatus');
+        Route::resource('hosting-providers', HostingProviderController::class)->middleware('permission.type:server_hosting.view')->only(['index']);
+        Route::resource('hosting-providers', HostingProviderController::class)->middleware('permission.type:server_hosting.create')->only(['store']);
+        Route::resource('hosting-providers', HostingProviderController::class)->middleware('permission.type:server_hosting.edit')->only(['update']);
+        Route::resource('hosting-providers', HostingProviderController::class)->middleware('permission.type:server_hosting.delete')->only(['destroy']);
+
+        Route::patch('/hosting-services/toggle-status', [HostingServiceController::class, 'toggleStatus'])->middleware('permission.type:server_hosting.edit')->name('hosting-services.toggleStatus');
+        Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.view')->only(['index']);
+        Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.create')->only(['store']);
+        Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.edit')->only(['update']);
+        Route::resource('hosting-services', HostingServiceController::class)->middleware('permission.type:server_hosting.delete')->only(['destroy']);
+
+        // Server & Hosting Notifications Routes
+        Route::resource('server-hosting-notifications', ServerHostingNotificationSettingController::class)->middleware('permission.type:server_hosting.view')->only(['index']);
+        Route::post('server-hosting-notifications', [ServerHostingNotificationSettingController::class, 'store'])->middleware('permission.type:server_hosting.create')->name('server-hosting-notifications.store');
+        Route::put('server-hosting-notifications/{server_hosting_notification}', [ServerHostingNotificationSettingController::class, 'update'])->middleware('permission.type:server_hosting.edit')->name('server-hosting-notifications.update');
 
         // Task settings routes
         Route::patch('/task-statuses/toggle-status', [TaskSettingsController::class, 'toggleStatusTaskStatus'])->middleware('permission.type:task_settings.edit')->name('task_status.toggleStatus');
@@ -393,6 +418,7 @@ Route::middleware(['auth'])->group(function () {
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
         Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
+        Route::put('settings/notifications', [ProjectController::class, 'updateNotificationSettings'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.settings.notifications.update');
         Route::get('delete-summary', [ProjectController::class, 'deleteSummary'])->middleware(['permission.type:project.delete', 'can:delete,project'])->name('projects.delete-summary');
 
         // Project Timeline routes
@@ -456,6 +482,17 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('trackings/{projectTracking}', [ProjectTrackingController::class, 'destroy'])->middleware(['permission.type:project_tracking.delete', 'can:update,project'])->name('projects.trackings.destroy');
         Route::post('trackings/bulk-export', [ProjectTrackingController::class, 'bulkExport'])->name('projects.trackings.bulk-export');
         Route::get('trackings/attachments/{attachment}/download', [ProjectTrackingController::class, 'downloadAttachment'])->name('projects.trackings.attachments.download');
+
+        // Project Hosting routes
+        Route::get('hosting', [ProjectHostingController::class, 'index'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.index');
+        Route::post('hosting', [ProjectHostingController::class, 'store'])->middleware(['permission.type:project_hosting.create', 'can:update,project'])->name('projects.hosting.store');
+        Route::get('hosting/{hostingRecord}', [ProjectHostingController::class, 'show'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.show');
+        Route::put('hosting/{hostingRecord}', [ProjectHostingController::class, 'update'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.update');
+        Route::patch('hosting/{hostingRecord}/status', [ProjectHostingController::class, 'updateStatus'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.status');
+        Route::post('hosting/{hostingRecord}/renew', [ProjectHostingController::class, 'renew'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.renew');
+        Route::get('hosting/{hostingRecord}/renewal-history', [ProjectHostingController::class, 'renewalHistory'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.renewal-history');
+        Route::get('hosting/{hostingRecord}/status-history', [ProjectHostingController::class, 'statusHistory'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.status-history');
+        Route::delete('hosting/{hostingRecord}', [ProjectHostingController::class, 'destroy'])->middleware(['permission.type:project_hosting.delete', 'can:update,project'])->name('projects.hosting.destroy');
     });
 
     // Project task routes

@@ -45,11 +45,11 @@
                                         {{ $entry['timeline_name'] }}
                                     </span>
 
-                                    <span class="inline-flex items-center gap-2 rounded-full bg-bgray-50 px-3 py-1 text-xs font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">
+                                    <span class="inline-flex items-center gap-2 rounded-full bg-bgray-50 px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                         {{ $entry['from_label'] }}
                                     </span>
 
-                                    <span class="text-bgray-600 dark:text-bgray-300">
+                                    <span class="text-bgray-700 dark:text-bgray-300">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h9.586L11.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 1.414L13.586 11H4a1 1 0 01-1-1z" clip-rule="evenodd" />
                                         </svg>

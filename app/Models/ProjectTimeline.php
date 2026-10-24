@@ -65,4 +65,9 @@ class ProjectTimeline extends Model
     {
         return $this->hasMany(ProjectTimelineStatusHistory::class);
     }
+
+    public function notificationLogs()
+    {
+        return $this->morphMany(ProjectNotificationLog::class, 'link');
+    }
 }

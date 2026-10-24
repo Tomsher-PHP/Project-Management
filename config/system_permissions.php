@@ -71,6 +71,12 @@ return [
     ['name' => 'project_tracking.delete',  'label' => 'Project Tracking', 'sort_order' => 6260, 'default_checked' => false],
     ['name' => 'project_tracking.export',  'label' => 'Project Tracking', 'sort_order' => 6280, 'default_checked' => false],
 
+    // PROJECT HOSTING
+    ['name' => 'project_hosting.view',    'label' => 'Project Hosting', 'sort_order' => 6300, 'default_checked' => false],
+    ['name' => 'project_hosting.create',  'label' => 'Project Hosting', 'sort_order' => 6320, 'default_checked' => false],
+    ['name' => 'project_hosting.edit',    'label' => 'Project Hosting', 'sort_order' => 6340, 'default_checked' => false],
+    ['name' => 'project_hosting.delete',  'label' => 'Project Hosting', 'sort_order' => 6360, 'default_checked' => false],
+
     // TASK
     ['name' => 'task.view_all_tasks',     'label' => 'Task', 'sort_order' => 7000, 'default_checked' => false],
     ['name' => 'task.view',               'label' => 'Task', 'sort_order' => 7020, 'default_checked' => true],
@@ -302,6 +308,12 @@ return [
     ['name' => 'company_expenses.create', 'label' => 'Settings - Company Expenses', 'sort_order' => 69020, 'default_checked' => false],
     ['name' => 'company_expenses.edit',   'label' => 'Settings - Company Expenses', 'sort_order' => 69040, 'default_checked' => false],
     ['name' => 'company_expenses.delete', 'label' => 'Settings - Company Expenses', 'sort_order' => 69060, 'default_checked' => false],
+
+    // Server & Hosting
+    ['name' => 'server_hosting.view',   'label' => 'Settings - Server & Hosting', 'sort_order' => 69100, 'default_checked' => false],
+    ['name' => 'server_hosting.create', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69120, 'default_checked' => false],
+    ['name' => 'server_hosting.edit',   'label' => 'Settings - Server & Hosting', 'sort_order' => 69140, 'default_checked' => false],
+    ['name' => 'server_hosting.delete', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69160, 'default_checked' => false],
 
     // ---------------------------------------------------------------------------------------------------------------------------------
     // CONFIGURATION  -- Last Settings Module
