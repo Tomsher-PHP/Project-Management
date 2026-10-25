@@ -227,6 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
         isKanbanLoading = true;
         container.dataset.loading = 'true';
         toggleLoading(container, true);
+        toggleRefreshButtonsLoading(true);
 
         return fetch(buildKanbanUrl({ flow }), {
             signal: activeBoardAbortController.signal,
@@ -266,6 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     isKanbanLoading = false;
                     container.dataset.loading = 'false';
                     toggleLoading(container, false);
+                    toggleRefreshButtonsLoading(false);
                 }
             });
     };
@@ -355,6 +357,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const toggleLoading = (el, state) => {
         el.classList.toggle('opacity-50', state);
+    };
+
+    const toggleRefreshButtonsLoading = (state) => {
+        document.querySelectorAll('[data-workspace-kanban-refresh], [data-kanban-refresh]').forEach((button) => {
+            button.disabled = state;
+            button.setAttribute('aria-busy', state ? 'true' : 'false');
+            const icon = button.querySelector('[data-refresh-icon], svg');
+            icon?.classList.toggle('animate-spin', state);
+        });
     };
 
     const setDragState = (state) => {
@@ -611,6 +622,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.addEventListener('click', (event) => {
+        const refreshBtn = event.target.closest('[data-workspace-kanban-refresh], [data-kanban-refresh]');
+
+        if (refreshBtn) {
+            if (event.defaultPrevented || isKanbanLoading || isDragInProgress) {
+                return;
+            }
+
+            event.preventDefault();
+            loadKanban(currentFlow);
+            return;
+        }
+
         const trigger = event.target.closest('[data-kanban-sort-trigger]');
 
         if (trigger) {
