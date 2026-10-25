@@ -190,6 +190,7 @@ class ProjectTaskController extends Controller
         abort_if($approveMode && ! $canApproveRequest, Response::HTTP_FORBIDDEN);
 
         $task->load([
+            'projectTimeline:id,name',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'parentTask:id,name',
