@@ -966,11 +966,16 @@ const prepareTaskMoveModal = (root, triggerButton) => {
     form.setAttribute('action', triggerButton.dataset.projectTaskMoveUrl || '');
 
     const taskNameNode = modal.querySelector('[data-project-task-move-task-name]');
+    const taskCodeNode = modal.querySelector('[data-project-task-move-task-code]');
     const currentSprintNode = modal.querySelector('[data-project-task-move-current-sprint]');
     const toggleCheckbox = form.querySelector('[data-project-task-move-another-project-toggle]');
 
     if (taskNameNode) {
-        taskNameNode.textContent = triggerButton.dataset.projectTaskName || 'this task';
+        taskNameNode.textContent = triggerButton.dataset.projectTaskName || '--';
+    }
+
+    if (taskCodeNode) {
+        taskCodeNode.textContent = triggerButton.dataset.projectTaskCode || '--';
     }
 
     if (currentSprintNode) {

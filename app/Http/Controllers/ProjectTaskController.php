@@ -190,6 +190,7 @@ class ProjectTaskController extends Controller
         abort_if($approveMode && ! $canApproveRequest, Response::HTTP_FORBIDDEN);
 
         $task->load([
+            'projectTimeline:id,name',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'parentTask:id,name',
@@ -663,9 +664,14 @@ class ProjectTaskController extends Controller
             ->where('project_id', $project->id)
             ->accessibleBy(auth()->user());
         $taskCount = (clone $allTasks)->count();
-        $estimatedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
-        $derivedSeconds = (int) (clone $allTasks)->sum('derived_time_seconds');
+        $derivedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
         $actualSeconds = (int) (clone $allTasks)->sum('actual_time_seconds');
+
+        $displayTimeline = $project->display_timeline;
+        $timelineEstimate = $displayTimeline?->estimated_time_seconds;
+        $hasEstimate = $displayTimeline !== null && $timelineEstimate !== null && (int) $timelineEstimate > 0;
+        $estimatedSeconds = $timelineEstimate !== null ? (int) $timelineEstimate : null;
+        $derivedColorClass = $this->resolveDerivedColorClass($estimatedSeconds, $derivedSeconds, $hasEstimate);
 
         return [
             'key' => 'all-tasks',
@@ -675,11 +681,13 @@ class ProjectTaskController extends Controller
             'accent_color' => '#3B82F6',
             'task_count' => $taskCount,
             'estimated_seconds' => $estimatedSeconds,
-            'estimated_label' => $this->formatSecondsShort($estimatedSeconds),
+            'estimated_label' => $this->formatSecondsShort((int) ($estimatedSeconds ?? 0)),
             'derived_seconds' => $derivedSeconds,
             'derived_label' => $this->formatSecondsShort($derivedSeconds),
             'actual_seconds' => $actualSeconds,
             'actual_label' => $this->formatSecondsShort($actualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
             'date_label' => null,
             'created_label' => null,
             'is_latest' => true,
@@ -690,9 +698,13 @@ class ProjectTaskController extends Controller
 
     private function mapProjectSprintToTaskGroup(ProjectSprint $projectSprint, int $index): array
     {
-        $sprintEstimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
+        $sprintEstimatedSeconds = $projectSprint->estimated_time_seconds !== null
+            ? (int) $projectSprint->estimated_time_seconds
+            : null;
         $sprintDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
         $sprintActualSeconds = (int) ($projectSprint->actual_time_seconds ?? 0);
+        $hasEstimate = $sprintEstimatedSeconds !== null && $sprintEstimatedSeconds > 0;
+        $derivedColorClass = $this->resolveDerivedColorClass($sprintEstimatedSeconds, $sprintDerivedSeconds, $hasEstimate);
 
         return [
             'key' => 'sprint-' . $projectSprint->id,
@@ -702,11 +714,13 @@ class ProjectTaskController extends Controller
             'accent_color' => $projectSprint->color ?: '#D1D5DB',
             'task_count' => (int) $projectSprint->tasks_count,
             'estimated_seconds' => $sprintEstimatedSeconds,
-            'estimated_label' => $this->formatSecondsShort($sprintEstimatedSeconds),
+            'estimated_label' => $this->formatSecondsShort((int) ($sprintEstimatedSeconds ?? 0)),
             'derived_seconds' => $sprintDerivedSeconds,
             'derived_label' => $this->formatSecondsShort($sprintDerivedSeconds),
             'actual_seconds' => $sprintActualSeconds,
             'actual_label' => $this->formatSecondsShort($sprintActualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
             'date_label' => $this->formatDateRange($projectSprint->start_date, $projectSprint->end_date),
             'created_label' => $projectSprint->created_at
                 ? AppServiceProvider::formatAppDate($projectSprint->created_at)
@@ -722,6 +736,8 @@ class ProjectTaskController extends Controller
         $ungroupedEstimatedSeconds = (int) (clone $ungroupedTasks)->sum('estimated_time_seconds');
         $ungroupedDerivedSeconds = (int) (clone $ungroupedTasks)->sum('derived_time_seconds');
         $ungroupedActualSeconds = (int) (clone $ungroupedTasks)->sum('actual_time_seconds');
+        $hasEstimate = $ungroupedEstimatedSeconds > 0;
+        $derivedColorClass = $this->resolveDerivedColorClass($ungroupedEstimatedSeconds, $ungroupedDerivedSeconds, $hasEstimate);
 
         return [
             'key' => 'ungrouped',
@@ -736,12 +752,25 @@ class ProjectTaskController extends Controller
             'derived_label' => $this->formatSecondsShort($ungroupedDerivedSeconds),
             'actual_seconds' => $ungroupedActualSeconds,
             'actual_label' => $this->formatSecondsShort($ungroupedActualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
             'date_label' => 'No sprint dates',
             'created_label' => null,
             'is_latest' => $isLatest,
             'is_unscheduled' => true,
             'is_linear_group' => false,
         ];
+    }
+
+    private function resolveDerivedColorClass(?int $estimatedSeconds, int $derivedSeconds, bool $hasEstimate): string
+    {
+        if (! $hasEstimate || $estimatedSeconds === null || $estimatedSeconds <= 0) {
+            return '';
+        }
+
+        return $derivedSeconds > $estimatedSeconds
+            ? 'text-error-300 dark:text-red-400'
+            : 'text-success-400 dark:text-success-300';
     }
 
     private function firstOrCreateTaskTag(string $name): Tag

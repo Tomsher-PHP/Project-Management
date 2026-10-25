@@ -45,12 +45,13 @@ class UserWorkspaceController extends Controller
     {
         $user = $request->user();
         $workspaceUser = $this->resolveWorkspaceUser($request);
-        $selectedDate = $this->resolveSelectedDate($request->input('date'));
-        $timelineViewData = $this->buildTimelineViewData($workspaceUser, $selectedDate, (int) $user->id === (int) $workspaceUser->id);
 
         if ($request->ajax() && $request->boolean('kanban')) {
             return $this->renderKanbanBoard($request, $taskServices, $workspaceUser);
         }
+
+        $selectedDate = $this->resolveSelectedDate($request->input('date'));
+        $timelineViewData = $this->buildTimelineViewData($workspaceUser, $selectedDate, (int) $user->id === (int) $workspaceUser->id);
 
         if ($request->ajax()) {
             return $this->buildDailyTimelineResponse($timelineViewData);

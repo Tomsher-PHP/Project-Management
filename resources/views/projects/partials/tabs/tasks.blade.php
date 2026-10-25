@@ -304,6 +304,7 @@
         @endcan
     @endif
 
+    <!-- Task Move Modal -->
     @if (!$isDeletedProjectView && auth()->user()?->can('task.move'))
         <div class="modal fixed inset-0 z-[75] hidden items-center justify-center overflow-y-auto" data-project-task-move-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-move-close></div>
@@ -331,9 +332,17 @@
                                         <span class="text-xs font-normal text-bgray-700 dark:text-bgray-300">({{ ucfirst($project->project_flow) }})</span>
                                     </span>
                                 </div>
-                                <p class="text-xs">
+                                <p class="text-xs py-1">
                                     <span class="text-bgray-700 dark:text-bgray-300">Current Sprint:</span>
                                     <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-current-sprint>--</span>
+                                </p>
+                                <p class="text-xs py-1">
+                                    <span class="text-bgray-700 dark:text-bgray-300">Task Name:</span>
+                                    <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-task-name>--</span>
+                                </p>
+                                <p class="text-xs py-1">
+                                    <span class="text-bgray-700 dark:text-bgray-300">Task Code:</span>
+                                    <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-task-code>--</span>
                                 </p>
                             </div>
 
