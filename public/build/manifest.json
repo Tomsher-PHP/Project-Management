@@ -79,7 +79,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CSlr8Vtt.css",
+    "file": "assets/app-YA79106j.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -325,7 +325,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-Bd_W7RYX.js",
+    "file": "assets/project-detail-D761UZhZ.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -404,7 +404,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-DdEP9T9v.js",
+    "file": "assets/task-detail-CEJjHXYX.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -419,6 +419,7 @@
       "_note-files-modal-BGduGZXA.js",
       "resources/js/modules/tasks/time-log-change-request.js",
       "resources/js/modules/projects/project-tasks.js",
+      "resources/js/modules/tasks/developer-notes.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
@@ -448,6 +449,16 @@
     "file": "assets/approve-extend-time-hZQoTGQ3.js",
     "name": "approve-extend-time",
     "src": "resources/js/modules/tasks/approve-extend-time.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/tasks/developer-notes.js": {
+    "file": "assets/developer-notes-BZK2TpsD.js",
+    "name": "developer-notes",
+    "src": "resources/js/modules/tasks/developer-notes.js",
     "isEntry": true,
     "imports": [
       "_alert-kNjqpuwD.js",
@@ -485,12 +496,15 @@
     ]
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-B5iYPAln.js",
+    "file": "assets/kanban-board-CPPbxWF6.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true,
     "imports": [
-      "_task-comments-BCaf8cZV.js"
+      "_task-comments-BCaf8cZV.js",
+      "resources/js/modules/tasks/developer-notes.js",
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
   "resources/js/modules/tasks/schedule-task.js": {
