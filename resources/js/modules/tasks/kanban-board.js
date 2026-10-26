@@ -2,6 +2,7 @@ import Sortable from "sortablejs";
 import '../task-insights-modal';
 import '../task-notes-modal';
 import '../task-comments';
+import '../tasks/developer-notes';
 
 const CONTROLLER_KEY = '__workspaceKanbanBoardController';
 
@@ -127,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    const handleDrop = (evt) => {
+    const handleDrop = (evt, remarks = '') => {
         const fromColumn = evt.from;
         const toColumn = evt.to;
         const statusId = toColumn.dataset.statusId;
@@ -166,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 status_id: statusId,
                 task_ids: nextToTaskIds,
                 moved_task_id: movedTaskId,
+                remarks: remarks || null,
             })
         })
             .then(handleFetchError)
@@ -551,18 +553,91 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     /** ================= COMMON SORTABLE CONFIG ================= */
+
+
     const sortableOptions = {
-        group: { name: "kanban", pull: true, put: true },
+        group: {
+            name: "kanban",
+            pull: true,
+            put: true,
+        },
         animation: 180,
         easing: "cubic-bezier(0.2, 0, 0, 1)",
         ghostClass: "kanban-ghost",
         chosenClass: "kanban-chosen",
         dragClass: "kanban-drag",
-        onStart: () => {
-            setDragState(true);
+
+        onStart: () => setDragState(true),
+
+        onEnd: async (evt) => {
+            const task = evt.item;
+            const fromColumn = evt.from;
+            const toColumn = evt.to;
+
+            if (fromColumn === toColumn) {
+                handleDrop(evt);
+                return;
+            }
+
+            const wasCompleted = task.dataset.isCompleted === "1";
+            const willBeCompleted = toColumn.dataset.isCompleted === "1";
+
+            // Incomplete -> completed requires a developer note.
+
+            if (
+                !wasCompleted &&
+                willBeCompleted &&
+                task.dataset.hasDeveloperNote !== '1'
+            ) {
+                rollback(evt);
+                setDragState(false);
+
+                Alert.error(
+                    'Please add a developer note before moving this task to a completed status.'
+                );
+
+                // Open the existing Developer Notes modal for this task.
+                const notesTrigger = task.querySelector(
+                    '[data-developer-notes-trigger]'
+                );
+
+                if (notesTrigger) {
+                    setTimeout(() => {
+                        notesTrigger.click();
+                    }, 300);
+                } else {
+                    console.error(
+                        'Developer Notes trigger not found for task:',
+                        task.dataset.taskId
+                    );
+                }
+
+                return;
+            }
+
+
+            // Completed -> incomplete requires a reopening remark.
+
+            if (wasCompleted && !willBeCompleted) {
+                const remarks = await requestReopenRemark();
+
+                if (remarks === null) {
+                    rollback(evt);
+                    setDragState(false);
+                    return;
+                }
+
+                handleDrop(evt, remarks);
+                return;
+            }
+
+
+            // All other transitions continue normally.
+            handleDrop(evt);
         },
-        onEnd: handleDrop,
     };
+
+
 
     const createKanbanController = () => ({
         reload: () => {
@@ -667,5 +742,52 @@ document.addEventListener("DOMContentLoaded", () => {
             closeSortMenus();
         }
     });
+
+
+    const requestReopenRemark = () => {
+        const modal = document.getElementById('reopen-task-remark-modal');
+        const input = document.getElementById('reopen-task-remark-input');
+        const error = document.getElementById('reopen-task-remark-error');
+        const confirmButton = document.getElementById('confirm-reopen-task');
+        const cancelButton = document.getElementById('cancel-reopen-task');
+
+        return new Promise((resolve) => {
+            input.value = '';
+            error.classList.add('hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            input.focus();
+
+            const cleanup = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+
+                confirmButton.removeEventListener('click', onConfirm);
+                cancelButton.removeEventListener('click', onCancel);
+            };
+
+            const onConfirm = () => {
+                const remarks = input.value.trim();
+
+                if (!remarks) {
+                    error.classList.remove('hidden');
+                    input.focus();
+                    return;
+                }
+
+                cleanup();
+                resolve(remarks);
+            };
+
+            const onCancel = () => {
+                cleanup();
+                resolve(null);
+            };
+
+            confirmButton.addEventListener('click', onConfirm);
+            cancelButton.addEventListener('click', onCancel);
+        });
+    };
+
 
 });
