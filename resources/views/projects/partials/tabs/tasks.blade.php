@@ -77,7 +77,7 @@
     @if ($taskGroups->isEmpty())
         <div class="rounded-[24px] border border-dashed border-bgray-300 bg-bgray-50 px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
             <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">No tasks added yet</h4>
-            <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">
+            <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
                 Tasks will appear here once they are linked to this project.
             </p>
         </div>
@@ -304,6 +304,7 @@
         @endcan
     @endif
 
+    <!-- Task Move Modal -->
     @if (!$isDeletedProjectView && auth()->user()?->can('task.move'))
         <div class="modal fixed inset-0 z-[75] hidden items-center justify-center overflow-y-auto" data-project-task-move-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-move-close></div>
@@ -322,7 +323,7 @@
                         <form class="space-y-4 overflow-y-auto px-6 pb-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)' data-dependencies-url-template="{{ route('projects.task-create-dependencies', ['project' => '__PROJECT_ID__']) }}" data-source-project-flow="{{ $project->project_flow }}">
                             <input type="hidden" name="_method" value="PATCH">
 
-                            <div class="rounded-lg border border-bgray-200 bg-bgray-50/70 p-3.5 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-300 space-y-1.5">
+                            <div class="rounded-lg border border-bgray-200 bg-bgray-50/70 p-3.5 text-sm text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-300 space-y-1.5">
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs text-bgray-700 dark:text-bgray-300">Current Project:</span>
                                     <span class="inline-flex items-center gap-1.5 font-medium text-bgray-900 dark:text-white">
@@ -331,9 +332,17 @@
                                         <span class="text-xs font-normal text-bgray-700 dark:text-bgray-300">({{ ucfirst($project->project_flow) }})</span>
                                     </span>
                                 </div>
-                                <p class="text-xs">
+                                <p class="text-xs py-1">
                                     <span class="text-bgray-700 dark:text-bgray-300">Current Sprint:</span>
                                     <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-current-sprint>--</span>
+                                </p>
+                                <p class="text-xs py-1">
+                                    <span class="text-bgray-700 dark:text-bgray-300">Task Name:</span>
+                                    <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-task-name>--</span>
+                                </p>
+                                <p class="text-xs py-1">
+                                    <span class="text-bgray-700 dark:text-bgray-300">Task Code:</span>
+                                    <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-task-code>--</span>
                                 </p>
                             </div>
 
@@ -489,7 +498,7 @@
                 <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
                     <span>Is Default</span>
                     <span class="group relative inline-flex cursor-help">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-700 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                         </svg>
                         <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
@@ -514,7 +523,7 @@
             <div>
                 <div class="mb-2.5 flex items-center justify-between gap-3">
                     <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
-                    <span class="text-xs font-medium text-bgray-600 dark:text-bgray-300"><span data-modal-description-count>0</span>/250</span>
+                    <span class="text-xs font-medium text-bgray-700 dark:text-bgray-300"><span data-modal-description-count>0</span>/250</span>
                 </div>
                 <textarea name="description" rows="3" maxlength="250" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
             </div>
@@ -534,7 +543,7 @@
                 <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
                     <span>Is Default</span>
                     <span class="group relative inline-flex cursor-help">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-700 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                         </svg>
                         <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
@@ -550,7 +559,7 @@
                     <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
                         <span>Is Rework?</span>
                         <span class="group relative inline-flex cursor-help">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-700 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                             </svg>
                             <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-60 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
@@ -565,7 +574,7 @@
                     <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
                         <span>Is Productive?</span>
                         <span class="group relative inline-flex cursor-help">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-700 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                             </svg>
                             <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-60 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
@@ -580,7 +589,7 @@
                     <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
                         <span>Customer Request?</span>
                         <span class="group relative inline-flex cursor-help">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-700 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                             </svg>
                             <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">

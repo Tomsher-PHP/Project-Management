@@ -966,11 +966,16 @@ const prepareTaskMoveModal = (root, triggerButton) => {
     form.setAttribute('action', triggerButton.dataset.projectTaskMoveUrl || '');
 
     const taskNameNode = modal.querySelector('[data-project-task-move-task-name]');
+    const taskCodeNode = modal.querySelector('[data-project-task-move-task-code]');
     const currentSprintNode = modal.querySelector('[data-project-task-move-current-sprint]');
     const toggleCheckbox = form.querySelector('[data-project-task-move-another-project-toggle]');
 
     if (taskNameNode) {
-        taskNameNode.textContent = triggerButton.dataset.projectTaskName || 'this task';
+        taskNameNode.textContent = triggerButton.dataset.projectTaskName || '--';
+    }
+
+    if (taskCodeNode) {
+        taskCodeNode.textContent = triggerButton.dataset.projectTaskCode || '--';
     }
 
     if (currentSprintNode) {
@@ -1466,6 +1471,17 @@ const handleTaskRootSuccess = (root, result, {
 
     const newRoot = replaceTasksRoot(root, result.html);
     Alert.success(result.message || successMessage);
+
+    if (result.navbar_timer && typeof result.navbar_timer === 'object') {
+        const nextState = result.navbar_timer;
+        if (nextState.active === true || nextState.active === '1' || nextState.shouldShowTimer === true) {
+            document.dispatchEvent(new CustomEvent('navbar-running-task-timer:update', {
+                detail: nextState,
+            }));
+        } else {
+            document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+        }
+    }
 
     if (newRoot) {
         initializeTasksRoot(newRoot);

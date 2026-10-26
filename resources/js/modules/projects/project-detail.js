@@ -12,3 +12,5 @@ import './project-header';
 import './project-insights-modal';
 import './project-comments';
 import './project-tracking';
+import './project-hosting';
+import './project-settings';

@@ -425,6 +425,17 @@ const initializeTaskSettings = (root = document) => {
                 throw new Error(result.message || 'Unable to update the task.');
             }
 
+            if (result.navbar_timer && typeof result.navbar_timer === 'object') {
+                const nextState = result.navbar_timer;
+                if (nextState.active === true || nextState.active === '1' || nextState.shouldShowTimer === true) {
+                    document.dispatchEvent(new CustomEvent('navbar-running-task-timer:update', {
+                        detail: nextState,
+                    }));
+                } else {
+                    document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+                }
+            }
+
             const header = document.getElementById('task-detail-header');
             const tabsRoot = document.querySelector('[data-task-tabs]');
             const overviewPanel = tabsRoot?.querySelector('[data-task-tab-panel="overview"]');

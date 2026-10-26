@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use App\Models\HandoffRequest;
 
 class UserWorkspaceController extends Controller
 {
@@ -43,12 +44,13 @@ class UserWorkspaceController extends Controller
     {
         $user = $request->user();
         $workspaceUser = $this->resolveWorkspaceUser($request);
-        $selectedDate = $this->resolveSelectedDate($request->input('date'));
-        $timelineViewData = $this->buildTimelineViewData($workspaceUser, $selectedDate, (int) $user->id === (int) $workspaceUser->id);
 
         if ($request->ajax() && $request->boolean('kanban')) {
             return $this->renderKanbanBoard($request, $taskServices, $workspaceUser);
         }
+
+        $selectedDate = $this->resolveSelectedDate($request->input('date'));
+        $timelineViewData = $this->buildTimelineViewData($workspaceUser, $selectedDate, (int) $user->id === (int) $workspaceUser->id);
 
         if ($request->ajax()) {
             return $this->buildDailyTimelineResponse($timelineViewData);
@@ -109,6 +111,7 @@ class UserWorkspaceController extends Controller
             'taskCreateDependencies' => $taskCreateDependencies,
             'workspaceFilterCount' => $workspaceFilterCount,
             'workspaceHasActiveFilters' => $workspaceFilterCount > 0,
+            'pendingHandoffCount' => $pendingHandoffCount,
         ] + $timelineViewData + $filterViewData + $formData);
     }
 

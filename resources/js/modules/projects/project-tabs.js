@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const projectId = tabsRoot.dataset.projectId;
     const defaultTab = tabsRoot.dataset.defaultTab || 'overview';
+    const forceInitialTab = tabsRoot.dataset.forceInitialTab || null;
     const tabsUrlTemplate = tabsRoot.dataset.tabsUrlTemplate || window.ProjectApp?.tabsUrlTemplate;
     // const storageKey = `projectTab_${projectId}`;
     const storageKey = `projectTab`;
@@ -180,7 +181,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const requestedTab = params.get('tab');
     const initialTab = availableTabs.includes(requestedTab)
         ? requestedTab
-        : (availableTabs.includes(savedTab) ? savedTab : defaultTab);
+        : (forceInitialTab && availableTabs.includes(forceInitialTab)
+            ? forceInitialTab
+            : (availableTabs.includes(savedTab) ? savedTab : defaultTab));
 
     loadTab(initialTab);
 });

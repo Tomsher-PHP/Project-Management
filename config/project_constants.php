@@ -112,4 +112,23 @@ return [
         1 => 'noted',
         2 => 'assigned'
     ],
+
+    'project_timeline_statuses' => [
+        1 => 'planned',
+        2 => 'active',
+        3 => 'completed',
+        4 => 'cancelled'
+    ],
+
+    'project_timeline_types' => [
+        'original' => 'Original',
+        'renewal' => 'Renewal',
+        'extension' => 'Extension',
+        'new' => 'New'
+    ],
+
+    'project_notification_types' => [
+        'timeline_ending_soon' => 'Timeline Ending Soon',
+        'hosting_ending_soon' => 'Server & Hosting Expiry',
+    ]
 ];

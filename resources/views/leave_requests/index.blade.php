@@ -1,30 +1,19 @@
 @extends('layouts.master')
-
 @section('page-content')
 
     <!-- Page starts -->
-
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-
-
         <div class="flex flex-wrap items-center gap-3">
-
             @if (!$isPendingPage)
                 @can('leave_request.create')
                     <x-button.create-button :href="route('leave-requests.create')" label="Apply Leave" />
                 @endcan
             @endif
-
             <x-filters.button />
             <x-filters.list-search />
-
         </div>
-
-
     </div>
-
     @php
-
         /*
          * Employee filter
          */
@@ -87,9 +76,7 @@
     @endphp
 
     <!-- Filter drawer -->
-
     <x-filters.drawer>
-
 
         <x-filters.multi-select name="user_id" label="Employee" :options="$employeeFilterOptions" />
 
@@ -105,13 +92,10 @@
 
         <x-filters.input-search name="requested_to_date" label="To Date" />
 
-
     </x-filters.drawer>
-
     <!-- Filter drawer end -->
 
     <!-- Validation errors -->
-
     @if ($errors->any())
         <div class="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
             <ul class="list-disc pl-5">
@@ -123,39 +107,27 @@
     @endif
 
     <!-- Success message -->
-
     @if (session('success'))
         <div class="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             {{ session('success') }} </div>
     @endif
 
     <!-- Warning message -->
-
     @if (session('warning'))
         <div class="mb-5 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
             {{ session('warning') }} </div>
     @endif
 
     <!-- Leave Requests -->
-
     <div class="2xl:flex 2xl:space-x-[48px]">
-
-
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
-
             <!-- List table -->
             <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
-
                 <div class="flex flex-col space-y-5">
-
                     <div class="table-content w-full overflow-x-auto">
-
                         <table class="w-full min-w-[1200px]">
-
                             <thead>
-
                                 <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-
                                     <!-- # -->
                                     <th class="px-6 py-5 text-left xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
@@ -240,20 +212,15 @@
                                             </span>
                                         </div>
                                     </th>
-
                                 </tr>
-
                             </thead>
-
                             <tbody>
-
                                 @php
                                     $startNumber = ($leaveRequests->currentPage() - 1) * $leaveRequests->perPage();
                                 @endphp
 
                                 @forelse ($leaveRequests as $leaveRequest)
                                     @php
-
                                         /*
                                          * ============================================
                                          * CURRENT USER
@@ -328,15 +295,11 @@
                                          * APPROVAL PERMISSION
                                          * ============================================
                                          *
-                                         * Super Admin:
-                                         *     Can approve/reject everything.
+                                         * Super Admin: Can approve/reject everything.
                                          *
-                                         * Assigned user:
-                                         *     Can approve/reject another employee's
- *     leave.
+                                         * Assigned user: Can approve/reject another employee's leave.
  *
- * Requester:
- *     Cannot approve/reject their own leave.
+ * Requester: Cannot approve/reject their own leave.
  */
 
 $canApproveReject = $isSuperAdmin || ($isAssignedToMe && !$isOwnRequest);
@@ -351,11 +314,8 @@ $status = strtolower($leaveRequest->status ?? '');
 
 $statusClasses = match ($status) {
     'approved' => 'text-green-700',
-
     'rejected' => 'text-red-700',
-
     'cancelled' => 'text-gray-700',
-
     default => 'text-red-700',
 };
 
@@ -402,16 +362,13 @@ $duration = $leaveRequest->duration ?? '-';
 $displayStatus = $status ? ucfirst($status) : '-';
                                     @endphp
 
-
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
-
                                         <!-- # -->
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                                 {{ $startNumber + $loop->iteration }}
                                             </span>
                                         </td>
-
 
                                         <!-- Employee -->
                                         <td class="px-6 py-5 xl:px-0">
@@ -422,7 +379,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                             </div>
                                         </td>
 
-
                                         <!-- Leave Type -->
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center">
@@ -431,7 +387,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                 </span>
                                             </div>
                                         </td>
-
 
                                         <!-- Added By -->
                                         <td class="px-6 py-5 xl:px-0">
@@ -442,7 +397,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                             </div>
                                         </td>
 
-
                                         <!-- Day Type -->
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center">
@@ -451,7 +405,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                 </span>
                                             </div>
                                         </td>
-
 
                                         <!-- Half Day -->
                                         <td class="px-6 py-5 xl:px-0">
@@ -462,7 +415,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                             </div>
                                         </td>
 
-
                                         <!-- From Date -->
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center">
@@ -471,7 +423,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                 </span>
                                             </div>
                                         </td>
-
 
                                         <!-- To Date -->
                                         <td class="px-6 py-5 xl:px-0">
@@ -482,7 +433,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                             </div>
                                         </td>
 
-
                                         <!-- Days -->
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center">
@@ -491,7 +441,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                 </span>
                                             </div>
                                         </td>
-
 
                                         <!-- Status -->
                                         <td class="px-6 py-5 xl:px-0">
@@ -503,22 +452,30 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                         </td>
 
                                         <!-- Actions -->
-                                        <td class="px-6 py-5 xl:px-0">
-                                            <div class="flex min-w-[220px] flex-wrap items-center gap-2">
-
-                                                {{-- PENDING LEAVE LISTING --}}
-
-                                                @if ($isPendingPage)
+                                        <td class="px-4 py-3">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                {{-- PENDING LEAVE REQUEST --}}
+                                                @if ($status === 'pending')
                                                     {{-- View --}}
                                                     @if ($canManageLeave)
                                                         @can('leave_request.view')
-                                                            <x-view-button :action="route('leave-requests.show', $leaveRequest->id)" />
+                                                            <a href="{{ route('leave-requests.show', $leaveRequest) }}" class="rounded-lg  px-3 py-2 text-xs font-semibold transition 0 border border-bgray-400 bg-white text-bgray-700 shadow-sm">
+                                                                View
+                                                            </a>
                                                         @endcan
                                                     @endif
 
-                                                    {{-- Approve / Reject --}}
+                                                    {{-- Edit Both employee and assigned person can edit while the leave is pending. --}}
+                                                    @if ($isOwnRequest || $isAssignedToMe)
+                                                        @can('leave_request.edit')
+                                                            <a href="{{ route('leave-requests.edit', $leaveRequest) }}" class="rounded-lg  px-3 py-2 text-xs font-semibold transition 0 border border-bgray-400 bg-white text-bgray-700 shadow-sm">
+                                                                Edit
+                                                            </a>
+                                                        @endcan
+                                                    @endif
+
+                                                    {{-- Approve / Reject Only assigned person or super admin --}}
                                                     @if ($canApproveReject)
-                                                        {{-- Approve --}}
                                                         @can('leave_request.edit')
                                                             <a href="{{ route('leave-requests.edit', [
                                                                 'leaveRequest' => $leaveRequest->id,
@@ -527,10 +484,7 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                             ]) }}" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
                                                                 Approve
                                                             </a>
-                                                        @endcan
 
-                                                        {{-- Reject --}}
-                                                        @can('leave_request.edit')
                                                             <a href="{{ route('leave-requests.edit', [
                                                                 'leaveRequest' => $leaveRequest->id,
                                                                 'approved_mode' => 1,
@@ -539,68 +493,78 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                                 Reject
                                                             </a>
                                                         @endcan
-                                                    @elseif ($isOwnRequest && !$isSuperAdmin)
-                                                        {{-- Own pending request --}}
-                                                        {{-- <span class="text-sm font-medium text-bgray-500 dark:text-bgray-400">
-                                                            Waiting for approval
-                                                        </span> --}}
                                                     @endif
 
-                                                    {{-- Cancel --}}
-                                                    @if ($status === 'pending')
-                                                        @if($isOwnRequest)
-                                                            @can('leave_request.cancel')
-                                                                <button
-                                                                    type="button"
-                                                                    onclick="openCancelModalFromButton(this)"
-                                                                    data-cancel-id="{{ $leaveRequest->id }}"
-                                                                    data-cancel-employee="{{ $leaveRequest->user?->name ?? 'Employee' }}"
-                                                                    data-cancel-leave-type="{{ $leaveRequest->leaveType?->name ?? 'Leave' }}"
-                                                                    data-cancel-day-type="{{ $dayType }}"
-                                                                    data-cancel-half-day="{{ $halfDayType }}"
-                                                                    data-cancel-from="{{ $fromDate }}"
-                                                                    data-cancel-to="{{ $toDate }}"
-                                                                    data-cancel-duration="{{ $duration }}"
-                                                                    data-cancel-status="{{ $displayStatus }}"
-                                                                    class="rounded-lg bg-error-300 px-3 py-2 text-xs
-                                                                    font-semibold text-white transition hover:bg-error-400">
-                                                                    Cancel
-                                                                </button>
-                                                            @endcan
-                                                        @endif
+                                                    {{-- Cancel Both employee and assigned person can cancel while the leave is pending. --}}
+                                                    @if ($isOwnRequest || $isAssignedToMe)
+                                                        @can('leave_request.cancel')
+                                                            <x-cancel-button type="button" onclick="openCancelModalFromButton(this)" data-cancel-id="{{ $leaveRequest->id }}" data-cancel-employee="{{ $leaveRequest->user?->name ?? 'Employee' }}" data-cancel-leave-type="{{ $leaveRequest->leaveType?->name ?? 'Leave' }}" data-cancel-day-type="{{ $dayType }}" data-cancel-from-date="{{ $leaveRequest->requested_from_date }}" data-cancel-to-date="{{ $leaveRequest->requested_to_date }}" data-cancel-duration="{{ $leaveRequest->duration ?? '-' }}" data-cancel-status="{{ $leaveRequest->status ?? '-' }}"  />
+                                                        @endcan
                                                     @endif
 
-                                                {{-- FULL LEAVE LISTING --}}
-                                                @else
+
+                                                    {{-- APPROVED LEAVE REQUEST --}}
+                                                @elseif ($status === 'approved')
+                                                    {{-- View Employee and assigned person can view. --}}
                                                     @if ($canManageLeave)
-                                                        {{-- View --}}
                                                         @can('leave_request.view')
-                                                            <x-view-button :action="route('leave-requests.show', $leaveRequest->id)" />
+                                                            <a href="{{ route('leave-requests.show', $leaveRequest) }}" class="rounded-lg  px-3 py-2 text-xs font-semibold transition 0 border border-bgray-400 bg-white text-bgray-700 shadow-sm">
+                                                                View
+                                                            </a>
                                                         @endcan
+                                                    @endif
 
+                                                    {{-- Request Leave Change
+                                                        Only the original employee can request a change.
+                                                        Hide the button if a pending change request already exists. --}}
+                                                    @if ($isOwnRequest)
+                                                        @can('leave_change_request.create')
+                                                            @php
+                                                                $hasPendingLeaveChange = $leaveRequest->changeRequests()->where('status', 'pending')->exists();
+                                                            @endphp
 
-                                                        {{-- Edit --}}
-                                                        @can('leave_request.edit')
-                                                            <x-edit-button :action="route('leave-requests.edit', $leaveRequest->id)" />
+                                                            @unless ($hasPendingLeaveChange)
+                                                                <a href="{{ route('leave-change-requests.create', $leaveRequest) }}" class="rounded-lg  px-3 py-2 text-xs font-semibold transition 0 rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm">
+                                                                    Request Leave Change
+                                                                </a>
+                                                            @endunless
                                                         @endcan
+                                                    @endif
+
+                                                    {{-- APPROVED LEAVE: Request cancellation --}}
+                                                    @if ($isOwnRequest)
+                                                        @can('leave_cancellation_request.create')
+                                                            @php
+                                                                // $hasPendingCancellation = LeaveCancellationRequest::where('leave_request_id', $leaveRequest->id)->where('status', 'pending')->exists();
+                                                                $hasPendingCancellation = $leaveRequest->cancellationRequests()->where('status', 'pending')->exists();
+                                                            @endphp
+
+                                                            @unless ($hasPendingCancellation)
+                                                                <button type="button" onclick="openLeaveCancellationRequestModal(this)" data-cancel-id="{{ $leaveRequest->id }}" data-cancel-employee="{{ $leaveRequest->user?->name ?? 'Employee' }}" data-cancel-leave-type="{{ $leaveRequest->leaveType?->name ?? 'Leave' }}" data-cancel-from-date="{{ $leaveRequest->approved_from_date ?? $leaveRequest->requested_from_date }}" data-cancel-to-date="{{ $leaveRequest->approved_to_date ?? $leaveRequest->requested_to_date }}" data-cancel-duration="{{ $leaveRequest->duration ?? '-' }}" data-cancel-status="{{ $leaveRequest->status ?? '-' }}" class="rounded-lg  px-3 py-2 text-xs font-semibold transition 0 border border-bgray-400 bg-white text-bgray-700 shadow-sm">
+                                                                    <i class="fas fa-calendar-times"></i>
+                                                                    Request Leave Cancellation
+                                                                </button>
+                                                            @endunless
+                                                        @endcan
+                                                    @endif
 
 
-                                                        {{-- Cancel --}}
-                                                        @if (in_array($status, ['pending', 'approved'], true))
-                                                            @can('leave_request.cancel')
-                                                                <x-cancel-button type="button" onclick="openCancelModalFromButton(this)" data-cancel-id="{{ $leaveRequest->id }}" data-cancel-employee="{{ $leaveRequest->user?->name ?? 'Employee' }}" data-cancel-leave-type="{{ $leaveRequest->leaveType?->name ?? 'Leave' }}" data-cancel-from="{{ optional($leaveRequest->approver_from_date ?? $leaveRequest->requested_from_date)->format('d M Y') }}" data-cancel-to="{{ optional($leaveRequest->approver_to_date ?? $leaveRequest->requested_to_date)->format('d M Y') }}" data-cancel-duration="{{ $leaveRequest->approved_duration ?? $leaveRequest->duration }}" />
-                                                            @endcan
-                                                        @endif
+
+                                                    {{-- REJECTED / CANCELLED --}}
+                                                @else
+                                                    {{-- View only --}}
+                                                    @if ($canManageLeave)
+                                                        @can('leave_request.view')
+                                                            <a href="{{ route('leave-requests.show', $leaveRequest) }}" class="rounded-lg  px-3 py-2 text-xs font-semibold transition 0 border border-bgray-400 bg-white text-bgray-700 shadow-sm">
+                                                                View
+                                                            </a>
+                                                        @endcan
                                                     @endif
                                                 @endif
 
                                             </div>
-
                                         </td>
-
                                     </tr>
-
-
                                 @empty
 
                                     <x-table-no-data col-span="11" message="No leave requests found." />
@@ -654,9 +618,7 @@ $displayStatus = $status ? ucfirst($status) : '-';
 
                 <!-- Body -->
                 <div class="px-6 py-5">
-
                     <div class="space-y-4">
-
                         <!-- Employee -->
                         <div>
                             <p class="text-xs font-medium uppercase text-bgray-500">
@@ -778,6 +740,73 @@ $displayStatus = $status ? ucfirst($status) : '-';
         </div>
     </div>
 
+    {{-- Leave cancellation modal --}}
+    <div id="leaveCancellationRequestModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+
+        <div class="fixed inset-0 bg-black/50" onclick="closeLeaveCancellationRequestModal()"></div>
+
+        <div class="relative flex min-h-full items-center justify-center p-4">
+            <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
+
+                <div class="mb-5 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        Request Leave Cancellation
+                    </h2>
+
+                    <button type="button" onclick="closeLeaveCancellationRequestModal()" class="text-gray-500 hover:text-gray-700">
+                        &times;
+                    </button>
+                </div>
+
+                <div class="mb-4 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
+                    This request must be approved before your approved leave is cancelled.
+                </div>
+
+                <div class="mb-4 space-y-2 text-sm">
+                    <p>
+                        <strong>Employee:</strong>
+                        <span id="cancellationRequestEmployee">--</span>
+                    </p>
+                    <p>
+                        <strong>Leave type:</strong>
+                        <span id="cancellationRequestLeaveType">--</span>
+                    </p>
+                    <p>
+                        <strong>From:</strong>
+                        <span id="cancellationRequestFromDate">--</span>
+                    </p>
+                    <p>
+                        <strong>To:</strong>
+                        <span id="cancellationRequestToDate">--</span>
+                    </p>
+                </div>
+
+                <form id="leaveCancellationRequestForm" method="POST" action="">
+                    @csrf
+
+                    <label for="cancellation_request_reason" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                        Reason for cancellation
+                    </label>
+
+                    <textarea id="cancellation_request_reason" name="reason" rows="4" required maxlength="2000" class="w-full rounded-lg border border-gray-300 p-3 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Please explain why you need to cancel this leave."></textarea>
+
+                    <div class="mt-5 flex justify-end gap-3">
+                        <button type="button" onclick="closeLeaveCancellationRequestModal()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">
+                            Close
+                        </button>
+
+                        <button type="submit" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
+                            Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+
     <!-- Cancel Modal JavaScript -->
 
     <script>
@@ -846,6 +875,52 @@ $displayStatus = $status ? ucfirst($status) : '-';
                 closeCancelModal();
             }
 
+        });
+
+
+        // Leave cancel request script
+
+        function openLeaveCancellationRequestModal(button) {
+            const id = button.dataset.cancelId;
+
+            document.getElementById('cancellationRequestEmployee').textContent =
+                button.dataset.cancelEmployee || '--';
+
+            document.getElementById('cancellationRequestLeaveType').textContent =
+                button.dataset.cancelLeaveType || '--';
+
+            document.getElementById('cancellationRequestFromDate').textContent =
+                button.dataset.cancelFromDate || '--';
+
+            document.getElementById('cancellationRequestToDate').textContent =
+                button.dataset.cancelToDate || '--';
+
+            document.getElementById('leaveCancellationRequestForm').action =
+                "{{ url('leave-cancellation-requests') }}/" + id;
+
+            document.getElementById('leaveCancellationRequestModal')
+                .classList.remove('hidden');
+
+            document.getElementById('leaveCancellationRequestModal')
+                .setAttribute('aria-hidden', 'false');
+
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeLeaveCancellationRequestModal() {
+            document.getElementById('leaveCancellationRequestModal')
+                .classList.add('hidden');
+
+            document.getElementById('leaveCancellationRequestModal')
+                .setAttribute('aria-hidden', 'true');
+
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeLeaveCancellationRequestModal();
+            }
         });
     </script>
 

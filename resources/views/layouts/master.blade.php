@@ -85,6 +85,8 @@
         @include('quick-notes.partials.drawer')
     @endauth
 
+    @stack('modals')
+
     <!--scripts -->
     <script src="{{ asset(config('assets.js.jquery')) }}"></script>
     <script src="{{ asset(config('assets.js.aos')) }}"></script>

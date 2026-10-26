@@ -8,6 +8,8 @@
         'break_requests' => 0,
         'task_time_extend_requests' => 0,
         'leave_requests' => 0,
+        'leave_change_requests' => 0,
+        'leave_cancellation_request' => 0,
         'has_any_pending' => false,
     ];
 
@@ -43,6 +45,8 @@
 
     $canViewAppraisal = $authUser?->can('appraisal.view');
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
+    $canViewLeaveChangeRequests = $authUser?->can('leave_change_request.view');
+    $canViewLeaveCancelRequests = $authUser?->can('leave_cancellation_request.view');
     $canViewAttendance = $authUser?->can('attendance.view');
     $canViewHolidays = $authUser?->can('holidays.view');
     $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
@@ -60,13 +64,13 @@
     };
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses || $canViewLeaveChangeRequests || $canViewLeaveCancelRequests;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
     $isDashboardActive = request()->routeIs('dashboard');
     $isWorkspaceActive = request()->routeIs('user.workspace');
-    $isAnalyticsActive = request()->routeIs('user.analytics');
+    $isProjectAnalyticsActive = request()->routeIs('project.analytics*');
     $isRolesActive = request()->routeIs('roles.*');
     $isUsersActive = request()->routeIs('users.*');
     $isTeamsActive = request()->routeIs('teams.*');
@@ -83,10 +87,13 @@
     $isBreakRequestsActive = request()->routeIs('break-requests.*');
     $isTaskTimeExtendRequestsActive = request()->routeIs('tasks.extend-time-requests.*');
     $isLeaveRequestsActive = request()->routeIs('leave-requests.*');
+    $isLeaveChangeRequestsActive = request()->routeIs('leave-change-requests.*');
+    $isLeaveCancelRequestsActive = request()->routeIs('leave-cancellation-requests.*');
     $isLeaveApprovalRequestsActive = request()->routeIs('leave-requests.pending');
     $isLeavesActive = request()->routeIs('leave-requests.index');
 
-    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive || $isLeaveApprovalRequestsActive;
+    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive || $isLeaveApprovalRequestsActive || $isLeaveChangeRequestsActive || $isLeaveCancelRequestsActive;
+
     $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive && !$isTaskTimeExtendRequestsActive;
 
     $isProjectReportActive = request()->routeIs('reports.projects', 'reports.project.export', 'reports.projects.by-flow');
@@ -171,18 +178,17 @@
                             </div>
                         </a>
                     </li>
-                    <li class="item py-[8px] {{ $isAnalyticsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                        <a href="{{ route('user.analytics') }}">
+                    <li class="item py-[8px] {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                        <a href="{{ route('project.analytics') }}">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="18" y1="20" x2="18" y2="10" />
-                                            <line x1="12" y1="20" x2="12" y2="4" />
-                                            <line x1="6" y1="20" x2="6" y2="14" />
+                                            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                                            <path d="M22 12A10 10 0 0 0 12 2v10z" />
                                         </svg>
                                     </span>
-                                    <span class="item-text text-base font-medium leading-none {{ $isAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
+                                    <span class="item-text text-base font-medium leading-none {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
                                 </div>
                             </div>
                         </a>
@@ -340,7 +346,7 @@
                             </li>
                         @endif
 
-                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests || $canViewLeaveRequests)
+                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests || $canViewLeaveRequests || $canViewLeaveChangeRequests || $canViewLeaveCancelRequests)
                             <!-- Requests -->
                             <li class="item py-[8px] {{ $isRequestsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="javascript:void(0)" aria-expanded="{{ $isRequestsMenuActive ? 'true' : 'false' }}">
@@ -444,8 +450,33 @@
                                             </a>
                                         </li>
                                     @endif
+                                    @if ($canViewLeaveChangeRequests)
+                                        <!-- Leave Change Requests -->
+                                        <li>
+                                            <a href="{{ route('leave-change-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                <span>Leave Change</span>
+                                                @if (($requestMenuBadges['leave_change_requests'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['leave_change_requests'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
 
-
+                                    @if ($canViewLeaveCancelRequests)
+                                        <!-- Leave Cancel Requests -->
+                                        <li>
+                                            <a href="{{ route('leave-cancellation-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                <span>Leave Cancel</span>
+                                                @if (($requestMenuBadges['leave_cancellation_request'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['leave_cancellation_request'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
                                 </ul>
                             </li>
                         @endif
@@ -782,8 +813,8 @@
                     <p class="truncate text-sm font-bold text-bgray-900 dark:text-white">
                         {{ $authUser?->name }}
                     </p>
-                    <p class="truncate text-xs font-medium text-bgray-700 dark:text-bgray-300">
-                        {{ $authUser?->role_name ?? 'No Role' }}
+                    <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">
+                        {{ $authUser?->getRoleNames()->implode(', ') ?: 'No Role' }}
                     </p>
                 </div>
             </div>

@@ -26,7 +26,7 @@
                                 {{ $user->name }}
                             </h4>
                             <p class="text-gray-500 dark:text-white">
-                                {{ $user->details->designation->name ?? '' }}
+                                {{ $user->details?->designation?->name ?? '' }}
                             </p>
                         </div>
                     </div>

@@ -2,7 +2,7 @@
     <div class="modal-close fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-time-log-change-request-overlay></div>
 
     <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-        <div class="relative z-10 w-full max-w-3xl">
+        <div class="modal-content relative z-10 w-full max-w-3xl">
             <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                     <div>

@@ -370,9 +370,9 @@
             {{-- Rejection Information --}}
             @if ($leaveRequest->status === 'rejected')
                 <div
-                    class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20 lg:col-span-2">
+                    class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-800 lg:col-span-2">
 
-                    <h3 class="mb-5 text-lg font-semibold text-red-700 dark:text-red-300">
+                    <h3 class="mb-5 text-lg font-semibold ">
                         Rejection Information
                     </h3>
 
@@ -380,7 +380,7 @@
 
                         {{-- Rejected By --}}
                         <div>
-                            <p class="text-xs uppercase text-red-500">
+                            <p class="text-xs uppercase">
                                 Rejected By
                             </p>
 
@@ -391,7 +391,7 @@
 
                         {{-- Rejected At --}}
                         <div>
-                            <p class="text-xs uppercase text-red-500">
+                            <p class="text-xs uppercase ">
                                 Rejected Date
                             </p>
 
@@ -403,7 +403,7 @@
                         {{-- Rejection Reason --}}
                         <div class="md:col-span-3">
 
-                            <p class="text-xs uppercase text-red-500">
+                            <p class="text-xs uppercase">
                                 Rejection Reason
                             </p>
 

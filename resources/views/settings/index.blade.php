@@ -141,7 +141,24 @@
                         </div>
                     </div>
                 </a>
-            @endcanany
+            @endcan
+
+            @can('server_hosting.view')
+                <a href="{{ route('settings.hosting-providers.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Server & Hosting
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
 
             @can('task_settings.view')
                 <a href="{{ route('settings.task-statuses.index') }}" class="block group transition duration-300">
@@ -295,8 +312,6 @@
                     </div>
                 </a>
             @endcan
-
-
 
         </div>
     @else

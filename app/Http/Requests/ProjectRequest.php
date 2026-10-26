@@ -26,6 +26,15 @@ class ProjectRequest extends FormRequest
                 'project_category_ids' => $catId !== null && $catId !== '' ? [$catId] : [],
             ]);
         }
+
+        if ($this->has('service_type_ids')) {
+            $serviceTypeIds = $this->input('service_type_ids');
+            $this->merge([
+                'service_type_ids' => is_array($serviceTypeIds)
+                    ? array_values(array_unique(array_filter(array_map('intval', $serviceTypeIds))))
+                    : [],
+            ]);
+        }
     }
 
     /**
@@ -62,6 +71,8 @@ class ProjectRequest extends FormRequest
                 'default_billable' => 'nullable|boolean',
                 'project_technology_ids' => 'nullable|array',
                 'project_technology_ids.*' => 'nullable|exists:technologies,id',
+                'service_type_ids' => 'nullable|array',
+                'service_type_ids.*' => 'nullable|exists:service_types,id',
             ];
         }
 
@@ -99,7 +110,7 @@ class ProjectRequest extends FormRequest
                 return;
             }
 
-            if ($selectedParentProject->trashed() || ! $selectedParentProject->projectStatus?->is_completed) {
+            if ($selectedParentProject->trashed()) {
                 $validator->errors()->add(
                     'parent_project_id',
                     'Please select a completed project when linking this project as rework or follow-up work.'

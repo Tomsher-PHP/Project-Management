@@ -51,19 +51,19 @@
                                         <x-sorting.sortable-column column="customer.name" label="Customer" />
                                     </div>
                                 </td>
+                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
+                                    <div class="flex w-full items-center space-x-2.5">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Service Type</span>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-2 xl:w-[220px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status / Stage</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
+                                <td class="px-6 py-2 xl:w-[220px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
-                                        <x-sorting.sortable-column column="start_date" label="Start Date" />
-                                    </div>
-                                </td>
-                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
-                                    <div class="flex w-full items-center space-x-2.5">
-                                        <x-sorting.sortable-column column="end_date" label="End Date" />
+                                        <x-sorting.sortable-column column="start_date" label="Date" />
                                     </div>
                                 </td>
                                 <td class="px-6 py-2 xl:w-[165px] xl:px-0">
@@ -77,6 +77,10 @@
                             @endphp
                             @forelse ($projects as $key => $project)
                                 @php
+                                    $displayTimeline = $project->display_timeline;
+                                    $displayStartDate = $displayTimeline?->start_date ?? $project->start_date;
+                                    $displayEndDate = $displayTimeline?->end_date ?? $project->end_date;
+
                                     $priority = config('project_constants.project_priorities')[$project->priority] ?? null;
                                     $isAgileFlow = $project->project_flow === 'agile';
                                     $flowLabel = ucfirst($project->project_flow ?? 'linear');
@@ -140,6 +144,18 @@
                                             </span>
                                         </div>
                                     </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full flex-wrap gap-1.5">
+                                            @forelse ($project->serviceTypes as $serviceType)
+                                                <span class="inline-flex w-fit items-center gap-1.5 rounded-full border border-bgray-200 px-2.5 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300" title="{{ $serviceType->code }}">
+                                                    <span class="h-2 w-2 rounded-full" style="background-color: {{ $serviceType->color ?: '#9a9996' }}"></span>
+                                                    <span>{{ $serviceType->name }}</span>
+                                                </span>
+                                            @empty
+                                                <span class="text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">--</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-5 xl:w-[220px] xl:px-0">
                                         <div class="flex w-full flex-col gap-2">
                                             <span class="inline-flex w-fit items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
@@ -152,24 +168,26 @@
                                             </span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex flex-col w-full">
-
-                                            <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
-                                                {{ $project->start_date?->format($globalDateFormat) ?? '--' }}
-                                            </span>
-
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                    <td class="px-6 py-5 xl:w-[220px] xl:px-0">
                                         <div class="flex w-full items-center">
-                                            <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->end_date?->format($globalDateFormat) ?? '--' }}</span>
+                                            <span class="block rounded-md px-2 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
+                                                @if ($displayStartDate && $displayEndDate)
+                                                    {{ $displayStartDate->format($globalDateFormat) }} to {{ $displayEndDate->format($globalDateFormat) }}
+                                                @elseif ($displayStartDate)
+                                                    {{ $displayStartDate->format($globalDateFormat) }} to --
+                                                @elseif ($displayEndDate)
+                                                    -- to {{ $displayEndDate->format($globalDateFormat) }}
+                                                @else
+                                                    --
+                                                @endif
+                                            </span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2">
-                                            <x-edit-button :action="route('projects.edit', $project->id)" title="Open project" />
-
+                                        <div class="flex w-full items-center space-x-1">
+                                            @can('project.edit')
+                                                <x-edit-button class="project-edit-btn" data-project="{{ json_encode($project) }}" title="Edit project" />
+                                            @endcan
                                             @can('project.delete')
                                                 <x-delete-form :action="route('projects.destroy', $project->id)" formClass="project-delete-form" />
                                             @endcan
@@ -215,6 +233,7 @@
         <x-filters.input-search name="name" label="Name" />
         <x-filters.multi-select name="customer_id" label="Customer" :options="$customers" />
         <x-filters.select name="project_flow" label="Project Flow" :options="$types" />
+        <x-filters.multi-select name="service_type_ids" label="Service Type" :options="$serviceTypes" />
         <x-filters.multi-select name="project_category_ids" label="Project Category" :options="$categoriesFilter" />
         <x-filters.multi-select name="priority" label="Priority" :options="$prioritiesFilter" />
         <x-filters.multi-select name="status_id" label="Project Status" :options="$statuses" />
@@ -288,5 +307,12 @@
         </div>
 
     </x-form-modal>
+
+    @push('modals')
+        <!-- Edit Project Modal -->
+        @include('projects.partials.project-edit-modal', ['project' => null])
+    @endpush
+
     @vite('resources/js/modules/projects/project-delete.js')
+    @vite('resources/js/modules/projects/project-edit.js')
 @endsection

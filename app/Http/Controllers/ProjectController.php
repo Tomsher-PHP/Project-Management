@@ -18,10 +18,11 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
+use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
-use App\Models\Technology;
+use App\Models\ServiceType;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
@@ -67,7 +68,7 @@ class ProjectController extends Controller
         );
 
         $projects = Project::accessibleBy(auth()->user())
-            ->with(['customer.profileGrade'])
+            ->with(['customer.profileGrade', 'technologies', 'parentProject', 'projectTimelines', 'serviceTypes'])
             ->filter($request->all())
             ->sort($request->all())
             ->orderBy('projects.id', 'desc')
@@ -95,6 +96,10 @@ class ProjectController extends Controller
         // Project categories for the category tabs
         $projectCategories = ProjectCategory::orderBy('name', 'asc')->get();
 
+        $serviceTypes = ServiceType::active()
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
         return view('projects.index', compact(
             'projects',
             'perPage',
@@ -102,7 +107,8 @@ class ProjectController extends Controller
             'statuses',
             'priorities',
             'types',
-            'projectCategories'
+            'projectCategories',
+            'serviceTypes'
         ));
     }
 
@@ -119,6 +125,8 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
+        $project->load(['technologies', 'parentProject', 'projectTimelines', 'serviceTypes']);
+
         return view('projects.detail-page', array_merge([
             'project' => $project,
             'projectActivitiesCount' => $this->getProjectActivitiesQuery($project)->count(),
@@ -200,6 +208,8 @@ class ProjectController extends Controller
             'checklists',
             'meetings',
             'history',
+            'hosting',
+            'timelines',
             'settings',
             'payments'
         ];
@@ -456,6 +466,8 @@ class ProjectController extends Controller
             'notes' => $this->renderNotesTab($project, $request),
             'meetings' => $this->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
+            'hosting' => app(\App\Http\Controllers\ProjectHostingController::class)->renderHostingTab($project),
+            'timelines' => $this->renderTimelinesTab($project),
             'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
@@ -465,14 +477,14 @@ class ProjectController extends Controller
 
     private function renderOverviewTab(Project $project): string
     {
-        $progressbar = $this->analyticsService->getProgressbar($project);
+        $timelineProgressbars = $this->analyticsService->getTimelineProgressbars($project);
         $taskStatusOverview = $this->analyticsService->getTaskStatusOverview($project);
         $taskAssigneeOverview = $this->analyticsService->getTaskAssigneeOverview($project);
         $milestoneBurnupChart = $this->analyticsService->getMilestoneBurnupChartData($project);
 
         return view('projects.partials.tabs.overview', [
             'project' => $project,
-            'progressbar' => $progressbar,
+            'timelineProgressbars' => $timelineProgressbars,
             'taskStatusOverview' => $taskStatusOverview,
             'taskAssigneeOverview' => $taskAssigneeOverview,
             'milestoneBurnupChart' => $milestoneBurnupChart,
@@ -506,7 +518,7 @@ class ProjectController extends Controller
 
         $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
         $agileSprints = AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get();
-        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function($q) {
+        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function ($q) {
             $q->active()->orderBy('sort_order', 'asc');
         }])->orderBy('sort_order', 'asc')->get();
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
@@ -760,13 +772,13 @@ class ProjectController extends Controller
 
         // Project Tracking
         $projectTrackings = $project->trackings()
-        ->with([
-            'attachments',
-            'attachments.addedBy:id,name',
-        ])
-        ->latest('date')
-        ->latest('id')
-        ->get();
+            ->with([
+                'attachments',
+                'attachments.addedBy:id,name',
+            ])
+            ->latest('date')
+            ->latest('id')
+            ->get();
 
         $currentStatus = [
             'label' => $project->projectStatus?->name ?? 'No Status',
@@ -778,50 +790,79 @@ class ProjectController extends Controller
             'color' => $project->projectStage?->color ?: '#CBD5E1',
         ];
 
+        $showTimelineHistory = $project->projectTimelines()->where('status', '!=', \App\Models\ProjectTimeline::STATUS_CANCELLED)->count() > 1;
+
+        $timelineHistory = collect();
+        if ($showTimelineHistory) {
+            $timelineHistory = $project->timelineHistories()
+                ->with(['addedBy:id,name', 'projectTimeline:id,name'])
+                ->get()
+                ->map(function ($history) {
+                    return [
+                        'timeline_name' => $history->projectTimeline?->name ?? 'Unknown Timeline',
+                        'from_label' => $history->from_status ? ucfirst(config('project_constants.project_timeline_statuses.' . $history->from_status, 'Unknown')) : 'Start',
+                        'from_color' => '#CBD5E1',
+                        'to_label' => ucfirst(config('project_constants.project_timeline_statuses.' . $history->status, 'Unknown')),
+                        'to_color' => '#CBD5E1',
+                        'changed_at' => $this->projectServices->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
+                        'changed_by' => $history->addedBy?->name ?? '--',
+                        'remarks' => $history->remarks,
+                    ];
+                })
+                ->values();
+        }
+
         return view('projects.partials.tabs.history', compact(
             'project',
             'statusHistory',
             'stageHistory',
             'currentStatus',
             'currentStage',
-            'projectTrackings'
+            'projectTrackings',
+            'timelineHistory',
+            'showTimelineHistory'
         ))->render();
+    }
+
+    private function renderTimelinesTab(Project $project): string
+    {
+        return view('projects.partials.tabs.timelines', compact('project'))->render();
     }
 
     private function renderSettingsTab(Project $project): string
     {
-        $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
-        $selectedCustomerId = $project->customer_id;
-        $selectedCategoryIds = $project->project_category_ids ?? [];
-        $selectedTechnologyIds = $project->technologies()->get()->pluck('id')->map(fn($id) => (int) $id)->all();
-        $selectedParentProjectId = $project->parent_project_id;
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $preferences = $project->notificationPreferences()
+            ->get()
+            ->keyBy('notification_type');
 
-        $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
-        $project->load('technologies');
+        return view('projects.partials.tabs.settings', compact('project', 'notificationTypes', 'preferences'))->render();
+    }
 
-        $customers = Customer::forForm($selectedCustomerId)->get();
-        $projectCategories = ProjectCategory::forForm($selectedCategoryIds, 'sort_order')->get();
-        $projectTechnologies = Technology::forForm($selectedTechnologyIds, 'sort_order')->get();
-        $parentProjectOptions = Project::query()
-            ->eligibleParentOptions($project->id, $selectedParentProjectId)
-            ->get();
+    public function updateNotificationSettings(Request $request, Project $project): JsonResponse
+    {
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $notifications = $request->input('notifications', []);
 
-        $nextProjectCategorySortOrder = ((int) ProjectCategory::max('sort_order')) + 1;
-        $nextProjectTechnologySortOrder = ((int) Technology::max('sort_order')) + 1;
+        foreach ($notificationTypes as $typeKey => $label) {
+            $isEnabled = filter_var($notifications[$typeKey] ?? false, FILTER_VALIDATE_BOOLEAN);
 
-        $priorities = config('project_constants.project_priorities');
+            ProjectNotificationPreference::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'notification_type' => $typeKey,
+                ],
+                [
+                    'is_enabled' => $isEnabled,
+                ]
+            );
+        }
 
-        return view('projects.partials.tabs.settings', compact(
-            'project',
-            'users',
-            'customers',
-            'projectCategories',
-            'nextProjectCategorySortOrder',
-            'projectTechnologies',
-            'nextProjectTechnologySortOrder',
-            'priorities',
-            'parentProjectOptions'
-        ))->render();
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification settings updated successfully.',
+            'notifications' => $project->notificationPreferences()->pluck('is_enabled', 'notification_type'),
+        ], Response::HTTP_OK);
     }
 
     private function applyProjectChangeDateValidation($validator, ?string $changeDate, ?Carbon $minimumDate): void

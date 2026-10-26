@@ -30,6 +30,7 @@ class ProjectReportService
                 'salesPerson:id,name',
                 'projectStatus:id,name,color',
                 'projectStage:id,name,color',
+                'projectTimelines',
             ])
 
             ->withSum('tasks', 'actual_time_seconds')
@@ -107,14 +108,15 @@ class ProjectReportService
         $projects->getCollection()->transform(function ($project) {
 
             // Timeline
-            $timeline =
-                $this->projectServices
-                ->getTimelines($project);
+            $timeline = $project->display_timeline;
 
-            $project->project_timeline =
-                $timeline['projectTimeline'] ?? [];
+            $project->project_timeline = $timeline;
 
-            $estimatedSeconds = (int) ($project->estimated_time_seconds ?? 0);
+            $project->start_date = $timeline?->start_date;
+            $project->end_date = $timeline?->end_date;
+            $project->estimated_time_seconds = $timeline?->estimated_time_seconds ?? 0;
+
+            $estimatedSeconds = (int) $project->estimated_time_seconds;
             $actualSeconds = (int) ($project->tasks_sum_actual_time_seconds ?? 0);
 
             // Estimated hours
