@@ -43,19 +43,38 @@
                     </p>
 
                     @if ($event === 'updated')
-                        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-bgray-700 dark:text-bgray-300">
-                            <span class="inline-flex items-center rounded bg-white px-2 py-0.5 dark:bg-darkblack-600 text-bgray-600 dark:text-white">
-                                <x-activity-log.value :value="$oldValue" :type="$oldType" />
-                            </span>
-                            <span class="text-bgray-600 dark:text-bgray-300">&rarr;</span>
-                            <span class="inline-flex items-center rounded bg-success-50 px-2 py-0.5 dark:bg-success-900/10">
-                                <x-activity-log.value :value="$newValue" :type="$newType" />
-                            </span>
-                        </div>
+                        @if ($oldType === 'html' || $newType === 'html')
+                            <div class="mt-2 space-y-2 text-sm text-bgray-700 dark:text-bgray-300">
+                                <div class="rounded bg-white px-2 py-1 dark:bg-darkblack-600 text-bgray-600 dark:text-white">
+                                    <span class="block text-xs font-semibold uppercase tracking-wider text-bgray-400 dark:text-bgray-400 mb-1">Old</span>
+                                    <x-activity-log.value :value="$oldValue" :type="$oldType" />
+                                </div>
+                                <div class="rounded bg-success-50 px-2 py-1 dark:bg-success-900/10">
+                                    <span class="block text-xs font-semibold uppercase tracking-wider text-success-500 dark:text-success-400 mb-1">New</span>
+                                    <x-activity-log.value :value="$newValue" :type="$newType" />
+                                </div>
+                            </div>
+                        @else
+                            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-bgray-700 dark:text-bgray-300">
+                                <span class="inline-flex items-center rounded bg-white px-2 py-0.5 dark:bg-darkblack-600 text-bgray-600 dark:text-white">
+                                    <x-activity-log.value :value="$oldValue" :type="$oldType" />
+                                </span>
+                                <span class="text-bgray-600 dark:text-bgray-300">&rarr;</span>
+                                <span class="inline-flex items-center rounded bg-success-50 px-2 py-0.5 dark:bg-success-900/10">
+                                    <x-activity-log.value :value="$newValue" :type="$newType" />
+                                </span>
+                            </div>
+                        @endif
                     @else
-                        <div class="mt-2 inline-flex items-center rounded bg-white px-2 py-0.5 text-sm text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
-                            <x-activity-log.value :value="$singleValue" :type="$singleType" />
-                        </div>
+                        @if ($singleType === 'html')
+                            <div class="mt-2 rounded bg-white px-2 py-0.5 text-sm text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
+                                <x-activity-log.value :value="$singleValue" :type="$singleType" />
+                            </div>
+                        @else
+                            <div class="mt-2 inline-flex items-center rounded bg-white px-2 py-0.5 text-sm text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
+                                <x-activity-log.value :value="$singleValue" :type="$singleType" />
+                            </div>
+                        @endif
                     @endif
                 </div>
             </article>
