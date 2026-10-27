@@ -551,6 +551,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Task notes and attachments routes
         Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('notes.store');
+        Route::get('notes/{note}/edit', [TaskController::class, 'editNote'])->name('notes.edit');
+        Route::match(['put', 'post'], 'notes/{note}', [TaskController::class, 'updateNote'])->name('notes.update');
         Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('notes.delete');
         Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('notes.attachments.delete');
 
