@@ -25,15 +25,11 @@
             @endphp
 
             @if ($canEdit)
-                <button type="button" class="edit-project-note rounded-md border border-bgray-300 bg-white px-3 py-1 text-xs font-medium text-bgray-700 transition hover:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-note-id="{{ $note->id }}">
-                    Edit
-                </button>
+                <x-edit-button action="javascript:void(0)" class="edit-project-note" data-note-id="{{ $note->id }}" title="Edit Note" />
             @endif
 
             @if ($canRemove)
-                <button type="button" class="delete-project-note rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-error-300 transition hover:bg-red-50" data-note-id="{{ $note->id }}">
-                    Delete
-                </button>
+                <x-delete-form :action="route('projects.deleteNote', ['project' => $note->project_id, 'note' => $note->id])" :id="$note->id" formClass="delete-project-note-form" class="delete-project-note" data-note-id="{{ $note->id }}" title="Delete Note" />
             @endif
         </div>
     </div>

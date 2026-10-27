@@ -395,7 +395,7 @@ const initializeProjectFiles = (root = document) => {
     }
 
     async function deleteNote(button) {
-        const noteId = button.dataset.noteId;
+        const noteId = button.dataset.noteId || button.closest('form')?.dataset.id;
 
         const result = await Alert.confirm({
             title: 'Delete Note',
@@ -489,6 +489,7 @@ const initializeProjectFiles = (root = document) => {
             }
 
             if (deleteNoteButton) {
+                event.preventDefault();
                 await deleteNote(deleteNoteButton);
                 return;
             }
