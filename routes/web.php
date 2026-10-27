@@ -435,6 +435,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Project notes and attachments routes
         Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
+        Route::get('notes/{note}/edit', [ProjectController::class, 'editNote'])->name('projects.editNote');
+        Route::match(['put', 'post'], 'notes/{note}', [ProjectController::class, 'updateNote'])->name('projects.updateNote');
         Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
         Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
 

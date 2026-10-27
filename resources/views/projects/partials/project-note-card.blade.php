@@ -8,6 +8,9 @@
                 </h4>
                 <p class="text-sm text-bgray-700 dark:text-bgray-300">
                     @appDateTime($note->created_at)
+                    @if (!is_null($note->updated_by))
+                        <span class="ml-1 text-xs text-bgray-700 dark:text-bgray-300 italic">(edited)</span>
+                    @endif
                 </p>
             </div>
         </div>
@@ -16,6 +19,16 @@
             <span class="inline-flex w-fit rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-400 note-attachments-count">
                 {{ $note->attachments->count() }} File{{ $note->attachments->count() === 1 ? '' : 's' }}
             </span>
+
+            @php
+                $canEdit = auth()->check() && (int) auth()->id() === (int) $note->added_by && !($isDeletedProjectView ?? false);
+            @endphp
+
+            @if ($canEdit)
+                <button type="button" class="edit-project-note rounded-md border border-bgray-300 bg-white px-3 py-1 text-xs font-medium text-bgray-700 transition hover:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:bg-darkblack-400" data-note-id="{{ $note->id }}">
+                    Edit
+                </button>
+            @endif
 
             @if ($canRemove)
                 <button type="button" class="delete-project-note rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-error-300 transition hover:bg-red-50" data-note-id="{{ $note->id }}">

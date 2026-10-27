@@ -302,6 +302,60 @@ class ProjectController extends Controller
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
                 'canCreate' => auth()->user()->can('project.add_notes_files'),
+                'isDeletedProjectView' => $project->trashed(),
+            ])->render(),
+            'current_page' => $projectNotes->currentPage(),
+        ], Response::HTTP_OK);
+    }
+
+    public function editNote(Project $project, ProjectNote $note): JsonResponse
+    {
+        abort_unless((int) $note->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless((int) $note->added_by === (int) auth()->id(), Response::HTTP_FORBIDDEN, 'You can only edit notes created by you.');
+        abort_if($project->trashed(), Response::HTTP_FORBIDDEN, 'Cannot edit notes on a deleted project.');
+
+        $note->load('attachments');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $note->id,
+                'description' => $note->description,
+                'attachments' => $note->attachments->map(function ($attachment) {
+                    $ext = strtolower(pathinfo($attachment->original_name, PATHINFO_EXTENSION));
+                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
+
+                    return [
+                        'id' => $attachment->id,
+                        'original_name' => $attachment->original_name,
+                        'file_size' => $attachment->file_size,
+                        'file_type' => $attachment->file_type,
+                        'is_image' => $isImage,
+                        'url' => rescue(fn () => $attachment->url, null, false),
+                    ];
+                })->values(),
+            ],
+        ], Response::HTTP_OK);
+    }
+
+    public function updateNote(ProjectNoteRequest $request, Project $project, ProjectNote $note, ProjectServices $service): JsonResponse
+    {
+        abort_unless((int) $note->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless((int) $note->added_by === (int) auth()->id(), Response::HTTP_FORBIDDEN, 'You can only edit notes created by you.');
+        abort_if($project->trashed(), Response::HTTP_FORBIDDEN, 'Cannot edit notes on a deleted project.');
+
+        $service->updateNote($note, $request->validated());
+        $currentPage = (int) $request->input('notes_page', 1);
+        $projectNotes = $this->getPaginatedProjectNotes($project, $currentPage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note updated successfully.',
+            'html' => view('projects.partials.project-notes-list', [
+                'projectNotes' => $projectNotes,
+                'canRemove' => auth()->user()->can('project.remove_notes_files'),
+                'canCreate' => auth()->user()->can('project.add_notes_files'),
+                'isDeletedProjectView' => $project->trashed(),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -322,6 +376,7 @@ class ProjectController extends Controller
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
                 'canCreate' => auth()->user()->can('project.add_notes_files'),
+                'isDeletedProjectView' => $project->trashed(),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -345,6 +400,7 @@ class ProjectController extends Controller
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
                 'canCreate' => auth()->user()->can('project.add_notes_files'),
+                'isDeletedProjectView' => $project->trashed(),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);

@@ -2,6 +2,7 @@
     $isDeletedProjectView = $project->trashed();
     $canCreate = !$isDeletedProjectView && auth()->user()->can('project.add_notes_files');
     $canRemove = !$isDeletedProjectView && auth()->user()->can('project.remove_notes_files');
+    $canEditAny = !$isDeletedProjectView && auth()->check();
 @endphp
 
 <div class="w-full">
@@ -13,7 +14,7 @@
         </div>
     @endif
 
-    @if ($canCreate)
+    @if ($canCreate || $canEditAny)
         <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-project-note-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-note-modal-close></div>
 
@@ -22,8 +23,8 @@
                     <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                         <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                             <div>
-                                <h4 class="text-xl font-semibold text-bgray-900 dark:text-white">Add Note & Files</h4>
-                                <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
+                                <h4 id="project-note-modal-title" class="text-xl font-semibold text-bgray-900 dark:text-white">Add Note & Files</h4>
+                                <p id="project-note-modal-subtitle" class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                                     Capture an update and attach supporting files in one place.
                                 </p>
                             </div>
@@ -55,6 +56,14 @@
                                         You can attach multiple files. Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 1GB.
                                     </p>
                                     <div id="selected-note-files" class="mt-3 flex flex-wrap gap-2"></div>
+
+                                    <!-- Existing attachments section (for Edit mode) -->
+                                    <div id="existing-note-attachments-section" class="hidden pt-3 mt-3 border-t border-bgray-200 dark:border-darkblack-400">
+                                        <label class="mb-2 block text-xs font-semibold text-bgray-700 dark:text-bgray-300">
+                                            Existing Attachments
+                                        </label>
+                                        <div id="existing-note-attachments-list" class="grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -75,5 +84,10 @@
 </div>
 
 <div class="w-full">
-    @include('projects.partials.project-notes-list', ['projectNotes' => $projectNotes, 'canRemove' => $canRemove, 'canCreate' => $canCreate])
+    @include('projects.partials.project-notes-list', [
+        'projectNotes' => $projectNotes,
+        'canRemove' => $canRemove,
+        'canCreate' => $canCreate,
+        'isDeletedProjectView' => $isDeletedProjectView,
+    ])
 </div>
