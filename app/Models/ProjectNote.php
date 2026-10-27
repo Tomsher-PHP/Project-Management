@@ -57,4 +57,32 @@ class ProjectNote extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'is_active',
+        'added_by',
+        'updated_by',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'project_id' => 'Project',
+            'description' => 'Description',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'project_id' => Project::find($value)?->name ?? $value,
+            'description' => $value,
+            default => $value,
+        };
+    }
 }

@@ -435,6 +435,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Project notes and attachments routes
         Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
+        Route::get('notes/{note}/edit', [ProjectController::class, 'editNote'])->name('projects.editNote');
+        Route::match(['put', 'post'], 'notes/{note}', [ProjectController::class, 'updateNote'])->name('projects.updateNote');
         Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
         Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
 
@@ -549,6 +551,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Task notes and attachments routes
         Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('notes.store');
+        Route::get('notes/{note}/edit', [TaskController::class, 'editNote'])->name('notes.edit');
+        Route::match(['put', 'post'], 'notes/{note}', [TaskController::class, 'updateNote'])->name('notes.update');
         Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('notes.delete');
         Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('notes.attachments.delete');
 

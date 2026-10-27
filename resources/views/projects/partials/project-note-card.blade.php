@@ -8,6 +8,9 @@
                 </h4>
                 <p class="text-sm text-bgray-700 dark:text-bgray-300">
                     @appDateTime($note->created_at)
+                    @if (!is_null($note->updated_by))
+                        <span class="ml-1 text-xs text-bgray-700 dark:text-bgray-300 italic">(edited)</span>
+                    @endif
                 </p>
             </div>
         </div>
@@ -17,10 +20,16 @@
                 {{ $note->attachments->count() }} File{{ $note->attachments->count() === 1 ? '' : 's' }}
             </span>
 
+            @php
+                $canEdit = auth()->check() && (int) auth()->id() === (int) $note->added_by && !($isDeletedProjectView ?? false);
+            @endphp
+
+            @if ($canEdit)
+                <x-edit-button action="javascript:void(0)" class="edit-project-note" data-note-id="{{ $note->id }}" title="Edit Note" />
+            @endif
+
             @if ($canRemove)
-                <button type="button" class="delete-project-note rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-error-300 transition hover:bg-red-50" data-note-id="{{ $note->id }}">
-                    Delete
-                </button>
+                <x-delete-form :action="route('projects.deleteNote', ['project' => $note->project_id, 'note' => $note->id])" :id="$note->id" formClass="delete-project-note-form" class="delete-project-note" data-note-id="{{ $note->id }}" title="Delete Note" />
             @endif
         </div>
     </div>

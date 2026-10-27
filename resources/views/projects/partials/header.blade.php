@@ -64,9 +64,7 @@
                                     @php
                                         $serviceColor = $serviceType->color ?: '#9a9996';
                                     @endphp
-                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-xs transition duration-150 hover:opacity-90 dark:bg-darkblack-500"
-                                        style="background-color: {{ $serviceColor }}18; color: {{ $serviceColor }}; border: 1px solid {{ $serviceColor }}40;"
-                                        title="{{ ($serviceType->code ? $serviceType->name . ' (' . $serviceType->code . ')' : $serviceType->name) . ($serviceType->trashed() ? ' (deleted)' : '') }}">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-xs transition duration-150 hover:opacity-90 dark:bg-darkblack-500" style="background-color: {{ $serviceColor }}18; color: {{ $serviceColor }}; border: 1px solid {{ $serviceColor }}40;" title="{{ ($serviceType->code ? $serviceType->name . ' (' . $serviceType->code . ')' : $serviceType->name) . ($serviceType->trashed() ? ' (deleted)' : '') }}">
                                         <span class="h-2 w-2 shrink-0 rounded-full" style="background-color: {{ $serviceColor }};"></span>
                                         <span class="whitespace-nowrap">{{ $serviceType->name }}</span>
                                     </span>
@@ -108,8 +106,7 @@
                             <ul class="max-h-72 overflow-y-auto">
                                 @foreach ($projectStatuses as $statusOption)
                                     <li>
-                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStatusUpdateUrl }}" data-field="status_id" data-value="{{ $statusOption->id }}" data-item-name="{{ $statusOption->name }}" data-item-color="{{ $statusOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->status_id }}" data-modal-title="Change Project Status"
-                                            data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Status" data-min-date="{{ $statusChangeMinDate ?? '' }}" data-min-date-label="{{ $statusChangeMinDateLabel ?? '' }}">
+                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStatusUpdateUrl }}" data-field="status_id" data-value="{{ $statusOption->id }}" data-item-name="{{ $statusOption->name }}" data-item-color="{{ $statusOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->status_id }}" data-modal-title="Change Project Status" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Status" data-min-date="{{ $statusChangeMinDate ?? '' }}" data-min-date-label="{{ $statusChangeMinDateLabel ?? '' }}">
                                             <span class="flex items-center gap-2 @if ((int) $project->status_id === (int) $statusOption->id) text-success-400 dark:text-success-300 @endif">
                                                 <span class="inline-flex h-3 w-3 rounded-md" style="background-color: {{ $statusOption->color ?: '#9CA3AF' }}"></span>
                                                 <span>{{ $statusOption->name }}</span>
@@ -145,15 +142,13 @@
                         <div class="absolute right-0 top-14 z-20 hidden w-full overflow-hidden rounded-md bg-white shadow-lg dark:bg-darkblack-500" data-project-header-menu>
                             <ul class="max-h-72 overflow-y-auto">
                                 <li>
-                                    <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="" data-item-name="No Stage" data-item-color="#9CA3AF" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage" data-modal-description="Add the effective date and an optional remark for this change."
-                                        data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
+                                    <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="" data-item-name="No Stage" data-item-color="#9CA3AF" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
                                         <span @if (blank($project->project_stage_id)) class="text-success-400 dark:text-success-300" @endif>No Stage</span>
                                     </button>
                                 </li>
                                 @foreach ($projectStages as $stageOption)
                                     <li>
-                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="{{ $stageOption->id }}" data-item-name="{{ $stageOption->name }}" data-item-color="{{ $stageOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage"
-                                            data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
+                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="{{ $stageOption->id }}" data-item-name="{{ $stageOption->name }}" data-item-color="{{ $stageOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
                                             <span class="flex items-center gap-2 @if ((int) $project->project_stage_id === (int) $stageOption->id) text-success-400 dark:text-success-300 @endif">
                                                 <span class="inline-flex h-3 w-3 rounded-md" style="background-color: {{ $stageOption->color ?: '#9CA3AF' }}"></span>
                                                 <span>{{ $stageOption->name }}</span>
@@ -208,98 +203,48 @@
         </div>
     </div>
 
-    <div class="mt-5 {{ $isExpanded ? '' : 'hidden' }} border-t border-bgray-200 pt-4 dark:border-darkblack-400" data-project-header-expandable>
+    <div class="mt-5 {{ $isExpanded ? '' : 'hidden' }} space-y-4 border-t border-bgray-200 pt-4 dark:border-darkblack-400" data-project-header-expandable>
         <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-            <div class="space-y-4">
-                <div class="rounded-xl border border-bgray-200 bg-bgray-50/60 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40">
-                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer</p>
-                            <div class="mt-1 flex min-w-0 items-center gap-1 text-md font-medium text-bgray-900 dark:text-white">
-                                @if ($project->customer)
-                                    <x-profile-grade-badge :grade="$project->customer->profileGrade" size="sm" />
-                                @endif
-                                @if ($project->customer && !$project->customer->trashed())
-                                    <a href="{{ route('customers.show', $project->customer) }}" class="truncate transition hover:text-success-400">
-                                        {{ $project->customer->name }}
-                                    </a>
-                                @else
-                                    <span class="truncate">{{ $project->customer->name ?? '--' }}</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Sales Person</p>
-                            <p class="mt-1 truncate text-md font-medium text-bgray-900 dark:text-white">{{ $project->salesPerson->name ?? '--' }}</p>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Project Flow</p>
-                            <div class="mt-1 flex items-center gap-2 text-md font-medium text-bgray-900 dark:text-white">
-                                <x-project-flow-icon :flow="$project->project_flow" size="sm" />
-                                <span>{{ strtoupper($project->project_flow ?? '--') }}</span>
-                            </div>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Start Date</p>
-                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayStartDate)->format($globalDateFormat) ?? '--' }}</p>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">End Date</p>
-                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayEndDate)->format($globalDateFormat) ?? '--' }}</p>
-                        </div>
-                        @if ($canCustomerEndDate)
-                            <div class="min-w-0">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer End Date</p>
-                                <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayCustomerEndDate)->format($globalDateFormat) ?? '--' }}</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="grid gap-4 xl:grid-cols-2">
-                    <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                        <div>
-                            <div class="mb-2 flex items-center justify-between gap-3">
-                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">Project Timeline</p>
-                                <span class="text-sm font-bold {{ $projectTimeline['text_class'] }}">
-                                    {{ $projectTimeline['percentage'] }}%
-                                </span>
-                            </div>
-
-                            <div>
-                                <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
-                                    <div class="h-full rounded-full transition-all duration-300 {{ $projectTimeline['bar_class'] }}" style="width: {{ $projectTimeline['percentage'] }}%;"></div>
-                                </div>
-
-                                <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-700 dark:text-bgray-300">
-                                    <span>{{ $projectTimeline['start_label'] }}</span>
-                                    <span>{{ $projectTimeline['end_label'] }}</span>
-                                </div>
-                            </div>
+            <div class="p-2">
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer</p>
+                        <div class="mt-1 flex min-w-0 items-center gap-1 text-md font-medium text-bgray-900 dark:text-white">
+                            @if ($project->customer)
+                                <x-profile-grade-badge :grade="$project->customer->profileGrade" size="sm" />
+                            @endif
+                            @if ($project->customer && !$project->customer->trashed())
+                                <a href="{{ route('customers.show', $project->customer) }}" class="truncate transition hover:text-success-400">
+                                    {{ $project->customer->name }}
+                                </a>
+                            @else
+                                <span class="truncate">{{ $project->customer->name ?? '--' }}</span>
+                            @endif
                         </div>
                     </div>
-
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Sales Person</p>
+                        <p class="mt-1 truncate text-md font-medium text-bgray-900 dark:text-white">{{ $project->salesPerson->name ?? '--' }}</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Project Flow</p>
+                        <div class="mt-1 flex items-center gap-2 text-md font-medium text-bgray-900 dark:text-white">
+                            <x-project-flow-icon :flow="$project->project_flow" size="sm" />
+                            <span>{{ strtoupper($project->project_flow ?? '--') }}</span>
+                        </div>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Start Date</p>
+                        <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayStartDate)->format($globalDateFormat) ?? '--' }}</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">End Date</p>
+                        <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayEndDate)->format($globalDateFormat) ?? '--' }}</p>
+                    </div>
                     @if ($canCustomerEndDate)
-                        <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                            <div>
-                                <div class="mb-2 flex items-center justify-between gap-3">
-                                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">Customer Timeline</p>
-                                    <span class="text-sm font-bold {{ $customerTimeline['text_class'] }}">
-                                        {{ $customerTimeline['percentage'] }}%
-                                    </span>
-                                </div>
-
-                                <div>
-                                    <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
-                                        <div class="h-full rounded-full transition-all duration-300 {{ $customerTimeline['bar_class'] }}" style="width: {{ $customerTimeline['percentage'] }}%;"></div>
-                                    </div>
-
-                                    <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-700 dark:text-bgray-300">
-                                        <span>{{ $customerTimeline['start_label'] }}</span>
-                                        <span>{{ $customerTimeline['end_label'] }}</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer End Date</p>
+                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($displayCustomerEndDate)->format($globalDateFormat) ?? '--' }}</p>
                         </div>
                     @endif
                 </div>
@@ -318,6 +263,54 @@
                     </p>
                 </div>
             </div>
+        </div>
+
+        <div class="grid gap-4 {{ $canCustomerEndDate ? 'xl:grid-cols-2' : '' }}">
+            <div class="p-2">
+                <div>
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                        <p class="text-sm font-semibold text-bgray-900 dark:text-white">Project Timeline</p>
+                        <span class="text-sm font-bold {{ $projectTimeline['text_class'] }}">
+                            {{ $projectTimeline['percentage'] }}%
+                        </span>
+                    </div>
+
+                    <div>
+                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
+                            <div class="h-full rounded-full transition-all duration-300 {{ $projectTimeline['bar_class'] }}" style="width: {{ $projectTimeline['percentage'] }}%;"></div>
+                        </div>
+
+                        <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-700 dark:text-bgray-300">
+                            <span>{{ $projectTimeline['start_label'] }}</span>
+                            <span>{{ $projectTimeline['end_label'] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if ($canCustomerEndDate)
+                <div class="p-2">
+                    <div>
+                        <div class="mb-2 flex items-center justify-between gap-3">
+                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">Customer Timeline</p>
+                            <span class="text-sm font-bold {{ $customerTimeline['text_class'] }}">
+                                {{ $customerTimeline['percentage'] }}%
+                            </span>
+                        </div>
+
+                        <div>
+                            <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
+                                <div class="h-full rounded-full transition-all duration-300 {{ $customerTimeline['bar_class'] }}" style="width: {{ $customerTimeline['percentage'] }}%;"></div>
+                            </div>
+
+                            <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-700 dark:text-bgray-300">
+                                <span>{{ $customerTimeline['start_label'] }}</span>
+                                <span>{{ $customerTimeline['end_label'] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>

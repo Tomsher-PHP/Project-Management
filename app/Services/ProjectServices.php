@@ -426,6 +426,70 @@ class ProjectServices
         });
     }
 
+    public function updateNote(ProjectNote $note, array $data): ProjectNote
+    {
+        return DB::transaction(function () use ($note, $data) {
+            $project = $note->project;
+
+            $removedAttachmentIds = $data['removed_attachment_ids'] ?? [];
+            if (!empty($removedAttachmentIds)) {
+                $attachmentsToDelete = $note->attachments()
+                    ->whereIn('id', $removedAttachmentIds)
+                    ->get();
+
+                if ($attachmentsToDelete->isNotEmpty()) {
+                    $this->attachmentService->delete($attachmentsToDelete);
+                }
+            }
+
+            $newAttachmentsUploaded = false;
+            if (!empty($data['attachments'])) {
+                $directory = 'project_files/' . $project->project_code . '/notes';
+
+                foreach ($data['attachments'] as $file) {
+                    $this->attachmentService->upload(
+                        $file,
+                        $directory,
+                        $note,
+                        $this->filesystemDisk,
+                        'public',
+                        false,
+                        'project_note'
+                    );
+                }
+                $newAttachmentsUploaded = true;
+            }
+
+            $attachmentsChanged = !empty($removedAttachmentIds) || $newAttachmentsUploaded;
+            $newDescription = $data['description'] ?? null;
+            $descriptionChanged = $note->description !== $newDescription;
+
+            if ($descriptionChanged) {
+                $note->description = $newDescription;
+                $note->updated_by = auth()->id();
+                $note->save();
+            } elseif ($attachmentsChanged) {
+                $note->updated_by = auth()->id();
+                $note->updated_at = now();
+                $note->saveQuietly();
+
+                activity('project_notes')
+                    ->performedOn($note)
+                    ->causedBy(auth()->user())
+                    ->withProperties([
+                        'parent_type' => Project::class,
+                        'parent_id' => $project->id,
+                        'labels' => ['description' => 'Description'],
+                        'display_attributes' => ['description' => $note->description],
+                    ])
+                    ->event('updated')
+                    ->log('project_notes.updated');
+            }
+
+            return $note->load(['attachments', 'addedBy']);
+        });
+    }
+
     public function findOrCreateUnplannedWorkMilestone(Project $project): ProjectMilestone
     {
         $this->ensureAgileProject($project);

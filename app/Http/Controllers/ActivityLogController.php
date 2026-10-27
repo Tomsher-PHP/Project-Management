@@ -283,8 +283,8 @@ class ActivityLogController extends Controller
                 return [
                     'field' => $field,
                     'label' => $labels->get($field, $this->resolveActivityFieldLabel($activity, $field)),
-                    'old' => $this->resolveActivityFieldValue($subjectModel, $field, $oldValues, $displayOld),
-                    'new' => $this->resolveActivityFieldValue($subjectModel, $field, $attributes, $displayAttributes),
+                    'old' => $this->resolveActivityFieldValue($subjectModel, $field, $oldValues, $displayOld, $activity),
+                    'new' => $this->resolveActivityFieldValue($subjectModel, $field, $attributes, $displayAttributes, $activity),
                 ];
             })
             ->values();
@@ -304,7 +304,7 @@ class ActivityLogController extends Controller
             ->title();
     }
 
-    private function resolveActivityFieldValue(?Model $subjectModel, string $field, Collection $rawValues, Collection $displayValues): array
+    private function resolveActivityFieldValue(?Model $subjectModel, string $field, Collection $rawValues, Collection $displayValues, ?Activity $activity = null): array
     {
         if (! $rawValues->has($field) && ! $displayValues->has($field)) {
             return [
@@ -313,13 +313,26 @@ class ActivityLogController extends Controller
             ];
         }
 
-        $resolved = $this->transformActivityValue($subjectModel, $field, $rawValues->get($field));
+        $resolved = $this->transformActivityValue($subjectModel, $field, $rawValues->get($field), $activity);
 
         if ($displayValues->has($field)) {
             $resolved['value'] = $displayValues->get($field);
         }
 
+        if ($this->isHtmlActivityField($activity, $field)) {
+            $resolved['type'] = 'html';
+        }
+
         return $resolved;
+    }
+
+    private function isHtmlActivityField(?Activity $activity, string $field): bool
+    {
+        if (! $activity) {
+            return false;
+        }
+
+        return in_array($activity->log_name, ['project_notes', 'task_notes'], true) && $field === 'description';
     }
 
     private function resolveSubjectLabel(Activity $activity): string
@@ -351,12 +364,19 @@ class ActivityLogController extends Controller
         return $instance instanceof Model ? $instance : null;
     }
 
-    private function transformActivityValue(?Model $subjectModel, string $field, mixed $value): array
+    private function transformActivityValue(?Model $subjectModel, string $field, mixed $value, ?Activity $activity = null): array
     {
         if ($value === null) {
             return [
                 'value' => null,
                 'type' => null,
+            ];
+        }
+
+        if ($this->isHtmlActivityField($activity, $field)) {
+            return [
+                'value' => $value,
+                'type' => 'html',
             ];
         }
 
