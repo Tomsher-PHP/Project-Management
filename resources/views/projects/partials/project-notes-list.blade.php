@@ -30,7 +30,7 @@
     </div>
 
     @if ($projectNotes->hasPages())
-        <div class="mt-6">
+        <div class="mt-6" data-project-notes-pagination>
             {{ $projectNotes->links() }}
         </div>
     @endif

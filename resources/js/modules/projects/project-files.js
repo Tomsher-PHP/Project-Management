@@ -4,6 +4,7 @@ const projectFilesState = {
     editor: null,
     listenersBound: false,
     openEditNoteModal: null,
+    loadNotesPagination: null,
     currentEditingNoteId: null,
     removedAttachmentIds: [],
     pendingFiles: [],
@@ -371,11 +372,20 @@ const initializeProjectFiles = (root = document) => {
     function replaceNotesHistory(html, currentPage) {
         const notesHistory = document.getElementById('project-notes-history');
 
-        if (!notesHistory) {
+        if (!notesHistory || !html) {
             return;
         }
 
-        notesHistory.outerHTML = html;
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const newHistory = wrapper.querySelector('#project-notes-history') || (wrapper.firstElementChild?.id === 'project-notes-history' ? wrapper.firstElementChild : null);
+
+        if (newHistory) {
+            notesHistory.outerHTML = newHistory.outerHTML;
+        } else {
+            notesHistory.outerHTML = html;
+        }
+
         updateNotesPageInUrl(currentPage);
     }
 
@@ -393,6 +403,61 @@ const initializeProjectFiles = (root = document) => {
         url.searchParams.set('notes_page', String(currentPage));
         window.history.replaceState({}, '', url);
     }
+
+    async function loadNotesPagination(target) {
+        let pageNum = 1;
+        if (typeof target === 'number') {
+            pageNum = target;
+        } else if (typeof target === 'string') {
+            try {
+                const parsed = new URL(target, window.location.origin);
+                pageNum = parseInt(parsed.searchParams.get('notes_page'), 10) || 1;
+            } catch (e) {
+                pageNum = parseInt(target, 10) || 1;
+            }
+        }
+
+        const notesHistory = document.getElementById('project-notes-history');
+        if (notesHistory) {
+            notesHistory.style.opacity = '0.5';
+            notesHistory.style.pointerEvents = 'none';
+        }
+
+        const tabsRoot = document.querySelector('[data-project-tabs]');
+        const tabsUrlTemplate = tabsRoot?.dataset.tabsUrlTemplate || window.ProjectApp?.tabsUrlTemplate || `/projects/${projectId}/tabs/__TAB__`;
+        const baseUrl = tabsUrlTemplate.replace('__TAB__', 'notes');
+        const url = new URL(baseUrl, window.location.origin);
+        url.searchParams.set('notes_page', String(pageNum));
+        url.searchParams.set('notes_only', '1');
+
+        try {
+            const response = await fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-Project-Notes-Pagination': 'true',
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || (data.status !== undefined && !data.status) || (data.success !== undefined && !data.success)) {
+                throw new Error(data.message || 'Failed to load notes page.');
+            }
+
+            const htmlContent = data.html || '';
+            replaceNotesHistory(htmlContent, pageNum);
+        } catch (error) {
+            console.error('Error loading notes page:', error);
+            Alert.error(error.message || 'Failed to load notes page.');
+            if (notesHistory) {
+                notesHistory.style.opacity = '';
+                notesHistory.style.pointerEvents = '';
+            }
+        }
+    }
+
+    projectFilesState.loadNotesPagination = loadNotesPagination;
 
     async function deleteNote(button) {
         const noteId = button.dataset.noteId || button.closest('form')?.dataset.id;
@@ -478,6 +543,7 @@ const initializeProjectFiles = (root = document) => {
             const editButton = event.target.closest('.edit-project-note');
             const deleteNoteButton = event.target.closest('.delete-project-note');
             const deleteFileButton = event.target.closest('.delete-project-note-file');
+            const paginationLink = event.target.closest('#project-notes-history [data-project-notes-pagination] a, #project-notes-history nav a, #project-notes-history .pagination a');
 
             if (editButton) {
                 event.preventDefault();
@@ -496,6 +562,12 @@ const initializeProjectFiles = (root = document) => {
 
             if (deleteFileButton) {
                 await deleteNoteFile(deleteFileButton);
+                return;
+            }
+
+            if (paginationLink) {
+                event.preventDefault();
+                await loadNotesPagination(paginationLink.href);
                 return;
             }
         });

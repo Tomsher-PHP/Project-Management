@@ -1,7 +1,7 @@
 @php
-    $isDeletedProjectView = $project->trashed();
-    $canCreate = !$isDeletedProjectView && auth()->user()->can('project.add_notes_files');
-    $canRemove = !$isDeletedProjectView && auth()->user()->can('project.remove_notes_files');
+    $isDeletedProjectView = $isDeletedProjectView ?? $project->trashed();
+    $canCreate = $canCreate ?? (!$isDeletedProjectView && auth()->user()->can('project.add_notes_files'));
+    $canRemove = $canRemove ?? (!$isDeletedProjectView && auth()->user()->can('project.remove_notes_files'));
     $canEditAny = !$isDeletedProjectView && auth()->check();
 @endphp
 

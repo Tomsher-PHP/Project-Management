@@ -289,7 +289,15 @@ class ProjectRestoreService
     {
         $projectNotes = $this->getPaginatedProjectNotes($project, (int) $request->input('notes_page', 1));
 
-        return view('projects.partials.tabs.notes', compact('project', 'projectNotes'))->render();
+        $canRemove = false;
+        $canCreate = false;
+        $isDeletedProjectView = true;
+
+        if ($request->ajax() && ($request->boolean('notes_only') || $request->header('X-Project-Notes-Pagination') || $request->input('view') === 'list')) {
+            return view('projects.partials.project-notes-list', compact('projectNotes', 'canRemove', 'canCreate', 'isDeletedProjectView'))->render();
+        }
+
+        return view('projects.partials.tabs.notes', compact('project', 'projectNotes', 'canRemove', 'canCreate', 'isDeletedProjectView'))->render();
     }
 
     private function renderHistoryTab(Project $project): string
