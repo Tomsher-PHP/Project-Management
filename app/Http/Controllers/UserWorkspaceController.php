@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BreakWorkRequest;
+use App\Models\HandoffRequest;
 use App\Models\Holiday;
-use App\Models\Project;
-use App\Models\ProjectMilestone;
-use App\Models\ProjectSprint;
 use App\Models\Task;
 use App\Models\TaskStatus;
 use App\Models\User;
@@ -21,7 +19,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use App\Models\HandoffRequest;
 
 class UserWorkspaceController extends Controller
 {
@@ -96,7 +93,7 @@ class UserWorkspaceController extends Controller
         )
             ->where('status', HandoffRequest::STATUS_PENDING)
             ->count();
-            
+
         return view('workspace.view', [
             'tasksByStatus' => $tasksByStatus,
             'agileNewTaskCount' => $agileNewTaskCount,
@@ -246,7 +243,7 @@ class UserWorkspaceController extends Controller
             ->baseQuery($request->user())
             ->where('current_assignee_id', $workspaceUser->id)
             ->whereHas('project', fn($query) => $query->where('project_flow', $selectedFlowType))
-            ->where('request_status', '!=', 'rejected');
+            ->where('request_status', '!=', Task::REQUEST_REJECTED);
 
         return $taskFilterService->getFilters($request->user(), $baseQuery);
     }

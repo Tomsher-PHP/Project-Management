@@ -34,10 +34,10 @@ class TaskRequestServices
             ])
             ->withExists([
                 'currentAssignee as is_self_requested' => fn(Builder $query) =>
-                    $query->whereKey($user->id),
+                $query->whereKey($user->id),
                 'timeLogs as has_started',
                 'timeLogs as is_currently_running' => fn(Builder $query) =>
-                    $query->where('is_running', true),
+                $query->where('is_running', true),
             ]);
 
         $this->applyFilters($query, $filters);
@@ -90,7 +90,7 @@ class TaskRequestServices
 
         $tasks = $this->accountableRequestQuery($user)
             ->whereKey($taskIds)
-            ->where('request_status', 'pending')
+            ->where('request_status', Task::REQUEST_PENDING)
             ->get();
 
         abort_unless($tasks->count() === $taskIds->count(), Response::HTTP_FORBIDDEN);
@@ -114,7 +114,7 @@ class TaskRequestServices
     {
         return $this->accountableRequestQuery($user)
             ->whereKey($task->id)
-            ->where('request_status', 'pending')
+            ->where('request_status', Task::REQUEST_PENDING)
             ->exists();
     }
 
