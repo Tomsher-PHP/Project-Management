@@ -130,5 +130,27 @@ return [
     'project_notification_types' => [
         'timeline_ending_soon' => 'Timeline Ending Soon',
         'hosting_ending_soon' => 'Server & Hosting Expiry',
-    ]
+    ],
+
+    'project_import_modules' => [
+        'project_hosting' => [
+            'label' => 'Project Hosting Records',
+            'description' => 'Import hosting records associated with multiple projects.',
+            'permission' => 'project_hosting.create',
+            'view_partial' => 'projects.import.modules.project-hosting',
+            'template_path' => 'assets/templates/project_hosting/project_hosting_records_import_template.xlsx',
+            'template_filename' => 'project_hosting_records_import_template.xlsx',
+            'handler_class' => \App\Services\ProjectHostingImportService::class,
+            'enabled' => true,
+        ],
+        // 'project_timeline' => [
+        //     'label' => 'Project Timeline Records',
+        //     'description' => 'Import timeline records associated with multiple projects.',
+        //     'permission' => 'project_timeline.create',
+        //     'view_partial' => 'projects.import.modules.project-timeline',
+        //     'template_path' => 'assets/templates/project_hosting/project_hosting_records_import_template.xlsx',
+        //     'template_filename' => 'project_hosting_records_import_template.xlsx',
+        //     'enabled' => true,
+        // ],
+    ],
 ];

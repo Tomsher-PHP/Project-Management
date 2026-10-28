@@ -37,6 +37,7 @@ use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectHostingController;
+use App\Http\Controllers\ProjectImportController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
@@ -528,6 +529,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('meetings/groups/{group}', [ProjectController::class, 'meetingGroup'])->name('projects.restore.meetings.groups.show');
     });
 
+    // Project Import routes
+    Route::get('projects/import', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('projects.import.index');
+    Route::get('projects/import/{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('projects.import.template');
+    Route::post('projects/import/{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('projects.import.validate');
+    Route::post('projects/import/{module}/process', [ProjectImportController::class, 'startImport'])->name('projects.import.process');
+    Route::get('projects/import/{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('projects.import.status');
+
+    // Project common routes
     Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
     Route::get('projects/{project}/task-create-dependencies', [ProjectController::class, 'taskCreateDependencies'])->name('projects.task-create-dependencies');
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);

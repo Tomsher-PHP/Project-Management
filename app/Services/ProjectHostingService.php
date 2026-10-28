@@ -17,13 +17,15 @@ class ProjectHostingService
     /**
      * Create a new hosting record with its initial status history entry.
      */
-    public function createRecord(Project $project, array $data, ?int $userId = null): ProjectHostingRecord
+    public function createRecord(Project $project, array $data, ?int $userId = null, bool $preserveLastRenewedDate = false): ProjectHostingRecord
     {
         $userId = $userId ?? auth()->id();
         $data['project_id'] = $project->id;
         $data['created_by'] = $userId;
         $data['updated_by'] = $userId;
-        unset($data['last_renewed_date']);
+        if (! $preserveLastRenewedDate) {
+            unset($data['last_renewed_date']);
+        }
 
         return DB::transaction(function () use ($data, $userId) {
             $record = ProjectHostingRecord::create($data);
