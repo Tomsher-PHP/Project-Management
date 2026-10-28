@@ -12,15 +12,22 @@ use App\Models\HostingService;
 use App\Models\HostingServiceStatus;
 use App\Models\Project;
 use App\Models\ProjectHostingRecord;
-use App\Models\ProjectHostingRenewalHistory;
-use App\Models\ProjectHostingStatusHistory;
+use App\Services\ProjectHostingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 class ProjectHostingController extends Controller
 {
+    /**
+     * Create a new controller instance with the ProjectHostingService dependency.
+     */
+    public function __construct(
+        protected ?ProjectHostingService $hostingService = null
+    ) {
+        $this->hostingService = $hostingService ?? app(ProjectHostingService::class);
+    }
+
     /**
      * Render the main Hosting tab view for project detail page.
      */
@@ -130,27 +137,9 @@ class ProjectHostingController extends Controller
         abort_unless(auth()->user()?->can('project_hosting.create'), Response::HTTP_FORBIDDEN);
 
         $validated = $request->validated();
-        $validated['project_id'] = $project->id;
-        $validated['created_by'] = auth()->id();
-        $validated['updated_by'] = auth()->id();
-        unset($validated['last_renewed_date']);
-
-        DB::beginTransaction();
 
         try {
-            $record = ProjectHostingRecord::create($validated);
-
-            ProjectHostingStatusHistory::create([
-                'project_hosting_record_id' => $record->id,
-                'from_status_id' => null,
-                'to_status_id' => $record->hosting_service_status_id,
-                'changed_at' => now(),
-                'changed_by' => auth()->id(),
-                'reason' => 'Initial status',
-                'notes' => null,
-            ]);
-
-            DB::commit();
+            $this->hostingService->createRecord($project, $validated, auth()->id());
 
             return response()->json([
                 'success' => true,
@@ -159,7 +148,6 @@ class ProjectHostingController extends Controller
                 'summary' => $this->calculateSummaryMetrics($project),
             ], Response::HTTP_CREATED);
         } catch (\Throwable $e) {
-            DB::rollBack();
             report($e);
 
             return response()->json([
@@ -178,35 +166,9 @@ class ProjectHostingController extends Controller
         $this->ensureHostingRecordBelongsToProject($project, $hostingRecord);
 
         $validated = $request->validated();
-        $validated['updated_by'] = auth()->id();
-        unset($validated['last_renewed_date']);
-
-        DB::beginTransaction();
 
         try {
-            /** @var ProjectHostingRecord $lockedRecord */
-            $lockedRecord = ProjectHostingRecord::where('id', $hostingRecord->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $oldStatusId = (int) $lockedRecord->hosting_service_status_id;
-            $newStatusId = isset($validated['hosting_service_status_id']) ? (int) $validated['hosting_service_status_id'] : null;
-
-            $lockedRecord->update($validated);
-
-            if ($newStatusId !== null && $oldStatusId !== $newStatusId) {
-                ProjectHostingStatusHistory::create([
-                    'project_hosting_record_id' => $lockedRecord->id,
-                    'from_status_id' => $oldStatusId,
-                    'to_status_id' => $newStatusId,
-                    'changed_at' => now(),
-                    'changed_by' => auth()->id(),
-                    'reason' => 'Status changed',
-                    'notes' => null,
-                ]);
-            }
-
-            DB::commit();
+            $this->hostingService->updateRecord($hostingRecord, $validated, auth()->id());
 
             return response()->json([
                 'success' => true,
@@ -215,7 +177,6 @@ class ProjectHostingController extends Controller
                 'summary' => $this->calculateSummaryMetrics($project),
             ]);
         } catch (\Throwable $e) {
-            DB::rollBack();
             report($e);
 
             return response()->json([
@@ -239,34 +200,14 @@ class ProjectHostingController extends Controller
 
         $newStatusId = (int) $request->input('hosting_service_status_id');
 
-        DB::beginTransaction();
-
         try {
-            /** @var ProjectHostingRecord $lockedRecord */
-            $lockedRecord = ProjectHostingRecord::where('id', $hostingRecord->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $oldStatusId = (int) $lockedRecord->hosting_service_status_id;
-
-            if ($oldStatusId !== $newStatusId) {
-                $lockedRecord->update([
-                    'hosting_service_status_id' => $newStatusId,
-                    'updated_by' => auth()->id(),
-                ]);
-
-                ProjectHostingStatusHistory::create([
-                    'project_hosting_record_id' => $lockedRecord->id,
-                    'from_status_id' => $oldStatusId,
-                    'to_status_id' => $newStatusId,
-                    'changed_at' => now(),
-                    'changed_by' => auth()->id(),
-                    'reason' => 'Status changed via dropdown',
-                    'notes' => null,
-                ]);
-            }
-
-            DB::commit();
+            $lockedRecord = $this->hostingService->updateStatus(
+                $hostingRecord,
+                $newStatusId,
+                'Status changed via dropdown',
+                null,
+                auth()->id()
+            );
 
             $listRequest = Request::create(
                 $request->url(),
@@ -279,12 +220,11 @@ class ProjectHostingController extends Controller
                 'success' => true,
                 'message' => 'Hosting status updated successfully.',
                 'hosting_service_status_id' => $newStatusId,
-                'status_name' => $lockedRecord->fresh()->hostingServiceStatus?->name,
+                'status_name' => $lockedRecord->hostingServiceStatus?->name,
                 'html' => $this->renderHostingList($project, $listRequest),
                 'summary' => $this->calculateSummaryMetrics($project),
             ]);
         } catch (\Throwable $e) {
-            DB::rollBack();
             report($e);
 
             return response()->json([
@@ -305,88 +245,8 @@ class ProjectHostingController extends Controller
 
         $validated = $request->validated();
 
-        DB::beginTransaction();
-
         try {
-            /** @var ProjectHostingRecord $lockedRecord */
-            $lockedRecord = ProjectHostingRecord::where('id', $hostingRecord->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            // Capture previous record state for history tracking
-            $previousStartDate = $lockedRecord->start_date;
-            $previousExpiryDate = $lockedRecord->expiry_date;
-
-            // Determine updated dates
-            $renewalDate = $validated['renewal_date'];
-            $newExpiryDate = $validated['new_expiry_date'];
-            $newStartDate = !empty($validated['new_start_date']) ? $validated['new_start_date'] : $lockedRecord->start_date;
-
-            // Determine updated billing details (preserve existing if not explicitly provided)
-            $billingCycleId = array_key_exists('hosting_billing_cycle_id', $validated) && $validated['hosting_billing_cycle_id'] !== null
-                ? (int) $validated['hosting_billing_cycle_id']
-                : $lockedRecord->hosting_billing_cycle_id;
-
-            $billingAmount = array_key_exists('billing_amount', $validated) && $validated['billing_amount'] !== null && $validated['billing_amount'] !== ''
-                ? $validated['billing_amount']
-                : $lockedRecord->billing_amount;
-
-            $currencyCode = !empty($validated['currency_code'])
-                ? $validated['currency_code']
-                : $lockedRecord->currency_code;
-
-            $reference = array_key_exists('reference', $validated) && $validated['reference'] !== null && $validated['reference'] !== ''
-                ? $validated['reference']
-                : $lockedRecord->reference;
-
-            $notes = $validated['notes'] ?? null;
-
-            // Create Renewal History record
-            ProjectHostingRenewalHistory::create([
-                'project_hosting_record_id' => $lockedRecord->id,
-                'renewal_date' => $renewalDate,
-                'previous_start_date' => $previousStartDate,
-                'previous_expiry_date' => $previousExpiryDate,
-                'new_start_date' => $newStartDate,
-                'new_expiry_date' => $newExpiryDate,
-                'hosting_billing_cycle_id' => $billingCycleId,
-                'billing_amount' => $billingAmount,
-                'currency_code' => $currencyCode,
-                'reference' => $reference,
-                'notes' => $notes,
-                'renewed_by' => auth()->id(),
-            ]);
-
-            // Update hosting record with new renewal values
-            $recordUpdates = [
-                'last_renewed_date' => $renewalDate,
-                'expiry_date' => $newExpiryDate,
-                'next_renewal_date' => $newExpiryDate, // In PMS, next renewal aligns with expiry date
-                'hosting_billing_cycle_id' => $billingCycleId,
-                'billing_amount' => $billingAmount,
-                'currency_code' => $currencyCode,
-                'reference' => $reference,
-                'updated_by' => auth()->id(),
-            ];
-
-            if (!empty($validated['new_start_date'])) {
-                $recordUpdates['start_date'] = $validated['new_start_date'];
-            }
-
-            $lockedRecord->update($recordUpdates);
-
-            DB::commit();
-
-            // Reload relations for rendering updated drawer view
-            $lockedRecord->load([
-                'hostingProvider',
-                'hostingService',
-                'hostingServiceStatus',
-                'hostingBillingCycle',
-                'hostingEnvironment',
-                'creator',
-                'updater',
-            ]);
+            $lockedRecord = $this->hostingService->renewRecord($hostingRecord, $validated, auth()->id());
 
             return response()->json([
                 'success' => true,
@@ -399,7 +259,6 @@ class ProjectHostingController extends Controller
                 ])->render(),
             ]);
         } catch (\Throwable $e) {
-            DB::rollBack();
             report($e);
 
             return response()->json([
@@ -417,11 +276,7 @@ class ProjectHostingController extends Controller
         abort_unless(auth()->user()?->can('project_hosting.view'), Response::HTTP_FORBIDDEN);
         $this->ensureHostingRecordBelongsToProject($project, $hostingRecord);
 
-        $renewals = $hostingRecord->renewalHistories()
-            ->with(['billingCycle', 'renewedBy'])
-            ->orderByDesc('renewal_date')
-            ->orderByDesc('id')
-            ->get();
+        $renewals = $this->hostingService->getRenewalHistory($hostingRecord);
 
         return response()->json([
             'success' => true,
@@ -442,11 +297,7 @@ class ProjectHostingController extends Controller
         abort_unless(auth()->user()?->can('project_hosting.view'), Response::HTTP_FORBIDDEN);
         $this->ensureHostingRecordBelongsToProject($project, $hostingRecord);
 
-        $statuses = $hostingRecord->statusHistories()
-            ->with(['fromStatus', 'toStatus', 'changedBy'])
-            ->orderByDesc('changed_at')
-            ->orderByDesc('id')
-            ->get();
+        $statuses = $this->hostingService->getStatusHistory($hostingRecord);
 
         return response()->json([
             'success' => true,
@@ -467,12 +318,8 @@ class ProjectHostingController extends Controller
         abort_unless(auth()->user()?->can('project_hosting.delete'), Response::HTTP_FORBIDDEN);
         $this->ensureHostingRecordBelongsToProject($project, $hostingRecord);
 
-        DB::beginTransaction();
-
         try {
-            $hostingRecord->delete();
-
-            DB::commit();
+            $this->hostingService->deleteRecord($hostingRecord);
 
             return response()->json([
                 'status' => true,
@@ -484,7 +331,6 @@ class ProjectHostingController extends Controller
                 'render_mode' => 'replace_inner',
             ]);
         } catch (\Throwable $e) {
-            DB::rollBack();
             report($e);
 
             return response()->json([
@@ -515,56 +361,13 @@ class ProjectHostingController extends Controller
      */
     protected function getFilteredHostingRecords(Project $project, Request $request)
     {
-        $query = $this->getHostingRecordsQuery($project);
-
-        // Search by keyword (name, domain, reference)
-        if ($request->filled('search')) {
-            $searchTerm = trim((string) $request->input('search'));
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', "%{$searchTerm}%")
-                    ->orWhere('domain', 'like', "%{$searchTerm}%")
-                    ->orWhere('reference', 'like', "%{$searchTerm}%");
-            });
-        }
-
-        // Filter by provider
-        if ($request->filled('hosting_provider_id')) {
-            $query->where('hosting_provider_id', (int) $request->input('hosting_provider_id'));
-        }
-
-        // Filter by service type
-        if ($request->filled('hosting_service_id')) {
-            $query->where('hosting_service_id', (int) $request->input('hosting_service_id'));
-        }
-
-        // Filter by status
-        if ($request->filled('hosting_service_status_id')) {
-            $query->where('hosting_service_status_id', (int) $request->input('hosting_service_status_id'));
-        }
-
-        // Filter by ownership
-        if ($request->filled('ownership_type')) {
-            $query->where('ownership_type', $request->input('ownership_type'));
-        }
-
-        // Filter by expiry classification
-        if ($request->filled('expiry_status')) {
-            $today = now()->startOfDay()->toDateString();
-            $in30Days = now()->addDays(30)->endOfDay()->toDateString();
-
-            match ($request->input('expiry_status')) {
-                'expiring_soon' => $query->whereNotNull('expiry_date')
-                    ->whereBetween('expiry_date', [$today, $in30Days]),
-                'expired' => $query->whereNotNull('expiry_date')
-                    ->where('expiry_date', '<', $today),
-                'no_expiry' => $query->whereNull('expiry_date'),
-                default => null,
-            };
-        }
-
         $perPage = max(1, min(100, (int) $request->input('per_page', 10)));
 
-        return $query->paginate($perPage)->withQueryString();
+        return $this->hostingService->getFilteredHostingRecords(
+            $project,
+            $request->all(),
+            $perPage
+        )->withQueryString();
     }
 
     /**
@@ -572,38 +375,7 @@ class ProjectHostingController extends Controller
      */
     protected function calculateSummaryMetrics(Project $project): array
     {
-        $baseQuery = ProjectHostingRecord::query()->where('project_id', $project->id);
-
-        $today = now()->startOfDay()->toDateString();
-        $in30Days = now()->addDays(30)->endOfDay()->toDateString();
-
-        $total = (clone $baseQuery)->count();
-
-        // Active status count (determined from HostingServiceStatus active code/name)
-        $activeStatusIds = HostingServiceStatus::where('code', 'active')
-            ->orWhere('name', 'Active')
-            ->pluck('id');
-
-        $active = (clone $baseQuery)
-            ->whereIn('hosting_service_status_id', $activeStatusIds)
-            ->count();
-
-        $expiringSoon = (clone $baseQuery)
-            ->whereNotNull('expiry_date')
-            ->whereBetween('expiry_date', [$today, $in30Days])
-            ->count();
-
-        $expired = (clone $baseQuery)
-            ->whereNotNull('expiry_date')
-            ->where('expiry_date', '<', $today)
-            ->count();
-
-        return [
-            'total' => $total,
-            'active' => $active,
-            'expiring_soon' => $expiringSoon,
-            'expired' => $expired,
-        ];
+        return $this->hostingService->calculateSummaryMetrics($project);
     }
 
     /**
@@ -623,18 +395,7 @@ class ProjectHostingController extends Controller
      */
     protected function getHostingRecordsQuery(Project $project)
     {
-        return ProjectHostingRecord::query()
-            ->where('project_id', $project->id)
-            ->with([
-                'hostingProvider',
-                'hostingService',
-                'hostingServiceStatus',
-                'hostingBillingCycle',
-                'hostingEnvironment',
-                'creator:id,name',
-                'updater:id,name',
-            ])
-            ->latest('id');
+        return $this->hostingService->getHostingRecordsQuery($project);
     }
 
     /**
