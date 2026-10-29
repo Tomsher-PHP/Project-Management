@@ -166,3 +166,11 @@
 .max-w-0 {
     max-width: 0px !important;
 }
+
+/* Prevent Chromium/Edge autofill style recalculation flickering */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s !important;
+}
