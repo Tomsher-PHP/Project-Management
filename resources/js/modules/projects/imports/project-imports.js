@@ -2,21 +2,104 @@
  * Project Imports - Frontend module for single-upload, live tracking, results filtering and pagination.
  */
 export function initProjectImports() {
-    // 1. File input name display & form submit guard (prevents double submits)
+    // 1. File input, drag & drop box & form submit guard
+    const fileUploadBox = document.getElementById('file-upload-box');
     const fileInput = document.getElementById('excel-file-input');
     const fileNameDisplay = document.getElementById('file-chosen-name');
+    const filePrompt = document.getElementById('file-upload-prompt');
+    const chosenContainer = document.getElementById('file-chosen-container');
     const importForm = document.getElementById('import-form');
     const startBtn = document.getElementById('btn-start-import');
     const btnLabel = document.getElementById('btn-import-label');
     const btnIcon = document.getElementById('btn-import-icon');
     const btnSpinner = document.getElementById('btn-import-spinner');
 
-    if (fileInput && fileNameDisplay) {
+    const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+
+    function updateFileDisplay(file) {
+        if (file) {
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                alert('The file size cannot exceed 20 MB.');
+                fileInput.value = '';
+                updateFileDisplay(null);
+                return;
+            }
+
+            if (fileNameDisplay) fileNameDisplay.textContent = file.name;
+            if (filePrompt) filePrompt.classList.add('hidden');
+            if (chosenContainer) {
+                chosenContainer.classList.remove('hidden');
+                chosenContainer.classList.add('flex');
+            }
+            if (fileUploadBox) {
+                fileUploadBox.classList.add('border-success-400', 'bg-success-50/20', 'dark:bg-darkblack-500');
+            }
+        } else {
+            if (fileNameDisplay) fileNameDisplay.textContent = '';
+            if (filePrompt) filePrompt.classList.remove('hidden');
+            if (chosenContainer) {
+                chosenContainer.classList.remove('flex');
+                chosenContainer.classList.add('hidden');
+            }
+            if (fileUploadBox) {
+                fileUploadBox.classList.remove('border-success-400', 'bg-success-50/20', 'dark:bg-darkblack-500');
+            }
+        }
+    }
+
+    if (fileInput) {
         fileInput.addEventListener('change', function () {
             if (this.files && this.files[0]) {
-                fileNameDisplay.textContent = this.files[0].name;
+                updateFileDisplay(this.files[0]);
             } else {
-                fileNameDisplay.textContent = 'No file chosen';
+                updateFileDisplay(null);
+            }
+        });
+    }
+
+    if (fileUploadBox && fileInput) {
+        fileUploadBox.addEventListener('click', function (e) {
+            if (e.target !== fileInput) {
+                fileInput.click();
+            }
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUploadBox.addEventListener(eventName, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                fileUploadBox.classList.add('border-success-400', 'bg-success-50/30', 'dark:bg-darkblack-500');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUploadBox.addEventListener(eventName, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    fileUploadBox.classList.remove('border-success-400', 'bg-success-50/30', 'dark:bg-darkblack-500');
+                }
+            });
+        });
+
+        fileUploadBox.addEventListener('drop', function (e) {
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const droppedFile = e.dataTransfer.files[0];
+
+                if (droppedFile.size > MAX_FILE_SIZE_BYTES) {
+                    alert('The file size cannot exceed 20 MB.');
+                    return;
+                }
+
+                try {
+                    const dt = new DataTransfer();
+                    dt.items.add(droppedFile);
+                    fileInput.files = dt.files;
+                } catch (err) {
+                    fileInput.files = e.dataTransfer.files;
+                }
+
+                updateFileDisplay(droppedFile);
             }
         });
     }
@@ -26,6 +109,12 @@ export function initProjectImports() {
             if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
                 e.preventDefault();
                 alert('Please select an Excel (.xlsx) file to import.');
+                return;
+            }
+
+            if (fileInput.files[0].size > MAX_FILE_SIZE_BYTES) {
+                e.preventDefault();
+                alert('The file size cannot exceed 20 MB.');
                 return;
             }
 

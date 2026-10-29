@@ -162,12 +162,12 @@ class ProjectImportController extends Controller
                 'required',
                 'file',
                 'mimes:xlsx',
-                'max:10240',
+                'max:20480',
             ],
         ], [
             'file.required' => 'Please select an Excel (.xlsx) file to import.',
             'file.mimes' => 'The uploaded file must be a valid .xlsx Excel workbook.',
-            'file.max' => 'The file size cannot exceed 10 MB.',
+            'file.max' => 'The file size cannot exceed 20 MB.',
         ]);
 
         $uploadedFile = $request->file('file');
@@ -450,12 +450,12 @@ class ProjectImportController extends Controller
                 'required',
                 'file',
                 'mimes:xlsx',
-                'max:10240',
+                'max:20480',
             ],
         ], [
             'file.required' => 'Please select an Excel (.xlsx) file to validate.',
             'file.mimes' => 'The uploaded file must be a valid .xlsx Excel workbook.',
-            'file.max' => 'The file size cannot exceed 10 MB.',
+            'file.max' => 'The file size cannot exceed 20 MB.',
         ]);
 
         $selectedModule = $this->importService->resolveModule($moduleKey, $user);

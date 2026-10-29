@@ -1,13 +1,99 @@
 <div class="space-y-6">
+
+    <!-- Module Overview & Template Card -->
+    <div class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-bgray-900 dark:text-white">
+                    {{ $module['label'] ?? 'Project Hosting Records' }}
+                </h3>
+
+                <!-- Minimal Single-Row Import Steps -->
+                <div class="mt-2.5 flex items-center gap-3 text-xs text-bgray-600 dark:text-bgray-400 flex-wrap">
+                    <span class="inline-flex items-center gap-1.5 font-medium">
+                        <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-50 text-[11px] font-bold text-success-500 ring-1 ring-inset ring-success-500/20 dark:bg-darkblack-500 dark:text-success-400">1</span>
+                        Download Template
+                    </span>
+                    <svg class="h-3 w-3 text-bgray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span class="inline-flex items-center gap-1.5 font-medium">
+                        <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-50 text-[11px] font-bold text-success-500 ring-1 ring-inset ring-success-500/20 dark:bg-darkblack-500 dark:text-success-400">2</span>
+                        Fill in Details
+                    </span>
+                    <svg class="h-3 w-3 text-bgray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span class="inline-flex items-center gap-1.5 font-medium">
+                        <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-50 text-[11px] font-bold text-success-500 ring-1 ring-inset ring-success-500/20 dark:bg-darkblack-500 dark:text-success-400">3</span>
+                        Upload &amp; Import
+                    </span>
+                </div>
+            </div>
+
+            <!-- Template Download Action -->
+            <div class="flex-shrink-0">
+                @if (!empty($module['has_template']))
+                    <a href="{{ route('projects.import.template', $module['key']) }}" class="inline-flex items-center gap-2 rounded-lg border border-success-300 bg-success-300 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:border-success-400 hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-success-400 dark:bg-success-400 dark:hover:bg-success-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
+                        </svg>
+                        <span>Template</span>
+                    </a>
+                @else
+                    <span class="inline-flex items-center gap-1.5 rounded-md border border-bgray-300 bg-bgray-100 px-3 py-1.5 text-xs font-medium text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-400">
+                        No template available
+                    </span>
+                @endif
+            </div>
+        </div>
+
+        <form id="import-form" action="{{ route('projects.import.process', $module['key']) }}" method="POST" enctype="multipart/form-data" class="mt-6">
+            @csrf
+
+            <!-- Upload Box (Drag and Drop) -->
+            <div id="file-upload-box" class="border-2 border-dashed border-bgray-300 rounded-xl p-6 text-center cursor-pointer hover:border-success-300 transition dark:border-darkblack-400">
+                <p id="file-upload-prompt" class="text-bgray-700 dark:text-bgray-300">
+                    Attach your Excel file <span class="text-success-300 font-semibold">click to upload</span>
+                </p>
+                <div id="file-chosen-container" class="hidden items-center justify-center gap-2">
+                    <svg class="h-5 w-5 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span id="file-chosen-name" class="font-semibold text-bgray-900 dark:text-white"></span>
+                    <span class="text-xs text-success-500 ml-1 font-normal">(click to change)</span>
+                </div>
+                <input id="excel-file-input" type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" required />
+            </div>
+
+            <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p class="text-error-300 text-sm">Files includes xlsx and max file size is 20MB</p>
+
+                <button type="submit" id="btn-start-import" class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-success-300 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition duration-200 hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-success-400 dark:hover:bg-success-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg id="btn-import-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <svg id="btn-import-spinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span id="btn-import-label">Import Records</span>
+                </button>
+            </div>
+
+            @error('file')
+                <p class="mt-2 text-xs font-medium text-red-500">
+                    {{ $message }}
+                </p>
+            @enderror
+        </form>
+    </div>
+
     <!-- Active / Recent Queued Import Status & Results Tracker -->
     @if (!empty($activeImport))
         @php
-            $isFinished = in_array($activeImport->status, [
-                \App\Services\ProjectImportTrackingManager::STATUS_COMPLETED,
-                \App\Services\ProjectImportTrackingManager::STATUS_COMPLETED_WITH_ERRORS,
-                \App\Services\ProjectImportTrackingManager::STATUS_FAILED,
-                \App\Services\ProjectImportTrackingManager::STATUS_INTERRUPTED,
-            ], true);
+            $isFinished = in_array($activeImport->status, [\App\Services\ProjectImportTrackingManager::STATUS_COMPLETED, \App\Services\ProjectImportTrackingManager::STATUS_COMPLETED_WITH_ERRORS, \App\Services\ProjectImportTrackingManager::STATUS_FAILED, \App\Services\ProjectImportTrackingManager::STATUS_INTERRUPTED], true);
             $total = (int) ($activeImport->total_rows ?? 0);
             $processed = (int) ($activeImport->processed_rows ?? 0);
             $percent = $total > 0 ? min(100, round(($processed / $total) * 100)) : ($isFinished ? 100 : 0);
@@ -15,12 +101,7 @@
             $successCount = (int) ($activeImport->successful_rows ?? 0);
         @endphp
 
-        <div id="import-status-card"
-            class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8"
-            data-import-id="{{ $activeImport->id }}"
-            data-module-key="{{ $module['key'] }}"
-            data-initial-status="{{ $activeImport->status }}"
-            data-status-url="{{ route('projects.import.status', ['module' => $module['key'], 'import' => $activeImport->id]) }}">
+        <div id="import-status-card" class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8" data-import-id="{{ $activeImport->id }}" data-module-key="{{ $module['key'] }}" data-initial-status="{{ $activeImport->status }}" data-status-url="{{ route('projects.import.status', ['module' => $module['key'], 'import' => $activeImport->id]) }}">
 
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-bgray-200 pb-5 dark:border-darkblack-400">
                 <div>
@@ -114,20 +195,14 @@
 
                     <!-- Optional Excel Downloads -->
                     <div class="flex items-center gap-2.5 flex-wrap" id="import-download-actions">
-                        <a id="btn-download-failed"
-                            href="{{ route('projects.import.download.failed', ['module' => $module['key'], 'import' => $activeImport->id]) }}"
-                            class="{{ $failedCount > 0 ? 'inline-flex' : 'hidden' }} items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-darkblack-500 dark:text-red-400 transition"
-                            title="Download only failed rows to correct and re-upload">
+                        <a id="btn-download-failed" href="{{ route('projects.import.download.failed', ['module' => $module['key'], 'import' => $activeImport->id]) }}" class="{{ $failedCount > 0 ? 'inline-flex' : 'hidden' }} items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-darkblack-500 dark:text-red-400 transition" title="Download only failed rows to correct and re-upload">
                             <svg class="h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             <span>Download Failed Rows</span>
                         </a>
 
-                        <a id="btn-download-results"
-                            href="{{ route('projects.import.download.results', ['module' => $module['key'], 'import' => $activeImport->id]) }}"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 transition"
-                            title="Download complete audit log of all processed rows">
+                        <a id="btn-download-results" href="{{ route('projects.import.download.results', ['module' => $module['key'], 'import' => $activeImport->id]) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 transition" title="Download complete audit log of all processed rows">
                             <svg class="h-3.5 w-3.5 text-bgray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
@@ -268,146 +343,6 @@
             </div>
         </div>
     @endif
-
-    <!-- Module Overview & Template Card -->
-    <div class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8">
-        <div class="border-b border-bgray-200 pb-6 dark:border-darkblack-400">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center rounded-full bg-success-50 px-2.5 py-0.5 text-xs font-semibold text-success-400 dark:bg-darkblack-500">
-                            Active Module
-                        </span>
-                        <span class="text-xs text-bgray-500 dark:text-bgray-400">Key: project_hosting</span>
-                    </div>
-                    <h3 class="mt-2 text-xl font-bold text-bgray-900 dark:text-white sm:text-2xl">
-                        {{ $module['label'] ?? 'Project Hosting Records' }}
-                    </h3>
-                    <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-300">
-                        {{ $module['description'] ?? 'Import hosting records associated with multiple projects.' }}
-                    </p>
-                </div>
-
-                <!-- Template Download Action -->
-                <div class="flex-shrink-0">
-                    @if (!empty($module['has_template']))
-                        <a href="{{ route('projects.import.template', $module['key']) }}" class="inline-flex items-center gap-2 rounded-lg border border-success-300 bg-success-300 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:border-success-400 hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-success-400 dark:bg-success-400 dark:hover:bg-success-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
-                            </svg>
-                            <span>Download Excel Template</span>
-                        </a>
-                    @else
-                        <span class="inline-flex items-center gap-1.5 rounded-md border border-bgray-300 bg-bgray-100 px-3 py-1.5 text-xs font-medium text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-400">
-                            No template available
-                        </span>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- 3-Step Simple Guidelines -->
-        <div class="mt-6">
-            <h4 class="text-sm font-semibold text-bgray-900 dark:text-white">
-                Import Steps
-            </h4>
-
-            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div class="rounded-lg border border-bgray-200 bg-bgray-50/60 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                    <div class="flex items-center gap-2">
-                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-success-100 text-xs font-bold text-success-700 dark:bg-darkblack-600 dark:text-success-300">1</span>
-                        <h5 class="text-xs font-bold text-bgray-900 dark:text-white">Download Template</h5>
-                    </div>
-                    <p class="mt-2 text-xs leading-relaxed text-bgray-600 dark:text-bgray-400">
-                        Get the standard 18-column Excel template with instructions and master data values.
-                    </p>
-                </div>
-
-                <div class="rounded-lg border border-bgray-200 bg-bgray-50/60 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                    <div class="flex items-center gap-2">
-                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-success-100 text-xs font-bold text-success-700 dark:bg-darkblack-600 dark:text-success-300">2</span>
-                        <h5 class="text-xs font-bold text-bgray-900 dark:text-white">Fill in Details</h5>
-                    </div>
-                    <p class="mt-2 text-xs leading-relaxed text-bgray-600 dark:text-bgray-400">
-                        Populate your records in the "Hosting Upload" sheet. Unneeded optional columns can be left blank.
-                    </p>
-                </div>
-
-                <div class="rounded-lg border border-bgray-200 bg-bgray-50/60 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                    <div class="flex items-center gap-2">
-                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-success-100 text-xs font-bold text-success-700 dark:bg-darkblack-600 dark:text-success-300">3</span>
-                        <h5 class="text-xs font-bold text-bgray-900 dark:text-white">Upload &amp; Import</h5>
-                    </div>
-                    <p class="mt-2 text-xs leading-relaxed text-bgray-600 dark:text-bgray-400">
-                        Upload once. Each row is validated independently: valid rows import immediately, failed rows are reported.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Single Import Form Card -->
-    <div class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8">
-        <div class="border-b border-bgray-200 pb-5 dark:border-darkblack-400">
-            <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                Upload &amp; Import Records
-            </h4>
-            <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-300">
-                Select your completed <span class="font-mono text-xs font-semibold text-bgray-800 dark:text-bgray-200">.xlsx</span> file and click Import Records.
-                Valid rows will be created in the database while any invalid rows fail individually with clear reasons.
-            </p>
-        </div>
-
-        <form id="import-form" action="{{ route('projects.import.process', $module['key']) }}" method="POST" enctype="multipart/form-data" class="mt-6">
-            @csrf
-
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div class="lg:col-span-2">
-                    <label for="excel-file-input" class="block text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
-                        Select Excel Workbook (.xlsx)
-                    </label>
-
-                    <div class="mt-2 flex flex-col sm:flex-row sm:items-center gap-3">
-                        <label class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-bgray-300 bg-bgray-50 px-4 py-2.5 text-sm font-semibold text-bgray-700 transition hover:bg-bgray-100 hover:border-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:bg-darkblack-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            <span>Browse Workbook...</span>
-                            <input id="excel-file-input" type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" required />
-                        </label>
-
-                        <span id="file-chosen-name" class="truncate text-xs font-medium text-bgray-500 dark:text-bgray-400">
-                            No file chosen
-                        </span>
-                    </div>
-
-                    @error('file')
-                        <p class="mt-2 text-xs font-medium text-red-500">
-                            {{ $message }}
-                        </p>
-                    @enderror
-
-                    <p class="mt-2 text-xs text-bgray-500 dark:text-bgray-400">
-                        Supported format: Microsoft Excel (.xlsx), maximum 10 MB. Completely blank rows are ignored.
-                    </p>
-                </div>
-
-                <div class="flex items-end justify-start lg:justify-end">
-                    <button type="submit" id="btn-start-import" class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-success-300 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition duration-200 hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-success-400 dark:hover:bg-success-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg id="btn-import-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        <svg id="btn-import-spinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                        </svg>
-                        <span id="btn-import-label">Import Records</span>
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
 
     @push('scripts')
         @vite('resources/js/modules/projects/imports/project-imports.js')

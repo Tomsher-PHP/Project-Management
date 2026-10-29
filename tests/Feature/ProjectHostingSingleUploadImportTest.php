@@ -623,4 +623,38 @@ class ProjectHostingSingleUploadImportTest extends TestCase
         $res->assertNotFound();
         $this->assertTrue($res->json('expired'));
     }
+
+    /**
+     * Test file size limit allows up to 20 MB and rejects files larger than 20 MB.
+     */
+    public function test_file_size_validation_allows_up_to_20_mb_and_rejects_larger(): void
+    {
+        // 1. File > 20 MB (e.g. 21 MB = 21504 KB) should fail validation with 20 MB error
+        $oversizedFile = UploadedFile::fake()->create('oversized.xlsx', 21504, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $response = $this->actingAs($this->authorizedUser)
+            ->post(route('projects.import.process', 'project_hosting'), [
+                'file' => $oversizedFile,
+            ]);
+
+        $response->assertSessionHasErrors([
+            'file' => 'The file size cannot exceed 20 MB.',
+        ]);
+
+        // 2. File <= 20 MB (e.g. 15 MB = 15360 KB) passes size validation (fails on structure/empty if fake, but passes file size rule)
+        $validSizeFile = UploadedFile::fake()->create('valid_size.xlsx', 15360, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $validResponse = $this->actingAs($this->authorizedUser)
+            ->post(route('projects.import.process', 'project_hosting'), [
+                'file' => $validSizeFile,
+            ]);
+
+        // Should not have file size error
+        $errors = session('errors');
+        if ($errors) {
+            $this->assertFalse(
+                collect($errors->get('file'))->contains('The file size cannot exceed 20 MB.')
+            );
+        }
+    }
 }
