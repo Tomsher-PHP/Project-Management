@@ -814,7 +814,7 @@
                         {{ $authUser?->name }}
                     </p>
                     <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">
-                        {{ $authUser?->getRoleNames()->implode(', ') ?: 'No Role' }}
+                        {{ $authUser?->getRoleNames()?->implode(', ') ?: 'No Role' }}
                     </p>
                 </div>
             </div>
