@@ -151,6 +151,7 @@ return [
         //     'template_path' => 'assets/templates/project_hosting/project_hosting_records_import_template.xlsx',
         //     'template_filename' => 'project_hosting_records_import_template.xlsx',
         //     'enabled' => true,
-        // ],
     ],
+
+    'import_tracking_expiry_seconds' => env('PROJECT_IMPORT_EXPIRY_SECONDS', 86400),
 ];

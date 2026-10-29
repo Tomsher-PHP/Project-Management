@@ -25,7 +25,7 @@ class ProcessProjectImportJobTest extends TestCase
         $job = new ProcessProjectImportJob(999);
 
         $this->assertEquals(999, $job->importId);
-        $this->assertEquals(3, $job->tries);
+        $this->assertEquals(1, $job->tries);
         $this->assertEquals(600, $job->timeout);
         $this->assertEquals([30, 60, 120], $job->backoff());
 

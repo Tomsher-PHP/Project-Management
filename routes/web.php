@@ -535,6 +535,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('projects/import/{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('projects.import.validate');
     Route::post('projects/import/{module}/process', [ProjectImportController::class, 'startImport'])->name('projects.import.process');
     Route::get('projects/import/{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('projects.import.status');
+    Route::get('projects/import/{module}/download-failed/{import}', [ProjectImportController::class, 'downloadFailedRows'])->name('projects.import.download.failed');
+    Route::get('projects/import/{module}/download-results/{import}', [ProjectImportController::class, 'downloadAllResults'])->name('projects.import.download.results');
 
     // Project common routes
     Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\ProjectImport;
 use App\Services\ProjectImportService;
+use App\Services\ProjectImportTrackingManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -17,16 +18,20 @@ class ProcessProjectImportJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 3;
+    /**
+     * Set tries to 1 to disable automatic replay of partially processed imports.
+     * Prevents potential duplicate insertions if an import is interrupted.
+     */
+    public int $tries = 1;
 
     public int $timeout = 600;
-
-    public function __construct(public readonly int $importId) {}
 
     public function backoff(): array
     {
         return [30, 60, 120];
     }
+
+    public function __construct(public readonly string|int $importId) {}
 
     public function middleware(): array
     {
@@ -36,9 +41,86 @@ class ProcessProjectImportJob implements ShouldQueue
     }
 
     /**
-     * Execute the common project import job.
+     * Execute the project import job.
+     *
+     * @param  \App\Services\ProjectImportService  $importService
+     * @param  \App\Services\ProjectImportTrackingManager  $trackingManager
+     * @return void
      */
-    public function handle(ProjectImportService $importService): void
+    public function handle(
+        ProjectImportService $importService,
+        ProjectImportTrackingManager $trackingManager
+    ): void {
+        $importIdStr = (string) $this->importId;
+
+        // 1. Check non-database temporary tracking first
+        $tracking = $trackingManager->getTracking($importIdStr);
+
+        if ($tracking) {
+            $this->processTrackedImport($tracking, $importService, $trackingManager);
+            return;
+        }
+
+        // 2. Legacy fallback for database-backed import record
+        $this->processLegacyImport($importService);
+    }
+
+    /**
+     * Process a non-database tracked import.
+     */
+    protected function processTrackedImport(
+        array $tracking,
+        ProjectImportService $importService,
+        ProjectImportTrackingManager $trackingManager
+    ): void {
+        $importIdStr = (string) $this->importId;
+
+        // Prevent duplicate execution / race condition
+        if (in_array($tracking['status'], [
+            ProjectImportTrackingManager::STATUS_COMPLETED,
+            ProjectImportTrackingManager::STATUS_COMPLETED_WITH_ERRORS,
+            ProjectImportTrackingManager::STATUS_FAILED,
+        ], true)) {
+            Log::info('ProcessProjectImportJob skipped: tracked import already finished.', ['import_id' => $importIdStr]);
+            return;
+        }
+
+        try {
+            $handler = $importService->resolveImportHandler($tracking['module_key']);
+        } catch (Throwable $e) {
+            Log::error('ProcessProjectImportJob failed to resolve handler', [
+                'import_id' => $importIdStr,
+                'module_key' => $tracking['module_key'],
+                'error' => $e->getMessage(),
+            ]);
+            $trackingManager->updateTracking($importIdStr, [
+                'status' => ProjectImportTrackingManager::STATUS_FAILED,
+                'error_message' => $e->getMessage(),
+                'completed_at' => now()->toIso8601String(),
+            ]);
+            $trackingManager->deleteSourceFile($importIdStr);
+            return;
+        }
+
+        try {
+            $handler->process($importIdStr);
+        } catch (Throwable $e) {
+            Log::error('ProcessProjectImportJob handler exception', [
+                'import_id' => $importIdStr,
+                'module_key' => $tracking['module_key'],
+                'error' => $e->getMessage(),
+            ]);
+            $trackingManager->markInterrupted($importIdStr, $e->getMessage());
+            throw $e;
+        } finally {
+            $trackingManager->deleteSourceFile($importIdStr);
+        }
+    }
+
+    /**
+     * Legacy execution for existing ProjectImport database model.
+     */
+    protected function processLegacyImport(ProjectImportService $importService): void
     {
         $import = ProjectImport::find($this->importId);
 
@@ -47,7 +129,6 @@ class ProcessProjectImportJob implements ShouldQueue
             return;
         }
 
-        // Prevent duplicate execution / race condition
         if (in_array($import->status, [ProjectImport::STATUS_COMPLETED, ProjectImport::STATUS_COMPLETED_WITH_ERRORS], true)) {
             Log::info('ProcessProjectImportJob skipped: import already completed.', ['import_id' => $this->importId]);
             return;
@@ -61,8 +142,8 @@ class ProcessProjectImportJob implements ShouldQueue
                 'module_key' => $import->module_key,
                 'error' => $e->getMessage(),
             ]);
-            $importService->markImportFailed($this->importId, $e->getMessage());
-            $importService->deleteImportFile($this->importId);
+            $importService->markImportFailed((int) $this->importId, $e->getMessage());
+            $importService->deleteImportFile((int) $this->importId);
             return;
         }
 
@@ -79,10 +160,10 @@ class ProcessProjectImportJob implements ShouldQueue
                 'module_key' => $import->module_key,
                 'error' => $e->getMessage(),
             ]);
-            $importService->markImportFailed($this->importId, $e->getMessage());
+            $importService->markImportFailed((int) $this->importId, $e->getMessage());
             throw $e;
         } finally {
-            $importService->deleteImportFile($this->importId);
+            $importService->deleteImportFile((int) $this->importId);
         }
     }
 
@@ -96,8 +177,21 @@ class ProcessProjectImportJob implements ShouldQueue
             'error' => $exception?->getMessage(),
         ]);
 
-        $importService = app(ProjectImportService::class);
-        $importService->markImportFailed($this->importId, $exception?->getMessage() ?? 'Import failed unexpectedly.');
-        $importService->deleteImportFile($this->importId);
+        $importIdStr = (string) $this->importId;
+        $trackingManager = app(ProjectImportTrackingManager::class);
+
+        $tracking = $trackingManager->getTracking($importIdStr);
+        if ($tracking) {
+            $trackingManager->markInterrupted($importIdStr, $exception?->getMessage() ?? 'Import failed unexpectedly.');
+            $trackingManager->deleteSourceFile($importIdStr);
+            return;
+        }
+
+        // Legacy
+        if (is_numeric($this->importId)) {
+            $importService = app(ProjectImportService::class);
+            $importService->markImportFailed((int) $this->importId, $exception?->getMessage() ?? 'Import failed unexpectedly.');
+            $importService->deleteImportFile((int) $this->importId);
+        }
     }
 }

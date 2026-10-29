@@ -298,6 +298,25 @@ class ProjectHostingImportValidator
             return $trimmed === '' ? null : $trimmed;
         };
 
+        // Raw values map for reporting and re-import exports
+        $rawValues = [];
+        foreach (self::EXPECTED_HEADERS as $col => $header) {
+            $cell = $sheet->getCell($col . $rowNumber);
+            $val = $cell->getValue();
+            if ($val instanceof \DateTimeInterface) {
+                $rawValues[$header] = $val->format('Y-m-d');
+            } elseif (in_array($col, ['I', 'J', 'K', 'L'], true) && is_numeric($val) && (float) $val >= 1 && (float) $val <= 2958465) {
+                try {
+                    $dt = ExcelDate::excelToDateTimeObject((float) $val);
+                    $rawValues[$header] = $dt->format('Y-m-d');
+                } catch (\Throwable) {
+                    $rawValues[$header] = (string) $val;
+                }
+            } else {
+                $rawValues[$header] = ($val !== null) ? (string) $val : '';
+            }
+        }
+
         // Raw values
         $rawProjectCode = $getVal('A');
         $rawServiceName = $getVal('B');
@@ -502,6 +521,7 @@ class ProjectHostingImportValidator
             'status' => count($errors) === 0 ? 'Valid' : 'Invalid',
             'errors' => $errors,
             'data' => $data,
+            'raw_values' => $rawValues,
         ];
     }
 

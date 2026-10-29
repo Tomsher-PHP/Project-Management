@@ -247,19 +247,27 @@ class ProjectImportEndToEndTest extends TestCase
             'status' => true,
         ]);
 
-        // Verify tracking record was created with pending status
-        $import = ProjectImport::latest('id')->first();
-        $this->assertNotNull($import);
-        $this->assertEquals('project_hosting', $import->module_key);
-        $this->assertEquals(ProjectImport::STATUS_PENDING, $import->status);
-        $this->assertEquals($this->superAdmin->id, $import->uploaded_by);
+        // Verify NO database records were created in project_imports table
+        $this->assertEquals(0, ProjectImport::count(), 'Zero database records should be created in project_imports table.');
+
+        $importId = $response->json('data.id');
+        $this->assertNotEmpty($importId);
+
+        // Verify tracking manager has initialized tracking state in private storage
+        /** @var \App\Services\ProjectImportTrackingManager $trackingManager */
+        $trackingManager = app(\App\Services\ProjectImportTrackingManager::class);
+        $tracking = $trackingManager->getTracking($importId);
+        $this->assertNotNull($tracking);
+        $this->assertEquals('project_hosting', $tracking['module_key']);
+        $this->assertEquals('pending', $tracking['status']);
+        $this->assertEquals($this->superAdmin->id, $tracking['user_id']);
 
         // Verify file stored in private local disk
-        Storage::disk('local')->assertExists($import->file_path);
+        Storage::disk('local')->assertExists($tracking['file_path']);
 
         // Verify queued job dispatched
-        Queue::assertPushed(ProcessProjectImportJob::class, function ($job) use ($import) {
-            return $job->importId === $import->id;
+        Queue::assertPushed(ProcessProjectImportJob::class, function ($job) use ($importId) {
+            return $job->importId === $importId;
         });
 
         // Verify no synchronous database inserts occurred
