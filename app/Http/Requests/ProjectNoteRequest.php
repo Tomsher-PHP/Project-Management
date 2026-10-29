@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProjectNote;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ProjectNoteRequest extends FormRequest
@@ -34,10 +35,27 @@ class ProjectNoteRequest extends FormRequest
      */
     public function rules(): array
     {
+        $note = $this->route('note');
+        if (is_numeric($note)) {
+            $note = ProjectNote::find($note);
+        }
+
+        $hasExistingAttachments = false;
+        if ($note instanceof ProjectNote) {
+            $removedIds = (array) $this->input('removed_attachment_ids', []);
+            $hasExistingAttachments = $note->attachments()
+                ->whereNotIn('id', $removedIds)
+                ->exists();
+        }
+
+        $requiresContent = ! $hasExistingAttachments;
+
         return [
-            'description' => ['nullable', 'string', 'required_without:attachments'],
-            'attachments' => ['nullable', 'array', 'required_without:description'],
+            'description' => ['nullable', 'string', $requiresContent ? 'required_without:attachments' : 'nullable'],
+            'attachments' => ['nullable', 'array', $requiresContent ? 'required_without:description' : 'nullable'],
             'attachments.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:1048576'],
+            'removed_attachment_ids' => ['nullable', 'array'],
+            'removed_attachment_ids.*' => ['integer'],
         ];
     }
 

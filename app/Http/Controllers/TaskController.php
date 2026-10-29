@@ -30,6 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Activitylog\Models\Activity;
 
 class TaskController extends Controller
@@ -521,13 +522,134 @@ class TaskController extends Controller
             'html' => view('tasks.partials.task-notes-list', [
                 'task' => $task,
                 'taskNotes' => $taskNotes,
-                'canRemove' => auth()->user()->can('update', $task),
+                'canRemove' => auth()->user()->can('task.remove_notes_files'),
                 'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'note_card_html' => $createdNote ? view('tasks.partials.task-note-card', [
+                'task' => $task,
                 'note' => $createdNote,
                 'canRemove' => auth()->user()?->can('task.remove_notes_files') ?? false,
             ])->render() : '',
+            'current_page' => $taskNotes->currentPage(),
+        ], Response::HTTP_OK);
+    }
+
+    public function editNote(Task $task, TaskNote $note): JsonResponse
+    {
+        abort_unless((int) $note->task_id === (int) $task->id, Response::HTTP_NOT_FOUND);
+        abort_unless((int) $note->added_by === (int) auth()->id(), Response::HTTP_FORBIDDEN, 'You can only edit notes created by you.');
+
+        $note->load('attachments');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $note->id,
+                'description' => $note->description,
+                'attachments' => $note->attachments->map(function ($attachment) {
+                    $ext = strtolower(pathinfo($attachment->original_name, PATHINFO_EXTENSION));
+                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
+
+                    return [
+                        'id' => $attachment->id,
+                        'original_name' => $attachment->original_name,
+                        'file_size' => $attachment->file_size,
+                        'file_type' => $attachment->file_type,
+                        'is_image' => $isImage,
+                        'url' => rescue(fn () => $attachment->url, null, false),
+                    ];
+                })->values(),
+            ],
+        ], Response::HTTP_OK);
+    }
+
+    public function updateNote(TaskNoteRequest $request, Task $task, TaskNote $note, AttachmentService $attachmentService): JsonResponse
+    {
+        abort_unless((int) $note->task_id === (int) $task->id, Response::HTTP_NOT_FOUND);
+        abort_unless((int) $note->added_by === (int) auth()->id(), Response::HTTP_FORBIDDEN, 'You can only edit notes created by you.');
+
+        DB::transaction(function () use ($task, $note, $request, $attachmentService) {
+            $validated = $request->validated();
+            $removedAttachmentIds = $validated['removed_attachment_ids'] ?? [];
+
+            if (!empty($removedAttachmentIds)) {
+                $attachmentsToDelete = $note->attachments()
+                    ->whereIn('id', $removedAttachmentIds)
+                    ->get();
+
+                if ($attachmentsToDelete->isNotEmpty()) {
+                    $attachmentService->delete($attachmentsToDelete);
+                }
+            }
+
+            $newAttachmentsUploaded = false;
+            if (!empty($validated['attachments'])) {
+                $projectCode = $task->project?->project_code ?: 'project';
+                $taskCode = $task->code ?: ('task-' . $task->id);
+                $directory = 'task_files/' . $projectCode . '/' . $taskCode . '/notes';
+
+                foreach ($validated['attachments'] as $file) {
+                    $attachmentService->upload(
+                        $file,
+                        $directory,
+                        $note,
+                        $this->filesystemDisk,
+                        'public',
+                        false,
+                        'task_note'
+                    );
+                }
+                $newAttachmentsUploaded = true;
+            }
+
+            $attachmentsChanged = !empty($removedAttachmentIds) || $newAttachmentsUploaded;
+            $newDescription = $validated['description'] ?? $validated['note'] ?? null;
+            $descriptionChanged = $note->description !== $newDescription;
+
+            if ($descriptionChanged) {
+                $note->description = $newDescription;
+                $note->updated_by = auth()->id();
+                $note->save();
+            } elseif ($attachmentsChanged) {
+                $note->updated_by = auth()->id();
+                $note->updated_at = now();
+                $note->saveQuietly();
+
+                $activity = activity('task_notes')
+                    ->performedOn($note)
+                    ->causedBy(auth()->user())
+                    ->withProperties([
+                        'parent_type' => Task::class,
+                        'parent_id' => $task->id,
+                        'labels' => ['description' => 'Description'],
+                        'display_attributes' => ['description' => $note->description],
+                    ])
+                    ->event('updated');
+
+                if (Schema::hasColumn('activity_log', 'parent_type') && Schema::hasColumn('activity_log', 'parent_id')) {
+                    $activity->tap(function ($act) use ($task) {
+                        $act->parent_type = Project::class;
+                        $act->parent_id = $task->project_id;
+                    });
+                }
+
+                $activity->log('updated');
+            }
+        });
+
+        $task = $this->loadTaskForDetail($task);
+        $currentPage = (int) $request->input('notes_page', 1);
+        $taskNotes = $this->getPaginatedTaskNotes($task, $currentPage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note updated successfully.',
+            'html' => view('tasks.partials.task-notes-list', [
+                'task' => $task,
+                'taskNotes' => $taskNotes,
+                'canRemove' => auth()->user()->can('task.remove_notes_files'),
+                'canCreate' => auth()->user()->can('task.add_notes_files'),
+            ])->render(),
             'current_page' => $taskNotes->currentPage(),
         ], Response::HTTP_OK);
     }
@@ -547,7 +669,7 @@ class TaskController extends Controller
             'html' => view('tasks.partials.task-notes-list', [
                 'task' => $task,
                 'taskNotes' => $taskNotes,
-                'canRemove' => auth()->user()->can('update', $task),
+                'canRemove' => auth()->user()->can('task.remove_notes_files'),
                 'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'current_page' => $taskNotes->currentPage(),
@@ -572,7 +694,7 @@ class TaskController extends Controller
             'html' => view('tasks.partials.task-notes-list', [
                 'task' => $task,
                 'taskNotes' => $taskNotes,
-                'canRemove' => auth()->user()->can('update', $task),
+                'canRemove' => auth()->user()->can('task.remove_notes_files'),
                 'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'current_page' => $taskNotes->currentPage(),
@@ -630,17 +752,27 @@ class TaskController extends Controller
                 'project' => $task->project,
             ] + $taskServices->getTaskOverviewData($task))->render(),
             'scope' => $this->renderTaskScopeTab($task),
-            'notes' => view('tasks.partials.tabs.notes', [
-                'task' => $task,
-                'project' => $task->project,
-                'taskNotes' => $this->getPaginatedTaskNotes($task, (int) request()->input('notes_page', 1)),
-            ])->render(),
+            'notes' => $this->renderTaskNotesTab($task, request()),
             'history' => view('tasks.partials.tabs.history', [
                 'task' => $task,
                 'project' => $task->project,
             ] + $this->getTaskHistoryData($task))->render(),
             default => '',
         };
+    }
+
+    private function renderTaskNotesTab(Task $task, Request $request): string
+    {
+        $taskNotes = $this->getPaginatedTaskNotes($task, (int) $request->input('notes_page', 1));
+
+        $canRemove = auth()->user()->can('task.remove_notes_files');
+        $canCreate = auth()->user()->can('task.add_notes_files');
+
+        if ($request->ajax() && ($request->boolean('notes_only') || $request->header('X-Task-Notes-Pagination') || $request->input('view') === 'list')) {
+            return view('tasks.partials.task-notes-list', compact('task', 'taskNotes', 'canRemove', 'canCreate'))->render();
+        }
+
+        return view('tasks.partials.tabs.notes', compact('task', 'taskNotes', 'canRemove', 'canCreate'))->render();
     }
 
     private function renderTaskScopeTab(Task $task): string

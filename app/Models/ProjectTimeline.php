@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProjectTimeline extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsModelActivity;
 
     public const STATUS_PLANNED = 1;
     public const STATUS_ACTIVE = 2;
@@ -69,5 +70,44 @@ class ProjectTimeline extends Model
     public function notificationLogs()
     {
         return $this->morphMany(ProjectNotificationLog::class, 'link');
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'created_by',
+        'actual_time_seconds',
+        'sort_order',
+        'notes',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'project_id' => 'Project',
+            'name' => 'Name',
+            'type' => 'Type',
+            'status' => 'Status',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'customer_end_date' => 'Customer End Date',
+            'estimated_time_seconds' => 'Estimated Time',
+            'customer_estimate_seconds' => 'Customer Estimate Time',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'project_id' => $this->project?->name ?? Project::find($value)?->name ?? $value,
+            'type' => config('project_constants.project_timeline_types.' . $value, ucfirst((string) $value)),
+            'status' => ucfirst(config('project_constants.project_timeline_statuses.' . $value, (string) $value)),
+            'estimated_time_seconds' => $this->secondsToReadable($value),
+            'customer_estimate_seconds' => $this->secondsToReadable($value),
+            default => $value,
+        };
     }
 }

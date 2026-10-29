@@ -244,7 +244,7 @@ class UserWorkspaceController extends Controller
             ->baseQuery($request->user())
             ->where('current_assignee_id', $workspaceUser->id)
             ->whereHas('project', fn($query) => $query->where('project_flow', $selectedFlowType))
-            ->where('request_status', '!=', 'rejected');
+            ->where('request_status', '!=', Task::REQUEST_REJECTED);
 
         return $taskFilterService->getFilters($request->user(), $baseQuery);
     }

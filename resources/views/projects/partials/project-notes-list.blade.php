@@ -17,7 +17,11 @@
 
     <div id="project-notes-list" class="mt-6 space-y-5">
         @forelse ($projectNotes as $note)
-            @include('projects.partials.project-note-card', ['note' => $note, 'canRemove' => $canRemove])
+            @include('projects.partials.project-note-card', [
+                'note' => $note,
+                'canRemove' => $canRemove,
+                'isDeletedProjectView' => $isDeletedProjectView ?? false,
+            ])
         @empty
             <div id="project-notes-empty-state" class="rounded-xl border border-dashed border-bgray-300 px-6 py-10 text-center text-sm text-gray-400 dark:border-darkblack-400">
                 No project notes and files added yet.
@@ -26,7 +30,7 @@
     </div>
 
     @if ($projectNotes->hasPages())
-        <div class="mt-6">
+        <div class="mt-6" data-project-notes-pagination>
             {{ $projectNotes->links() }}
         </div>
     @endif

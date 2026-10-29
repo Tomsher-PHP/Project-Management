@@ -8,6 +8,9 @@
                 </h4>
                 <p class="text-sm text-bgray-700 dark:text-bgray-300">
                     @appDateTime($note->created_at)
+                    @if (!is_null($note->updated_by))
+                        <span class="ml-1 text-xs text-bgray-700 dark:text-bgray-300 italic">(edited)</span>
+                    @endif
                 </p>
             </div>
         </div>
@@ -17,10 +20,16 @@
                 {{ $note->attachments->count() }} File{{ $note->attachments->count() === 1 ? '' : 's' }}
             </span>
 
+            @php
+                $canEdit = auth()->check() && (int) auth()->id() === (int) $note->added_by;
+            @endphp
+
+            @if ($canEdit)
+                <x-edit-button action="javascript:void(0)" class="edit-task-note" data-note-id="{{ $note->id }}" title="Edit Note" />
+            @endif
+
             @if ($canRemove)
-                <button type="button" class="delete-task-note rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-red-50" data-note-id="{{ $note->id }}">
-                    Delete
-                </button>
+                <x-delete-form :action="route('tasks.notes.delete', ['task' => $note->task_id, 'note' => $note->id])" :id="$note->id" formClass="delete-task-note-form" class="delete-task-note" data-note-id="{{ $note->id }}" title="Delete Note" />
             @endif
         </div>
     </div>
@@ -66,7 +75,7 @@
                         </a>
 
                         @if ($canRemove)
-                            <button type="button" class="delete-task-note-file mt-3 text-xs font-medium text-red-500 hover:underline" data-note-id="{{ $note->id }}" data-attachment-id="{{ $attachment->id }}">
+                            <button type="button" class="delete-task-note-file mt-3 text-xs font-medium text-error-300 hover:underline" data-note-id="{{ $note->id }}" data-attachment-id="{{ $attachment->id }}">
                                 Remove File
                             </button>
                         @endif
