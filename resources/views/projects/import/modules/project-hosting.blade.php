@@ -1,7 +1,7 @@
 <div class="space-y-6">
     <!-- Active / Recent Queued Import Status Tracker -->
     @if (!empty($activeImport))
-        <div id="import-status-card" class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8" data-import-id="{{ $activeImport->id }}" data-module-key="{{ $module['key'] }}">
+        <div id="import-status-card" class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8" data-import-id="{{ $activeImport->id }}" data-module-key="{{ $module['key'] }}" data-initial-status="{{ $activeImport->status }}" data-status-url="{{ route('projects.import.status', ['module' => $module['key'], 'import' => $activeImport->id]) }}">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-bgray-200 pb-5 dark:border-darkblack-400">
                 <div>
                     <div class="flex items-center gap-2">
@@ -25,12 +25,17 @@
                             </span>
                         @elseif ($activeImport->status === \App\Models\ProjectImport::STATUS_PROCESSING)
                             <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-darkblack-500 dark:text-blue-400">
-                                <svg class="animate-spin h-3.5 w-3.5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                <svg class="animate-spin h-3.5 w-3.5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
                                 Processing Rows...
                             </span>
                         @elseif ($activeImport->status === \App\Models\ProjectImport::STATUS_COMPLETED)
                             <span class="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-3 py-1 text-xs font-bold text-success-600 ring-1 ring-inset ring-success-600/20 dark:bg-darkblack-500 dark:text-success-400">
-                                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
                                 Completed Successfully
                             </span>
                         @elseif ($activeImport->status === \App\Models\ProjectImport::STATUS_COMPLETED_WITH_ERRORS)
@@ -44,13 +49,10 @@
                         @endif
                     </span>
 
-                    <button
-                        type="button"
-                        id="btn-refresh-import-status"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 transition"
-                        title="Refresh status"
-                    >
-                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <button type="button" id="btn-refresh-import-status" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 transition" title="Refresh status">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
                         Refresh
                     </button>
                 </div>
@@ -87,7 +89,9 @@
             <!-- Error message if any -->
             <div id="import-error-container" class="{{ !empty($activeImport->error_message) ? '' : 'hidden' }} mt-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-darkblack-500">
                 <div class="flex items-start gap-3">
-                    <svg class="h-5 w-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <svg class="h-5 w-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
                     <div class="text-xs text-red-700 dark:text-red-300" id="import-error-text">
                         {{ $activeImport->error_message }}
                     </div>
@@ -160,10 +164,7 @@
                 <!-- Module Template Download Action -->
                 <div class="flex-shrink-0">
                     @if (!empty($module['has_template']))
-                        <a
-                            href="{{ route('projects.import.template', $module['key']) }}"
-                            class="inline-flex items-center gap-2 rounded-lg border border-success-300 bg-success-300 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:border-success-400 hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-success-400 dark:bg-success-400 dark:hover:bg-success-500"
-                        >
+                        <a href="{{ route('projects.import.template', $module['key']) }}" class="inline-flex items-center gap-2 rounded-lg border border-success-300 bg-success-300 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:border-success-400 hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-success-400 dark:bg-success-400 dark:hover:bg-success-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
@@ -208,10 +209,7 @@
 
                     @if (!empty($module['has_template']))
                         <div class="mt-4 pt-3 border-t border-bgray-200 dark:border-darkblack-400">
-                            <a
-                                href="{{ route('projects.import.template', $module['key']) }}"
-                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-success-500 hover:text-success-600 dark:text-success-400 dark:hover:text-success-300"
-                            >
+                            <a href="{{ route('projects.import.template', $module['key']) }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-success-500 hover:text-success-600 dark:text-success-400 dark:hover:text-success-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
@@ -291,12 +289,7 @@
             </p>
         </div>
 
-        <form
-            action="{{ route('projects.import.validate', $module['key']) }}"
-            method="POST"
-            enctype="multipart/form-data"
-            class="mt-6"
-        >
+        <form action="{{ route('projects.import.validate', $module['key']) }}" method="POST" enctype="multipart/form-data" class="mt-6">
             @csrf
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -311,15 +304,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                             </svg>
                             <span>Browse File...</span>
-                            <input
-                                id="excel-file-input"
-                                type="file"
-                                name="file"
-                                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                class="hidden"
-                                onchange="document.getElementById('file-chosen-name').textContent = this.files[0] ? this.files[0].name : 'No file selected';"
-                                required
-                            />
+                            <input id="excel-file-input" type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" onchange="document.getElementById('file-chosen-name').textContent = this.files[0] ? this.files[0].name : 'No file selected';" required />
                         </label>
 
                         <span id="file-chosen-name" class="truncate text-xs font-medium text-bgray-500 dark:text-bgray-400">
@@ -339,10 +324,7 @@
                 </div>
 
                 <div class="flex items-end justify-start lg:justify-end">
-                    <button
-                        type="submit"
-                        class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-success-300 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-success-400 dark:hover:bg-success-500"
-                    >
+                    <button type="submit" class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-success-300 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-success-400 dark:hover:bg-success-500">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -379,7 +361,7 @@
                     </div>
                 </div>
 
-            <!-- No Data Rows Alert -->
+                <!-- No Data Rows Alert -->
             @elseif ($validationResult['total_rows'] === 0)
                 <div class="rounded-lg border border-amber-300 bg-amber-50 p-6 dark:border-amber-900/40 dark:bg-darkblack-500">
                     <div class="flex items-start gap-4">
@@ -402,7 +384,7 @@
                     </div>
                 </div>
 
-            <!-- Row Validation Summary & Detailed Results -->
+                <!-- Row Validation Summary & Detailed Results -->
             @else
                 <!-- Summary Metrics Card -->
                 <div class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8">
@@ -492,19 +474,9 @@
                             <form action="{{ route('projects.import.process', $module['key']) }}" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                                 @csrf
                                 <div class="relative">
-                                    <input
-                                        type="file"
-                                        name="file"
-                                        accept=".xlsx"
-                                        required
-                                        class="block w-full text-xs text-bgray-600 dark:text-bgray-300 file:mr-2 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-white dark:file:bg-darkblack-600 file:text-bgray-700 dark:file:text-bgray-200 file:border file:border-bgray-300 dark:file:border-darkblack-400 hover:file:bg-bgray-50 cursor-pointer"
-                                    >
+                                    <input type="file" name="file" accept=".xlsx" required class="block w-full text-xs text-bgray-600 dark:text-bgray-300 file:mr-2 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-white dark:file:bg-darkblack-600 file:text-bgray-700 dark:file:text-bgray-200 file:border file:border-bgray-300 dark:file:border-darkblack-400 hover:file:bg-bgray-50 cursor-pointer">
                                 </div>
-                                <button
-                                    type="submit"
-                                    onclick="return confirm('Are you sure you want to queue this file for database import?');"
-                                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-success-400 dark:hover:bg-success-500 whitespace-nowrap transition"
-                                >
+                                <button type="submit" onclick="return confirm('Are you sure you want to queue this file for database import?');" class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm hover:bg-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-success-400 dark:hover:bg-success-500 whitespace-nowrap transition">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                     </svg>
@@ -591,83 +563,7 @@
         </div>
     @endif
 
-    @if (!empty($activeImport))
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const card = document.getElementById('import-status-card');
-                if (!card) return;
-
-                const importId = card.getAttribute('data-import-id');
-                const moduleKey = card.getAttribute('data-module-key');
-                if (!importId || !moduleKey) return;
-
-                const statusUrl = "{{ url('projects/import') }}/" + encodeURIComponent(moduleKey) + "/status/" + encodeURIComponent(importId);
-                let pollInterval = null;
-
-                async function checkStatus() {
-                    try {
-                        const res = await fetch(statusUrl, {
-                            headers: { 'Accept': 'application/json' }
-                        });
-                        if (!res.ok) return;
-                        const payload = await res.json();
-                        if (!payload || !payload.data) return;
-
-                        const d = payload.data;
-                        const totalEl = document.getElementById('metric-total-rows');
-                        const procEl = document.getElementById('metric-processed-rows');
-                        const succEl = document.getElementById('metric-successful-rows');
-                        const failEl = document.getElementById('metric-failed-rows');
-
-                        if (totalEl) totalEl.textContent = d.total_rows !== null ? d.total_rows : '-';
-                        if (procEl) procEl.textContent = d.processed_rows ?? 0;
-                        if (succEl) succEl.textContent = d.successful_rows ?? 0;
-                        if (failEl) failEl.textContent = d.failed_rows ?? 0;
-
-                        const badge = document.getElementById('import-status-badge');
-                        if (badge) {
-                            if (d.status === 'completed') {
-                                badge.innerHTML = '<span class="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-3 py-1 text-xs font-bold text-success-600 ring-1 ring-inset ring-success-600/20 dark:bg-darkblack-500 dark:text-success-400"><svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Completed Successfully</span>';
-                            } else if (d.status === 'completed_with_errors') {
-                                badge.innerHTML = '<span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-darkblack-500 dark:text-amber-400">Completed with Row Errors</span>';
-                            } else if (d.status === 'failed') {
-                                badge.innerHTML = '<span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600 ring-1 ring-inset ring-red-600/20 dark:bg-darkblack-500 dark:text-red-400">Failed</span>';
-                            } else if (d.status === 'processing') {
-                                badge.innerHTML = '<span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-darkblack-500 dark:text-blue-400"><svg class="animate-spin h-3.5 w-3.5 text-blue-600 mr-1 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Processing Rows...</span>';
-                            }
-                        }
-
-                        if (d.error_message) {
-                            const errBox = document.getElementById('import-error-container');
-                            const errTxt = document.getElementById('import-error-text');
-                            if (errBox && errTxt) {
-                                errTxt.textContent = d.error_message;
-                                errBox.classList.remove('hidden');
-                            }
-                        }
-
-                        if (d.is_finished) {
-                            if (pollInterval) {
-                                clearInterval(pollInterval);
-                                pollInterval = null;
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Status fetch error', e);
-                    }
-                }
-
-                const refreshBtn = document.getElementById('btn-refresh-import-status');
-                if (refreshBtn) {
-                    refreshBtn.addEventListener('click', checkStatus);
-                }
-
-                // Auto-poll every 3 seconds if status is pending or processing
-                const initialStatus = '{{ $activeImport->status }}';
-                if (initialStatus === 'pending' || initialStatus === 'processing') {
-                    pollInterval = setInterval(checkStatus, 3000);
-                }
-            });
-        </script>
-    @endif
+    @push('scripts')
+        @vite('resources/js/modules/projects/imports/project-imports.js')
+    @endpush
 </div>
