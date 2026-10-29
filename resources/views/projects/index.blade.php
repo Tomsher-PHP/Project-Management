@@ -12,29 +12,29 @@
 
         <x-filters.list-search />
 
-        <x-project-flow-indicator class="sm:ml-auto" />
+        <div class="flex flex-wrap items-center gap-3 sm:ml-auto">
+            @can('project_hosting.create')
+                <a href="{{ route('projects.import.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" />
+                    </svg>
+                    <span>Imports</span>
+                </a>
+            @endcan
 
-        @can('project_hosting.create')
-            <a href="{{ route('projects.import.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" />
-                </svg>
-                <span>Imports</span>
-            </a>
-        @endcan
-
-        @can('project.restore')
-            <a href="{{ route('projects.restore.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h8" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h5" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h8" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 8l5 4-5 4" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 12h-8" />
-                </svg>
-                <span>Restore Projects</span>
-            </a>
-        @endcan
+            @can('project.restore')
+                <a href="{{ route('projects.restore.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 8l5 4-5 4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 12h-8" />
+                    </svg>
+                    <span>Restore</span>
+                </a>
+            @endcan
+        </div>
     </div>
 
     <div class="2xl:flex 2xl:space-x-[48px]">
