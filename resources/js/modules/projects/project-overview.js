@@ -651,7 +651,7 @@ const renderAssigneeBarChart = (overviewRoot) => {
      * there are enough users.
      */
     canvas.style.width = `${requiredWidth}px`;
-    canvas.style.height = '320px';
+    canvas.style.height = '420px';
 
     /*
      * Keep the visible graph area fixed.
@@ -899,8 +899,9 @@ const renderAssigneeBarChart = (overviewRoot) => {
                     ticks: {
                         color: labelColor,
 
-                        maxRotation: 0,
-                        minRotation: 0,
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: false,
 
                         callback(value) {
                             const label =

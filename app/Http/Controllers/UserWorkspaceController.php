@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\BreakWorkRequest;
+use App\Models\HandoffRequest;
 use App\Models\Holiday;
-use App\Models\Project;
-use App\Models\ProjectMilestone;
-use App\Models\ProjectSprint;
+use App\Models\LeaveRequest;
 use App\Models\Task;
 use App\Models\TaskStatus;
 use App\Models\User;
@@ -21,7 +20,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use App\Models\HandoffRequest;
 
 class UserWorkspaceController extends Controller
 {
@@ -96,7 +94,7 @@ class UserWorkspaceController extends Controller
         )
             ->where('status', HandoffRequest::STATUS_PENDING)
             ->count();
-            
+
         return view('workspace.view', [
             'tasksByStatus' => $tasksByStatus,
             'agileNewTaskCount' => $agileNewTaskCount,
@@ -246,7 +244,7 @@ class UserWorkspaceController extends Controller
             ->baseQuery($request->user())
             ->where('current_assignee_id', $workspaceUser->id)
             ->whereHas('project', fn($query) => $query->where('project_flow', $selectedFlowType))
-            ->where('request_status', '!=', 'rejected');
+            ->where('request_status', '!=', Task::REQUEST_REJECTED);
 
         return $taskFilterService->getFilters($request->user(), $baseQuery);
     }
@@ -275,24 +273,101 @@ class UserWorkspaceController extends Controller
         return $workspaceUser;
     }
 
-    private function buildTimelineViewData(User $workspaceUser, Carbon $selectedDate, bool $isOwnWorkspace = true): array
-    {
+    private function buildTimelineViewData(
+        User $workspaceUser,
+        Carbon $selectedDate,
+        bool $isOwnWorkspace = true
+    ): array {
         $userId = (int) $workspaceUser->id;
+
         $hasRunningTaskTimer = ! $isOwnWorkspace
             && (bool) ($this->runningTaskNavbarService->getForUser($userId)['isRunning'] ?? false);
+
         $assignedShift = $this->timeLineService->getAssignedShift($userId, $selectedDate);
-        $workedTaskSegments = $this->timeLineService->getWorkedTaskTimelineSegments($userId, $selectedDate);
-        $breakTaskSegments = $this->timeLineService->getBreakTimelineSegments($workedTaskSegments, $assignedShift, $selectedDate);
-        $breakTaskSegments = $this->splitBreakSegmentsForPendingRequests($workspaceUser, $selectedDate, $breakTaskSegments, $isOwnWorkspace);
+
+        $workedTaskSegments = $this->timeLineService->getWorkedTaskTimelineSegments(
+            $userId,
+            $selectedDate
+        );
+
+        $breakTaskSegments = $this->timeLineService->getBreakTimelineSegments(
+            $workedTaskSegments,
+            $assignedShift,
+            $selectedDate
+        );
+
+        $breakTaskSegments = $this->splitBreakSegmentsForPendingRequests(
+            $workspaceUser,
+            $selectedDate,
+            $breakTaskSegments,
+            $isOwnWorkspace
+        );
+
         $shiftSummaryDuration = !empty($assignedShift['timeline_segments'])
             ? ($assignedShift['timeline_segments'][0]['duration_label'] ?? '--')
             : '--';
-        $workedTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($workedTaskSegments);
-        $breakTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($breakTaskSegments);
-        $workedDiffData = $this->timeLineService->getWorkedShiftDiff($assignedShift, $workedTotalSeconds);
-        $workspaceHoliday = Holiday::forUserOnDate($workspaceUser, $selectedDate->toDateString());
+
+        $workedTotalSeconds = $this->timeLineService->getTotalTimelineSeconds(
+            $workedTaskSegments
+        );
+
+        $breakTotalSeconds = $this->timeLineService->getTotalTimelineSeconds(
+            $breakTaskSegments
+        );
+
+        $workedDiffData = $this->timeLineService->getWorkedShiftDiff(
+            $assignedShift,
+            $workedTotalSeconds
+        );
+
+        $workspaceHoliday = Holiday::forUserOnDate(
+            $workspaceUser,
+            $selectedDate->toDateString()
+        );
+
+        // Find pending or approved leave covering the selected date.
+        $workspaceLeave = LeaveRequest::query()
+            ->with('leaveType:id,name')
+            ->where('user_id', $userId)
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereRaw(
+                'DATE(COALESCE(approved_from_date, requested_from_date)) <= ?',
+                [$selectedDate->toDateString()]
+            )
+            ->whereRaw(
+                'DATE(COALESCE(approved_to_date, requested_to_date)) >= ?',
+                [$selectedDate->toDateString()]
+            )
+            ->first();
+
+        $leaveTypeName = trim($workspaceLeave?->leaveType?->name ?? '');
+
+        $workspaceLeaveName = null;
+
+        if ($leaveTypeName !== '') {
+            $workspaceLeaveName = 'On ' . $leaveTypeName;
+
+            if (!preg_match('/leave$/i', $leaveTypeName)) {
+                $workspaceLeaveName .= ' Leave';
+            }
+        }
+
+        // Hide the break bar on holidays and leave days.
+        // Do not change the existing Day Off behavior.
+        $hideBreakBar = !empty($workspaceHoliday)
+            || !empty($workspaceLeave);
+
+        if ($hideBreakBar) {
+            $breakTaskSegments = [];
+        }
+
+        // Recalculate the displayed break duration after hiding the segments.
+        $breakTotalSeconds = $this->timeLineService->getTotalTimelineSeconds(
+            $breakTaskSegments
+        );
 
         $dateFormat = config('constants.date_format');
+
         return [
             'assignedShift' => $assignedShift,
             'workedTaskSegments' => $workedTaskSegments,
@@ -303,19 +378,33 @@ class UserWorkspaceController extends Controller
             'workedDiffData' => $workedDiffData,
             'selectedDateValue' => $selectedDate->toDateString(),
             'todayDate' => now($selectedDate->getTimezone())->toDateString(),
-            'workspaceGreetingLabel' => $isOwnWorkspace ? $this->buildWorkspaceGreetingLabel($workspaceUser->name) : null,
-            'workspaceGreetingDayName' => $isOwnWorkspace ? now()->format('l, ' . $dateFormat) : null,
+
+            'workspaceGreetingLabel' => $isOwnWorkspace
+                ? $this->buildWorkspaceGreetingLabel($workspaceUser->name)
+                : null,
+
+            'workspaceGreetingDayName' => $isOwnWorkspace
+                ? now()->format('l, ' . $dateFormat)
+                : null,
+
             'workspaceTimelineUserName' => $workspaceUser->name,
             'workspaceTimelineUserId' => $workspaceUser->id,
             'workspaceTimelineUserAvatarUrl' => $workspaceUser->profileImageUrl,
-            'workspaceTimelineUserInitial' => Str::upper(Str::substr($workspaceUser->name ?? 'U', 0, 2)),
+            'workspaceTimelineUserInitial' => Str::upper(
+                Str::substr($workspaceUser->name ?? 'U', 0, 2)
+            ),
             'workspaceTimelineShowsUser' => ! $isOwnWorkspace,
             'workspaceTimelineUserHasRunningTimer' => $hasRunningTaskTimer,
+
             'workspaceHoliday' => $workspaceHoliday,
             'workspaceHolidayName' => $workspaceHoliday?->name,
 
+            'workspaceLeave' => $workspaceLeave,
+            'workspaceLeaveName' => $workspaceLeaveName,
         ];
     }
+
+
 
     private function buildDailyTimelineResponse(array $timelineViewData)
     {

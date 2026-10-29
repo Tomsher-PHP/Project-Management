@@ -62,12 +62,14 @@ export default defineConfig({
                 'resources/js/modules/meetings/meeting-form.js',
                 'resources/js/modules/projects/project-edit.js',
                 'resources/js/modules/projects/project-timelines.js',
+                'resources/js/modules/projects/imports/project-imports.js',
                 'resources/js/login/login.js',
                 'resources/js/modules/attendance/attendance.js',
                 'resources/js/modules/holiday.js',
 
                 'resources/js/modules/analytics/project-analytics-filters.js',
                 'resources/js/modules/analytics/project-analytics-dashboard.js',
+                'resources/js/modules/tasks/developer-notes.js',
 
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',

@@ -192,7 +192,7 @@
                                         id="requested_from_date"
                                         value="{{ old('requested_from_date') }}"
                                         required
-                                        class="datepicker w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                        class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
                                     @error('requested_from_date')
                                         <p class="mt-2 text-sm text-error-300">
@@ -220,7 +220,7 @@
                                         id="requested_to_date"
                                         value="{{ old('requested_to_date') }}"
                                         required
-                                        class="datepicker w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                        class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
                                     @error('requested_to_date')
                                         <p class="mt-2 text-sm text-error-300">
@@ -247,7 +247,7 @@
                                         id="duration_display"
                                         value="0.00"
                                         readonly
-                                        class="w-full rounded-lg border border-gray-300 bg-bgray-50 px-4 py-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                        class="w-full rounded-lg border border-gray-300 bg-bgray-50 p-2.5 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
                                     <p class="mt-2 text-xs text-bgray-500">
                                         Automatically calculated.
@@ -281,7 +281,7 @@
                                         type="file"
                                         name="attachment"
                                         id="attachment"
-                                        class="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                        class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
                                     <p
                                         id="attachment-help"

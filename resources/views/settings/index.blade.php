@@ -270,7 +270,7 @@
                             </div>
 
                             <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
-                                Leave Types
+                                Leave Settings
                             </h3>
 
                         </div>

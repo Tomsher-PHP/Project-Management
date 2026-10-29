@@ -37,6 +37,7 @@ use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectHostingController;
+use App\Http\Controllers\ProjectImportController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
@@ -75,6 +76,7 @@ use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LeaveNotificationSettingController;
 
 
 Route::get('/', function () {
@@ -349,6 +351,10 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.edit')->only(['update']);
         Route::resource('leave-types', LeaveTypeController::class)->middleware('permission.type:leave-type.delete')->only(['destroy']);
 
+        // Leave Notification Settings Routes
+        Route::get('leave-notifications', [LeaveNotificationSettingController::class, 'edit',])->name('leave-notifications.edit');
+        Route::put('leave-notifications', [LeaveNotificationSettingController::class, 'update',])->name('leave-notifications.update');
+
         // Company Expenses Settings Routes
         Route::patch('/expense-payment-modes/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusPaymentMode'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_payment_mode.toggleStatus');
         Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
@@ -528,6 +534,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('meetings/groups/{group}', [ProjectController::class, 'meetingGroup'])->name('projects.restore.meetings.groups.show');
     });
 
+    // Project Import routes
+    Route::get('projects/import', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('projects.import.index');
+    Route::get('projects/import/{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('projects.import.template');
+    Route::post('projects/import/{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('projects.import.validate');
+    Route::post('projects/import/{module}/process', [ProjectImportController::class, 'startImport'])->name('projects.import.process');
+    Route::get('projects/import/{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('projects.import.status');
+    Route::get('projects/import/{module}/download-failed/{import}', [ProjectImportController::class, 'downloadFailedRows'])->name('projects.import.download.failed');
+    Route::get('projects/import/{module}/download-results/{import}', [ProjectImportController::class, 'downloadAllResults'])->name('projects.import.download.results');
+
+    // Project common routes
     Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
     Route::get('projects/{project}/task-create-dependencies', [ProjectController::class, 'taskCreateDependencies'])->name('projects.task-create-dependencies');
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
@@ -562,6 +578,31 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/switch', [TaskController::class, 'switch'])->name('switch');
 
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('edit');
+
+
+        // View developer notes
+        Route::get('developer-notes-modal', [
+            TaskController::class,
+            'developerNotesModal',
+        ])
+            ->middleware(['permission.type:task.view', 'can:view,task'])
+            ->name('developer-notes.modal');
+
+        // Add a developer note
+        Route::post('developer-notes', [
+            TaskController::class,
+            'storeDeveloperNote',
+        ])
+            ->middleware(['permission.type:task.view', 'can:view,task'])
+            ->name('developer-notes.store');
+
+        Route::delete(
+            'developer-notes',
+            [TaskController::class, 'deleteDeveloperNote']
+        )
+            ->middleware(['permission.type:task.view', 'can:view,task'])
+            ->name('developer-notes.delete');
+
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);

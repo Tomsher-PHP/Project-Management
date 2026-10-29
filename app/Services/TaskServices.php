@@ -328,7 +328,7 @@ class TaskServices
         $query = $this->queryService->baseQuery($user)
             ->filter($filters)
             ->whereHas('project', fn($query) => $query->where('project_flow', $flowType))
-            ->where('request_status', '!=', 'rejected');
+            ->where('request_status', '!=', Task::REQUEST_REJECTED);
 
         $workspaceUserId = (int) ($options['workspace_user_id'] ?? 0);
 

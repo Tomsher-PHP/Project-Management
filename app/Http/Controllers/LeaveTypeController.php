@@ -15,7 +15,7 @@ class LeaveTypeController extends Controller
 
     public function __construct()
     {
-        $this->pageTitle = 'Leave Types';
+        $this->pageTitle = 'Leave Settings';
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 
@@ -29,7 +29,7 @@ class LeaveTypeController extends Controller
 
         $nextSortOrder = ((int) LeaveType::max('sort_order')) + 1;
 
-        return view('settings.leave_types.index', compact('leaveTypes', 'perPage', 'nextSortOrder'));
+        return view('settings.leave_settings.index', compact('leaveTypes', 'perPage', 'nextSortOrder'));
     }
 
     /**
@@ -63,7 +63,7 @@ class LeaveTypeController extends Controller
     {
         $leaveType = LeaveType::findOrFail($id);
 
-        return view('settings.leave_types.edit', [
+        return view('settings.leave_settings.edit', [
             'pageTitle' => 'Leave Type',
             'subTitle' => 'View leave type details.',
             'leaveType' => $leaveType,

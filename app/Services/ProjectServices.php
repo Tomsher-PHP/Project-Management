@@ -1084,7 +1084,7 @@ class ProjectServices
                 $query->where('type', TaskStatus::TYPE_ACTIVE);
             })->count(),
             'running_timers_count' => TaskTimeLog::whereIn('task_id', $taskIdsQuery)->whereNull('ended_at')->count(),
-            'pending_requests_count' => $project->tasks()->where('request_status', 'pending')->count(),
+            'pending_requests_count' => $project->tasks()->where('request_status', Task::REQUEST_PENDING)->count(),
             'scope_files_count' => $project->attachments()->where('category', 'scope_files')->count(),
         ];
     }
