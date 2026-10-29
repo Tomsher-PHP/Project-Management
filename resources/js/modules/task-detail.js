@@ -10,6 +10,7 @@ import './task-files';
 import './tasks/task-status-dropdown';
 import './tasks/time-log-change-request';
 import './projects/project-tasks';
+import './tasks/developer-notes';
 
 const TASK_DETAIL_LOADING_HTML = (tab) => `
     <div class="flex items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 py-12 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">

@@ -21,6 +21,7 @@
 <div class="space-y-6">
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div class="space-y-6 xl:col-span-2">
+
             <section class="{{ $cardClasses }}">
                 @php
                     $canEditDescription = auth()->user()?->can('update', $task) ?? false;
@@ -53,6 +54,71 @@
                 @else
                     <p class="mt-4 {{ $emptyTextClasses }}">No task description added yet.</p>
                 @endif
+            </section>
+
+            @php
+                $isCompleted = (bool) $task->status?->is_completed;
+                $developerNote = $task->developerNotes()->first();
+                $developerNoteText = $developerNote?->note
+                    ?? $developerNote?->content
+                    ?? '';
+
+                $canEditDeveloperNotes = !$isCompleted && (int) $task->current_assignee_id === (int) auth()->id();
+
+            @endphp
+
+            <section class="{{ $cardClasses }}">
+                <div class="flex items-center justify-between gap-3">
+                    <h3 class="{{ $cardTitleClasses }}">Developer Notes</h3>
+
+                    @if ($canEditDeveloperNotes)
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 px-3 py-2 text-sm font-medium text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:text-bgray-200 dark:hover:bg-darkblack-500"
+                            data-developer-notes-trigger
+                            data-task-id="{{ $task->id }}"
+                            data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
+                            data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
+                            data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
+                        >
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.862 4.487a2.1 2.1 0 0 1 2.97 2.97L9.75 17.54l-4 1 1-4 10.112-10.053Z" />
+                            </svg>
+                        </button>
+                    @endif
+                </div>
+
+                <div
+                    class="mt-4 rounded-xl bg-bgray-50 px-4 py-4 dark:bg-darkblack-500"
+                    data-task-developer-notes-display
+                >
+                    @if ($developerNote && filled($developerNoteText))
+                        <p
+                            class="{{ $cardTextClasses }} whitespace-pre-wrap break-words"
+                            data-task-developer-notes-text
+                        >{{ $developerNoteText }}</p>
+                    @else
+                        <p
+                            class="{{ $emptyTextClasses }}"
+                            data-task-developer-notes-empty
+                        >
+                            No developer notes added yet.
+                        </p>
+                    @endif
+
+                    @if ($isCompleted)
+                        <p class="mt-3 text-xs text-bgray-500 dark:text-bgray-400">
+                            This task is completed. Developer notes are read-only.
+                        </p>
+                    @elseif (!$canEditDeveloperNotes)
+                        <p class="mt-3 text-xs text-bgray-500 dark:text-bgray-400">
+                            Only the assigned user can add or edit developer notes.
+                        </p>
+                    @endif
+                </div>
             </section>
 
             <section class="{{ $cardClasses }}">

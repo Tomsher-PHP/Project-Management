@@ -79,7 +79,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DZAha8Ut.css",
+    "file": "assets/app-CHaIIftF.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -315,6 +315,12 @@
     "src": "resources/js/modules/project-status-form.js",
     "isEntry": true
   },
+  "resources/js/modules/projects/imports/project-imports.js": {
+    "file": "assets/project-imports-py23BsRi.js",
+    "name": "project-imports",
+    "src": "resources/js/modules/projects/imports/project-imports.js",
+    "isEntry": true
+  },
   "resources/js/modules/projects/project-delete.js": {
     "file": "assets/project-delete-WOHrl-AU.js",
     "name": "project-delete",
@@ -325,7 +331,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-COGyhdIM.js",
+    "file": "assets/project-detail-0v_2ED22.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -404,7 +410,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-3O-PGK8L.js",
+    "file": "assets/task-detail-DQv0Rr8d.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -419,6 +425,7 @@
       "_note-files-modal-CFZnvcW7.js",
       "resources/js/modules/tasks/time-log-change-request.js",
       "resources/js/modules/projects/project-tasks.js",
+      "resources/js/modules/tasks/developer-notes.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
@@ -448,6 +455,16 @@
     "file": "assets/approve-extend-time-hZQoTGQ3.js",
     "name": "approve-extend-time",
     "src": "resources/js/modules/tasks/approve-extend-time.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/tasks/developer-notes.js": {
+    "file": "assets/developer-notes-BZK2TpsD.js",
+    "name": "developer-notes",
+    "src": "resources/js/modules/tasks/developer-notes.js",
     "isEntry": true,
     "imports": [
       "_alert-kNjqpuwD.js",
@@ -485,12 +502,15 @@
     ]
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-B5iYPAln.js",
+    "file": "assets/kanban-board-CPPbxWF6.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true,
     "imports": [
-      "_task-comments-BCaf8cZV.js"
+      "_task-comments-BCaf8cZV.js",
+      "resources/js/modules/tasks/developer-notes.js",
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
   "resources/js/modules/tasks/schedule-task.js": {

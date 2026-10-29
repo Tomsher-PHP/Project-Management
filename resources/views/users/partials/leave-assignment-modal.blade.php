@@ -98,7 +98,7 @@
                     <div class="max-h-[70vh] overflow-y-auto px-6 py-6 sm:px-7">
                         {{-- Top Information --}}
                         @if ($isEdit)
-                            <div class="mb-5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
+                            <div class="mb-5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
                                 <div class="font-semibold">
                                     Editing {{ $editYear }} Leave Assignment
                                 </div>
@@ -221,7 +221,7 @@
                                         name="valid_from"
                                         id="leave_valid_from"
                                         value="{{ old('valid_from', $defaultFrom) }}"
-                                        class="w-full rounded-lg border border-gray-300 p-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
+                                        class="datepicker w-full rounded-lg border border-gray-300 p-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
                                         required
                                     >
 
@@ -252,7 +252,7 @@
                                         name="valid_to"
                                         id="leave_valid_to"
                                         value="{{ old('valid_to', $defaultTo) }}"
-                                        class="w-full rounded-lg border border-gray-300 p-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
+                                        class="datepicker w-full rounded-lg border border-gray-300 p-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
                                         required
                                     >
 

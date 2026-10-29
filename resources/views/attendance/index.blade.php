@@ -573,7 +573,7 @@
 
                                 <label
                                     for="attendance_user_id"
-                                    class="mb-2 block text-sm font-medium"
+                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
                                 >
                                     User
                                     <span class="text-red-500">*</span>
@@ -586,9 +586,7 @@
                                     class="tom-select w-full"
                                 >
 
-                                    <option value="">
-                                        Select User
-                                    </option>
+                                    <option value="">Select User</option>
 
                                     @foreach ($attendanceUsers ?? [] as $attendanceUser)
 
@@ -607,7 +605,7 @@
 
                                 <label
                                     for="attendance_leave_type_id"
-                                    class="mb-2 block text-sm font-medium"
+                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
                                 >
                                     Leave Type
                                     <span class="text-red-500">*</span>
@@ -620,9 +618,7 @@
                                     class="tom-select w-full"
                                 >
 
-                                    <option value="">
-                                        Select Leave Type
-                                    </option>
+                                    <option value="">Select Leave Type</option>
 
                                     @foreach ($leaveTypes as $leaveType)
 
@@ -644,7 +640,7 @@
 
                                 <label
                                     for="attendance_type"
-                                    class="mb-2 block text-sm font-medium"
+                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
                                 >
                                     Type
                                     <span class="text-red-500">*</span>
@@ -677,7 +673,7 @@
 
                                 <label
                                     for="attendance_half_day_type"
-                                    class="mb-2 block text-sm font-medium"
+                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
                                 >
                                     Leave Period
                                     <span class="text-red-500">*</span>
@@ -710,7 +706,7 @@
 
                                 <label
                                     for="attendance_from_date"
-                                    class="mb-2 block text-sm font-medium"
+                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
                                 >
                                     From Date
                                     <span class="text-red-500">*</span>
@@ -731,7 +727,7 @@
 
                                 <label
                                     for="attendance_to_date"
-                                    class="mb-2 block text-sm font-medium"
+                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
                                 >
                                     To Date
                                     <span class="text-red-500">*</span>
@@ -750,7 +746,7 @@
                             {{-- Duration --}}
                             <div>
 
-                                <label class="mb-2 block text-sm font-medium">
+                                <label class="mb-2 block text-sm font-medium text-gray dark:text-white">
                                     Duration
                                 </label>
 
@@ -810,7 +806,7 @@
 
                                 <label
                                     for="attendance_reason"
-                                    class="mb-2 block text-sm font-medium"
+                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
                                 >
                                     Reason
                                     <span class="text-red-500">*</span>
@@ -873,7 +869,7 @@
                         <button
                             type="button"
                             onclick="closeMarkAttendance()"
-                            class="rounded-lg border border-bgray-200 px-5 py-2.5 text-sm"
+                            class="rounded-lg border border-bgray-200 px-5 py-2.5 text-sm text-gray dark:text-white"
                         >
                             Cancel
                         </button>

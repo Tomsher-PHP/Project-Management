@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\TaskDeveloperNote;
+use App\Models\User;
+use App\Traits\HasFormOptions;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use App\Traits\TaskFilterable;
@@ -10,8 +13,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Traits\HasFormOptions;
 
 class Task extends Model
 {
@@ -597,4 +598,11 @@ class Task extends Model
             'id' => $this->project_id,
         ];
     }
+
+
+    public function developerNotes()
+    {
+        return $this->hasMany(TaskDeveloperNote::class)->latest();
+    }
+
 }

@@ -69,6 +69,7 @@ export default defineConfig({
 
                 'resources/js/modules/analytics/project-analytics-filters.js',
                 'resources/js/modules/analytics/project-analytics-dashboard.js',
+                'resources/js/modules/tasks/developer-notes.js',
 
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',

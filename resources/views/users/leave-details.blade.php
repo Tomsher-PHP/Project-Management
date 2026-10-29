@@ -187,16 +187,16 @@
                                             @endif
                                         @endif
                                     </td>
-                                    <td class="px-5 py-4 text-right text-sm">
+                                    <td class="px-5 py-4 text-right text-sm text-bgray-900 dark:text-white">
                                         {{ number_format($balance->yearly_entitlement, 2) }}
                                     </td>
-                                    <td class="px-5 py-4 text-right text-sm">
+                                    <td class="px-5 py-4 text-right text-sm text-bgray-900 dark:text-white">
                                         {{ number_format($balance->monthly_entitlement, 2) }}
                                     </td>
-                                    <td class="px-5 py-4 text-right text-sm">
+                                    <td class="px-5 py-4 text-right text-sm text-bgray-900 dark:text-white">
                                         {{ number_format($balance->opening_balance, 2) }}
                                     </td>
-                                    <td class="px-5 py-4 text-right text-sm">
+                                    <td class="px-5 py-4 text-right text-sm text-bgray-900 dark:text-white">
                                         {{ number_format($balance->used_balance, 2) }}
                                     </td>
                                     <td class="px-5 py-4 text-right">
