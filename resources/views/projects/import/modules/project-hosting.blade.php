@@ -9,7 +9,7 @@
                 </h3>
 
                 <!-- Minimal Single-Row Import Steps -->
-                <div class="mt-2.5 flex items-center gap-3 text-xs text-bgray-600 dark:text-bgray-400 flex-wrap">
+                <div class="mt-2.5 flex items-center gap-3 text-xs text-bgray-600 dark:text-bgray-300 flex-wrap">
                     <span class="inline-flex items-center gap-1.5 font-medium">
                         <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-50 text-[11px] font-bold text-success-500 ring-1 ring-inset ring-success-500/20 dark:bg-darkblack-500 dark:text-success-400">1</span>
                         Download Template
@@ -42,7 +42,7 @@
                         <span>Template</span>
                     </a>
                 @else
-                    <span class="inline-flex items-center gap-1.5 rounded-md border border-bgray-300 bg-bgray-100 px-3 py-1.5 text-xs font-medium text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-400">
+                    <span class="inline-flex items-center gap-1.5 rounded-md border border-bgray-300 bg-bgray-100 px-3 py-1.5 text-xs font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                         No template available
                     </span>
                 @endif
@@ -103,35 +103,24 @@
 
         <div id="import-status-card" class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8" data-import-id="{{ $activeImport->id }}" data-module-key="{{ $module['key'] }}" data-initial-status="{{ $activeImport->status }}" data-status-url="{{ route('projects.import.status', ['module' => $module['key'], 'import' => $activeImport->id]) }}">
 
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-bgray-200 pb-5 dark:border-darkblack-400">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">
-                            Import Task
-                        </span>
-                        <span class="text-xs text-bgray-400">&bull;</span>
-                        <span class="text-xs font-mono text-bgray-600 dark:text-bgray-300">{{ $activeImport->file_name }}</span>
-                    </div>
-                    <h4 class="mt-1 text-lg font-bold text-bgray-900 dark:text-white flex items-center gap-2">
-                        <span id="import-title-text">
-                            @if ($isFinished)
-                                Import Results
-                            @else
-                                Import Processing Progress
-                            @endif
-                        </span>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-bgray-200 pb-4 dark:border-darkblack-400">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">
+                        <span id="import-title-text">{{ $isFinished ? 'Import Results' : 'Import Progress' }}</span>
                     </h4>
+                    <span class="text-xs text-bgray-400">&bull;</span>
+                    <span class="text-xs font-mono text-bgray-700 dark:text-bgray-300">{{ $activeImport->file_name }}</span>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2.5">
                     <span id="import-status-badge">
                         @if ($activeImport->status === \App\Services\ProjectImportTrackingManager::STATUS_PENDING)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-darkblack-500 dark:text-amber-400">
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-darkblack-500 dark:text-amber-400">
                                 <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                 Pending in Queue
                             </span>
                         @elseif ($activeImport->status === \App\Services\ProjectImportTrackingManager::STATUS_PROCESSING)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-darkblack-500 dark:text-blue-400">
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-darkblack-500 dark:text-blue-400">
                                 <svg class="animate-spin h-3.5 w-3.5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -139,28 +128,28 @@
                                 Processing Rows...
                             </span>
                         @elseif ($activeImport->status === \App\Services\ProjectImportTrackingManager::STATUS_COMPLETED)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-3 py-1 text-xs font-bold text-success-600 ring-1 ring-inset ring-success-600/20 dark:bg-darkblack-500 dark:text-success-400">
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-2.5 py-0.5 text-xs font-bold text-success-600 ring-1 ring-inset ring-success-600/20 dark:bg-darkblack-500 dark:text-success-400">
                                 <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                                 </svg>
                                 Completed Successfully
                             </span>
                         @elseif ($activeImport->status === \App\Services\ProjectImportTrackingManager::STATUS_COMPLETED_WITH_ERRORS)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-darkblack-500 dark:text-amber-400">
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-darkblack-500 dark:text-amber-400">
                                 Completed with Row Errors
                             </span>
                         @elseif ($activeImport->status === \App\Services\ProjectImportTrackingManager::STATUS_INTERRUPTED)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600 ring-1 ring-inset ring-red-600/20 dark:bg-darkblack-500 dark:text-red-400">
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-bold text-red-600 ring-1 ring-inset ring-red-600/20 dark:bg-darkblack-500 dark:text-red-400">
                                 Processing Interrupted
                             </span>
                         @else
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600 ring-1 ring-inset ring-red-600/20 dark:bg-darkblack-500 dark:text-red-400">
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-bold text-red-600 ring-1 ring-inset ring-red-600/20 dark:bg-darkblack-500 dark:text-red-400">
                                 Failed
                             </span>
                         @endif
                     </span>
 
-                    <button type="button" id="btn-refresh-import-status" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 transition" title="Refresh status">
+                    <button type="button" id="btn-refresh-import-status" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-2.5 py-1 text-xs font-semibold text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 transition" title="Refresh status">
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
@@ -170,80 +159,62 @@
             </div>
 
             <!-- Progress Bar Section -->
-            <div id="import-progress-container" class="mt-5 {{ $isFinished ? 'hidden' : '' }}">
+            <div id="import-progress-container" class="mt-4 {{ $isFinished ? 'hidden' : '' }}">
                 <div class="flex items-center justify-between text-xs font-semibold text-bgray-600 dark:text-bgray-300 mb-1.5">
                     <span>Import Progress</span>
                     <span id="import-progress-percent">{{ $percent }}%</span>
                 </div>
-                <div class="w-full bg-bgray-200 rounded-full h-2.5 dark:bg-darkblack-500 overflow-hidden">
-                    <div id="import-progress-bar" class="bg-success-400 h-2.5 rounded-full transition-all duration-300" style="width: {{ $percent }}%"></div>
+                <div class="w-full bg-bgray-200 rounded-full h-2 dark:bg-darkblack-500 overflow-hidden">
+                    <div id="import-progress-bar" class="bg-success-400 h-2 rounded-full transition-all duration-300" style="width: {{ $percent }}%"></div>
                 </div>
             </div>
 
-            <!-- Summary Text Banner (shown when finished) -->
-            <div id="import-summary-banner" class="mt-5 {{ $isFinished ? '' : 'hidden' }} rounded-lg border border-bgray-200 bg-bgray-50/80 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-sm text-bgray-900 dark:text-white" id="import-summary-text">
-                            @if ($activeImport->status === \App\Services\ProjectImportTrackingManager::STATUS_INTERRUPTED)
-                                Import interrupted: {{ $processed }} rows processed, {{ $successCount }} successful, {{ $failedCount }} failed.
-                            @elseif ($isFinished)
-                                Import completed: {{ $processed }} rows processed, {{ $successCount }} successful, {{ $failedCount }} failed.
-                            @endif
-                        </span>
+            <!-- Summary Section & Download Actions -->
+            <div id="import-summary-banner" class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap">
+                <span id="import-summary-text" class="hidden"></span>
+
+                <!-- Small Metrics Tiles placed before Download Failed Rows -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex items-center gap-1.5 rounded-lg border border-bgray-200 bg-bgray-50/70 px-3 py-1.5 dark:border-darkblack-400 dark:bg-darkblack-500">
+                        <span class="text-xs text-bgray-700 dark:text-bgray-300 font-medium">Total:</span>
+                        <span id="metric-total-rows" class="text-xs font-bold text-bgray-900 dark:text-white">{{ $activeImport->total_rows ?? '-' }}</span>
                     </div>
-
-                    <!-- Optional Excel Downloads -->
-                    <div class="flex items-center gap-2.5 flex-wrap" id="import-download-actions">
-                        <a id="btn-download-failed" href="{{ route('projects.import.download.failed', ['module' => $module['key'], 'import' => $activeImport->id]) }}" class="{{ $failedCount > 0 ? 'inline-flex' : 'hidden' }} items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-darkblack-500 dark:text-red-400 transition" title="Download only failed rows to correct and re-upload">
-                            <svg class="h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span>Download Failed Rows</span>
-                        </a>
-
-                        <a id="btn-download-results" href="{{ route('projects.import.download.results', ['module' => $module['key'], 'import' => $activeImport->id]) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 transition" title="Download complete audit log of all processed rows">
-                            <svg class="h-3.5 w-3.5 text-bgray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span>Download All Results</span>
-                        </a>
+                    <div class="flex items-center gap-1.5 rounded-lg border border-bgray-200 bg-bgray-50/70 px-3 py-1.5 dark:border-darkblack-400 dark:bg-darkblack-500">
+                        <span class="text-xs text-bgray-700 dark:text-bgray-300 font-medium">Processed:</span>
+                        <span id="metric-processed-rows" class="text-xs font-bold text-bgray-900 dark:text-white">{{ $activeImport->processed_rows ?? 0 }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 rounded-lg border border-success-200 bg-success-50/50 px-3 py-1.5 dark:border-darkblack-400 dark:bg-darkblack-500">
+                        <span class="text-xs text-success-600 dark:text-success-400 font-medium">Created:</span>
+                        <span id="metric-successful-rows" class="text-xs font-bold text-success-600 dark:text-success-300">{{ $activeImport->successful_rows ?? 0 }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50/50 px-3 py-1.5 dark:border-darkblack-400 dark:bg-darkblack-500">
+                        <span class="text-xs text-red-600 dark:text-red-400 font-medium">Failed:</span>
+                        <span id="metric-failed-rows" class="text-xs font-bold text-red-600 dark:text-red-400">{{ $activeImport->failed_rows ?? 0 }}</span>
                     </div>
                 </div>
-            </div>
 
-            <!-- Metrics Tiles -->
-            <div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div class="rounded-lg border border-bgray-200 bg-bgray-50/60 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Total Rows</span>
-                    <p id="metric-total-rows" class="mt-1 text-2xl font-bold text-bgray-900 dark:text-white">
-                        {{ $activeImport->total_rows ?? '-' }}
-                    </p>
-                </div>
-                <div class="rounded-lg border border-bgray-200 bg-bgray-50/60 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                    <span class="text-xs font-medium text-bgray-500 dark:text-bgray-400">Processed</span>
-                    <p id="metric-processed-rows" class="mt-1 text-2xl font-bold text-bgray-900 dark:text-white">
-                        {{ $activeImport->processed_rows ?? 0 }}
-                    </p>
-                </div>
-                <div class="rounded-lg border border-success-200 bg-success-50/40 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                    <span class="text-xs font-medium text-success-600 dark:text-success-400">Created Records</span>
-                    <p id="metric-successful-rows" class="mt-1 text-2xl font-bold text-success-500 dark:text-success-300">
-                        {{ $activeImport->successful_rows ?? 0 }}
-                    </p>
-                </div>
-                <div class="rounded-lg border border-red-200 bg-red-50/40 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                    <span class="text-xs font-medium text-red-600 dark:text-red-400">Failed Rows</span>
-                    <p id="metric-failed-rows" class="mt-1 text-2xl font-bold text-red-500 dark:text-red-400">
-                        {{ $activeImport->failed_rows ?? 0 }}
-                    </p>
+                <!-- Download Actions -->
+                <div class="flex items-center gap-2 flex-wrap" id="import-download-actions">
+                    <a id="btn-download-failed" href="{{ route('projects.import.download.failed', ['module' => $module['key'], 'import' => $activeImport->id]) }}" class="{{ $failedCount > 0 ? 'inline-flex' : 'hidden' }} items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-darkblack-500 dark:text-red-400 transition" title="Download only failed rows to correct and re-upload">
+                        <svg class="h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Download Failed Rows</span>
+                    </a>
+
+                    <a id="btn-download-results" href="{{ route('projects.import.download.results', ['module' => $module['key'], 'import' => $activeImport->id]) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 transition" title="Download complete audit log of all processed rows">
+                        <svg class="h-3.5 w-3.5 text-bgray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Download All Results</span>
+                    </a>
                 </div>
             </div>
 
             <!-- Error message if file-level issue -->
-            <div id="import-error-container" class="{{ !empty($activeImport->error_message) ? '' : 'hidden' }} mt-5 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-darkblack-500">
-                <div class="flex items-start gap-3">
-                    <svg class="h-5 w-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div id="import-error-container" class="{{ !empty($activeImport->error_message) ? '' : 'hidden' }} mt-4 rounded-lg border border-red-200 bg-red-50 p-3.5 dark:border-red-900/50 dark:bg-darkblack-500">
+                <div class="flex items-start gap-2.5">
+                    <svg class="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <div class="text-xs text-red-700 dark:text-red-300" id="import-error-text">
@@ -264,10 +235,10 @@
                         <button type="button" class="filter-btn active rounded-md px-2.5 py-1 font-semibold text-bgray-900 bg-white shadow-sm dark:bg-darkblack-600 dark:text-white" data-filter="all">
                             All (<span id="filter-count-all">{{ count($activeImport->row_results ?? []) }}</span>)
                         </button>
-                        <button type="button" class="filter-btn rounded-md px-2.5 py-1 font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-filter="failed">
+                        <button type="button" class="filter-btn rounded-md px-2.5 py-1 font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-filter="failed">
                             Failed (<span id="filter-count-failed">{{ $failedCount }}</span>)
                         </button>
-                        <button type="button" class="filter-btn rounded-md px-2.5 py-1 font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-filter="success">
+                        <button type="button" class="filter-btn rounded-md px-2.5 py-1 font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-filter="success">
                             Success (<span id="filter-count-success">{{ $successCount }}</span>)
                         </button>
                     </div>
@@ -275,9 +246,9 @@
 
                 <div class="overflow-x-auto rounded-lg border border-bgray-200 dark:border-darkblack-400">
                     <table class="w-full text-left text-xs">
-                        <thead class="border-b border-bgray-200 bg-bgray-50 text-[11px] uppercase tracking-wider text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-400">
+                        <thead class="border-b border-bgray-200 bg-bgray-50 text-[11px] uppercase tracking-wider text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                             <tr>
-                                <th class="py-2.5 px-4 font-semibold w-24">Excel Row</th>
+                                <th class="py-2.5 px-4 font-semibold w-24">Row</th>
                                 <th class="py-2.5 px-4 font-semibold w-36">Project Code</th>
                                 <th class="py-2.5 px-4 font-semibold w-48">Service Name</th>
                                 <th class="py-2.5 px-4 font-semibold w-28">Result</th>
@@ -317,7 +288,7 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="py-2.5 px-4 {{ $rowStatus === 'success' ? 'text-success-600 dark:text-success-400' : ($rowStatus === 'unprocessed' ? 'text-bgray-500 dark:text-bgray-400' : 'text-red-600 dark:text-red-400') }}">
+                                        <td class="py-2.5 px-4 {{ $rowStatus === 'success' ? 'text-success-600 dark:text-success-400' : ($rowStatus === 'unprocessed' ? 'text-bgray-700 dark:text-bgray-300' : 'text-red-600 dark:text-red-400') }}">
                                             {{ $outcome['message'] ?? '-' }}
                                         </td>
                                     </tr>
@@ -328,7 +299,7 @@
                 </div>
 
                 <!-- Pagination Bar for Results -->
-                <div id="results-pagination-container" class="mt-3 flex items-center justify-between text-xs text-bgray-500 dark:text-bgray-400">
+                <div id="results-pagination-container" class="mt-3 flex items-center justify-between text-xs text-bgray-700 dark:text-bgray-300">
                     <span id="pagination-info">Showing all results</span>
                     <div class="flex items-center gap-2">
                         <button type="button" id="pagination-prev" class="rounded border border-bgray-300 bg-white px-2 py-1 text-xs font-semibold text-bgray-700 disabled:opacity-40 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
