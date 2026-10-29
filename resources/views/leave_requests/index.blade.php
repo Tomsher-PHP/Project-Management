@@ -474,22 +474,28 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                         @endcan
                                                     @endif
 
-                                                    {{-- Approve / Reject Only assigned person or super admin --}}
-                                                    @if ($canApproveReject)
+                                                    {{-- Approve / Reject: Only on the Pending Leave Requests page and visible only for reporting to/manager/superadmin --}}
+                                                    @if ($isPendingPage && $canApproveReject)
                                                         @can('leave_request.edit')
-                                                            <a href="{{ route('leave-requests.edit', [
-                                                                'leaveRequest' => $leaveRequest->id,
-                                                                'approved_mode' => 1,
-                                                                'action' => 'approve',
-                                                            ]) }}" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
+                                                            <a
+                                                                href="{{ route('leave-requests.edit', [
+                                                                    'leaveRequest' => $leaveRequest->id,
+                                                                    'approved_mode' => 1,
+                                                                    'action' => 'approve',
+                                                                ]) }}"
+                                                                class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400"
+                                                            >
                                                                 Approve
                                                             </a>
 
-                                                            <a href="{{ route('leave-requests.edit', [
-                                                                'leaveRequest' => $leaveRequest->id,
-                                                                'approved_mode' => 1,
-                                                                'action' => 'reject',
-                                                            ]) }}" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400">
+                                                            <a
+                                                                href="{{ route('leave-requests.edit', [
+                                                                    'leaveRequest' => $leaveRequest->id,
+                                                                    'approved_mode' => 1,
+                                                                    'action' => 'reject',
+                                                                ]) }}"
+                                                                class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400"
+                                                            >
                                                                 Reject
                                                             </a>
                                                         @endcan
