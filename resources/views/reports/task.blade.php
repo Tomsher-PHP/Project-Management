@@ -255,6 +255,42 @@
                                 <a href="{{ route('tasks.edit', $task) }}" class="transition hover:text-success-300 dark:hover:text-success-300">
                                     {{ $task->name ?? '-' }}
                                 </a>
+
+                                @php
+                                    $developerNote = $task->developerNotes->first();
+                                    $developerNoteText = $developerNote?->note
+                                        ?? $developerNote?->content
+                                        ?? '';
+                                @endphp
+
+                                @if (filled($developerNoteText))
+                                    <button
+                                        type="button"
+                                        class="inline-flex shrink-0 items-center justify-center rounded-md p-1
+                                            text-blue-500 transition hover:bg-blue-50 hover:text-blue-700
+                                            dark:hover:bg-darkblack-500"
+                                        data-report-developer-note
+                                        data-task-name="{{ $task->name }}"
+                                        data-note="{{ $developerNoteText }}"
+                                        title="View Developer Notes"
+                                        aria-label="View developer notes for {{ $task->name }}"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                            width="17"
+                                            height="17"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <path d="M14 2v6h6"/>
+                                            <path d="M8 13h8"/>
+                                            <path d="M8 17h8"/>
+                                        </svg>
+                                    </button>
+                                @endif
                             </td>
 
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-parent_task">
@@ -694,6 +730,107 @@
             });
             window.requestAnimationFrame(initializeTeamAssigneeSync);
             window.requestAnimationFrame(syncAssigneeFilterApplied);
+
+            // Function to show developer notes
+            const modal = document.getElementById('report-developer-note-modal');
+
+            if (!modal) return;
+
+            const taskName = document.getElementById('report-developer-note-task');
+            const content = document.getElementById('report-developer-note-content');
+
+            const closeButtons = [
+                document.getElementById('report-developer-note-close'),
+                document.getElementById('report-developer-note-close-footer'),
+            ];
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            };
+
+            document.addEventListener('click', (event) => {
+                if (!(event.target instanceof Element)) return;
+
+                const button = event.target.closest('[data-report-developer-note]');
+
+                if (!button) return;
+
+                taskName.textContent = button.dataset.taskName || 'Task';
+                content.textContent = button.dataset.note || '';
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            });
+
+            closeButtons.forEach((button) => {
+                button?.addEventListener('click', closeModal);
+            });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
         });
     </script>
+
+{{-- Developer Notes Modal --}}
+<div
+    id="report-developer-note-modal"
+    class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="report-developer-note-title"
+>
+    <div class="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-xl dark:bg-darkblack-600">
+
+        <div class="flex items-start justify-between border-b border-gray-200 p-5 dark:border-darkblack-400">
+            <div>
+                <h3
+                    id="report-developer-note-title"
+                    class="text-lg font-semibold text-bgray-900 dark:text-white"
+                >
+                    Developer Notes
+                </h3>
+
+                <p
+                    id="report-developer-note-task"
+                    class="mt-1 text-sm text-bgray-500 dark:text-bgray-300"
+                ></p>
+            </div>
+
+            <button
+                type="button"
+                id="report-developer-note-close"
+                class="rounded-lg p-2 text-bgray-500 transition hover:bg-gray-100 dark:hover:bg-darkblack-500"
+                aria-label="Close developer notes"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div
+            id="report-developer-note-content"
+            class="overflow-y-auto whitespace-pre-wrap break-words p-5 text-sm leading-6 text-bgray-700 dark:text-bgray-200"
+        ></div>
+
+
+    </div>
+</div>
+
 @endsection

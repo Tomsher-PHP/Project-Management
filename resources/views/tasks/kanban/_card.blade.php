@@ -43,7 +43,13 @@
     $prjLimit = $milestoneName ? 16 : 40;
 @endphp
 
-<div class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600" data-task-id="{{ $task->id }}">
+
+<div
+    class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600"
+    data-task-id="{{ $task->id }}"
+    data-is-completed="{{ $isCompleted ? '1' : '0' }}"
+    data-has-developer-note="{{ ($task->developerNotes?->isNotEmpty() ?? false) ? '1' : '0' }}"
+>
     <div class="space-y-3 p-4">
         <div class="{{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}" @if ($canOpenTask) data-project-task-detail-open
                 data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}"
@@ -79,6 +85,38 @@
 
             <div class="mt-3" title="{{ $taskName }}">
                 <x-task-name-status :name="$taskName" :request-type="$task->request_type" :request-status="$task->request_status" :limit="40" text-class="text-sm font-semibold leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : '' }}" name-class="block" class="max-w-full" />
+
+                <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-700 dark:hover:text-white {{ $task->developerNotes()->exists()
+                        ? '!text-blue-600 dark:!text-blue-400'
+                        : 'dark:text-bgray-300' }}"
+                    title="Developer Notes"
+                    aria-label="View developer notes"
+                    data-no-task-detail-open
+                    data-developer-notes-trigger
+                    data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
+                    data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
+                    data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <path d="M14 2v6h6"/>
+                        <path d="M8 13h8"/>
+                        <path d="M8 17h8"/>
+                    </svg>
+                </button>
             </div>
 
             <div class="mt-3 flex items-center justify-between gap-3 text-[11px]">
@@ -128,6 +166,8 @@
                     </span>
                     <span class="font-medium text-[11px]">{{ $commentsCount }}</span>
                 </button>
+
+
             </div>
 
             <div class="flex items-center gap-2 text-[12px] font-semibold">

@@ -93,9 +93,13 @@
 
     <!-- Request Estimate Change Modal -->
     @include('tasks.partials.extend-time-modal')
+
+    @include('tasks.partials.modals.dev-notes-modal')
+    @include('tasks.partials.modals.reopen-task-remark-modal')
 @endsection
 
 @push('scripts')
     @vite('resources/js/modules/task-detail.js')
     @vite('resources/js/modules/tasks/extend-task.js')
+     @vite('resources/js/modules/tasks/developer-notes.js')
 @endpush

@@ -22,6 +22,9 @@
 
             {{-- List Table --}}
             <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
+                @include('settings.leave_settings.leave_tabs', [
+                    'currentTab' => 'leave-types'
+                ])
 
                 <div class="flex flex-col space-y-5">
 

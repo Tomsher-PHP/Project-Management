@@ -62,8 +62,13 @@
             <!-- Task Insights Modal -->
             @include('tasks.partials.modals.insights-modal')
 
-            <!-- Task Notes & Files Modal -->
+            <!-- Task OONotes & Files Modal -->
             @include('tasks.partials.modals.notes-modal')
+
+            {{-- Task Developer Notes Modal --}}
+            @include('tasks.partials.modals.dev-notes-modal')
+
+            @include('tasks.partials.modals.reopen-task-remark-modal')
 
             <script id="task-filter-dependencies" type="application/json">
                 @json([

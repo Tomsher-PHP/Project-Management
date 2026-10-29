@@ -4,6 +4,16 @@
     $statuses = collect($statuses);
     $statusColor = $task->status?->color ?: '#94A3B8';
     $statusName = $task->status?->name ?? 'No Status';
+
+     $isCurrentlyCompleted = (bool) $task->status?->is_completed;
+
+    $hasDeveloperNote = $task->developerNotes()
+        ->where(function ($query) {
+            $query->whereNotNull('note')
+                ->where('note', '!=', '');
+        })
+        ->exists();
+
 @endphp
 
 @if ($canChange && filled($transitionUrl) && $statuses->isNotEmpty())
@@ -22,12 +32,28 @@
                 @foreach ($statuses as $statusOption)
                     @php
                         $isCurrent = (int) ($task->status_id ?? 0) === (int) $statusOption->id;
+                        $targetIsCompleted = (bool) $statusOption->is_completed;
                     @endphp
 
                     <li>
-                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-task-status-option data-task-id="{{ $task->id }}" data-status-id="{{ $statusOption->id }}" data-transition-url="{{ $transitionUrl }}" data-current-status-id="{{ $task->status_id ?? '' }}" data-include-task-detail="{{ $includeTaskDetail ? 'true' : 'false' }}">
+                        <button
+                            type="button"
+                            class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600"
+                            data-task-status-option
+                            data-task-id="{{ $task->id }}"
+                            data-status-id="{{ $statusOption->id }}"
+                            data-transition-url="{{ $transitionUrl }}"
+                            data-current-status-id="{{ $task->status_id ?? '' }}"
+                            data-include-task-detail="{{ $includeTaskDetail ? 'true' : 'false' }}"
+                            data-is-completed="{{ $isCurrentlyCompleted ? '1' : '0' }}"
+                            data-target-is-completed="{{ $targetIsCompleted ? '1' : '0' }}"
+                            data-has-developer-note="{{ $hasDeveloperNote ? '1' : '0' }}"
+                        >
                             <span class="flex items-center gap-2 {{ $isCurrent ? 'text-success-400 dark:text-success-300' : '' }}">
-                                <span class="inline-flex h-3 w-3 rounded-full" style="background-color: {{ $statusOption->color ?: '#9CA3AF' }}"></span>
+                                <span
+                                    class="inline-flex h-3 w-3 rounded-full"
+                                    style="background-color: {{ $statusOption->color ?: '#9CA3AF' }}"
+                                ></span>
                                 <span>{{ $statusOption->name }}</span>
                             </span>
                         </button>
