@@ -115,10 +115,10 @@
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
                                                         {{ $project->name }}
                                                     </h4>
-                                                    <p class="text-sm text-bgray-700 dark:text-bgray-300">
-                                                        Code: {{ $project->project_code ?? '--' }}
-                                                    </p>
                                                 </a>
+                                                <p class="text-sm text-bgray-700 dark:text-bgray-300">
+                                                    Code: {{ $project->project_code ?? '--' }}
+                                                </p>
                                                 <div class="mt-3 w-full">
                                                     <div class="mb-1.5 flex items-center justify-between gap-3">
                                                         <span class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Completion</span>
