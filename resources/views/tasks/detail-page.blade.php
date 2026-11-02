@@ -44,7 +44,13 @@
                         </button>
                     @endcan
 
-                    <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
+                    <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300"
+                    data-task-insights-initial-tab="comments"
+                    data-task-id="{{ $task->id }}"
+                    data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
+                    data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
+                    data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
+                    data-task-name="{{ $task->name }}">
                         <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-300">
                             <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M5.25 6.75H12.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />

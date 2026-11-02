@@ -86,37 +86,6 @@
             <div class="mt-3" title="{{ $taskName }}">
                 <x-task-name-status :name="$taskName" :request-type="$task->request_type" :request-status="$task->request_status" :limit="40" text-class="text-sm font-semibold leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : '' }}" name-class="block" class="max-w-full" />
 
-                <button
-                    type="button"
-                    class="inline-flex items-center justify-center rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-700 dark:hover:text-white {{ $task->developerNotes()->exists()
-                        ? '!text-blue-600 dark:!text-blue-400'
-                        : 'dark:text-bgray-300' }}"
-                    title="Developer Notes"
-                    aria-label="View developer notes"
-                    data-no-task-detail-open
-                    data-developer-notes-trigger
-                    data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
-                    data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
-                    data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <path d="M14 2v6h6"/>
-                        <path d="M8 13h8"/>
-                        <path d="M8 17h8"/>
-                    </svg>
-                </button>
             </div>
 
             <div class="mt-3 flex items-center justify-between gap-3 text-[11px]">
@@ -158,13 +127,41 @@
                     @endif
                 </div>
 
-                <button type="button" class="group inline-flex items-center gap-1 px-2 py-0.5 font-semibold text-bgray-600 transition-all duration-150 dark:text-bgray-300 hover:text-bgray-900 dark:hover:text-bgray-200 transition-colors" title="View Comments" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}">
-                    <span class="inline-flex shrink-0 text-bgray-500 group-hover:text-bgray-700 dark:text-bgray-300 dark:group-hover:text-bgray-200 transition-colors">
+                @php
+                    $developerNotesCount = $task->developerNotes()->count();
+                    $activityTotalCount = $commentsCount + $developerNotesCount;
+                @endphp
+
+                <button
+                    type="button"
+                    class="group inline-flex items-center gap-1 rounded-md px-2 py-1 text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white {{ $developerNotesCount > 0 ? '!text-blue-600 dark:!text-blue-400' : '' }}"
+                    title="Completion Notes: {{ $developerNotesCount }} | Comments: {{ $commentsCount }}"
+                    aria-label="Task Activity: {{ $developerNotesCount }} developer notes and {{ $commentsCount }} comments"
+                    data-task-activity-trigger
+                    data-no-task-detail-open
+                    data-task-id="{{ $task->id }}"
+                    data-task-insights-url="{{ route('tasks.comments.modal', $task) }}"
+                    data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
+                    data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
+                    data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
+                    data-has-developer-note="{{ $developerNotesCount > 0 ? '1' : '0' }}"
+                    data-comments-count="{{ $commentsCount }}"
+                    data-developer-notes-count="{{ $developerNotesCount }}"
+                    data-task-name="{{ $task->name }}"
+                >
+
+                    <span class="inline-flex shrink-0">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
                         </svg>
                     </span>
-                    <span class="font-medium text-[11px]">{{ $commentsCount }}</span>
+                    <span
+                        class="font-medium text-[11px]"
+                        data-task-activity-count
+                    >
+                        {{ $activityTotalCount }}
+                    </span>
+
                 </button>
 
 

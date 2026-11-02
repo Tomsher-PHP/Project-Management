@@ -75,11 +75,14 @@
                         <button
                             type="button"
                             class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 px-3 py-2 text-sm font-medium text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:text-bgray-200 dark:hover:bg-darkblack-500"
+                            data-task-insights-initial-tab="developer-notes"
+                            data-task-insights-url="{{ route('tasks.comments.modal', $task) }}"
                             data-developer-notes-trigger
                             data-task-id="{{ $task->id }}"
                             data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
                             data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
                             data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
+                            data-task-name="{{ $task->name }}"
                         >
                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg"
                                 fill="none" viewBox="0 0 24 24" stroke="currentColor"

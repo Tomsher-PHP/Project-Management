@@ -56,9 +56,13 @@
     "file": "assets/sweetalert2.esm.all-YZDMVk0e.js",
     "name": "sweetalert2.esm.all"
   },
-  "_task-comments-BCaf8cZV.js": {
-    "file": "assets/task-comments-BCaf8cZV.js",
+  "_task-comments-DMkPeK_8.js": {
+    "file": "assets/task-comments-DMkPeK_8.js",
     "name": "task-comments"
+  },
+  "_task-insights-modal-DCLerg8E.js": {
+    "file": "assets/task-insights-modal-DCLerg8E.js",
+    "name": "task-insights-modal"
   },
   "_timepicker-BgMmsOv3.js": {
     "file": "assets/timepicker-BgMmsOv3.js",
@@ -79,7 +83,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-U61NZofK.css",
+    "file": "assets/app-BoX_ZMq9.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -115,7 +119,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DirUzOmx.js",
+    "file": "assets/app-CR7dKN_P.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -126,6 +130,8 @@
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-BnPXzLD6.js",
       "_datepicker-DWdH-Ouy.js",
+      "resources/js/modules/tasks/developer-notes.js",
+      "_task-insights-modal-DCLerg8E.js",
       "_timepicker-BgMmsOv3.js",
       "_weekpicker-CPVHNp86.js",
       "_flatpickr.min-Cc3t1Oke.js"
@@ -410,7 +416,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-DQv0Rr8d.js",
+    "file": "assets/task-detail-3M67p9RT.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -421,7 +427,8 @@
       "_timepicker-BgMmsOv3.js",
       "_weekpicker-CPVHNp86.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_task-comments-BCaf8cZV.js",
+      "_task-insights-modal-DCLerg8E.js",
+      "_task-comments-DMkPeK_8.js",
       "_note-files-modal-CFZnvcW7.js",
       "resources/js/modules/tasks/time-log-change-request.js",
       "resources/js/modules/projects/project-tasks.js",
@@ -462,7 +469,7 @@
     ]
   },
   "resources/js/modules/tasks/developer-notes.js": {
-    "file": "assets/developer-notes-BZK2TpsD.js",
+    "file": "assets/developer-notes-CPrtsoDj.js",
     "name": "developer-notes",
     "src": "resources/js/modules/tasks/developer-notes.js",
     "isEntry": true,
@@ -502,12 +509,13 @@
     ]
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-CPPbxWF6.js",
+    "file": "assets/kanban-board-Crc5mLEL.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true,
     "imports": [
-      "_task-comments-BCaf8cZV.js",
+      "_task-insights-modal-DCLerg8E.js",
+      "_task-comments-DMkPeK_8.js",
       "resources/js/modules/tasks/developer-notes.js",
       "_alert-kNjqpuwD.js",
       "_sweetalert2.esm.all-YZDMVk0e.js"
