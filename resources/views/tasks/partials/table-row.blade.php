@@ -138,7 +138,7 @@
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         @if ($task->due_date_time)
-            <div class="inline-flex items-center gap-0.5 text-sm font-medium text-bgray-900 dark:text-white {{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task) }}">
+            <div class="inline-flex items-center gap-0.5 text-sm font-medium {{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task) }}">
                 {!! taskDueDateIcon($task->due_date_time, $task->estimated_time_seconds, $task) !!}
                 <span>@appDateTime($task->due_date_time)</span>
             </div>
