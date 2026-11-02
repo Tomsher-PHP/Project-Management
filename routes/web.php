@@ -77,6 +77,7 @@ use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LeaveNotificationSettingController;
+use App\Http\Controllers\DailyWorkReportSettingsController;
 
 
 Route::get('/', function () {
@@ -379,7 +380,29 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
+
+
+        // Daily Work Report Settings Routes
+        Route::prefix('daily-work-reports')
+            ->name('daily-work-reports.')
+            ->group(function () {
+                Route::get('/', [DailyWorkReportSettingsController::class, 'index'])->middleware('permission.type:daily_work_report.view')->name('index');
+
+                Route::post('/settings',[DailyWorkReportSettingsController::class, 'update'])->middleware('permission.type:daily_work_report.edit')->name('settings.update');
+
+                Route::post('/recipients',[DailyWorkReportSettingsController::class, 'storeRecipient'])->middleware('permission.type:daily_work_report.edit')->name('recipients.store');
+
+                Route::patch('/recipients/{recipient}/toggle',[DailyWorkReportSettingsController::class, 'toggleRecipient'])->middleware('permission.type:daily_work_report.edit')->name('recipients.toggle');
+
+                Route::delete('/recipients/{recipient}',[DailyWorkReportSettingsController::class, 'destroyRecipient'])->middleware('permission.type:daily_work_report.edit')->name('recipients.destroy');
+            });
     });
+
+
+
+
+
+
 
     // Team management Routes
     Route::patch('/teams/toggle-status', [TeamController::class, 'toggleStatus'])->name('teams.toggleStatus')->middleware('permission.type:user.edit');
@@ -581,28 +604,12 @@ Route::middleware(['auth'])->group(function () {
 
 
         // View developer notes
-        Route::get('developer-notes-modal', [
-            TaskController::class,
-            'developerNotesModal',
-        ])
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.modal');
+        Route::get('developer-notes-modal', [TaskController::class,'developerNotesModal',])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.modal');
 
         // Add a developer note
-        Route::post('developer-notes', [
-            TaskController::class,
-            'storeDeveloperNote',
-        ])
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.store');
+        Route::post('developer-notes', [TaskController::class,'storeDeveloperNote',])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.store');
 
-        Route::delete(
-            'developer-notes',
-            [TaskController::class, 'deleteDeveloperNote']
-        )
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.delete');
-
+        Route::delete('developer-notes',[TaskController::class, 'deleteDeveloperNote'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.delete');
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
@@ -814,53 +821,25 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('leave-change-requests')
         ->name('leave-change-requests.')
         ->group(function () {
-
-            Route::get('/', [LeaveChangeRequestController::class, 'index'])
-                ->name('index');
-
-            Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])
-                ->name('create');
-
-            Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])
-                ->name('store');
-
-            Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])
-                ->name('show');
-
-            Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])
-                ->name('approve');
-
-            Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])
-                ->name('reject');
-
-            Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])
-                ->name('cancel');
+            Route::get('/', [LeaveChangeRequestController::class, 'index'])->name('index');
+            Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])->name('create');
+            Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])->name('store');
+            Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])->name('show');
+            Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])->name('approve');
+            Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])->name('reject');
+            Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])->name('cancel');
         });
-
-
-
 
     Route::prefix('leave-cancellation-requests')
         ->name('leave-cancellation-requests.')
         ->controller(LeaveCancellationRequestController::class)
         ->group(function () {
-            Route::post('/{leaveRequest}', 'store')
-                ->name('store');
-
-            Route::get('/', 'index')
-                ->name('index');
-
-            Route::get('/{cancellationRequest}/details', 'show')
-                ->name('show');
-
-            Route::post('/{cancellationRequest}/approve', 'approve')
-                ->name('approve');
-
-            Route::post('/{cancellationRequest}/reject', 'reject')
-                ->name('reject');
-
-            Route::post('/{cancellationRequest}/cancel', 'cancel')
-                ->name('cancel');
+            Route::post('/{leaveRequest}', 'store')->name('store');
+            Route::get('/', 'index')->name('index');
+            Route::get('/{cancellationRequest}/details', 'show')->name('show');
+            Route::post('/{cancellationRequest}/approve', 'approve')->name('approve');
+            Route::post('/{cancellationRequest}/reject', 'reject')->name('reject');
+            Route::post('/{cancellationRequest}/cancel', 'cancel')->name('cancel');
         });
 
 

@@ -267,6 +267,12 @@ return [
     ['name' => 'project_settings.edit',   'label' => 'Settings - Project Settings', 'sort_order' => 57040, 'default_checked' => false],
     ['name' => 'project_settings.delete', 'label' => 'Settings - Project Settings', 'sort_order' => 57060, 'default_checked' => false],
 
+    ['name' => 'daily_work_report.view','label' => 'View Daily Work Reports','sort_order' => 58000,'default_checked' => false,],
+    ['name' => 'daily_work_report.edit','label' => 'Manage Daily Work Report Settings and Recipients','sort_order' => 58020,'default_checked' => false,],
+    ['name' => 'daily_work_report.generate','label' => 'Generate Daily Work Reports','sort_order' => 58040,'default_checked' => false,],
+    ['name' => 'daily_work_report.send_test','label' => 'Send Test Daily Work Reports','sort_order' => 58060,'default_checked' => false,],
+    ['name' => 'daily_work_report.retry','label' => 'Retry Failed Daily Work Reports','sort_order' => 58080,'default_checked' => false,],
+
     // TASK SETTINGS
     ['name' => 'task_settings.view',   'label' => 'Settings - Task Settings', 'sort_order' => 61000, 'default_checked' => false],
     ['name' => 'task_settings.create', 'label' => 'Settings - Task Settings', 'sort_order' => 61020, 'default_checked' => false],
@@ -319,5 +325,8 @@ return [
     // CONFIGURATION  -- Last Settings Module
     ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
     ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
+
+
+   
 
 ];
