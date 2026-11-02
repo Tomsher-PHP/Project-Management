@@ -21,7 +21,7 @@
                                         </button>
                                     </div>
                                     <p class="mt-1 truncate text-xs font-medium uppercase tracking-wide text-success-400">
-                                        {{ $authUser->getRoleNames()->implode(', ') ?: 'No Role Assigned' }}
+                                        {{ $authUser?->getRoleNames()?->implode(', ') ?: 'No Role Assigned' }}
                                         @if ($authUser?->is_super_admin)
                                             (Super Admin)
                                         @endif
