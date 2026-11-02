@@ -1,4 +1,9 @@
 @php
+    $project = $project ?? null;
+    $projectTimelines = collect($projectTimelines ?? []);
+    $projectMilestones = collect($projectMilestones ?? []);
+    $projectSprints = collect($projectSprints ?? []);
+    $isDeletedProjectView = $isDeletedProjectView ?? false;
     $taskMovePlacementOptions = [
         'timelines' => $projectTimelines
             ->map(
@@ -44,16 +49,20 @@
                         </button>
                     </div>
 
-                    <form class="space-y-4 overflow-y-auto px-6 pb-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)' data-dependencies-url-template="{{ route('projects.task-create-dependencies', ['project' => '__PROJECT_ID__']) }}" data-source-project-flow="{{ $project->project_flow }}">
+                    <form class="space-y-4 overflow-y-auto px-6 pb-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)' data-dependencies-url-template="{{ route('projects.task-create-dependencies', ['project' => '__PROJECT_ID__']) }}" data-initial-source-project-id="{{ $project?->id }}" data-source-project-id="{{ $project?->id }}" data-source-project-flow="{{ $project?->project_flow }}">
                         <input type="hidden" name="_method" value="PATCH">
 
                         <div class="rounded-lg border border-bgray-200 bg-bgray-50/70 p-3.5 text-sm text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-300 space-y-1.5">
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-bgray-700 dark:text-bgray-300">Current Project:</span>
                                 <span class="inline-flex items-center gap-1.5 font-medium text-bgray-900 dark:text-white">
-                                    <x-project-flow-icon :flow="$project->project_flow" size="sm" />
-                                    <span>{{ $project->name }}</span>
-                                    <span class="text-xs font-normal text-bgray-700 dark:text-bgray-300">({{ ucfirst($project->project_flow) }})</span>
+                                    <span data-project-task-move-current-project-icon>
+                                        @if ($project)
+                                            <x-project-flow-icon :flow="$project->project_flow" size="sm" />
+                                        @endif
+                                    </span>
+                                    <span data-project-task-move-current-project-name>{{ $project?->name ?? '--' }}</span>
+                                    <span class="text-xs font-normal text-bgray-700 dark:text-bgray-300" data-project-task-move-current-project-flow>@if ($project)({{ ucfirst($project->project_flow) }})@endif</span>
                                 </span>
                             </div>
                             <p class="text-xs py-1">
@@ -87,7 +96,7 @@
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Project <x-red-star />
                             </label>
-                            <select id="move_target_project_id" name="target_project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-exclude-id="{{ $project->id }}" data-sort="0" data-project-task-move-project-select disabled>
+                            <select id="move_target_project_id" name="target_project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-exclude-id="{{ $project?->id }}" data-sort="0" data-project-task-move-project-select disabled>
                                 <option value="">Search project here..</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="target_project_id"></p>

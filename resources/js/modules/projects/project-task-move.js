@@ -196,6 +196,20 @@ const fetchMoveProjectDependencies = async (form, projectId) => {
     return result.data;
 };
 
+const mapProjectDependenciesToPlacement = (dependencies = {}) => ({
+    timelines: dependencies.timelines || [],
+    milestones: dependencies.milestones || [],
+    sprints: dependencies.sprints || [],
+});
+
+const renderProjectFlowIcon = (flow = '') => {
+    if (String(flow).toLowerCase() === 'linear') {
+        return '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>';
+    }
+
+    return '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-600 dark:text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>';
+};
+
 const syncTaskMoveUI = async (
     form,
     {
@@ -543,7 +557,7 @@ const syncTaskMoveUI = async (
     }
 };
 
-const prepareTaskMoveModal = (root, triggerButton) => {
+const prepareTaskMoveModal = async (root, triggerButton) => {
     const modal = root?.querySelector('[data-project-task-move-modal]');
     const form = modal?.querySelector('[data-project-task-move-form]');
 
@@ -560,7 +574,13 @@ const prepareTaskMoveModal = (root, triggerButton) => {
     const taskCodeNode = modal.querySelector('[data-project-task-move-task-code]');
     const currentSprintNode = modal.querySelector('[data-project-task-move-current-sprint]');
     const currentTimelineNode = modal.querySelector('[data-project-task-move-current-timeline]');
+    const currentProjectIconNode = modal.querySelector('[data-project-task-move-current-project-icon]');
+    const currentProjectNameNode = modal.querySelector('[data-project-task-move-current-project-name]');
+    const currentProjectFlowNode = modal.querySelector('[data-project-task-move-current-project-flow]');
     const toggleCheckbox = form.querySelector('[data-project-task-move-another-project-toggle]');
+    const sourceProjectId = String(triggerButton.dataset.projectTaskSourceProjectId || '');
+    const sourceProjectName = triggerButton.dataset.projectTaskSourceProjectName || '--';
+    let sourceProjectFlow = String(triggerButton.dataset.projectTaskSourceProjectFlow || 'agile').toLowerCase();
 
     if (taskNameNode) {
         taskNameNode.textContent = triggerButton.dataset.projectTaskName || '--';
@@ -578,17 +598,61 @@ const prepareTaskMoveModal = (root, triggerButton) => {
         currentTimelineNode.textContent = triggerButton.dataset.projectTaskCurrentTimeline || '--';
     }
 
+    if (currentProjectNameNode) {
+        currentProjectNameNode.textContent = sourceProjectName;
+    }
+
+    if (currentProjectIconNode) {
+        currentProjectIconNode.innerHTML = renderProjectFlowIcon(sourceProjectFlow);
+    }
+
+    if (currentProjectFlowNode) {
+        currentProjectFlowNode.textContent = `(${sourceProjectFlow.charAt(0).toUpperCase()}${sourceProjectFlow.slice(1)})`;
+    }
+
     if (toggleCheckbox) {
         toggleCheckbox.checked = false;
     }
 
     const projectSelect = form.querySelector('[data-project-task-move-project-select]');
+    form.dataset.sourceProjectId = sourceProjectId;
+    form.dataset.sourceProjectFlow = sourceProjectFlow;
     form.dataset.currentTimelineId = triggerButton.dataset.projectTaskCurrentTimelineId || '';
     form.dataset.currentSprintId = triggerButton.dataset.projectTaskCurrentSprintId || '';
+
+    if (projectSelect) {
+        projectSelect.dataset.excludeId = sourceProjectId;
+        projectSelect.tomselect?.clear(true);
+        projectSelect.tomselect?.clearOptions();
+        if (projectSelect.tomselect) {
+            projectSelect.tomselect.loadedSearches = {};
+            projectSelect.tomselect.clearCache();
+        }
+    }
+
     setSelectValue(projectSelect, '');
     setSelectValue(form.querySelector('[name="project_milestone_id"]'), '');
 
-    syncTaskMoveUI(form, {
+    const initialSourceProjectId = String(form.dataset.initialSourceProjectId || '');
+
+    if (sourceProjectId && sourceProjectId === initialSourceProjectId) {
+        form.dataset.taskMovePlacement = form.dataset.initialTaskMovePlacement || form.dataset.taskMovePlacement || '{}';
+    } else if (sourceProjectId) {
+        const sourceDependencies = await fetchMoveProjectDependencies(form, sourceProjectId);
+        sourceProjectFlow = String(sourceDependencies?.flow || sourceProjectFlow).toLowerCase();
+        form.dataset.sourceProjectFlow = sourceProjectFlow;
+        form.dataset.taskMovePlacement = JSON.stringify(mapProjectDependenciesToPlacement(sourceDependencies));
+
+        if (currentProjectIconNode) {
+            currentProjectIconNode.innerHTML = renderProjectFlowIcon(sourceProjectFlow);
+        }
+
+        if (currentProjectFlowNode) {
+            currentProjectFlowNode.textContent = `(${sourceProjectFlow.charAt(0).toUpperCase()}${sourceProjectFlow.slice(1)})`;
+        }
+    }
+
+    await syncTaskMoveUI(form, {
         selectedTimelineId: form.dataset.currentTimelineId,
         selectedMilestoneId: '',
         selectedSprintId: '',
@@ -613,13 +677,25 @@ export const initializeProjectTaskMove = (root, {
 
     root.dataset.projectTaskMoveInitialized = 'true';
     initTomSelect(modal);
+    const moveForm = modal.querySelector('[data-project-task-move-form]');
+    if (moveForm) {
+        moveForm.dataset.initialTaskMovePlacement = moveForm.dataset.taskMovePlacement || '{}';
+    }
 
-    root.addEventListener('click', (event) => {
+    root.addEventListener('click', async (event) => {
         const moveOpenButton = event.target.closest('[data-project-task-move-open]');
 
         if (moveOpenButton && root.contains(moveOpenButton)) {
             onBeforeOpen?.();
-            openTaskMoveModal(prepareTaskMoveModal(root, moveOpenButton));
+            const preparation = prepareTaskMoveModal(root, moveOpenButton);
+            openTaskMoveModal(modal);
+
+            try {
+                await preparation;
+            } catch (error) {
+                closeTaskMoveModal(modal);
+                Alert.errorModal(error.message || 'Unable to load project options.');
+            }
             return;
         }
 

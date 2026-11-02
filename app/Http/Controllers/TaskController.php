@@ -67,14 +67,16 @@ class TaskController extends Controller
 
         // Preload relations for all tasks in the list to avoid N+1 queries when rendering the list and task cards
         $taskRowRelations = [
-            'project:id,name,project_code,project_flow',
-            'projectMilestone:id,name',
-            'projectSprint:id,name',
+            'project:id,name,project_code,project_flow,is_system,added_by,deleted_at',
+            'projectTimeline:id,name',
+            'projectMilestone:id,name,is_backlog,is_system',
+            'projectSprint:id,project_milestone_id,name,is_backlog,is_system',
             'currentAssignee:id,name',
             'status:id,name,color,type,is_completed',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];
+        $tasks->getCollection()->load($taskRowRelations);
         $tasks->getCollection()->each(function (Task $task) use ($taskRowRelations) {
             $this->loadTaskDescendantsForList($task, $taskRowRelations);
         });

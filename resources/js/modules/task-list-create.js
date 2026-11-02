@@ -125,6 +125,26 @@ const setFieldValue = (field, value = '') => {
     }
 };
 
+const setSelectValue = (field, value = '') => {
+    if (!field) {
+        return;
+    }
+
+    const normalizedValue = value === null || value === undefined ? '' : String(value);
+
+    if (field.tomselect) {
+        if (normalizedValue) {
+            field.tomselect.setValue(normalizedValue, true);
+        } else {
+            field.tomselect.clear(true);
+        }
+
+        return;
+    }
+
+    field.value = normalizedValue;
+};
+
 const setCheckboxValue = (field, checked) => {
     if (!field) {
         return;
@@ -692,7 +712,7 @@ const loadParentTaskOptions = async (form, dependencies) => {
     });
 };
 
-const prepareTaskCreateModal = async (root, dependencies) => {
+const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
     const form = root.querySelector('[data-task-create-form]');
 
     if (!form) {
@@ -735,9 +755,44 @@ const prepareTaskCreateModal = async (root, dependencies) => {
     setEmptyProjectState(form, dependencies);
 
     const projectField = form.querySelector('[name="project_id"]');
+    const projectId = String(prefill.projectId || '');
+
+    if (projectField && projectId) {
+        const projectOption = {
+            value: projectId,
+            text: prefill.projectName || `Project #${projectId}`,
+            subtype: prefill.projectCode || '',
+        };
+
+        if (projectField.tomselect) {
+            if (!projectField.tomselect.options[projectId]) {
+                projectField.tomselect.addOption(projectOption);
+            }
+        } else if (!Array.from(projectField.options).some((option) => String(option.value) === projectId)) {
+            const option = document.createElement('option');
+            option.value = projectId;
+            option.textContent = projectOption.text;
+            projectField.appendChild(option);
+        }
+
+        setSelectValue(projectField, projectId);
+    }
 
     if (projectField?.value) {
         await applyProjectDefaults(form, dependencies);
+
+        const milestoneId = String(prefill.milestoneId || '');
+        const sprintId = String(prefill.sprintId || '');
+        const parentTaskId = String(prefill.parentTaskId || '');
+        const milestoneField = form.querySelector('[name="project_milestone_id"]');
+
+        setSelectValue(milestoneField, milestoneId);
+        updateSprintOptions(form, dependencies, {
+            selectedMilestoneId: milestoneId,
+            selectedSprintId: sprintId,
+        });
+        await loadParentTaskOptions(form, dependencies);
+        setSelectValue(form.querySelector('[name="parent_task_id"]'), parentTaskId);
     }
 };
 
@@ -849,7 +904,14 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             openTaskCreateModal(root.querySelector('[data-task-create-modal]'));
 
             try {
-                await prepareTaskCreateModal(root, dependencies);
+                await prepareTaskCreateModal(root, dependencies, {
+                    projectId: openButton.dataset.taskCreateProjectId || '',
+                    projectName: openButton.dataset.taskCreateProjectName || '',
+                    projectCode: openButton.dataset.taskCreateProjectCode || '',
+                    milestoneId: openButton.dataset.taskCreateMilestoneId || '',
+                    sprintId: openButton.dataset.taskCreateSprintId || '',
+                    parentTaskId: openButton.dataset.taskCreateParentTaskId || '',
+                });
             } catch (error) {
                 Alert.errorModal(error.message || 'Unable to load project task options.');
             }

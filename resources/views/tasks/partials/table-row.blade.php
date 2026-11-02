@@ -11,6 +11,15 @@
     $isCompleted = (bool) $task->status?->is_completed;
     $wasCompletedLate = $isCompleted && $task->completed_at && $task->due_date_time && $task->completed_at->gt($task->due_date_time);
     $completedAtClasses = $wasCompletedLate ? 'text-red-500 dark:text-red-600' : 'text-success-400 dark:text-success-300';
+    $project = $task->project;
+    $isDeletedProjectView = $project?->trashed() ?? false;
+    $isBacklogPlacement = $project && $project->project_flow !== 'linear' && !$task->project_sprint_id;
+    $shouldPrefillPlacement = $project && !$isBacklogPlacement && !($task->projectSprint?->is_backlog || $task->projectSprint?->is_system || $task->projectMilestone?->is_backlog || $task->projectMilestone?->is_system);
+    $canAddSubTask = $project && !$isDeletedProjectView && auth()->user()?->can('task.create');
+    $canEditTask = !$isDeletedProjectView && auth()->user()?->can('task.edit');
+    $canViewLogs = $project && !$isDeletedProjectView;
+    $canMoveTask = $project && !$isDeletedProjectView && !$isSubtask && auth()->user()?->can('update', $project) && auth()->user()?->can('move', $task);
+    $canDeleteTask = !$isDeletedProjectView && auth()->user()?->can('delete', $task);
 @endphp
 
 <tr class="transition {{ config('assets.classes.table_row_hover') }} {{ $isSubtask ? 'hidden bg-bgray-50/40 dark:bg-darkblack-500/20' : '' }}" data-task-id="{{ $task->id }}" @if ($isSubtask) data-task-parent-id="{{ $parentTaskId }}" hidden @endif>
@@ -139,16 +148,16 @@
     </td>
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-        <div class="flex items-center gap-2">
-            @if ($task->project)
-                <x-edit-button action="javascript:void(0)" title="Open task" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$task->project, $task]) }}" data-project-task-group-key="" />
-            @else
-                <x-edit-button :action="route('tasks.edit', $task)" title="Open task" />
-            @endif
-
-            @can('delete', $task)
-                <x-delete-form :action="route('tasks.destroy', $task->id)" />
-            @endcan
-        </div>
+        <x-task-action-context-menu
+            :task="$task"
+            :project="$project"
+            context="task-index"
+            :can-add-sub-task="$canAddSubTask"
+            :can-edit-task="$canEditTask"
+            :can-view-logs="$canViewLogs"
+            :can-move-task="$canMoveTask"
+            :can-delete-task="$canDeleteTask"
+            :should-prefill-placement="$shouldPrefillPlacement"
+        />
     </td>
 </tr>
