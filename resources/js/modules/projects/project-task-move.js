@@ -627,6 +627,16 @@ export const initializeProjectTaskMove = (root, {
 
         if (moveCloseButton && root.contains(moveCloseButton)) {
             closeTaskMoveModal(modal);
+            return;
+        }
+
+        const panel = modal.querySelector('[data-project-task-move-panel]');
+        const isClickInsideModal = modal.contains(event.target);
+        const isClickInsidePanel = panel?.contains(event.target);
+        const isClickOnDropdown = event.target.closest('.ts-dropdown');
+
+        if (isClickInsideModal && !isClickInsidePanel && !isClickOnDropdown) {
+            closeTaskMoveModal(modal);
         }
     });
 
