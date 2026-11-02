@@ -161,7 +161,7 @@
                             </button>
                         @endif
 
-                        <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-log-open data-project-task-log-url="{{ route('projects.tasks.logs', [$project, $task]) }}">
+                        <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-task-log-open data-task-log-url="{{ route('projects.tasks.logs', [$project, $task]) }}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm.75 3a.75.75 0 00-1.5 0v5c0 .199.079.389.22.53l2.5 2.5a.75.75 0 001.06-1.06l-2.28-2.28V5z" clip-rule="evenodd" />
                             </svg>

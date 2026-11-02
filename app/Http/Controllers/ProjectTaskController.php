@@ -262,7 +262,7 @@ class ProjectTaskController extends Controller
         return response()->json([
             'status' => true,
             'html' => view(
-                'projects.partials.tasks.modals.log-content',
+                'projects.partials.modals.task-log-content',
                 [
                     'project'  => $project,
                     'task'     => $task,
