@@ -137,7 +137,7 @@
             </div>
         @endif
 
-        <form id="leave-request-form" method="POST" action="{{ route('leave-requests.update', $leaveRequest->id) }}" enctype="multipart/form-data">
+        <form id="leave-request-form" data-unpaid-leave-confirm method="POST" action="{{ route('leave-requests.update', $leaveRequest->id) }}" enctype="multipart/form-data">
 
             @csrf
             @method('PUT')

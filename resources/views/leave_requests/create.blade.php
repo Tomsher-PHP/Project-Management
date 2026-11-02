@@ -45,6 +45,7 @@
 
                         <form
                             action="{{ route('leave-requests.store') }}"
+                            data-unpaid-leave-confirm
                             method="POST"
                             enctype="multipart/form-data">
 

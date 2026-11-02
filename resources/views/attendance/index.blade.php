@@ -560,6 +560,13 @@
 
                     <input
                         type="hidden"
+                        name="confirm_unpaid_leave"
+                        id="confirm_unpaid_leave"
+                        value="0"
+                    >
+
+                    <input
+                        type="hidden"
                         name="created_from_attendance"
                         value="1"
                     >
@@ -1331,6 +1338,91 @@
 
             toggleAttendanceLeavePeriod();
 
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const forms = document.querySelectorAll(
+                '[data-unpaid-leave-confirm]'
+            );
+
+            forms.forEach(function (form) {
+
+                let confirmed = false;
+
+                form.addEventListener('submit', async function (e) {
+
+                    if (confirmed) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    try {
+
+                        const formData = new FormData(form);
+
+                        const response = await fetch(form.action, {
+                            method: form.method || 'POST',
+                            body: formData,
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                            return;
+                        }
+
+                        const result = await response.json();
+
+                        if (result.requires_confirmation) {
+
+                            Alert.confirm({
+                                title: 'No Leave Balance Found',
+                                text: result.message,
+                                confirmButtonText: 'Yes, Proceed',
+                                cancelButtonText: 'Cancel',
+                            }).then(function (accepted) {
+
+                                if (!accepted) {
+                                    return;
+                                }
+
+                                confirmed = true;
+
+                                form.querySelector(
+                                    '[name="confirm_unpaid_leave"]'
+                                ).value = '1';
+
+                                form.requestSubmit();
+                            });
+
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.message || 'Unable to process leave request.'
+                            );
+                        }
+
+                        if (result.redirect) {
+                            window.location.href = result.redirect;
+                        }
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert(
+                            error.message || 'Something went wrong.'
+                        );
+                    }
+                });
+            });
         });
     </script>
 
