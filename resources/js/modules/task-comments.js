@@ -64,6 +64,7 @@ const initializeTaskComments = (root = document) => {
     });
 
     form.addEventListener('submit', async (event) => {
+        const taskId = String(commentsRoot.dataset.taskId || '');
         event.preventDefault();
         clearError();
 
@@ -105,13 +106,53 @@ const initializeTaskComments = (root = document) => {
                 initializeTaskComments(modalContent);
             }
 
-            const countBadge = document.querySelector('[data-task-comments-count]');
+            const countBadge = document.querySelector(
+                '[data-task-insights-comments-count]'
+            );
 
             if (countBadge && typeof result.count !== 'undefined') {
                 countBadge.textContent = String(result.count);
             }
 
+            // Update the comments count and total Activity count on the Kanban card.
+            if (taskId && typeof result.count !== 'undefined') {
+                document.querySelectorAll(
+                    '[data-task-activity-trigger]'
+                ).forEach((button) => {
+                    if (String(button.dataset.taskId) !== taskId) return;
+
+                    const commentsCount = Number(result.count);
+                    const developerNotesCount = Number(
+                        button.dataset.developerNotesCount || 0
+                    );
+
+                    button.dataset.commentsCount = String(commentsCount);
+
+                    const totalCount = commentsCount + developerNotesCount;
+
+                    const countElement = button.querySelector(
+                        '[data-task-activity-count]'
+                    );
+
+                    if (countElement) {
+                        countElement.textContent = String(totalCount);
+                    }
+
+                    button.title =
+                        `Completion Notes: ${developerNotesCount} | Comments: ${commentsCount}`;
+
+                    button.setAttribute(
+                        'aria-label',
+                        `Task Activity: ${developerNotesCount} developer notes and ${commentsCount} comments`
+                    );
+                });
+            }
+
             Alert.success(result.message || 'Comment added successfully.');
+
+            document.dispatchEvent(
+                new CustomEvent('task-insights:close')
+            );
         } catch (error) {
             if (error.message) {
                 Alert.error(error.message);
