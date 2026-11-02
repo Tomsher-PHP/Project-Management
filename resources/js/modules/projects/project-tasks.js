@@ -211,6 +211,7 @@ const parseTaskPlacementOptions = (form) => {
 const parseTaskMovePlacementOptions = (form) => {
     if (!form?.dataset.taskMovePlacement) {
         return {
+            timelines: [],
             milestones: [],
             sprints: [],
         };
@@ -220,6 +221,7 @@ const parseTaskMovePlacementOptions = (form) => {
         return JSON.parse(form.dataset.taskMovePlacement);
     } catch (error) {
         return {
+            timelines: [],
             milestones: [],
             sprints: [],
         };
@@ -704,19 +706,26 @@ const fetchMoveProjectDependencies = async (form, projectId) => {
 
 const syncTaskMoveUI = async (
     form,
-    { selectedMilestoneId = null, selectedSprintId = null, syncModuleFromSprint = false } = {}
+    {
+        selectedTimelineId = null,
+        selectedMilestoneId = null,
+        selectedSprintId = null,
+        syncModuleFromSprint = false,
+    } = {}
 ) => {
     if (!form) return;
 
     const toggleCheckbox = form.querySelector('[data-project-task-move-another-project-toggle]');
     const projectContainer = form.querySelector('[data-project-task-move-project-container]');
     const projectSelect = form.querySelector('[data-project-task-move-project-select]');
+    const timelineField = form.querySelector('[name="project_timeline_id"]');
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
     const sprintField = form.querySelector('[name="project_sprint_id"]');
     const subtitleNode = form.querySelector('[data-project-task-move-subtitle-text]');
     const sprintStarNode = form.querySelector('[data-project-task-move-sprint-star]');
     const milestoneHintNode = form.querySelector('[data-project-task-move-milestone-hint]');
     const sprintHintNode = form.querySelector('[data-project-task-move-sprint-hint]');
+    const timelineHintNode = form.querySelector('[data-project-task-move-timeline-hint]');
     const targetFlowContainer = form.querySelector('[data-project-task-move-target-flow-container]');
     const targetFlowText = form.querySelector('[data-project-task-move-target-flow-text]');
     const flowNotice = form.querySelector('[data-project-task-move-flow-notice]');
@@ -736,7 +745,9 @@ const syncTaskMoveUI = async (
         if (flowNotice) flowNotice.classList.add('hidden');
 
         // --- Same Project Move Mode ---
-        if (subtitleNode) subtitleNode.textContent = 'to another sprint';
+        if (subtitleNode) subtitleNode.textContent = form.dataset.sourceProjectFlow === 'linear'
+            ? 'to another timeline'
+            : 'to another sprint or timeline';
 
         if (projectSelect) {
             setSelectValue(projectSelect, '');
@@ -748,6 +759,55 @@ const syncTaskMoveUI = async (
         }
 
         const placement = parseTaskMovePlacementOptions(form);
+        const sourceProjectFlow = String(form.dataset.sourceProjectFlow || 'agile').toLowerCase();
+        const isLinear = sourceProjectFlow === 'linear';
+        const currentTimelineId = String(form.dataset.currentTimelineId || '');
+        const timelineOptions = (placement.timelines || []).map(timeline => ({
+            value: String(timeline.id || timeline.value),
+            text: timeline.name || timeline.text,
+            subtype: timeline.subtype || '',
+        }));
+        const requestedTimelineId = selectedTimelineId === null
+            ? String(timelineField?.value || '')
+            : String(selectedTimelineId || currentTimelineId);
+        const resolvedTimelineId = timelineOptions.some(option => option.value === requestedTimelineId)
+            ? requestedTimelineId
+            : '';
+
+        setPlacementSelectOptions(timelineField, timelineOptions, {
+            placeholder: timelineOptions.length ? 'Select project timeline' : 'No eligible timelines available',
+            disabled: !timelineOptions.length,
+            value: resolvedTimelineId,
+        });
+
+        if (timelineHintNode) {
+            timelineHintNode.textContent = timelineOptions.length
+                ? ''
+                : 'This project has no active or completed timelines available.';
+            timelineHintNode.classList.toggle('hidden', timelineOptions.length > 0);
+        }
+
+        if (isLinear) {
+            setPlacementSelectOptions(milestoneField, [], {
+                placeholder: 'Not applicable for Linear projects',
+                disabled: true,
+                value: '',
+            });
+            setPlacementSelectOptions(sprintField, [], {
+                placeholder: 'Not applicable for Linear projects',
+                disabled: true,
+                value: '',
+            });
+
+            if (sprintStarNode) sprintStarNode.classList.add('hidden');
+            if (milestoneHintNode) {
+                milestoneHintNode.textContent = 'Linear project: Milestone and Sprint selections are disabled.';
+                milestoneHintNode.classList.remove('hidden');
+            }
+            if (sprintHintNode) sprintHintNode.classList.add('hidden');
+            return;
+        }
+
         const milestoneId = selectedMilestoneId === null ? String(milestoneField?.value || '') : String(selectedMilestoneId || '');
         let sprintId = selectedSprintId === null ? String(sprintField?.value || '') : String(selectedSprintId || '');
 
@@ -768,7 +828,11 @@ const syncTaskMoveUI = async (
             if (selectedSprintObj && selectedSprintObj.project_milestone_id) {
                 const matchedMilestoneId = String(selectedSprintObj.project_milestone_id);
                 setSelectValue(milestoneField, matchedMilestoneId);
-                return syncTaskMoveUI(form, { selectedMilestoneId: matchedMilestoneId, selectedSprintId: sprintId });
+                return syncTaskMoveUI(form, {
+                    selectedTimelineId: resolvedTimelineId,
+                    selectedMilestoneId: matchedMilestoneId,
+                    selectedSprintId: sprintId,
+                });
             }
         }
 
@@ -782,12 +846,15 @@ const syncTaskMoveUI = async (
             value: resolvedSprintId,
         });
 
-        if (sprintStarNode) sprintStarNode.classList.remove('hidden');
+        if (sprintStarNode) sprintStarNode.classList.add('hidden');
         if (milestoneHintNode) {
             milestoneHintNode.textContent = 'Optional. Choose a milestone to narrow the sprint list.';
             milestoneHintNode.classList.remove('hidden');
         }
-        if (sprintHintNode) sprintHintNode.classList.add('hidden');
+        if (sprintHintNode) {
+            sprintHintNode.textContent = 'Choose another sprint, or leave it empty when moving only to another timeline.';
+            sprintHintNode.classList.remove('hidden');
+        }
         return;
     }
 
@@ -819,6 +886,11 @@ const syncTaskMoveUI = async (
             disabled: false,
             value: '',
         });
+        setPlacementSelectOptions(timelineField, [], {
+            placeholder: 'Select project to load timelines',
+            disabled: true,
+            value: '',
+        });
 
         if (sprintStarNode) sprintStarNode.classList.add('hidden');
         if (milestoneHintNode) {
@@ -826,12 +898,43 @@ const syncTaskMoveUI = async (
             milestoneHintNode.classList.remove('hidden');
         }
         if (sprintHintNode) sprintHintNode.classList.add('hidden');
+        if (timelineHintNode) {
+            timelineHintNode.textContent = 'Select a project to view available timelines.';
+            timelineHintNode.classList.remove('hidden');
+        }
         return;
     }
 
     try {
         const projectDeps = await fetchMoveProjectDependencies(form, targetProjectId);
         if (!projectDeps) return;
+        if (!toggleCheckbox?.checked || String(projectSelect?.value || '') !== targetProjectId) return;
+
+        const timelines = (projectDeps.timelines || []).map(timeline => ({
+            value: String(timeline.value || timeline.id),
+            text: timeline.text || timeline.name,
+            subtype: timeline.subtype || '',
+        }));
+        const requestedTimelineId = selectedTimelineId === null
+            ? String(timelineField?.value || '')
+            : String(selectedTimelineId || '');
+        const defaultTimelineId = String(projectDeps.default_timeline_id || '');
+        const resolvedTimelineId = timelines.some(timeline => timeline.value === requestedTimelineId)
+            ? requestedTimelineId
+            : (timelines.some(timeline => timeline.value === defaultTimelineId) ? defaultTimelineId : '');
+
+        setPlacementSelectOptions(timelineField, timelines, {
+            placeholder: timelines.length ? 'Select project timeline' : 'No eligible timelines available',
+            disabled: !timelines.length,
+            value: resolvedTimelineId,
+        });
+
+        if (timelineHintNode) {
+            timelineHintNode.textContent = timelines.length
+                ? ''
+                : 'The selected project has no active or completed timelines available.';
+            timelineHintNode.classList.toggle('hidden', timelines.length > 0);
+        }
 
         const sourceProjectFlow = String(form.dataset.sourceProjectFlow || 'agile').toLowerCase();
         const targetProjectFlow = String(projectDeps.flow || (projectDeps.is_linear ? 'linear' : 'agile')).toLowerCase();
@@ -968,6 +1071,7 @@ const prepareTaskMoveModal = (root, triggerButton) => {
     const taskNameNode = modal.querySelector('[data-project-task-move-task-name]');
     const taskCodeNode = modal.querySelector('[data-project-task-move-task-code]');
     const currentSprintNode = modal.querySelector('[data-project-task-move-current-sprint]');
+    const currentTimelineNode = modal.querySelector('[data-project-task-move-current-timeline]');
     const toggleCheckbox = form.querySelector('[data-project-task-move-another-project-toggle]');
 
     if (taskNameNode) {
@@ -982,15 +1086,22 @@ const prepareTaskMoveModal = (root, triggerButton) => {
         currentSprintNode.textContent = triggerButton.dataset.projectTaskCurrentSprint || '--';
     }
 
+    if (currentTimelineNode) {
+        currentTimelineNode.textContent = triggerButton.dataset.projectTaskCurrentTimeline || '--';
+    }
+
     if (toggleCheckbox) {
         toggleCheckbox.checked = false;
     }
 
     const projectSelect = form.querySelector('[data-project-task-move-project-select]');
+    form.dataset.currentTimelineId = triggerButton.dataset.projectTaskCurrentTimelineId || '';
+    form.dataset.currentSprintId = triggerButton.dataset.projectTaskCurrentSprintId || '';
     setSelectValue(projectSelect, '');
     setSelectValue(form.querySelector('[name="project_milestone_id"]'), '');
 
     syncTaskMoveUI(form, {
+        selectedTimelineId: form.dataset.currentTimelineId,
         selectedMilestoneId: '',
         selectedSprintId: '',
     });
@@ -2289,6 +2400,9 @@ const initializeTasksRoot = (root) => {
             if (moveForm) {
                 clearTaskMoveFormErrors(moveForm);
                 syncTaskMoveUI(moveForm, {
+                    selectedTimelineId: toggleCheckbox.checked
+                        ? ''
+                        : moveForm.dataset.currentTimelineId || '',
                     selectedMilestoneId: '',
                     selectedSprintId: '',
                 });
@@ -2303,9 +2417,21 @@ const initializeTasksRoot = (root) => {
             if (moveForm) {
                 clearTaskMoveFormErrors(moveForm);
                 syncTaskMoveUI(moveForm, {
+                    selectedTimelineId: '',
                     selectedMilestoneId: '',
                     selectedSprintId: '',
                 });
+                return;
+            }
+        }
+
+        const timelineField = event.target.closest('[name="project_timeline_id"]');
+
+        if (timelineField && root.contains(timelineField)) {
+            const moveForm = timelineField.closest('[data-project-task-move-form]');
+
+            if (moveForm) {
+                clearTaskMoveFormErrors(moveForm);
                 return;
             }
         }
@@ -2318,6 +2444,7 @@ const initializeTasksRoot = (root) => {
             if (moveForm) {
                 clearTaskMoveFormErrors(moveForm);
                 syncTaskMoveUI(moveForm, {
+                    selectedTimelineId: moveForm.querySelector('[name="project_timeline_id"]')?.value || '',
                     selectedMilestoneId: milestoneField.value || '',
                     selectedSprintId: moveForm.querySelector('[name="project_sprint_id"]')?.value || '',
                 });
@@ -2352,6 +2479,7 @@ const initializeTasksRoot = (root) => {
         if (moveForm) {
             clearTaskMoveFormErrors(moveForm);
             syncTaskMoveUI(moveForm, {
+                selectedTimelineId: moveForm.querySelector('[name="project_timeline_id"]')?.value || '',
                 selectedMilestoneId: moveForm.querySelector('[name="project_milestone_id"]')?.value || '',
                 selectedSprintId: sprintField.value || '',
                 syncModuleFromSprint: true,
@@ -2493,14 +2621,24 @@ const initializeTasksRoot = (root) => {
             const projectSelect = moveForm.querySelector('[data-project-task-move-project-select]');
             const isAnotherProject = Boolean(toggleCheckbox?.checked);
             const targetProjectId = String(projectSelect?.value || '');
+            const timelineId = String(moveForm.querySelector('[name="project_timeline_id"]')?.value || '');
             const milestoneId = String(moveForm.querySelector('[name="project_milestone_id"]')?.value || '');
             const sprintId = String(moveForm.querySelector('[name="project_sprint_id"]')?.value || '');
+            const currentTimelineId = String(moveForm.dataset.currentTimelineId || '');
+            const timelineChanged = timelineId !== currentTimelineId;
 
             // Frontend validation before submitting
             if (!isAnotherProject) {
-                if (!sprintId) {
+                if (!timelineId) {
                     applyTaskMoveFormErrors(moveForm, {
-                        project_sprint_id: ['Please choose a sprint to move this task to.'],
+                        project_timeline_id: ['Please select a project timeline.'],
+                    });
+                    return;
+                }
+
+                if (!timelineChanged && !sprintId) {
+                    applyTaskMoveFormErrors(moveForm, {
+                        project_timeline_id: ['Please select another timeline or choose a different sprint.'],
                     });
                     return;
                 }
@@ -2508,6 +2646,13 @@ const initializeTasksRoot = (root) => {
                 if (!targetProjectId) {
                     applyTaskMoveFormErrors(moveForm, {
                         target_project_id: ['Please select a project.'],
+                    });
+                    return;
+                }
+
+                if (!timelineId) {
+                    applyTaskMoveFormErrors(moveForm, {
+                        project_timeline_id: ['Please select a project timeline.'],
                     });
                     return;
                 }

@@ -24,6 +24,15 @@
             ->values(),
     ];
     $taskMovePlacementOptions = [
+        'timelines' => $projectTimelines
+            ->map(
+                fn($projectTimeline) => [
+                    'value' => (string) $projectTimeline->id,
+                    'text' => $projectTimeline->name,
+                    'subtype' => ucfirst((string) config('project_constants.project_timeline_statuses.' . $projectTimeline->status, '')),
+                ],
+            )
+            ->values(),
         'milestones' => $projectMilestones
             ->map(
                 fn($projectMilestone) => [
@@ -310,7 +319,7 @@
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-move-close></div>
 
             <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
-                <div class="relative z-10 w-full max-w-xl transition-all duration-200">
+                <div class="relative z-10 w-full max-w-5xl transition-all duration-200">
                     <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                         <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
                             <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Move Task</h3>
@@ -335,6 +344,10 @@
                                 <p class="text-xs py-1">
                                     <span class="text-bgray-700 dark:text-bgray-300">Current Sprint:</span>
                                     <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-current-sprint>--</span>
+                                </p>
+                                <p class="text-xs py-1">
+                                    <span class="text-bgray-700 dark:text-bgray-300">Current Timeline:</span>
+                                    <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-current-timeline>--</span>
                                 </p>
                                 <p class="text-xs py-1">
                                     <span class="text-bgray-700 dark:text-bgray-300">Task Name:</span>
@@ -368,6 +381,23 @@
                                     <span class="text-bgray-700 dark:text-bgray-300">Target Project Flow:</span>
                                     <span class="inline-flex items-center gap-1.5 font-semibold text-bgray-900 dark:text-white ml-1" data-project-task-move-target-flow-text></span>
                                 </div>
+                            </div>
+
+                            <!-- Project Timeline selection -->
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                                    Project Timeline <x-red-star />
+                                </label>
+                                <select name="project_timeline_id" class="tom-select w-full" data-sort="0" data-project-task-move-timeline-select>
+                                    <option value="">Select project timeline</option>
+                                    @foreach ($projectTimelines as $projectTimeline)
+                                        <option value="{{ $projectTimeline->id }}" data-subtype="{{ ucfirst((string) config('project_constants.project_timeline_statuses.' . $projectTimeline->status, '')) }}">
+                                            {{ $projectTimeline->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 hidden text-xs text-bgray-700 dark:text-bgray-300" data-project-task-move-timeline-hint></p>
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="project_timeline_id"></p>
                             </div>
 
                             <!-- Cross-Flow Notice Box -->

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\LogsModelActivity;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -70,6 +71,14 @@ class ProjectTimeline extends Model
     public function notificationLogs()
     {
         return $this->morphMany(ProjectNotificationLog::class, 'link');
+    }
+
+    public function scopeEligibleForTaskMove(Builder $query): Builder
+    {
+        return $query->whereIn('status', [
+            self::STATUS_ACTIVE,
+            self::STATUS_COMPLETED,
+        ]);
     }
 
     /*----------------Activity Log Customization----------------*/

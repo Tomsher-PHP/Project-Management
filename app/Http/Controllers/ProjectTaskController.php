@@ -8,6 +8,7 @@ use App\Http\Requests\TaskMoveRequest;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Models\ProjectTimeline;
 use App\Models\Tag;
 use App\Models\Task;
 use App\Models\TaskMode;
@@ -299,6 +300,7 @@ class ProjectTaskController extends Controller
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('move', $task), Response::HTTP_FORBIDDEN);
         $validated = $request->validated();
+        $targetTimelineId = (int) $validated['project_timeline_id'];
 
         $isCrossProject = ! empty($validated['move_to_another_project']);
 
@@ -321,7 +323,8 @@ class ProjectTaskController extends Controller
                 $targetProject,
                 $task,
                 $targetMilestoneId,
-                $targetSprintId
+                $targetSprintId,
+                $targetTimelineId
             );
 
             return response()->json([
@@ -334,7 +337,8 @@ class ProjectTaskController extends Controller
         $task = $projectService->moveTaskToSprint(
             $project,
             $task,
-            (int) $validated['project_sprint_id']
+            ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null,
+            $targetTimelineId
         );
 
         return response()->json([
@@ -380,6 +384,12 @@ class ProjectTaskController extends Controller
             ->with(['projectMilestone:id,name'])
             ->orderForDisplay()
             ->get(['id', 'project_milestone_id', 'name', 'is_backlog', 'is_system']);
+        $projectTimelines = ProjectTimeline::query()
+            ->where('project_id', $project->id)
+            ->eligibleForTaskMove()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'name', 'status']);
         $defaultSprintId = $projectSprints->first()?->id;
         $initialGroupKey = $taskGroupViewData['initialGroupKey'];
         $initialTaskPage = $initialGroupKey
@@ -432,6 +442,7 @@ class ProjectTaskController extends Controller
             'assignableUsers' => $assignableUsers,
             'projectMilestones' => $projectMilestones,
             'projectSprints' => $projectSprints,
+            'projectTimelines' => $projectTimelines,
             'defaultSprintId' => $defaultSprintId,
             'taskGroupsPagination' => $taskGroupViewData['pagination'],
             'taskStatuses' => $taskStatuses,
@@ -908,6 +919,7 @@ class ProjectTaskController extends Controller
             'tags',
             'projectMilestone:id,name,is_backlog,is_system',
             'projectSprint:id,name,project_milestone_id,is_backlog,is_system',
+            'projectTimeline:id,name',
             'parentTask:id,name',
         ];
     }

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Project;
+use App\Models\ProjectTimeline;
 use App\Models\Tag;
 use App\Models\TaskMode;
 use App\Models\TaskStatus;
@@ -130,6 +131,24 @@ class TaskFormService
             ->values()
             ->toArray();
 
+        $timelines = $project->projectTimelines()
+            ->eligibleForTaskMove()
+            ->get(['id', 'name', 'status'])
+            ->map(fn(ProjectTimeline $timeline) => [
+                'value' => (string) $timeline->id,
+                'text' => $timeline->name,
+                'subtype' => ucfirst((string) config(
+                    'project_constants.project_timeline_statuses.' . $timeline->status,
+                    ''
+                )),
+            ])
+            ->values();
+
+        $displayTimelineId = $project->display_timeline?->id;
+        $defaultTimelineId = $timelines->contains(
+            fn(array $timeline) => (int) $timeline['value'] === (int) $displayTimelineId
+        ) ? (string) $displayTimelineId : null;
+
         $assignees = $project->activeMembers()
             ->orderBy('name')
             ->get(['users.id', 'users.name', 'users.email'])
@@ -152,6 +171,8 @@ class TaskFormService
             'default_task_estimate_minutes' => $defaultEstimateMinutes,
             'milestones' => $milestones,
             'sprints' => $sprints,
+            'timelines' => $timelines->all(),
+            'default_timeline_id' => $defaultTimelineId,
             'assignees' => $assignees,
         ];
     }

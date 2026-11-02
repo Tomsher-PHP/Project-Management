@@ -659,54 +659,94 @@ class ProjectServices
         ];
     }
 
-    public function moveTaskToSprint(Project $project, Task $task, ?int $projectSprintId = null): Task
+    public function moveTaskToSprint(Project $project, Task $task, ?int $projectSprintId = null, ?int $projectTimelineId = null): Task
     {
         if ((int) $task->project_id !== (int) $project->id) {
             throw new InvalidArgumentException('The provided task does not belong to the given project.');
         }
 
-        if (! $projectSprintId) {
-            throw new InvalidArgumentException('A target sprint is required to move this task.');
+        $targetTimelineId = $projectTimelineId ?: (int) ($task->project_timeline_id ?? 0);
+        $timelineChanged = $targetTimelineId
+            && (int) ($task->project_timeline_id ?? 0) !== $targetTimelineId;
+
+        if ($projectTimelineId) {
+            $this->resolveEligibleTaskMoveTimeline($project, $projectTimelineId);
         }
 
-        $projectSprint = ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->find($projectSprintId);
-
-        if (! $projectSprint) {
-            throw new InvalidArgumentException('The selected sprint is invalid.');
+        if (! $projectSprintId && ! $timelineChanged) {
+            throw new InvalidArgumentException('Please select another timeline or choose a different sprint.');
         }
 
-        if ($task->parent_task_id !== null) {
-            throw new InvalidArgumentException('Subtasks cannot be moved to another sprint.');
+        if ($projectSprintId && $project->is_linear) {
+            throw new InvalidArgumentException('Sprint movement is not available for Linear projects.');
         }
 
-        if ((int) ($task->project_sprint_id ?? 0) === (int) $projectSprint->id) {
-            throw new InvalidArgumentException('Please choose a different sprint.');
+        $projectSprint = null;
+
+        if ($projectSprintId) {
+            $projectSprint = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->find($projectSprintId);
+
+            if (! $projectSprint) {
+                throw new InvalidArgumentException('The selected sprint is invalid.');
+            }
+
+            if ($task->parent_task_id !== null) {
+                throw new InvalidArgumentException('Subtasks cannot be moved to another sprint.');
+            }
+
+            if ((int) ($task->project_sprint_id ?? 0) === (int) $projectSprint->id) {
+                throw new InvalidArgumentException('Please choose a different sprint.');
+            }
         }
 
-        DB::transaction(function () use ($project, $task, $projectSprint) {
-            $task->update([
-                'project_sprint_id' => $projectSprint->id,
-                'project_milestone_id' => $projectSprint->project_milestone_id,
-                'sort_order' => Task::nextSortOrder($project->id, (int) $projectSprint->id),
-            ]);
+        DB::transaction(function () use ($project, $task, $projectSprint, $targetTimelineId, $timelineChanged) {
+            $updateData = [];
 
-            $this->syncTaskDescendantPlacement(
-                $task,
-                (int) $projectSprint->project_milestone_id,
-                (int) $projectSprint->id
-            );
+            if ($projectSprint) {
+                $updateData = [
+                    'project_sprint_id' => $projectSprint->id,
+                    'project_milestone_id' => $projectSprint->project_milestone_id,
+                    'sort_order' => Task::nextSortOrder($project->id, (int) $projectSprint->id),
+                ];
+            }
+
+            if ($timelineChanged) {
+                $updateData['project_timeline_id'] = $targetTimelineId;
+            }
+
+            $task->update($updateData);
+
+            if ($projectSprint) {
+                $this->syncTaskDescendantPlacement(
+                    $task,
+                    (int) $projectSprint->project_milestone_id,
+                    (int) $projectSprint->id,
+                    null,
+                    null,
+                    $timelineChanged,
+                    $timelineChanged ? $targetTimelineId : null
+                );
+            } elseif ($timelineChanged) {
+                $this->syncTaskDescendantTimeline($task, $targetTimelineId);
+            }
         });
 
         return $task->fresh();
     }
 
-    public function moveTaskToProject(Project $sourceProject, Project $targetProject, Task $task, ?int $targetMilestoneId = null, ?int $targetSprintId = null): Task
+    public function moveTaskToProject(Project $sourceProject, Project $targetProject, Task $task, ?int $targetMilestoneId = null, ?int $targetSprintId = null, ?int $targetTimelineId = null): Task
     {
         if ((int) $task->project_id !== (int) $sourceProject->id) {
             throw new InvalidArgumentException('The provided task does not belong to the source project.');
         }
+
+        if (! $targetTimelineId) {
+            throw new InvalidArgumentException('A target project timeline is required to move this task.');
+        }
+
+        $this->resolveEligibleTaskMoveTimeline($targetProject, $targetTimelineId);
 
         $placement = $this->finalizeTaskPlacement($targetProject, $targetMilestoneId, $targetSprintId);
 
@@ -716,10 +756,8 @@ class ProjectServices
         $isFlowChanged = ($sourceProject->project_flow !== $targetProject->project_flow);
         $newStatusId = $isFlowChanged ? $this->resolveTargetStatusIdForFlow($targetProject->project_flow) : null;
 
-        return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId) {
+        return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId, $targetTimelineId) {
             $movingTasks = $this->collectTaskTree($task);
-
-            $targetTimelineId = $targetProject->display_timeline?->id;
 
             foreach ($movingTasks as $t) {
                 // If assigned to a user, add user to target project team if not exists
@@ -750,6 +788,7 @@ class ProjectServices
                     TaskStatusHistory::create([
                         'task_id' => $task->id,
                         'status_id' => $newStatusId,
+                        'remarks' => 'Moved from project '.$sourceProject->name,
                     ]);
                 }
                 $updateData['status_id'] = $newStatusId;
@@ -875,6 +914,30 @@ class ProjectServices
         return $tasks;
     }
 
+    private function resolveEligibleTaskMoveTimeline(Project $project, int $projectTimelineId): ProjectTimeline
+    {
+        $timeline = ProjectTimeline::query()
+            ->where('project_id', $project->id)
+            ->eligibleForTaskMove()
+            ->find($projectTimelineId);
+
+        if (! $timeline) {
+            throw new InvalidArgumentException('The selected project timeline is invalid for the destination project.');
+        }
+
+        return $timeline;
+    }
+
+    private function syncTaskDescendantTimeline(Task $task, int $projectTimelineId): void
+    {
+        $task->childTasks()
+            ->get()
+            ->each(function (Task $childTask) use ($projectTimelineId) {
+                $childTask->update(['project_timeline_id' => $projectTimelineId]);
+                $this->syncTaskDescendantTimeline($childTask, $projectTimelineId);
+            });
+    }
+
     public function syncTaskPlacementToDescendants(Task $task): void
     {
         $this->syncTaskDescendantPlacement(
@@ -885,15 +948,8 @@ class ProjectServices
         );
     }
 
-    private function syncTaskDescendantPlacement(
-        Task $task,
-        ?int $projectMilestoneId,
-        ?int $projectSprintId,
-        ?int $projectId = null,
-        ?int $newStatusId = null,
-        bool $updateTimeline = false,
-        ?int $targetTimelineId = null
-    ): void {
+    private function syncTaskDescendantPlacement(Task $task, ?int $projectMilestoneId, ?int $projectSprintId, ?int $projectId = null, ?int $newStatusId = null, bool $updateTimeline = false, ?int $targetTimelineId = null): void
+    {
         $targetProjectId = $projectId ?: (int) $task->project_id;
 
         $task->childTasks()
