@@ -578,30 +578,10 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('edit');
 
-
-        // View developer notes
-        Route::get('developer-notes-modal', [
-            TaskController::class,
-            'developerNotesModal',
-        ])
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.modal');
-
-        // Add a developer note
-        Route::post('developer-notes', [
-            TaskController::class,
-            'storeDeveloperNote',
-        ])
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.store');
-
-        Route::delete(
-            'developer-notes',
-            [TaskController::class, 'deleteDeveloperNote']
-        )
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.delete');
-
+        // Developer notes routes
+        Route::get('developer-notes-modal', [TaskController::class, 'developerNotesModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.modal');
+        Route::post('developer-notes', [TaskController::class, 'storeDeveloperNote'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.store');
+        Route::delete('developer-notes', [TaskController::class, 'deleteDeveloperNote'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.delete');
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
@@ -810,58 +790,26 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{quickNote}/archive', [QuickNoteController::class, 'toggleArchive'])->name('archive');
     });
 
-    Route::prefix('leave-change-requests')
-        ->name('leave-change-requests.')
-        ->group(function () {
+    // Leave routes
+    Route::prefix('leave-change-requests')->name('leave-change-requests.')->group(function () {
+        Route::get('/', [LeaveChangeRequestController::class, 'index'])->name('index');
+        Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])->name('create');
+        Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])->name('store');
+        Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])->name('show');
+        Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])->name('approve');
+        Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])->name('reject');
+        Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])->name('cancel');
+    });
 
-            Route::get('/', [LeaveChangeRequestController::class, 'index'])
-                ->name('index');
-
-            Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])
-                ->name('create');
-
-            Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])
-                ->name('store');
-
-            Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])
-                ->name('show');
-
-            Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])
-                ->name('approve');
-
-            Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])
-                ->name('reject');
-
-            Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])
-                ->name('cancel');
-        });
-
-
-
-
-    Route::prefix('leave-cancellation-requests')
-        ->name('leave-cancellation-requests.')
-        ->controller(LeaveCancellationRequestController::class)
-        ->group(function () {
-            Route::post('/{leaveRequest}', 'store')
-                ->name('store');
-
-            Route::get('/', 'index')
-                ->name('index');
-
-            Route::get('/{cancellationRequest}/details', 'show')
-                ->name('show');
-
-            Route::post('/{cancellationRequest}/approve', 'approve')
-                ->name('approve');
-
-            Route::post('/{cancellationRequest}/reject', 'reject')
-                ->name('reject');
-
-            Route::post('/{cancellationRequest}/cancel', 'cancel')
-                ->name('cancel');
-        });
-
+    // leave cancelation
+    Route::prefix('leave-cancellation-requests')->name('leave-cancellation-requests.')->controller(LeaveCancellationRequestController::class)->group(function () {
+        Route::post('/{leaveRequest}', 'store')->name('store');
+        Route::get('/', 'index')->name('index');
+        Route::get('/{cancellationRequest}/details', 'show')->name('show');
+        Route::post('/{cancellationRequest}/approve', 'approve')->name('approve');
+        Route::post('/{cancellationRequest}/reject', 'reject')->name('reject');
+        Route::post('/{cancellationRequest}/cancel', 'cancel')->name('cancel');
+    });
 
     // Meeting Management routes
     Route::get('/meetings/calendar-data', [MeetingController::class, 'calendarData'])->middleware('permission.type:meeting.view')->name('meetings.calendar-data');
