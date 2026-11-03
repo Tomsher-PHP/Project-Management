@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskProjectUpdateRequest;
-use App\Http\Requests\TaskQuickStoreRequest;
 use App\Http\Requests\TaskMoveRequest;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
@@ -149,33 +148,6 @@ class ProjectTaskController extends Controller
                     'subtype' => $task->code ?: 'Parent task',
                 ];
             })->values(),
-        ], Response::HTTP_OK);
-    }
-
-    public function storeTask(TaskQuickStoreRequest $request, Project $project, TaskServices $taskService): JsonResponse
-    {
-        $validated = $request->validated();
-        $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
-        $tasks = $taskService->createQuickTask($project, $validated);
-        $firstTask = $tasks->first();
-        $createdCount = $tasks->count();
-
-        $project->refresh();
-
-        $message = $createdCount > 1
-            ? "{$createdCount} tasks added successfully."
-            : ($requestType === 'self'
-                ? 'Task request submitted successfully.'
-                : 'Task added successfully.');
-
-        return response()->json([
-            'status' => true,
-            'message' => $message,
-            'created_count' => $createdCount,
-            'html' => $this->renderTasksTab(
-                $project,
-                $firstTask ? $this->resolveTaskGroupKey($project, $firstTask) : null
-            ),
         ], Response::HTTP_OK);
     }
 
@@ -390,46 +362,10 @@ class ProjectTaskController extends Controller
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get(['id', 'name', 'status']);
-        $defaultSprintId = $projectSprints->first()?->id;
         $initialGroupKey = $taskGroupViewData['initialGroupKey'];
         $initialTaskPage = $initialGroupKey
             ? $this->getTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
             : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
-        $assignableUsers = $project->activeMembers()
-            ->orderBy('users.name')
-            ->get(['users.id', 'users.name', 'users.email']);
-        $taskTypeOptions = TaskType::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'color']);
-        $taskModeOptions = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'color']);
-        $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
-            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
-            ->values();
-        $taskStatuses = TaskStatus::query()
-            ->active()
-            ->forFlow($project->project_flow)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'color']);
-        $defaultTaskStatusId = $this->getDefaultTaskStatusId($project);
-        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskEstimateMinutes = $project->default_task_estimate_seconds !== null
-            ? intdiv((int) $project->default_task_estimate_seconds, 60)
-            : 0;
-        $tagOptions = Tag::query()
-            ->active()
-            ->orderBy('name')
-            ->get(['id', 'name', 'color']);
-
-        $nextTaskTypeSortOrder = ((int) TaskType::max('sort_order')) + 1;
-        $nextTaskModeSortOrder = ((int) TaskMode::max('sort_order')) + 1;
-
         return view('projects.partials.tabs.tasks', [
             'project' => $project,
             'taskGroups' => $taskGroups,
@@ -439,22 +375,10 @@ class ProjectTaskController extends Controller
             'totalTaskCount' => $taskGroupViewData['totalTaskCount'],
             'sprintCount' => $taskGroupViewData['sprintCount'],
             'isLinearFlow' => $isLinearFlow,
-            'assignableUsers' => $assignableUsers,
             'projectMilestones' => $projectMilestones,
             'projectSprints' => $projectSprints,
             'projectTimelines' => $projectTimelines,
-            'defaultSprintId' => $defaultSprintId,
             'taskGroupsPagination' => $taskGroupViewData['pagination'],
-            'taskStatuses' => $taskStatuses,
-            'defaultTaskStatusId' => $defaultTaskStatusId,
-            'taskTypeOptions' => $taskTypeOptions,
-            'taskModeOptions' => $taskModeOptions,
-            'nextTaskTypeSortOrder' => $nextTaskTypeSortOrder,
-            'nextTaskModeSortOrder' => $nextTaskModeSortOrder,
-            'taskPriorityOptions' => $taskPriorityOptions,
-            'defaultTaskPriority' => $defaultTaskPriority,
-            'defaultTaskEstimateMinutes' => $defaultTaskEstimateMinutes,
-            'tagOptions' => $tagOptions,
         ])->render();
     }
 
@@ -1092,23 +1016,4 @@ class ProjectTaskController extends Controller
         return $hours . 'h ' . $minutes . 'm';
     }
 
-    private function getDefaultTaskStatusId(Project $project): ?int
-    {
-        return TaskStatus::query()
-            ->active()
-            ->forFlow($project->project_flow)
-            ->where('is_default', 1)
-            ->value('id');
-    }
-
-    private function getDefaultTaskPriorityValue(): string
-    {
-        $priorities = config('project_constants.task_priorities', []);
-
-        if (array_key_exists('medium', $priorities)) {
-            return 'medium';
-        }
-
-        return (string) (array_key_first($priorities) ?? 'medium');
-    }
 }

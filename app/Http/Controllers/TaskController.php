@@ -246,6 +246,11 @@ class TaskController extends Controller
             'created_count' => $createdCount,
             'request_type' => $firstTask?->request_type,
             'request_status' => $firstTask?->request_status,
+            'project_task_group_key' => $firstTask
+                ? ($project->is_linear
+                    ? 'all-tasks'
+                    : ($firstTask->project_sprint_id ? 'sprint-' . $firstTask->project_sprint_id : 'ungrouped'))
+                : null,
         ], Response::HTTP_OK);
     }
 

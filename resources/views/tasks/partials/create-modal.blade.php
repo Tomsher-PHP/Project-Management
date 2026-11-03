@@ -23,18 +23,22 @@
                     <!-- Left Column: Task Form Fields -->
                     <div class="min-h-0 overflow-y-auto border-b border-bgray-200 px-6 py-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r sm:px-7">
                         <div class="grid gap-5 md:grid-cols-2">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                                <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
-                                    <option value="">Search your project here..</option>
-                                    @foreach ($taskCreateProjects as $projectOption)
-                                        <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
-                                            {{ $projectOption->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_id"></p>
-                            </div>
+                            @if (isset($taskCreateFixedProject) && $taskCreateFixedProject)
+                                <input type="hidden" name="project_id" value="{{ $taskCreateFixedProject->id }}">
+                            @else
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
+                                    <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
+                                        <option value="">Search your project here..</option>
+                                        @foreach ($taskCreateProjects as $projectOption)
+                                            <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
+                                                {{ $projectOption->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_id"></p>
+                                </div>
+                            @endif
 
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>

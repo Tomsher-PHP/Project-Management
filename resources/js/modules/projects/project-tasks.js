@@ -20,10 +20,7 @@ const ERROR_HTML = `
 const taskGroupPaginationObservers = new WeakMap();
 const taskListPaginationObservers = new WeakMap();
 let taskRowMenuDocumentListenerBound = false;
-const projectTaskEditors = new WeakMap();
 const projectTaskDetailEditors = new WeakMap();
-const projectTaskNoteEditors = new WeakMap();
-const projectTaskCreateFilesMap = new WeakMap();
 const projectTaskManageNoteEditors = new WeakMap();
 const projectTaskManageFilesMap = new WeakMap();
 
@@ -118,79 +115,13 @@ const loadProjectTaskDetailNotesTab = async (detailModal, notesUrl) => {
     }
 };
 
-const renderProjectTaskCreateFiles = (root) => {
-    const container = root.querySelector('#project_task_create_selected_files');
-    if (!container) return;
-
-    const files = projectTaskCreateFilesMap.get(root) || [];
-    if (!files.length) {
-        container.innerHTML = '';
-        return;
-    }
-
-    container.innerHTML = files.map((file, index) => `
-        <div class="flex items-center justify-between rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-2 text-xs dark:border-darkblack-400 dark:bg-darkblack-500">
-            <div class="flex items-center gap-2 min-w-0 pr-2">
-                <svg class="h-4 w-4 text-bgray-600 dark:text-bgray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-                <span class="truncate font-medium text-bgray-900 dark:text-white">${file.name}</span>
-                <span class="text-bgray-700 dark:text-bgray-300 flex-shrink-0">(${(file.size / 1024).toFixed(1)} KB)</span>
-            </div>
-            <button type="button" class="text-red-500 hover:text-red-700 flex-shrink-0 font-bold px-1" data-project-task-create-remove-file="${index}">✕</button>
-        </div>
-    `).join('');
-};
-
 const getGroupElements = (group) => ({
     icon: group.querySelector('[data-project-task-group-icon]'),
     panel: group.querySelector('[data-project-task-group-panel]'),
     body: group.querySelector('[data-project-task-group-body]'),
 });
 
-const ADVANCED_TASK_FIELDS = new Set([
-    'description',
-    'status_id',
-    'parent_task_id',
-    'task_type_id',
-    'task_mode_id',
-    'priority',
-    'tag_ids',
-    'is_billable',
-]);
-
 const getFieldErrorTarget = (field) => field?.tomselect?.control || field;
-
-const clearTaskFormErrors = (form) => {
-    form.querySelectorAll('[data-project-task-error]').forEach((node) => {
-        node.textContent = '';
-        node.classList.add('hidden');
-    });
-
-    form.querySelectorAll('input, select, textarea').forEach((field) => {
-        getFieldErrorTarget(field)?.classList.remove('border-red-500');
-    });
-};
-
-const syncTaskFormSelectState = (form) => {
-    if (!form) {
-        return;
-    }
-
-    form.querySelectorAll('select').forEach((field) => {
-        if (!field.tomselect) {
-            return;
-        }
-
-        if (field.multiple) {
-            const selectedValues = Array.from(field.selectedOptions).map((option) => option.value);
-            field.tomselect.setValue(selectedValues, true);
-            return;
-        }
-
-        field.tomselect.setValue(field.value || '', true);
-    });
-};
 
 const parseTaskPlacementOptions = (form) => {
     if (!form?.dataset.taskPlacement) {
@@ -407,140 +338,6 @@ const getDefaultTaskDueDateTime = (estimateMinutes = 0) => {
     const hours = String(finalDate.getHours()).padStart(2, '0');
     const mins = String(finalDate.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${mins}`;
-};
-
-const setTaskModalAdvancedState = (root, expanded) => {
-    const panel = root?.querySelector('[data-project-task-modal-panel]');
-    const form = root?.querySelector('[data-project-task-form]');
-
-    if (panel) {
-        panel.classList.remove('max-w-lg', 'max-w-5xl');
-        panel.classList.add('max-w-[95vw]', '2xl:max-w-[1400px]');
-    }
-
-    if (form) {
-        // Set default due date when opening/initializing the task modal
-        const dueDateField = form.querySelector('[name="due_date_time"]');
-
-        if (dueDateField && !dueDateField.value) {
-            setFieldValue(
-                dueDateField,
-                getDefaultTaskDueDateTime()
-            );
-        }
-    }
-};
-
-const setTaskFormSprint = (form, sprintId) => {
-    if (!form) {
-        return;
-    }
-
-    const sprintField = form.querySelector('[name="project_sprint_id"]');
-    const normalizedSprintId = sprintId ? String(sprintId) : '';
-    const hasSprintOption = normalizedSprintId
-        ? Array.from(sprintField?.options || []).some((option) => String(option.value) === normalizedSprintId)
-        : false;
-    const resolvedSprintId = hasSprintOption ? normalizedSprintId : '';
-
-    if (!sprintField) {
-        return;
-    }
-
-    if (sprintField.tomselect) {
-        sprintField.tomselect.setValue(resolvedSprintId, true);
-        sprintField.dispatchEvent(new Event('change', { bubbles: true }));
-        return;
-    }
-
-    sprintField.value = resolvedSprintId;
-    sprintField.dispatchEvent(new Event('change', { bubbles: true }));
-};
-
-const prepareTaskModal = async (root, {
-    sprintId = '',
-    milestoneId = '',
-    parentTaskId = '',
-} = {}) => {
-    const form = root.querySelector('[data-project-task-form]');
-
-    if (!form) {
-        return;
-    }
-
-    initializeEstimatedTimeInputs(form);
-    initDatepicker('.datepicker', {}, form);
-    form.reset();
-    const editor = projectTaskEditors.get(root);
-    if (editor) {
-        editor.setContents([]);
-    }
-    const descInput = form.querySelector('#project_task_description_input');
-    if (descInput) {
-        descInput.value = '';
-    }
-    const noteEditor = projectTaskNoteEditors.get(root);
-    if (noteEditor) {
-        noteEditor.setContents([]);
-    }
-    const noteInput = form.querySelector('#project_task_create_note_input');
-    if (noteInput) {
-        noteInput.value = '';
-    }
-    projectTaskCreateFilesMap.set(root, []);
-    const attachmentsInput = form.querySelector('#project_task_create_attachments_input');
-    if (attachmentsInput) {
-        attachmentsInput.value = '';
-    }
-    renderProjectTaskCreateFiles(root);
-    clearTaskFormErrors(form);
-    setTaskModalAdvancedState(root, false);
-    syncTaskFormSelectState(form);
-
-    const shouldUseDefaultSprint = !sprintId && !milestoneId && !parentTaskId;
-    const resolvedSprintId = sprintId || (shouldUseDefaultSprint ? (root.dataset.defaultSprintId || '') : '');
-    const milestoneField = form.querySelector('[name="project_milestone_id"]');
-    const parentTaskField = form.querySelector('[name="parent_task_id"]');
-
-    if (milestoneField) {
-        setSelectValue(milestoneField, milestoneId || '');
-    }
-
-    syncProjectTaskPlacement(form, {
-        selectedMilestoneId: milestoneId || '',
-        selectedSprintId: resolvedSprintId,
-        syncModuleFromSprint: true,
-    });
-
-    if (resolvedSprintId) {
-        setTaskFormSprint(form, resolvedSprintId);
-    }
-
-    if (parentTaskField) {
-        setSelectValue(parentTaskField, '');
-    }
-
-    await loadParentTaskOptions(form, {
-        sprintId: resolvedSprintId,
-        selectedParentTaskId: parentTaskId || '',
-    }).catch(() => { });
-};
-
-const applyTaskFormErrors = (form, errors = {}) => {
-    clearTaskFormErrors(form);
-
-    Object.entries(errors).forEach(([fieldName, messages]) => {
-        const normalizedFieldName = fieldName.split('.')[0];
-        const field = form.querySelector(`[name="${normalizedFieldName}"], [name="${normalizedFieldName}[]"]`);
-        const errorNode = form.querySelector(`[data-project-task-error="${normalizedFieldName}"]`);
-
-        getFieldErrorTarget(field)?.classList.add('border-red-500');
-
-        if (errorNode) {
-            errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
-            errorNode.classList.remove('hidden');
-        }
-    });
 };
 
 const closeAllTaskRowMenus = (exceptDropdown = null) => {
@@ -793,28 +590,6 @@ const applyTaskDetailFormErrors = (form, errors = {}) => {
             errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
             errorNode.classList.remove('hidden');
         }
-    });
-};
-
-const closeTaskModal = (modal) => {
-    if (!modal) {
-        return;
-    }
-
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-};
-
-const openTaskModal = (modal) => {
-    if (!modal) {
-        return;
-    }
-
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-
-    window.requestAnimationFrame(() => {
-        modal.querySelector('[name="name"]')?.focus();
     });
 };
 
@@ -1303,57 +1078,6 @@ const initializeTasksRoot = (root) => {
     initializeTaskLogViewer(root);
     initializeTaskGroupPagination(root);
 
-    const editorElement = root.querySelector('#project_task_description_editor');
-    if (editorElement && !projectTaskEditors.has(root)) {
-        const editor = new window.Quill(editorElement, {
-            theme: 'snow',
-            placeholder: 'Add task details...',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['link']
-                ]
-            }
-        });
-        projectTaskEditors.set(root, editor);
-    }
-
-    const noteEditorElement = root.querySelector('#project_task_create_note_editor');
-    if (noteEditorElement && !projectTaskNoteEditors.has(root)) {
-        const noteEditor = new window.Quill(noteEditorElement, {
-            theme: 'snow',
-            placeholder: 'Write an initial task note...',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['link']
-                ]
-            }
-        });
-        projectTaskNoteEditors.set(root, noteEditor);
-    }
-
-    const attachmentsInput = root.querySelector('#project_task_create_attachments_input');
-    if (attachmentsInput && attachmentsInput.dataset.bound !== 'true') {
-        attachmentsInput.dataset.bound = 'true';
-        attachmentsInput.addEventListener('change', () => {
-            const newFiles = Array.from(attachmentsInput.files || []);
-            let currentFiles = projectTaskCreateFilesMap.get(root) || [];
-            const combined = [...currentFiles];
-            newFiles.forEach((f) => {
-                if (!combined.some((item) => item.name === f.name && item.size === f.size)) {
-                    combined.push(f);
-                }
-            });
-            projectTaskCreateFilesMap.set(root, combined);
-            renderProjectTaskCreateFiles(root);
-        });
-    }
-
     if (!taskRowMenuDocumentListenerBound) {
         document.addEventListener('click', (event) => {
             if (event.target.closest('[data-project-task-row-dropdown]')) {
@@ -1615,13 +1339,9 @@ const initializeTasksRoot = (root) => {
             }
             return;
         }
-        const removeFileBtn = event.target.closest('[data-project-task-create-remove-file]');
-        if (removeFileBtn && root.contains(removeFileBtn)) {
-            const index = Number(removeFileBtn.dataset.projectTaskCreateRemoveFile);
-            let currentFiles = projectTaskCreateFilesMap.get(root) || [];
-            currentFiles.splice(index, 1);
-            projectTaskCreateFilesMap.set(root, currentFiles);
-            renderProjectTaskCreateFiles(root);
+        const sharedCreateButton = event.target.closest('[data-task-create-open]');
+        if (sharedCreateButton && root.contains(sharedCreateButton)) {
+            closeAllTaskRowMenus();
             return;
         }
         const rowMenuTrigger = event.target.closest('[data-project-task-row-menu-trigger]');
@@ -1699,47 +1419,6 @@ const initializeTasksRoot = (root) => {
             return;
         }
 
-        const openButton = event.target.closest('[data-project-task-modal-open]');
-
-        if (openButton && root.contains(openButton)) {
-            closeAllTaskRowMenus();
-
-            await prepareTaskModal(root, {
-                sprintId: openButton.dataset.projectTaskSprintId || '',
-                milestoneId: openButton.dataset.projectTaskMilestoneId || '',
-                parentTaskId: openButton.dataset.projectTaskParentTaskId || '',
-            });
-            openTaskModal(root.querySelector('[data-project-task-modal]'));
-            return;
-        }
-
-        const advancedToggle = event.target.closest('[data-project-task-advanced-toggle]');
-
-        if (advancedToggle && root.contains(advancedToggle)) {
-            const form = root.querySelector('[data-project-task-form]');
-            setTaskModalAdvancedState(root, form?.dataset.advanced !== 'true');
-            return;
-        }
-
-        const projectTaskModal = root.querySelector('[data-project-task-modal]');
-        if (projectTaskModal && !projectTaskModal.classList.contains('hidden')) {
-            const closeButton = event.target.closest('[data-project-task-modal-close]');
-            const panel = projectTaskModal.querySelector('[data-project-task-modal-panel]');
-            const isClickInsidePanel = panel && panel.contains(event.target);
-            const isClickInsideModal = projectTaskModal.contains(event.target);
-            const isClickOnDropdownPopup = event.target.closest('.ts-dropdown, .flatpickr-calendar, .ql-toolbar, .ql-container');
-
-            if (closeButton && root.contains(closeButton)) {
-                closeTaskModal(projectTaskModal);
-                return;
-            }
-
-            if (isClickInsideModal && !isClickInsidePanel && !isClickOnDropdownPopup) {
-                closeTaskModal(projectTaskModal);
-                return;
-            }
-        }
-
         const detailCloseButton = event.target.closest('[data-project-task-detail-close]');
         const detailModalTarget = event.target.closest('[data-project-task-detail-modal]');
         const detailContentTarget = event.target.closest('[data-project-task-detail-content]');
@@ -1783,7 +1462,7 @@ const initializeTasksRoot = (root) => {
 
         if (milestoneField && root.contains(milestoneField)) {
 
-            const form = milestoneField.closest('[data-project-task-form], [data-project-task-detail-form]');
+            const form = milestoneField.closest('[data-project-task-detail-form]');
 
             if (!form) {
                 return;
@@ -1807,7 +1486,7 @@ const initializeTasksRoot = (root) => {
         }
 
 
-        const form = sprintField.closest('[data-project-task-form], [data-project-task-detail-form]');
+        const form = sprintField.closest('[data-project-task-detail-form]');
 
         if (!form) {
             return;
@@ -1834,92 +1513,6 @@ const initializeTasksRoot = (root) => {
 
         initializeTaskListPagination(group);
     });
-
-    const form = root.querySelector('[data-project-task-form]');
-
-    if (form) {
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            clearTaskFormErrors(form);
-
-            const editor = projectTaskEditors.get(root);
-            const descInput = form.querySelector('#project_task_description_input');
-            if (editor && descInput) {
-                const content = editor.root.innerHTML.trim();
-                descInput.value = (content === '<p><br></p>') ? '' : content;
-            }
-
-            const noteEditor = projectTaskNoteEditors.get(root);
-            const noteInput = form.querySelector('#project_task_create_note_input');
-            if (noteEditor && noteInput) {
-                const noteContent = noteEditor.root.innerHTML.trim();
-                noteInput.value = (noteContent === '<p><br></p>') ? '' : noteContent;
-            }
-
-            const submitButton = form.querySelector('[data-project-task-submit]');
-            const modal = root.querySelector('[data-project-task-modal]');
-            const storeUrl = form.dataset.storeUrl;
-
-            if (!storeUrl) {
-                Alert.errorModal('Unable to save the task right now.');
-                return;
-            }
-
-            submitButton?.setAttribute('disabled', 'disabled');
-
-            if (submitButton) {
-                submitButton.textContent = 'Saving...';
-            }
-
-            try {
-                const formData = new FormData(form);
-                const selectedFiles = projectTaskCreateFilesMap.get(root) || [];
-                if (selectedFiles.length > 0) {
-                    formData.delete('attachments[]');
-                    selectedFiles.forEach((file) => {
-                        formData.append('attachments[]', file);
-                    });
-                }
-
-                const response = await fetch(storeUrl, {
-                    method: 'POST',
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    },
-                    body: formData,
-                });
-
-                const result = await response.json();
-
-                if (response.status === 422 && result.errors) {
-                    applyTaskFormErrors(form, result.errors);
-                    throw new Error(result.message || 'Please correct the highlighted fields.');
-                }
-
-                if (!response.ok || !result.status) {
-                    throw new Error(result.message || 'Unable to save the task.');
-                }
-
-                handleTaskRootSuccess(root, result, {
-                    successMessage: 'Task added successfully.',
-                    closeModal: () => closeTaskModal(modal),
-                });
-            } catch (error) {
-                if (!(error.message || '').includes('highlighted fields')) {
-                    Alert.errorModal(error.message || 'Unable to save the task.');
-                }
-            } finally {
-                submitButton?.removeAttribute('disabled');
-
-                if (submitButton) {
-                    submitButton.textContent = 'Save Task';
-                }
-            }
-        });
-    }
 
     root.addEventListener('submit', async (event) => {
 

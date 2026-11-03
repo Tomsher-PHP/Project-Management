@@ -65,7 +65,7 @@
             @if (!$isDeletedProjectView)
                 @can('task.create')
                     @if (!$group['is_unscheduled'] && empty($group['is_linear_group']))
-                        <span class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $group['sprint_id'] }}">
+                        <span class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-task-create-open data-task-create-sprint-id="{{ $group['sprint_id'] }}">
                             + Task
                         </span>
                     @endif

@@ -799,7 +799,10 @@ const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
             if (!projectField.tomselect.options[projectId]) {
                 projectField.tomselect.addOption(projectOption);
             }
-        } else if (!Array.from(projectField.options).some((option) => String(option.value) === projectId)) {
+        } else if (
+            projectField.tagName === 'SELECT'
+            && !Array.from(projectField.options).some((option) => String(option.value) === projectId)
+        ) {
             const option = document.createElement('option');
             option.value = projectId;
             option.textContent = projectOption.text;
@@ -812,8 +815,10 @@ const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
     if (projectField?.value) {
         await applyProjectDefaults(form, dependencies);
 
-        const milestoneId = String(prefill.milestoneId || '');
+        const projectMeta = getProjectMeta(dependencies, projectField.value);
         const sprintId = String(prefill.sprintId || '');
+        const selectedSprint = (projectMeta?.sprints || []).find((option) => option.value === sprintId);
+        const milestoneId = String(prefill.milestoneId || selectedSprint?.project_milestone_id || '');
         const parentTaskId = String(prefill.parentTaskId || '');
         const milestoneField = form.querySelector('[name="project_milestone_id"]');
 
@@ -1118,6 +1123,27 @@ const initializeTaskCreateRoot = (root, dependencies) => {
                 throw new Error(
                     result.message || 'Unable to save the task.'
                 );
+            }
+
+            if (root.dataset.taskCreateSuccessMode === 'refresh-project-tasks') {
+                closeTaskCreateModal(root.querySelector('[data-task-create-modal]'));
+                Alert.success(result.message || 'Task added successfully.');
+                document.dispatchEvent(new CustomEvent('project-tab:reload', {
+                    detail: {
+                        tab: 'tasks',
+                        query: {
+                            preferred_group: result.project_task_group_key || '',
+                        },
+                    },
+                }));
+                isTaskCreateSubmitting = false;
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Save Task';
+                }
+
+                return;
             }
 
             window.location.reload();
