@@ -706,8 +706,9 @@ class TaskController extends Controller
     private function loadTaskForDetail(Task $task): Task
     {
         $task->load([
-            'project:id,name,project_code,project_flow,customer_id',
+            'project:id,name,project_code,project_flow,customer_id,is_system,added_by,deleted_at',
             'project.customer:id,name,customer_profile_grade_id',
+            'projectTimeline:id,name',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'projectSprint.projectMilestone:id,name',

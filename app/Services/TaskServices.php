@@ -164,6 +164,7 @@ class TaskServices
     {
         $task->loadMissing([
             'project:id,name,project_code,project_flow',
+            'projectTimeline:id,name',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'parentTask:id,name,code',
@@ -239,6 +240,10 @@ class TaskServices
                             'sprint' => $task->projectSprint->id,
                         ])
                         : null,
+                ],
+                [
+                    'label' => 'Project Timeline',
+                    'value' => $task->projectTimeline?->name ?? '--',
                 ],
                 [
                     'label' => 'Created',
