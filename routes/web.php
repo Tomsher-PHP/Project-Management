@@ -609,7 +609,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
     Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.bulk-action');
     Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.action');
-    Route::post('tasks/{task}/requests/cancel', [TaskRequestController::class, 'cancel'])->name('tasks.requests.cancel');
+    Route::delete('tasks/{task}/requests', [TaskRequestController::class, 'destroy'])->name('tasks.requests.destroy');
 
     // Task time log change request routes
     Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');

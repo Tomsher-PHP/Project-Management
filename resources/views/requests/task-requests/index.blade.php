@@ -90,6 +90,10 @@
 
                         <tbody class="bg-white dark:bg-darkblack-600">
                             @forelse ($tasks as $task)
+                                @php
+                                    $dueDate = $task->due_date_time;
+                                    $dueDateDisplay = \App\Providers\AppServiceProvider::formatAppDateTime($dueDate);
+                                @endphp
                                 <tr class="group {{ config('assets.classes.table_row_hover') }}">
 
                                     @if ($selectedStatus === 'pending')
@@ -100,7 +104,7 @@
                                         </td>
                                     @endif
 
-                                    {{-- Task --}}
+                                    <!-- Task -->
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[220px]">
                                             <a href="{{ route('tasks.edit', $task) }}" class="font-semibold text-bgray-900 transition hover:text-success-300 dark:text-white dark:hover:text-success-300">
@@ -113,7 +117,7 @@
                                         </div>
                                     </td>
 
-                                    {{-- Project --}}
+                                    <!-- Project -->
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[180px]">
                                             @if ($task->project && auth()->user()?->can('project.view'))
@@ -136,24 +140,24 @@
                                         </div>
                                     </td>
 
-                                    {{-- Requested By --}}
+                                    <!-- Requested By -->
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <div class="flex min-w-[180px] items-center gap-3">
-                                            <x-user-avatar :user="$task->currentAssignee" :image="$task->currentAssignee?->profile_image_url" :name="$task->currentAssignee?->name ?? '--'" size="md" />
+                                        <div class="min-w-[180px]">
+                                            <div class="flex items-center gap-1">
+                                                <x-user-avatar :user="$task->currentAssignee" :image="$task->currentAssignee?->profile_image_url" :name="$task->currentAssignee?->name ?? '--'" size="sm" />
 
-                                            <div>
-                                                <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">
-                                                    {{ $task->currentAssignee?->name ?? '--' }}
+                                                <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300" title="{{ $task->currentAssignee?->name ?? '--' }}">
+                                                    {{ limitStringChar($task->currentAssignee?->name ?? '--', 15) }}
                                                 </span>
-
-                                                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
-                                                    Requested At: @appDateTime($task->created_at)
-                                                </p>
                                             </div>
+
+                                            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
+                                                @appDateTime($task->created_at)
+                                            </p>
                                         </div>
                                     </td>
 
-                                    {{-- Current Status --}}
+                                    <!-- Current Status -->
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($task->is_currently_running)
                                             <span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700" title="This task is currently running">
@@ -163,21 +167,21 @@
                                         @elseif ($task->has_started)
                                             <span class="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700" title="This task has already been started but is not currently running">
                                                 <span class="h-2 w-2 rounded-full bg-yellow-500"></span>
-                                                Already Started
+                                                Started
                                             </span>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300" title="This task has not been started yet">
                                                 <span class="h-2 w-2 rounded-full bg-gray-400"></span>
-                                                Not Yet Started
+                                                Awaiting
                                             </span>
                                         @endif
                                     </td>
 
-                                    {{-- Estimated Time --}}
+                                    <!-- Estimated Time -->
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[150px] space-y-1">
                                             <div>
-                                                <span class="text-xs text-bgray-500 dark:text-bgray-400">
+                                                <span class="text-xs text-bgray-700 dark:text-bgray-300">
                                                     Estimated
                                                 </span>
 
@@ -188,54 +192,53 @@
                                         </div>
                                     </td>
 
-                                    {{-- Due Date --}}
+                                    <!-- Due Date -->
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="text-sm font-semibold text-bgray-900 dark:text-bgray-300">
-                                            @appDateTime($task->due_date_time)
-                                        </span>
+                                        @if ($dueDate)
+                                            <span class="inline-flex min-w-0 items-center gap-1 text-right leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $task) }}" title="{{ $dueDateDisplay }}">
+                                                {!! taskDueDateIcon($dueDate, $task->estimated_time_seconds, $task) !!}
+                                                <span class="text-sm font-semibold">{{ $dueDateDisplay }}</span>
+                                            </span>
+                                        @endif
                                     </td>
 
-                                    {{-- Actions --}}
+                                    <!-- Actions -->
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
 
-                                        {{-- Pending Request --}}
+                                        <!-- Pending Request -->
                                         @if ($task->request_status === 'pending')
-                                            {{-- Requester --}}
                                             @if ($task->is_self_requested)
                                                 <div class="flex min-w-[220px] flex-wrap items-center gap-2">
-                                                    {{-- <span class="text-xs text-bgray-700 dark:text-bgray-300">
-                                                        Waiting for approval
-                                                    </span> --}}
-
-                                                    <button type="button" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400" data-task-request-cancel-open data-action="{{ route('tasks.requests.cancel', $task) }}" data-task-name="{{ $task->name }}">
-                                                        Cancel
-                                                    </button>
+                                                    @if ($task->has_started || $task->is_currently_running)
+                                                        <span class="text-xs text-bgray-700 dark:text-bgray-300">
+                                                            Waiting for approval
+                                                        </span>
+                                                    @else
+                                                        <x-delete-form :action="route('tasks.requests.destroy', $task)" title="Delete task request" aria-label="Delete task request" />
+                                                    @endif
                                                 </div>
-
-                                                {{-- Receiver / Super Admin --}}
                                             @else
                                                 <div class="flex min-w-[220px] flex-wrap items-center gap-2">
 
-                                                    {{-- Approve --}}
-                                                    <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [
-                                                        'project' => $task->project_id,
-                                                        'task' => $task->id,
-                                                        'approve_mode' => 1,
-                                                        'request_id' => $task->id,
-                                                        'action' => 'approve',
-                                                    ]) }}">
+                                                    <!-- Approve -->
+                                                    <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-detail-open
+                                                        data-project-task-detail-url="{{ route('projects.tasks.modal', [
+                                                            'project' => $task->project_id,
+                                                            'task' => $task->id,
+                                                            'approve_mode' => 1,
+                                                            'request_id' => $task->id,
+                                                            'action' => 'approve',
+                                                        ]) }}">
                                                         Approve
                                                     </button>
 
-                                                    {{-- Reject --}}
+                                                    <!-- Reject -->
                                                     <button type="button" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400" data-task-request-reject-open data-action="{{ route('tasks.requests.action', [$task, 'reject']) }}" data-task-name="{{ $task->name }}">
                                                         Reject
                                                     </button>
 
                                                 </div>
                                             @endif
-
-                                            {{-- Rejected Request --}}
                                         @elseif ($task->request_status === 'rejected')
                                             <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                                 <p class="font-semibold text-bgray-700 dark:text-white">
@@ -251,23 +254,7 @@
                                                 </p>
                                             </div>
 
-                                            {{-- Cancelled Request --}}
-                                        @elseif ($task->request_status === 'cancelled')
-                                            <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
-                                                <p class="font-semibold text-bgray-700 dark:text-white">
-                                                    Cancelled by {{ $task->cancelledBy?->name ?? '--' }}
-                                                </p>
-
-                                                <p>
-                                                    {{ $task->cancelled_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}
-                                                </p>
-
-                                                <p title="{{ $task->cancellation_reason }}">
-                                                    {{ \Illuminate\Support\Str::limit($task->cancellation_reason ?? '--', 45) }}
-                                                </p>
-                                            </div>
-
-                                            {{-- Approved Request --}}
+                                            <!-- Approved Request -->
                                         @else
                                             <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                                 <p class="font-semibold text-bgray-700 dark:text-white">
@@ -294,7 +281,7 @@
             <x-pagination :paginator="$tasks" :per-page="$perPage" />
         </section>
 
-        {{-- Filters --}}
+        <!-- Filters -->
         <x-filters.drawer>
             <input type="hidden" name="request_status" value="{{ $selectedStatus }}">
 
@@ -305,7 +292,7 @@
             <x-filters.multi-select name="current_assignee_id" label="User" :options="$users" />
         </x-filters.drawer>
 
-        {{-- Reject Modal --}}
+        <!-- Reject Modal -->
         <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-task-request-reject-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-task-request-reject-close></div>
 
@@ -353,53 +340,7 @@
             </div>
         </div>
 
-        {{-- Cancel Modal --}}
-        <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-task-request-cancel-modal>
-            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-task-request-cancel-close></div>
-
-            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-                <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
-
-                    <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
-                        <div>
-                            <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
-                                Cancel Task Request
-                            </h3>
-
-                            <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300" data-task-request-cancel-task-name></p>
-                        </div>
-
-                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-task-request-cancel-close>
-                            ✕
-                        </button>
-                    </div>
-
-                    <form method="POST" action="#" class="space-y-4 px-5 py-5" data-task-request-cancel-form>
-                        @csrf
-
-                        <div>
-                            <label for="task-request-cancellation-reason" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
-                                Cancellation Reason <x-red-star />
-                            </label>
-
-                            <textarea id="task-request-cancellation-reason" name="cancellation_reason" rows="4" required maxlength="2000" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add cancellation reason"></textarea>
-                        </div>
-
-                        <div class="flex justify-end gap-3 border-t border-bgray-100 pt-4 dark:border-darkblack-400">
-                            <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-task-request-cancel-close>
-                                Keep Request
-                            </button>
-
-                            <button type="submit" class="rounded-lg bg-error-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-error-400">
-                                Cancel Request
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        {{-- Project Task Detail Modal --}}
+        <!-- Project Task Detail Modal -->
         <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-project-task-detail-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-detail-close></div>
 
@@ -423,14 +364,6 @@
             const rejectReason = document.getElementById('task-request-rejection-reason');
             const rejectTaskName = document.querySelector('[data-task-request-reject-task-name]');
             const rejectHiddenInputs = document.querySelector('[data-task-request-reject-hidden-inputs]');
-
-            /*
-             * Cancel modal
-             */
-            const cancelModal = document.querySelector('[data-task-request-cancel-modal]');
-            const cancelForm = document.querySelector('[data-task-request-cancel-form]');
-            const cancelReason = document.getElementById('task-request-cancellation-reason');
-            const cancelTaskName = document.querySelector('[data-task-request-cancel-task-name]');
 
             /*
              * Bulk actions
@@ -523,34 +456,6 @@
             };
 
             /*
-             * Open cancel modal
-             */
-            const openCancelModal = (button) => {
-                if (!cancelModal || !cancelForm) {
-                    return;
-                }
-
-                cancelForm.action = button.dataset.action || '#';
-                cancelForm.reset();
-
-                if (cancelTaskName) {
-                    cancelTaskName.textContent = button.dataset.taskName ?
-                        `Task: ${button.dataset.taskName}` :
-                        '';
-                }
-
-                cancelModal.classList.remove('hidden');
-                cancelReason?.focus();
-            };
-
-            /*
-             * Close cancel modal
-             */
-            const closeCancelModal = () => {
-                cancelModal?.classList.add('hidden');
-            };
-
-            /*
              * Reject buttons
              */
             document
@@ -568,26 +473,6 @@
                 .querySelectorAll('[data-task-request-reject-close]')
                 .forEach((button) => {
                     button.addEventListener('click', closeRejectModal);
-                });
-
-            /*
-             * Cancel buttons
-             */
-            document
-                .querySelectorAll('[data-task-request-cancel-open]')
-                .forEach((button) => {
-                    button.addEventListener('click', () => {
-                        openCancelModal(button);
-                    });
-                });
-
-            /*
-             * Cancel modal close buttons
-             */
-            document
-                .querySelectorAll('[data-task-request-cancel-close]')
-                .forEach((button) => {
-                    button.addEventListener('click', closeCancelModal);
                 });
 
             /*
