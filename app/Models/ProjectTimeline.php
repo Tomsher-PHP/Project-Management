@@ -86,6 +86,27 @@ class ProjectTimeline extends Model
         return $query->choosableForTasks();
     }
 
+    public function scopeEligibleForProjectReport(Builder $query): Builder
+    {
+        return $query->whereIn('project_timelines.status', [
+            self::STATUS_ACTIVE,
+            self::STATUS_COMPLETED,
+        ]);
+    }
+
+    public function scopeOrderForProjectReport(Builder $query): Builder
+    {
+        return $query
+            ->orderByRaw(
+                'CASE WHEN project_timelines.status = ? THEN 0 ELSE 1 END',
+                [self::STATUS_ACTIVE]
+            )
+            ->orderByDesc('project_timelines.end_date')
+            ->orderByDesc('project_timelines.start_date')
+            ->orderByDesc('project_timelines.sort_order')
+            ->orderByDesc('project_timelines.id');
+    }
+
     /*----------------Activity Log Customization----------------*/
 
     // Never show these fields in activity log details.

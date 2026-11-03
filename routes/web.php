@@ -661,7 +661,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('reports')->as('reports.')->group(function () {
 
         // To get choosed projects by flow in report filters
-        Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])->name('projects.by-flow');
+        Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])->middleware('permission.type:reports.project_view')->name('projects.by-flow');
 
         // PROJECT:: PROJECT REPORT
         Route::get('/projects-report', [ReportController::class, 'project'])->middleware('permission.type:reports.project_view')->name('projects');
