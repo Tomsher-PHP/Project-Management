@@ -273,11 +273,8 @@ class UserWorkspaceController extends Controller
         return $workspaceUser;
     }
 
-    private function buildTimelineViewData(
-        User $workspaceUser,
-        Carbon $selectedDate,
-        bool $isOwnWorkspace = true
-    ): array {
+    private function buildTimelineViewData(User $workspaceUser, Carbon $selectedDate, bool $isOwnWorkspace = true): array
+    {
         $userId = (int) $workspaceUser->id;
 
         $hasRunningTaskTimer = ! $isOwnWorkspace
@@ -403,8 +400,6 @@ class UserWorkspaceController extends Controller
             'workspaceLeaveName' => $workspaceLeaveName,
         ];
     }
-
-
 
     private function buildDailyTimelineResponse(array $timelineViewData)
     {

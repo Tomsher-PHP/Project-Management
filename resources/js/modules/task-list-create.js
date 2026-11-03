@@ -308,6 +308,8 @@ const setTaskCreateMode = (root, mode = 'create') => {
     const form = root.querySelector('[data-task-create-form]');
     const titleNode = root.querySelector('[data-task-create-title]');
     const assigneeFieldWrapper = root.querySelector('[data-task-create-assignee-field]');
+    const timelineFieldWrapper = root.querySelector('[data-task-create-timeline-field]');
+    const timelineField = timelineFieldWrapper?.querySelector('[name="project_timeline_id"]');
     const requestTypeField = form?.querySelector('[data-task-create-request-type]');
     const submitButton = form?.querySelector('[data-task-create-submit]');
 
@@ -327,6 +329,18 @@ const setTaskCreateMode = (root, mode = 'create') => {
 
     if (assigneeFieldWrapper) {
         assigneeFieldWrapper.hidden = normalizedMode === 'request';
+    }
+
+    if (timelineFieldWrapper) {
+        const isRequestMode = normalizedMode === 'request';
+        timelineFieldWrapper.hidden = isRequestMode;
+
+        if (isRequestMode) {
+            setSelectOptions(timelineField, [], {
+                placeholder: 'Select project first',
+                disabled: true,
+            });
+        }
     }
 
     const assigneeTimeDueRow = root.querySelector('[data-task-create-row-assignee-time-due]');
@@ -492,6 +506,10 @@ const setEmptyProjectState = (form, dependencies = null) => {
         placeholder: 'Select project first',
         disabled: true,
     });
+    setSelectOptions(form.querySelector('[name="project_timeline_id"]'), [], {
+        placeholder: 'Select project first',
+        disabled: true,
+    });
     setSelectOptions(form.querySelector('[name="parent_task_id"]'), [], {
         placeholder: 'Select project first',
         disabled: true,
@@ -522,6 +540,10 @@ const setProjectLoadingState = (form) => {
     });
     setSelectOptions(form.querySelector('[name="project_sprint_id"]'), [], {
         placeholder: 'Loading sprints...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="project_timeline_id"]'), [], {
+        placeholder: 'Loading timelines...',
         disabled: true,
     });
     setSelectOptions(form.querySelector('[name="parent_task_id"]'), [], {
@@ -576,6 +598,7 @@ const fetchProjectDependencies = async (dependencies, projectId) => {
 const applyProjectDefaults = async (form, dependencies) => {
     const projectField = form.querySelector('[name="project_id"]');
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
+    const timelineField = form.querySelector('[name="project_timeline_id"]');
     const assigneeField = form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]');
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
@@ -612,6 +635,14 @@ const applyProjectDefaults = async (form, dependencies) => {
     });
 
     updateSprintOptions(form, dependencies);
+
+    if (getTaskCreateMode(form.closest('[data-task-create-root]')) === 'create') {
+        setSelectOptions(timelineField, projectMeta.timelines || [], {
+            placeholder: (projectMeta.timelines || []).length ? 'Select timeline' : 'No active or completed timelines',
+            disabled: !(projectMeta.timelines || []).length,
+            value: projectMeta.default_timeline_id || '',
+        });
+    }
 
     setSelectOptions(assigneeField, projectMeta.assignees || [], {
         placeholder: 'Select assignee',

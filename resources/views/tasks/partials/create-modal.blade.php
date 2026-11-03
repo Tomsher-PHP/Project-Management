@@ -66,6 +66,16 @@
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="parent_task_id"></p>
                             </div>
 
+                            @can('task.create')
+                                <div class="md:col-span-2" data-task-create-timeline-field>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Timeline</label>
+                                    <select name="project_timeline_id" class="tom-select w-full" data-sort="0">
+                                        <option value="">Select project first</option>
+                                    </select>
+                                    <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_timeline_id"></p>
+                                </div>
+                            @endcan
+
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
                                 <input type="text" name="name" autocomplete="off" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">

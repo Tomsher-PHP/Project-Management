@@ -73,12 +73,17 @@ class ProjectTimeline extends Model
         return $this->morphMany(ProjectNotificationLog::class, 'link');
     }
 
-    public function scopeEligibleForTaskMove(Builder $query): Builder
+    public function scopeChoosableForTasks(Builder $query): Builder
     {
         return $query->whereIn('status', [
             self::STATUS_ACTIVE,
             self::STATUS_COMPLETED,
         ]);
+    }
+
+    public function scopeEligibleForTaskMove(Builder $query): Builder
+    {
+        return $query->choosableForTasks();
     }
 
     /*----------------Activity Log Customization----------------*/

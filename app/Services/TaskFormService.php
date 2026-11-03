@@ -132,7 +132,7 @@ class TaskFormService
             ->toArray();
 
         $timelines = $project->projectTimelines()
-            ->eligibleForTaskMove()
+            ->choosableForTasks()
             ->get(['id', 'name', 'status'])
             ->map(fn(ProjectTimeline $timeline) => [
                 'value' => (string) $timeline->id,
