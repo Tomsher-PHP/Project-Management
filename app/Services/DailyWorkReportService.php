@@ -19,9 +19,13 @@ class DailyWorkReportService
     ): array {
         $userId = $employee->id;
 
-        $currentTasks = Task::query()
+       $currentTasks = Task::query()
             ->where('current_assignee_id', $userId)
-            ->with(['project', 'status'])
+            ->with([
+                'project',
+                'status',
+                'developerNotes',
+            ])
             ->whereHas('project', function ($query) {
                 $query->whereNull('deleted_at');
             })
@@ -163,15 +167,45 @@ class DailyWorkReportService
 
     private function taskSummary(Task $task): array
     {
+        $dueDate = $task->due_date_time;
+        $completedAt = $task->completed_at;
+
+        $completionPerformance = null;
+        $completionDifferenceSeconds = null;
+
+        if (
+            $task->status?->is_completed
+            && $dueDate
+            && $completedAt
+        ) {
+            $completionDifferenceSeconds = $dueDate->getTimestamp()
+                - $completedAt->getTimestamp();
+
+            if ($completionDifferenceSeconds > 0) {
+                $completionPerformance = 'early';
+            } elseif ($completionDifferenceSeconds === 0) {
+                $completionPerformance = 'on_time';
+            } else {
+                $completionPerformance = 'late';
+            }
+        }
+
         return [
             'id' => $task->id,
             'name' => $task->name,
             'project' => $task->project?->name,
             'status' => $task->status?->name,
-            'due_date' => $task->due_date_time?->toIso8601String(),
-            'completed_at' => $task->completed_at?->toIso8601String(),
+
+            'due_date' => $dueDate?->toIso8601String(),
+            'completed_at' => $completedAt?->toIso8601String(),
+
+            'completion_performance' => $completionPerformance,
+            'completion_difference_seconds' => $completionDifferenceSeconds,
+
             'estimated_time_seconds' => (int) $task->estimated_time_seconds,
             'actual_time_seconds' => (int) $task->actual_time_seconds,
+
+            'developer_note' => $task->developerNotes->first()?->note,
         ];
     }
 }
