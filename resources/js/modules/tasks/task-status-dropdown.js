@@ -1,5 +1,7 @@
 import Alert from '../../alert';
 
+let pendingCompletionTransition = null;
+
 const parseJsonResponse = async (response) => {
     try {
         return await response.json();
@@ -93,10 +95,13 @@ const openDeveloperNotes = (taskId, dropdown = null) => {
         Alert.error(
             'The Developer Notes button could not be found for this task.'
         );
-        return;
+
+        return false;
     }
 
     trigger.click();
+
+    return true;
 };
 
 /**
@@ -247,14 +252,23 @@ const initializeTaskStatusDropdown = () => {
                         option.dataset.hasDeveloperNote === '1' ||
                         option.dataset.hasDeveloperNote === 'true';
 
-                    if (!hasDeveloperNote) {
-                        Alert.error(
-                            'Please add a developer note before moving this task to a completed status.'
-                        );
+                                        if (!hasDeveloperNote) {
+                        // Keep the exact status option the user selected.
+                        pendingCompletionTransition = {
+                            taskId: String(taskId),
+                            option,
+                        };
 
-                        // Open the existing modal for this exact task.
+                        // Open Developer Notes for this task.
                         window.setTimeout(() => {
-                            openDeveloperNotes(taskId, dropdown);
+                            const opened = openDeveloperNotes(
+                                taskId,
+                                dropdown
+                            );
+
+                            if (!opened) {
+                                pendingCompletionTransition = null;
+                            }
                         }, 300);
 
                         return;
@@ -341,6 +355,55 @@ const initializeTaskStatusDropdown = () => {
     });
 
     document.body.dataset.taskStatusDropdownInitialized = 'true';
+
+        // Resume the original Task Details status selection after the note is saved.
+    document.addEventListener(
+        'task-insights:developer-notes:saved',
+        (event) => {
+            if (!pendingCompletionTransition) return;
+
+            const savedTaskId = String(event.detail?.taskId || '');
+            const pendingTaskId = String(
+                pendingCompletionTransition.taskId
+            );
+
+            if (!savedTaskId || savedTaskId !== pendingTaskId) return;
+
+            const pending = pendingCompletionTransition;
+
+            // Clear it before clicking the option again.
+            // This prevents the modal's subsequent close event from cancelling it.
+            pendingCompletionTransition = null;
+
+            if (!pending.option?.isConnected) {
+                return;
+            }
+
+            // developer-notes.js has already updated data-has-developer-note.
+            // Re-trigger the original selected status option.
+            pending.option.click();
+        }
+    );
+
+    // If the user closes the modal without saving, cancel the pending transition.
+    document.addEventListener(
+        'task-insights:closed',
+        (event) => {
+            if (!pendingCompletionTransition) return;
+
+            const closedTaskId = String(event.detail?.taskId || '');
+            const pendingTaskId = String(
+                pendingCompletionTransition.taskId
+            );
+
+            if (
+                !closedTaskId ||
+                closedTaskId === pendingTaskId
+            ) {
+                pendingCompletionTransition = null;
+            }
+        }
+    );
 };
 
 document.addEventListener('DOMContentLoaded', initializeTaskStatusDropdown);
