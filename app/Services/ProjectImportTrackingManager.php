@@ -58,13 +58,8 @@ class ProjectImportTrackingManager
      * @param  int  $userId
      * @return array<string, mixed>
      */
-    public function initTracking(
-        string $importId,
-        string $moduleKey,
-        string $fileName,
-        string $filePath,
-        int $userId
-    ): array {
+    public function initTracking(string $importId, string $moduleKey, string $fileName, string $filePath, int $userId): array
+    {
         // Trigger lightweight cleanup of expired imports periodically
         try {
             $this->cleanupExpired();
@@ -306,7 +301,7 @@ class ProjectImportTrackingManager
         }
 
         $rowResults = $meta['row_results'] ?? [];
-        $failedRows = array_filter($rowResults, fn ($r) => ($r['status'] ?? '') === 'failed');
+        $failedRows = array_filter($rowResults, fn($r) => ($r['status'] ?? '') === 'failed');
 
         if (empty($failedRows)) {
             return null;
