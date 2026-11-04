@@ -69,6 +69,40 @@
                         </div>
                     @endforeach
                 @endif
+
+                {{-- Daily Work Report Email Setting --}}
+                <div class="col-12 mt-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+                                    <h6 class="mb-1">
+                                        Daily Work Report Emails
+                                    </h6>
+
+                                    <p class="text-muted mb-0">
+                                        Enable or disable sending this employee's
+                                        daily work report to all configured recipients.
+                                    </p>
+                                </div>
+
+                                <div class="form-check form-switch">
+                                    <input
+                                        type="checkbox"
+                                        class="form-check-input general-setting"
+                                        id="send_daily_work_report"
+                                        data-field="send_daily_work_report"
+                                        data-user="{{ $user->id }}"
+                                        {{ ($generalSettings->send_daily_work_report ?? true) ? 'checked' : '' }}
+                                        {{ auth()->user()->can('user.edit') ? '' : 'disabled' }}
+                                    >
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +17,19 @@
     $periodEnd = data_get($report, 'period.end', 'N/A');
 
     $workload = data_get($report, 'current_workload', []);
+
+    // Tasks with time logged during the reporting period.
     $tasks = data_get($report, 'current_workload.tasks', []);
+
+    // Todo tasks due today or earlier.
+    $pendingTasks = data_get($report, 'current_workload.pending_tasks', []);
+
+    // Workload counts.
+    $totalTasks = (int) data_get($report, 'current_workload.total', 0);
+    $completedTasks = (int) data_get($report, 'current_workload.completed', 0);
+    $inProgressTasks = (int) data_get($report, 'current_workload.in_progress', 0);
+    $pendingCount = (int) data_get($report, 'current_workload.pending', 0);
+    $overdueTasks = (int) data_get($report, 'current_workload.overdue', 0);
 
     $timeLogs = data_get($report, 'time_logs.entries', []);
     $comments = data_get($report, 'comments', []);
@@ -24,31 +37,29 @@
 
     $totalSeconds = (int) data_get($report, 'time_logs.total_seconds', 0);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Shift information
-    |--------------------------------------------------------------------------
-    | Expected data:
-    | shift.start
-    | shift.end
-    | shift.break
-    */
+    /* Shift information */
 
     $shiftStart = data_get($report, 'shift.start');
     $shiftEnd = data_get($report, 'shift.end');
-    $shiftBreak = data_get($report, 'shift.break');
+    // $shiftBreak = data_get($report, 'shift.break');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Attendance / leave information
-    |--------------------------------------------------------------------------
-    | Expected data:
-    | attendance.status
-    | attendance.description
-    */
+    /* Attendance information */
 
-    $attendanceStatus = data_get($report, 'attendance.status');
-    $attendanceDescription = data_get($report, 'attendance.description');
+    // Display attendance only for leave or day off.
+    $rawAttendanceStatus = data_get($report, 'attendance.status');
+    $attendanceStatus = null;
+
+    if ($rawAttendanceStatus) {
+        $normalizedAttendance = strtolower(trim((string) $rawAttendanceStatus));
+
+        if (
+            str_contains($normalizedAttendance, 'leave')
+            || str_contains($normalizedAttendance, 'day off')
+            || str_contains($normalizedAttendance, 'day_off')
+        ) {
+            $attendanceStatus = $rawAttendanceStatus;
+        }
+    }
 
     $formatDuration = function ($seconds) {
         $seconds = max(0, (int) $seconds);
@@ -183,12 +194,6 @@
                                             {{ $attendanceStatus }}
                                         </strong>
 
-                                        @if($attendanceDescription)
-                                            <p style="margin:5px 0 0; font-size:12px; color:#64748b; line-height:1.5;">
-                                                {{ $attendanceDescription }}
-                                            </p>
-                                        @endif
-
                                     </td>
                                 </tr>
                             </table>
@@ -198,69 +203,140 @@
                 @endif
 
                 {{-- Shift Information --}}
-                @if($shiftStart || $shiftEnd || $shiftBreak)
-                    <tr>
-                        <td style="padding:0 30px 25px;">
+                @php
+                    $workedStart = collect($timeLogs)
+                        ->pluck('started_at')
+                        ->filter()
+                        ->map(fn ($time) => \Carbon\Carbon::parse($time))
+                        ->sortBy(fn ($time) => $time->timestamp)
+                        ->first();
 
-                            <h3 style="margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid #e2e8f0; font-size:16px; color:#1e293b;">
-                                Shift Timing
-                            </h3>
+                    $workedEnd = collect($timeLogs)
+                        ->pluck('ended_at')
+                        ->filter()
+                        ->map(fn ($time) => \Carbon\Carbon::parse($time))
+                        ->sortByDesc(fn ($time) => $time->timestamp)
+                        ->first();
 
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td width="33.33%" style="padding:5px;">
-                                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                                            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:7px;">
-                                            <tr>
-                                                <td style="padding:13px; text-align:center;">
-                                                    <div style="font-size:11px; color:#64748b;">
-                                                        Shift Start
-                                                    </div>
-                                                    <strong style="display:block; margin-top:6px; font-size:15px; color:#334155;">
-                                                        {{ $formatTime($shiftStart) }}
-                                                    </strong>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
+                    $totalWorkingHours = $formatDuration($totalSeconds);
+                @endphp
+                ```blade
+@if($shiftStart || $shiftEnd || $workedStart || $workedEnd)
+    <tr>
+        <td style="padding:0 30px 25px;">
 
-                                    <td width="33.33%" style="padding:5px;">
-                                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                                            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:7px;">
-                                            <tr>
-                                                <td style="padding:13px; text-align:center;">
-                                                    <div style="font-size:11px; color:#64748b;">
-                                                        Shift End
-                                                    </div>
-                                                    <strong style="display:block; margin-top:6px; font-size:15px; color:#334155;">
-                                                        {{ $formatTime($shiftEnd) }}
-                                                    </strong>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
+            <h3 style="margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid #e2e8f0; font-size:16px; color:#1e293b;">
+                Work Timing Summary
+            </h3>
 
-                                    <td width="33.33%" style="padding:5px;">
-                                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                                            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:7px;">
-                                            <tr>
-                                                <td style="padding:13px; text-align:center;">
-                                                    <div style="font-size:11px; color:#64748b;">
-                                                        Break
-                                                    </div>
-                                                    <strong style="display:block; margin-top:6px; font-size:15px; color:#334155;">
-                                                        {{ is_numeric($shiftBreak) ? $formatDuration($shiftBreak) : ($shiftBreak ?: 'N/A') }}
-                                                    </strong>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
+            {{-- Assigned Shift --}}
+            <div style="font-size:13px; font-weight:bold; color:#334155; margin:0 0 8px;">
+                Assigned Shift
+            </div>
 
-                        </td>
-                    </tr>
-                @endif
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td width="50%" style="padding:5px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:7px;">
+                            <tr>
+                                <td style="padding:13px; text-align:center;">
+                                    <div style="font-size:11px; color:#64748b;">
+                                        Shift Start
+                                    </div>
+                                    <strong style="display:block; margin-top:6px; font-size:15px; color:#334155;">
+                                        {{ $shiftStart ? $formatTime($shiftStart) : '-' }}
+                                    </strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+
+                    <td width="50%" style="padding:5px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:7px;">
+                            <tr>
+                                <td style="padding:13px; text-align:center;">
+                                    <div style="font-size:11px; color:#64748b;">
+                                        Shift End
+                                    </div>
+                                    <strong style="display:block; margin-top:6px; font-size:15px; color:#334155;">
+                                        {{ $shiftEnd ? $formatTime($shiftEnd) : '-' }}
+                                    </strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            {{-- Actual Worked Timing --}}
+            <div style="font-size:13px; font-weight:bold; color:#334155; margin:16px 0 8px;">
+                Actual Worked Timing
+            </div>
+
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td width="50%" style="padding:5px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:7px;">
+                            <tr>
+                                <td style="padding:13px; text-align:center;">
+                                    <div style="font-size:11px; color:#64748b;">
+                                        First Work Start
+                                    </div>
+                                    <strong style="display:block; margin-top:6px; font-size:15px; color:#334155;">
+                                        {{ $workedStart ? $formatTime($workedStart) : '-' }}
+                                    </strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+
+                    <td width="50%" style="padding:5px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:7px;">
+                            <tr>
+                                <td style="padding:13px; text-align:center;">
+                                    <div style="font-size:11px; color:#64748b;">
+                                        Last Work End
+                                    </div>
+                                    <strong style="display:block; margin-top:6px; font-size:15px; color:#334155;">
+                                        {{ $workedEnd ? $formatTime($workedEnd) : '-' }}
+                                    </strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            {{-- Total Working Hours --}}
+            <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                style="margin-top:10px;">
+                <tr>
+                    <td style="padding:5px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                            style="background-color:#eff6ff; border:1px solid #bfdbfe; border-radius:7px;">
+                            <tr>
+                                <td style="padding:15px; text-align:center;">
+                                    <div style="font-size:12px; color:#475569;">
+                                        Total Working Hours (Time Logged)
+                                    </div>
+                                    <strong style="display:block; margin-top:6px; font-size:20px; color:#1d4ed8;">
+                                        {{ $totalWorkingHours }}
+                                    </strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+        </td>
+    </tr>
+@endif
+```
 
                 {{-- Workload Summary --}}
                 @if(array_key_exists('current_workload', $report))
@@ -274,11 +350,11 @@
                             <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                     @foreach([
-                                        ['label' => 'Total Tasks', 'value' => data_get($workload, 'total', 0), 'color' => '#334155'],
-                                        ['label' => 'Completed', 'value' => data_get($workload, 'completed', 0), 'color' => '#15803d'],
-                                        ['label' => 'In Progress', 'value' => data_get($workload, 'in_progress', 0), 'color' => '#2563eb'],
-                                        ['label' => 'Pending', 'value' => data_get($workload, 'pending', 0), 'color' => '#b45309'],
-                                        ['label' => 'Overdue', 'value' => data_get($workload, 'overdue', 0), 'color' => '#dc2626'],
+                                        ['label' => 'Total Tasks', 'value' => $totalTasks, 'color' => '#334155'],
+                                        ['label' => 'Completed', 'value' => $completedTasks, 'color' => '#15803d'],
+                                        ['label' => 'In Progress', 'value' => $inProgressTasks, 'color' => '#2563eb'],
+                                        ['label' => 'Pending', 'value' => $pendingCount, 'color' => '#b45309'],
+                                        ['label' => 'Overdue', 'value' => $overdueTasks, 'color' => '#dc2626'],
                                         ['label' => 'Time Logged', 'value' => $formatDuration($totalSeconds), 'color' => '#7c3aed'],
                                     ] as $item)
                                         <td width="16.66%" valign="top" style="padding:4px;">
@@ -307,13 +383,13 @@
                     </tr>
                 @endif
 
-                {{-- Current Tasks --}}
+                {{-- Tasks Worked On --}}
                 @if(array_key_exists('current_workload', $report))
                     <tr>
                         <td style="padding:0 30px 25px;">
 
                             <h3 style="margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid #e2e8f0; font-size:16px; color:#1e293b;">
-                                Current Tasks
+                                Tasks Worked On
                             </h3>
 
                             @if(count($tasks))
@@ -330,13 +406,12 @@
                                     </tr>
 
                                     @foreach($tasks as $task)
-                                    
                                         <tr>
                                             {{-- Task --}}
                                             <td style="padding:12px 9px; border-bottom:1px solid #e2e8f0; font-size:12px; color:#334155;">
                                                 @if(!empty($task['url']))
                                                     <a href="{{ $task['url'] }}"
-                                                    style="font-weight:bold; color:#2563eb; text-decoration:none;">
+                                                        style="font-weight:bold; color:#2563eb; text-decoration:none;">
                                                         {{ $task['name'] ?? 'Untitled Task' }}
                                                     </a>
                                                 @else
@@ -370,7 +445,6 @@
                                                 @endif
                                             </td>
 
-                                            
                                             {{-- Status and Completion Performance --}}
                                             <td style="padding:12px 9px; border-bottom:1px solid #e2e8f0; font-size:11px;">
 
@@ -379,7 +453,6 @@
                                                 </span>
 
                                                 @if(!empty($task['completion_performance']))
-
                                                     @php
                                                         $performance = $task['completion_performance'];
 
@@ -404,7 +477,6 @@
                                                     ">
                                                         {{ $performanceLabels[$performance] ?? '' }}
                                                     </div>
-
                                                 @endif
 
                                             </td>
@@ -414,7 +486,7 @@
 
                                                 <div>
                                                     <strong style="color:#334155;">Due:</strong>
-                                                    {{ $task['due_date']
+                                                    {{ !empty($task['due_date'])
                                                         ? \Carbon\Carbon::parse($task['due_date'])->format('Y-m-d • H:i')
                                                         : 'N/A' }}
                                                 </div>
@@ -458,17 +530,18 @@
 
                                             {{-- Estimated / Spent --}}
                                             <td style="padding:10px; border-bottom:1px solid #e5e7eb; font-size:12px; color:#334155;">
+                                                @php
+                                                    $estimatedSeconds = (int) ($task['estimated_time_seconds'] ?? 0);
+                                                    $actualSeconds = (int) ($task['actual_time_seconds'] ?? 0);
+
+                                                    $estimatedTime = $estimatedSeconds > 0
+                                                        ? formatSecondsToHMS($estimatedSeconds)
+                                                        : '--';
+
+                                                    $spentTime = formatSecondsToHMS($actualSeconds);
+                                                @endphp
+
                                                 <div>
-                                                    @php
-                                                        $estimatedSeconds = (int) ($task['estimated_time_seconds'] ?? 0);
-                                                        $actualSeconds = (int) ($task['actual_time_seconds'] ?? 0);
-
-                                                        $estimatedTime = $estimatedSeconds > 0
-                                                            ? formatSecondsToHMS($estimatedSeconds)
-                                                            : '--';
-
-                                                        $spentTime = formatSecondsToHMS($actualSeconds);
-                                                    @endphp
                                                     <strong>Estimated:</strong>
                                                     {{ $estimatedTime }}
                                                 </div>
@@ -495,7 +568,7 @@
                                 </table>
                             @else
                                 <p style="padding:15px; background-color:#f8fafc; color:#64748b; font-size:13px; border-radius:5px;">
-                                    No current tasks assigned.
+                                    No tasks have time logged during this reporting period.
                                 </p>
                             @endif
 
@@ -503,9 +576,105 @@
                     </tr>
                 @endif
 
+                {{-- Pending Tasks --}}
+                @if(array_key_exists('current_workload', $report))
+                    <tr>
+                        <td style="padding:0 30px 25px;">
+
+                            <h3 style="margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid #e2e8f0; font-size:16px; color:#1e293b;">
+                                Pending Tasks
+                            </h3>
+
+                            @if(count($pendingTasks))
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                                    style="border-collapse:collapse;">
+
+                                    <tr style="background-color:#f1f5f9;">
+                                        <th align="left" style="padding:11px 9px; font-size:11px; color:#475569;">
+                                            Task
+                                        </th>
+
+                                        <th align="left" style="padding:11px 9px; font-size:11px; color:#475569;">
+                                            Project
+                                        </th>
+
+                                        <th align="left" style="padding:11px 9px; font-size:11px; color:#475569;">
+                                            Due Date
+                                        </th>
+
+                                        <th align="left" style="padding:11px 9px; font-size:11px; color:#475569;">
+                                            Status
+                                        </th>
+                                    </tr>
+
+                                    @foreach($pendingTasks as $task)
+                                        @php
+                                            $dueDate = !empty($task['due_date'])
+                                                ? \Carbon\Carbon::parse($task['due_date'])
+                                                : null;
+
+                                            $reportDate = null;
+
+                                            try {
+                                                $reportDate = \Carbon\Carbon::parse($periodStart)->toDateString();
+                                            } catch (\Throwable $e) {
+                                                $reportDate = null;
+                                            }
+
+                                            // Due today or earlier is considered overdue.
+                                            $isOverdue = $dueDate
+                                                && $reportDate
+                                                && $dueDate->toDateString() <= $reportDate;
+                                        @endphp
+
+                                        <tr>
+                                            {{-- Task --}}
+                                            <td style="padding:12px 9px; border-bottom:1px solid #e2e8f0; font-size:12px; color:#334155;">
+                                                <strong>
+                                                    {{ $task['name'] ?? 'Untitled Task' }}
+                                                </strong>
+                                            </td>
+
+                                            {{-- Project --}}
+                                            <td style="padding:12px 9px; border-bottom:1px solid #e2e8f0; font-size:12px; color:#334155;">
+                                                {{ $task['project'] ?? 'N/A' }}
+                                            </td>
+
+                                            {{-- Due Date --}}
+                                            <td style="padding:12px 9px; border-bottom:1px solid #e2e8f0; font-size:11px; color:#64748b; white-space:nowrap;">
+                                                {{ $dueDate
+                                                    ? $dueDate->format('Y-m-d • H:i')
+                                                    : 'N/A' }}
+
+                                                @if($isOverdue)
+                                                    <div style="margin-top:5px; color:#dc2626; font-size:10px; font-weight:bold;">
+                                                        ⚠ Overdue
+                                                    </div>
+                                                @endif
+                                            </td>
+
+                                            {{-- Status --}}
+                                            <td style="padding:12px 9px; border-bottom:1px solid #e2e8f0; font-size:11px;">
+                                                <span style="color:{{ $statusColor($task['status'] ?? 'Pending') }}; font-weight:bold;">
+                                                    {{ $task['status'] ?? 'Pending' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+
+                                </table>
+                            @else
+                                <p style="padding:15px; background-color:#f8fafc; color:#64748b; font-size:13px; border-radius:5px;">
+                                    No pending tasks due today or earlier.
+                                </p>
+                            @endif
+
+                        </td>
+                    </tr>
+                @endif
 
                 {{-- Developer Notes --}}
-                {{-- Notes are displayed in the Current Tasks table. --}}
+                {{-- Notes are displayed in the Tasks Worked On table. --}}
 
                 {{-- Footer --}}
                 <tr>

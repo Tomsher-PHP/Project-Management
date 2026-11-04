@@ -274,15 +274,24 @@ class UserController extends Controller
 
     public function updateGeneralSettings(Request $request)
     {
-        $userSettingKeys = array_keys(config('constants.user_settings', []));
+        $userSettingKeys = array_keys(
+            config('constants.user_settings', [])
+        );
+
+        $allowedFields = array_merge(
+            ['kanban_view', 'theme', 'send_daily_work_report'],
+            $userSettingKeys
+        );
 
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'field' => 'required|in:kanban_view,theme,' . implode(',', $userSettingKeys),
+            'field' => 'required|in:' . implode(',', $allowedFields),
         ]);
 
+        // Existing generic user settings.
         if (in_array($request->field, $userSettingKeys, true)) {
-            if (!auth()->user()->can('user.edit')) {
+
+            if (! auth()->user()->can('user.edit')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized to update user settings.'
@@ -299,18 +308,51 @@ class UserController extends Controller
                     'key' => $request->field,
                 ],
                 [
-                    'value' => filter_var($request->value, FILTER_VALIDATE_BOOLEAN),
+                    'value' => filter_var(
+                        $request->value,
+                        FILTER_VALIDATE_BOOLEAN
+                    ),
                 ]
             );
+
+        } elseif ($request->field === 'send_daily_work_report') {
+
+            if (! auth()->user()->can('user.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to update user settings.'
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            $request->validate([
+                'value' => 'required|boolean',
+            ]);
+
+            UserGeneralSetting::updateOrCreate(
+                [
+                    'user_id' => $request->user_id,
+                ],
+                [
+                    'send_daily_work_report' => filter_var(
+                        $request->value,
+                        FILTER_VALIDATE_BOOLEAN
+                    ),
+                ]
+            );
+
         } else {
+
+            // Existing Kanban View and Theme settings.
             $request->validate([
                 'value' => 'required|string',
             ]);
 
             UserGeneralSetting::updateOrCreate(
-                ['user_id' => $request->user_id],
                 [
-                    $request->field => $request->value
+                    'user_id' => $request->user_id,
+                ],
+                [
+                    $request->field => $request->value,
                 ]
             );
         }

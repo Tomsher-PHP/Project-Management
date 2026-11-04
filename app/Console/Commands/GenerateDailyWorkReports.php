@@ -66,12 +66,34 @@ class GenerateDailyWorkReports extends Command
 
         $this->info("Processing {$employees->count()} employees.");
 
+        // Retrieve employee daily report preferences.
+        $dailyReportPreferences = UserGeneralSetting::query()
+            ->whereIn('user_id', $employees->pluck('id'))
+            ->pluck('send_daily_work_report', 'user_id');
+
         $generated = 0;
         $skipped = 0;
         $failed = 0;
 
         foreach ($employees as $employee) {
             try {
+
+                // Check whether this employee has enabled daily report emails.
+                $sendDailyReport = (bool) $dailyReportPreferences->get(
+                    $employee->id,
+                    true
+                );
+
+                if (! $sendDailyReport) {
+                    $this->line(
+                        "Skipped {$employee->name}: Daily Work Report emails disabled."
+                    );
+
+                    $skipped++;
+
+                    continue;
+                }
+
                 // Avoid creating the same report more than once.
                 $existing = DailyWorkReportLog::query()
                     ->where('user_id', $employee->id)
