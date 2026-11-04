@@ -221,7 +221,8 @@
                                         @else
                                             {{-- Approver can approve/reject requests from other users --}}
                                             <div class="flex min-w-[190px] flex-wrap items-center gap-2">
-                                                <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-time-log-change-request-approve-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-project-name="{{ $project?->name ?? 'Unknown Project' }}" data-reason="{{ $changeRequest->reason ?? '--' }}" data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}" data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}">
+                                                <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-time-log-change-request-approve-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-project-name="{{ $project?->name ?? 'Unknown Project' }}" data-reason="{{ $changeRequest->reason ?? '--' }}"
+                                                    data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}" data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}">
                                                     Approve
                                                 </button>
 
@@ -525,78 +526,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/modules/tasks/time-log-change-request.js')
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.querySelector(
-                '[data-time-log-change-request-cancel-modal]'
-            );
-
-            if (!modal) {
-                return;
-            }
-
-            const form = modal.querySelector(
-                '[data-time-log-change-request-cancel-form]'
-            );
-
-            const taskName = modal.querySelector(
-                '[data-time-log-change-request-cancel-task-name]'
-            );
-
-            const reason = modal.querySelector(
-                '#time-log-change-request-cancellation-reason'
-            );
-
-            const openButtons = document.querySelectorAll(
-                '[data-time-log-change-request-cancel-open]'
-            );
-
-            const closeButtons = document.querySelectorAll(
-                '[data-time-log-change-request-cancel-close]'
-            );
-
-            const openModal = function(button) {
-                form.action = button.dataset.action || '#';
-                taskName.textContent = button.dataset.taskName || '--';
-
-                reason.value = '';
-
-                modal.classList.remove('hidden');
-                modal.setAttribute('aria-hidden', 'false');
-
-                setTimeout(() => {
-                    reason.focus();
-                }, 50);
-            };
-
-            const closeModal = function() {
-                modal.classList.add('hidden');
-                modal.setAttribute('aria-hidden', 'true');
-
-                form.action = '#';
-                reason.value = '';
-            };
-
-            openButtons.forEach((button) => {
-                button.addEventListener('click', function() {
-                    openModal(button);
-                });
-            });
-
-            closeButtons.forEach((button) => {
-                button.addEventListener('click', closeModal);
-            });
-
-            document.addEventListener('keydown', function(event) {
-                if (
-                    event.key === 'Escape' &&
-                    !modal.classList.contains('hidden')
-                ) {
-                    closeModal();
-                }
-            });
-        });
-    </script>
+    @vite('resources/js/modules/requests/task-time-requests.js')
 @endpush

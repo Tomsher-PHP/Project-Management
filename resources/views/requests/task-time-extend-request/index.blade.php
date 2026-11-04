@@ -255,7 +255,7 @@
         <x-filters.multi-select name="user_id" label="User" :options="$users" />
     </x-filters.drawer>
 
-    {{-- Reject Modal --}}
+    <!-- Reject Modal -->
     <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-extend-request-reject-modal>
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-extend-request-reject-close></div>
 
@@ -300,7 +300,7 @@
         </div>
     </div>
 
-    {{-- Approve Modal --}}
+    <!-- Approve Modal -->
     <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-extend-request-approve-modal>
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-extend-request-approve-close></div>
 
@@ -403,7 +403,7 @@
         </div>
     </div>
 
-    {{-- Cancel Modal --}}
+    <!-- Cancel Modal -->
     <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-extend-request-cancel-modal aria-hidden="true">
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-extend-request-cancel-close></div>
 
@@ -463,162 +463,5 @@
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/modules/tasks/approve-extend-time.js'])
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            /*
-             * Reject modal
-             */
-            const rejectModal = document.querySelector(
-                '[data-extend-request-reject-modal]'
-            );
-
-            const rejectForm = document.querySelector(
-                '[data-extend-request-reject-form]'
-            );
-
-            const rejectReason = document.getElementById(
-                'extend-request-rejection-reason'
-            );
-
-            const rejectTitle = document.querySelector(
-                '[data-extend-request-reject-title]'
-            );
-
-            const openRejectModal = function(button) {
-                if (!rejectModal || !rejectForm) {
-                    return;
-                }
-
-                rejectForm.action = button.dataset.action || '#';
-                rejectForm.reset();
-
-                if (rejectTitle) {
-                    rejectTitle.textContent = button.dataset.requestUserName ?
-                        `Requested by ${button.dataset.requestUserName}` :
-                        '';
-                }
-
-                rejectModal.classList.remove('hidden');
-                rejectModal.setAttribute('aria-hidden', 'false');
-
-                setTimeout(() => {
-                    rejectReason?.focus();
-                }, 50);
-            };
-
-            const closeRejectModal = function() {
-                rejectModal?.classList.add('hidden');
-                rejectModal?.setAttribute('aria-hidden', 'true');
-            };
-
-            document
-                .querySelectorAll('[data-extend-request-reject-open]')
-                .forEach((button) => {
-                    button.addEventListener('click', function() {
-                        openRejectModal(button);
-                    });
-                });
-
-            document
-                .querySelectorAll('[data-extend-request-reject-close]')
-                .forEach((button) => {
-                    button.addEventListener('click', closeRejectModal);
-                });
-
-
-            /*
-             * Cancel modal
-             */
-            const cancelModal = document.querySelector(
-                '[data-extend-request-cancel-modal]'
-            );
-
-            const cancelForm = document.querySelector(
-                '[data-extend-request-cancel-form]'
-            );
-
-            const cancelTaskName = document.querySelector(
-                '[data-extend-request-cancel-task-name]'
-            );
-
-            const cancelReason = document.getElementById(
-                'extend-request-cancellation-reason'
-            );
-
-            const openCancelModal = function(button) {
-                if (!cancelModal || !cancelForm) {
-                    return;
-                }
-
-                cancelForm.action = button.dataset.action || '#';
-
-                if (cancelTaskName) {
-                    cancelTaskName.textContent =
-                        button.dataset.taskName || '--';
-                }
-
-                cancelReason.value = '';
-
-                cancelModal.classList.remove('hidden');
-                cancelModal.setAttribute('aria-hidden', 'false');
-
-                setTimeout(() => {
-                    cancelReason?.focus();
-                }, 50);
-            };
-
-            const closeCancelModal = function() {
-                cancelModal?.classList.add('hidden');
-                cancelModal?.setAttribute('aria-hidden', 'true');
-
-                if (cancelForm) {
-                    cancelForm.action = '#';
-                }
-
-                if (cancelReason) {
-                    cancelReason.value = '';
-                }
-            };
-
-            document
-                .querySelectorAll('[data-extend-request-cancel-open]')
-                .forEach((button) => {
-                    button.addEventListener('click', function() {
-                        openCancelModal(button);
-                    });
-                });
-
-            document
-                .querySelectorAll('[data-extend-request-cancel-close]')
-                .forEach((button) => {
-                    button.addEventListener('click', closeCancelModal);
-                });
-
-
-            /*
-             * Escape key
-             */
-            document.addEventListener('keydown', function(event) {
-                if (event.key !== 'Escape') {
-                    return;
-                }
-
-                if (
-                    cancelModal &&
-                    !cancelModal.classList.contains('hidden')
-                ) {
-                    closeCancelModal();
-                }
-
-                if (
-                    rejectModal &&
-                    !rejectModal.classList.contains('hidden')
-                ) {
-                    closeRejectModal();
-                }
-            });
-        });
-    </script>
+    @vite('resources/js/modules/requests/task-time-extend-request.js')
 @endpush
