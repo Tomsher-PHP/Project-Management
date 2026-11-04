@@ -148,7 +148,7 @@
                         18 Columns
                     </span>
                 </div>
-                <p class="text-xs text-bgray-500 dark:text-bgray-400 mt-0.5">
+                <p class="text-xs text-bgray-700 dark:text-bgray-400 mt-0.5">
                     Review column specifications, required fields, and data formatting guidelines before uploading.
                 </p>
             </div>
@@ -240,4 +240,3 @@
         }
     </script>
 @endpush
-
