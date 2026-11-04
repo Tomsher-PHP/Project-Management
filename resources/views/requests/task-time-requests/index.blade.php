@@ -123,7 +123,6 @@
                                             </p>
 
                                             <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
-                                                Requested:
                                                 <span class="font-medium text-bgray-700 dark:text-bgray-300">
                                                     @appDateTime($changeRequest->created_at)
                                                 </span>
@@ -294,7 +293,7 @@
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-time-log-change-request-approve-close></div>
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="relative z-10 w-full max-w-2xl rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
                         Approve Task Time Log Change Request
@@ -305,31 +304,11 @@
                     </button>
                 </div>
 
-                <form method="POST" action="#" class="space-y-5 px-5 py-1" data-time-log-change-request-approve-form>
+                <form method="POST" action="#" class="space-y-4 px-5 py-5" data-time-log-change-request-approve-form>
                     @csrf
 
-                    <div class="grid gap-4 rounded-lg bg-bgray-50 p-4 text-sm dark:bg-darkblack-500 sm:grid-cols-2">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
-                                User
-                            </span>
-
-                            <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-user-name>
-                                --
-                            </span>
-                        </div>
-
-                        <div class="break-word">
-                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
-                                Task
-                            </span>
-
-                            <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-task-name>
-                                --
-                            </span>
-                        </div>
-
-                        <div class="break-word">
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">
                                 Project
                             </span>
@@ -339,15 +318,35 @@
                             </span>
                         </div>
 
-                        <div class="break-word">
+                        <div>
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">
-                                Reason
+                                Task
                             </span>
 
-                            <p class="whitespace-pre-wrap text-bgray-900 dark:text-white" data-time-log-change-request-approve-reason>
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-task-name>
                                 --
-                            </p>
+                            </span>
                         </div>
+
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
+                                Requested By
+                            </span>
+
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-user-name>
+                                --
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                        <span class="block text-sm font-medium text-bgray-600 dark:text-bgray-300">
+                            Reason
+                        </span>
+
+                        <p class="mt-1 max-h-48 overflow-y-auto break-words whitespace-pre-wrap rounded-lg bg-bgray-50 p-3 text-sm text-bgray-900 dark:bg-darkblack-500 dark:text-white" data-time-log-change-request-approve-reason>
+                            --
+                        </p>
                     </div>
 
                     <div>

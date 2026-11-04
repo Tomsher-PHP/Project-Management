@@ -62,9 +62,6 @@
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Date</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Requested at</span>
-                            </th>
-                            <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Time Range</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
@@ -103,20 +100,24 @@
                                     </td>
                                 @endif
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    <div class="flex min-w-[180px] items-center gap-3">
+                                    <div class="flex min-w-[220px] items-center gap-3">
                                         <x-user-avatar :user="$requestUser" :image="$requestUser?->profile_image_url" :name="$requestUser?->name ?? 'Unknown User'" size="md" />
+
                                         <div>
-                                            <p class="font-semibold text-bgray-900 dark:text-white">{{ $requestUser?->name ?? 'Unknown User' }}</p>
+                                            <p class="font-semibold text-bgray-900 dark:text-white">
+                                                {{ $requestUser?->name ?? 'Unknown User' }}
+                                            </p>
+
+                                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
+                                                <span class="font-medium text-bgray-700 dark:text-bgray-300">
+                                                    @appDateTime($breakRequest->created_at)
+                                                </span>
+                                            </p>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <span class="min-w-[120px] text-sm text-bgray-700 dark:text-bgray-300">@appDate($breakRequest->work_date)</span>
-                                </td>
-                                <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    <span class="min-w-[170px] text-sm text-bgray-700 dark:text-bgray-300">
-                                        @appDateTime($breakRequest->created_at)
-                                    </span>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <div class="min-w-[180px] text-sm text-bgray-700 dark:text-bgray-300">
@@ -249,7 +250,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <x-table-no-data :col-span="$showBulkActions ? 9 : 8" message="No {{ strtolower($tabs[$selectedStatus]) }} break work requests found." sub-message="There are no break work requests available for your access level." />
+                            <x-table-no-data :col-span="$showBulkActions ? 8 : 7" message="No {{ strtolower($tabs[$selectedStatus]) }} break work requests found." sub-message="There are no break work requests available for your access level." />
                         @endforelse
                     </tbody>
                 </table>

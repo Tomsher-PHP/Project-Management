@@ -85,7 +85,7 @@
 
                             <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    <div class="flex min-w-[180px] items-center gap-3">
+                                    <div class="flex min-w-[220px] items-center gap-3">
                                         <x-user-avatar :user="$requestUser" :image="$requestUser?->profile_image_url" :name="$requestUser?->name ?? 'Unknown User'" size="md" />
 
                                         <div>
@@ -94,7 +94,6 @@
                                             </p>
 
                                             <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
-                                                Requested:
                                                 <span class="font-medium text-bgray-700 dark:text-bgray-300">
                                                     @appDateTime($extendRequest->created_at)
                                                 </span>
@@ -306,7 +305,7 @@
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-extend-request-approve-close></div>
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="relative z-10 w-full max-w-2xl rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
                         <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
@@ -379,7 +378,7 @@
                             Reason
                         </span>
 
-                        <p class="mt-1 whitespace-pre-wrap rounded-lg bg-bgray-50 p-3 text-sm text-bgray-900 dark:bg-darkblack-500 dark:text-white" data-approve-reason>
+                        <p class="mt-1 max-h-48 overflow-y-auto break-words whitespace-pre-wrap rounded-lg bg-bgray-50 p-3 text-sm text-bgray-900 dark:bg-darkblack-500 dark:text-white" data-approve-reason>
                             --
                         </p>
                     </div>
