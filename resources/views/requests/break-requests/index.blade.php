@@ -145,20 +145,10 @@
 
                                                 {{-- Requester --}}
                                                 @can('break_request.cancel')
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('break-requests.cancel', $breakRequest) }}"
-                                                        data-break-request-cancel-form
-                                                        data-confirm-title="Cancel break work request?"
-                                                        data-confirm-text="This will cancel your pending break work request."
-                                                        data-confirm-text-button="Yes, cancel"
-                                                    >
+                                                    <form method="POST" action="{{ route('break-requests.cancel', $breakRequest) }}" data-break-request-cancel-form data-confirm-title="Cancel break work request?" data-confirm-text="This will cancel your pending break work request." data-confirm-text-button="Yes, cancel">
                                                         @csrf
 
-                                                        <button
-                                                            type="submit"
-                                                            class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400"
-                                                        >
+                                                        <button type="submit" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400">
                                                             Cancel
                                                         </button>
                                                     </form>
@@ -166,48 +156,25 @@
 
                                             </div>
                                         @elseif ($canApproveRejectBreakRequests && $canAccess)
-
                                             {{-- Approver --}}
                                             <div class="flex min-w-[180px] flex-wrap items-center gap-2">
 
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('break-requests.action', [$breakRequest, 'approve']) }}"
-                                                    data-break-request-action-form
-                                                    data-confirm-title="Approve break work request?"
-                                                    data-confirm-text="This will approve the submitted break work request."
-                                                    data-confirm-text-button="Yes, approve"
-                                                >
-                                                    @csrf
+                                                <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-break-request-approve-open data-action="{{ route('break-requests.action', [$breakRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-requested-at="{{ \App\Providers\AppServiceProvider::formatAppDateTime($breakRequest->created_at) }}" data-work-date="{{ \App\Providers\AppServiceProvider::formatAppDate($breakRequest->work_date) }}"
+                                                    data-start-time="{{ \App\Providers\AppServiceProvider::formatAppTime($breakRequest->started_at) }}" data-end-time="{{ \App\Providers\AppServiceProvider::formatAppTime($breakRequest->ended_at) }}" data-duration="{{ formatSecondsToHMS($breakRequest->duration_seconds) }}" data-description="{{ $breakRequest->description ?? '--' }}">
+                                                    Approve
+                                                </button>
 
-                                                    <button
-                                                        type="submit"
-                                                        class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400"
-                                                    >
-                                                        Approve
-                                                    </button>
-                                                </form>
-
-                                                <button
-                                                    type="button"
-                                                    class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400"
-                                                    data-break-request-reject-open
-                                                    data-action="{{ route('break-requests.action', [$breakRequest, 'reject']) }}"
-                                                    data-request-user-name="{{ $requestUser?->name ?? 'Unknown User' }}"
-                                                >
+                                                <button type="button" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400" data-break-request-reject-open data-action="{{ route('break-requests.action', [$breakRequest, 'reject']) }}" data-request-user-name="{{ $requestUser?->name ?? 'Unknown User' }}">
                                                     Reject
                                                 </button>
 
                                             </div>
-
                                         @else
                                             {{-- <span class="text-xs text-bgray-700 dark:text-bgray-300">
                                                 Waiting for approval
                                             </span> --}}
                                         @endif
-
                                     @elseif ($breakRequest->isRejected())
-
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                             <p class="font-semibold text-bgray-700 dark:text-white">
                                                 Rejected by {{ $breakRequest->rejectedBy?->name ?? '--' }}
@@ -221,9 +188,7 @@
                                                 {{ \Illuminate\Support\Str::limit($breakRequest->rejection_reason ?? '--', 45) }}
                                             </p>
                                         </div>
-
                                     @elseif ($breakRequest->isCancelled())
-
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                             <p class="font-semibold text-bgray-700 dark:text-white">
                                                 Cancelled by {{ $breakRequest->cancelledBy?->name ?? '--' }}
@@ -233,9 +198,7 @@
                                                 @appDateTime($breakRequest->cancelled_at)
                                             </p>
                                         </div>
-
                                     @else
-
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                             <p class="font-semibold text-bgray-700 dark:text-white">
                                                 Approved by {{ $breakRequest->approvedBy?->name ?? '--' }}
@@ -245,7 +208,6 @@
                                                 @appDateTime($breakRequest->approved_at)
                                             </p>
                                         </div>
-
                                     @endif
                                 </td>
                             </tr>
@@ -266,6 +228,120 @@
         <x-filters.multi-select name="user_id" label="User" :options="$users" />
     </x-filters.drawer>
 
+    {{-- Approve Modal --}}
+    <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-break-request-approve-modal aria-hidden="true">
+        <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-break-request-approve-close></div>
+
+        <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div class="relative z-10 w-full max-w-2xl rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
+                <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                    <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
+                        Approve Break Work Request
+                    </h3>
+
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" aria-label="Close approval modal" data-break-request-approve-close>
+                        ✕
+                    </button>
+                </div>
+
+                <form method="POST" action="#" class="space-y-4 px-5 py-5" data-break-request-approve-form>
+                    @csrf
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
+                                Requested By
+                            </span>
+
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-break-request-approve-user-name>
+                                --
+                            </span>
+                        </div>
+
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
+                                Requested At
+                            </span>
+
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-break-request-approve-requested-at>
+                                --
+                            </span>
+                        </div>
+
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
+                                Work Date
+                            </span>
+
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-break-request-approve-work-date>
+                                --
+                            </span>
+                        </div>
+
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
+                                Duration
+                            </span>
+
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-break-request-approve-duration>
+                                --
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                        <h4 class="mb-3 text-sm font-semibold text-bgray-900 dark:text-white">
+                            Requested Time Range
+                        </h4>
+
+                        <div class="grid gap-4 rounded-lg bg-bgray-50 p-4 text-sm dark:bg-darkblack-500 sm:grid-cols-2">
+                            <div>
+                                <span class="block font-medium text-bgray-600 dark:text-bgray-300">
+                                    Start Time
+                                </span>
+
+                                <span class="font-semibold text-bgray-900 dark:text-white" data-break-request-approve-start-time>
+                                    --
+                                </span>
+                            </div>
+
+                            <div>
+                                <span class="block font-medium text-bgray-600 dark:text-bgray-300">
+                                    End Time
+                                </span>
+
+                                <span class="font-semibold text-bgray-900 dark:text-white" data-break-request-approve-end-time>
+                                    --
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                        <span class="block text-sm font-medium text-bgray-600 dark:text-bgray-300">
+                            Description
+                        </span>
+
+                        <p class="mt-1 max-h-48 overflow-y-auto break-words whitespace-pre-wrap rounded-lg bg-bgray-50 p-3 text-sm text-bgray-900 dark:bg-darkblack-500 dark:text-white" data-break-request-approve-description>
+                            --
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end gap-3 border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-break-request-approve-close>
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-break-request-approve-submit>
+                            Approve
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Reject Modal --}}
     <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-break-request-reject-modal>
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-break-request-reject-close></div>
 
@@ -310,6 +386,18 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const approveModal = document.querySelector('[data-break-request-approve-modal]');
+            const approveForm = document.querySelector('[data-break-request-approve-form]');
+            const approveSubmitButton = document.querySelector('[data-break-request-approve-submit]');
+            const approveFields = {
+                userName: document.querySelector('[data-break-request-approve-user-name]'),
+                requestedAt: document.querySelector('[data-break-request-approve-requested-at]'),
+                workDate: document.querySelector('[data-break-request-approve-work-date]'),
+                startTime: document.querySelector('[data-break-request-approve-start-time]'),
+                endTime: document.querySelector('[data-break-request-approve-end-time]'),
+                duration: document.querySelector('[data-break-request-approve-duration]'),
+                description: document.querySelector('[data-break-request-approve-description]'),
+            };
             const rejectModal = document.querySelector('[data-break-request-reject-modal]');
             const rejectForm = document.querySelector('[data-break-request-reject-form]');
             const rejectReason = document.getElementById('break-request-rejection-reason');
@@ -353,6 +441,43 @@
                 });
             };
 
+            const setApproveField = (field, value, fallback = '--') => {
+                if (approveFields[field]) {
+                    approveFields[field].textContent = value || fallback;
+                }
+            };
+
+            const openApproveModal = (button) => {
+                if (!approveModal || !approveForm) {
+                    return;
+                }
+
+                approveForm.action = button.dataset.action || '#';
+                approveForm.reset();
+
+                setApproveField('userName', button.dataset.userName, 'Unknown User');
+                setApproveField('requestedAt', button.dataset.requestedAt);
+                setApproveField('workDate', button.dataset.workDate);
+                setApproveField('startTime', button.dataset.startTime);
+                setApproveField('endTime', button.dataset.endTime);
+                setApproveField('duration', button.dataset.duration);
+                setApproveField('description', button.dataset.description);
+
+                approveModal.classList.remove('hidden');
+                approveModal.setAttribute('aria-hidden', 'false');
+            };
+
+            const closeApproveModal = () => {
+                approveModal?.classList.add('hidden');
+                approveModal?.setAttribute('aria-hidden', 'true');
+                approveForm?.reset();
+
+                if (approveSubmitButton) {
+                    approveSubmitButton.disabled = false;
+                    approveSubmitButton.textContent = 'Approve';
+                }
+            };
+
             const openRejectModal = (button) => {
                 if (!rejectModal || !rejectForm) {
                     return;
@@ -375,6 +500,21 @@
             const closeRejectModal = () => {
                 rejectModal?.classList.add('hidden');
             };
+
+            document.querySelectorAll('[data-break-request-approve-open]').forEach((button) => {
+                button.addEventListener('click', () => openApproveModal(button));
+            });
+
+            document.querySelectorAll('[data-break-request-approve-close]').forEach((button) => {
+                button.addEventListener('click', closeApproveModal);
+            });
+
+            approveForm?.addEventListener('submit', () => {
+                if (approveSubmitButton) {
+                    approveSubmitButton.disabled = true;
+                    approveSubmitButton.textContent = 'Approving...';
+                }
+            });
 
             document.querySelectorAll('[data-break-request-reject-open]').forEach((button) => {
                 button.addEventListener('click', () => openRejectModal(button));
@@ -436,9 +576,7 @@
 
             syncBulkActions();
 
-            document.querySelectorAll(
-                '[data-break-request-action-form], [data-break-request-cancel-form]'
-            ).forEach((form) => {
+            document.querySelectorAll('[data-break-request-cancel-form]').forEach((form) => {
                 form.addEventListener('submit', async (event) => {
                     event.preventDefault();
 
@@ -453,6 +591,20 @@
                         form.submit();
                     }
                 });
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape') {
+                    return;
+                }
+
+                if (!approveModal?.classList.contains('hidden')) {
+                    closeApproveModal();
+                }
+
+                if (!rejectModal?.classList.contains('hidden')) {
+                    closeRejectModal();
+                }
             });
         });
     </script>
