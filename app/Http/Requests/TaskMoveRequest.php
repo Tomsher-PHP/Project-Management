@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Models\ProjectTimeline;
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,13 +20,30 @@ class TaskMoveRequest extends FormRequest
     public function rules(): array
     {
         $isCrossProject = $this->boolean('move_to_another_project');
+        $currentProject = $this->resolveProject();
+        $effectiveProjectId = $isCrossProject
+            ? (int) $this->input('target_project_id')
+            : $currentProject?->id;
+        $timelineRules = [
+            'required',
+            'integer',
+            Rule::exists('project_timelines', 'id')->where(
+                fn ($query) => $query
+                    ->where('project_id', $effectiveProjectId)
+                    ->whereNull('deleted_at')
+                    ->whereIn('status', [
+                        ProjectTimeline::STATUS_ACTIVE,
+                        ProjectTimeline::STATUS_COMPLETED,
+                    ])
+            ),
+        ];
 
         if (! $isCrossProject) {
-            $project = $this->resolveProject();
-            $projectId = $project?->id;
+            $projectId = $currentProject?->id;
 
             return [
                 'move_to_another_project' => ['nullable', 'boolean'],
+                'project_timeline_id' => $timelineRules,
                 'project_milestone_id' => [
                     'nullable',
                     'integer',
@@ -34,7 +52,7 @@ class TaskMoveRequest extends FormRequest
                     ),
                 ],
                 'project_sprint_id' => [
-                    'required',
+                    'nullable',
                     'integer',
                     Rule::exists('project_sprints', 'id')->where(
                         fn ($query) => $query->where('project_id', $projectId)
@@ -45,6 +63,7 @@ class TaskMoveRequest extends FormRequest
 
         return [
             'move_to_another_project' => ['nullable', 'boolean'],
+            'project_timeline_id' => $timelineRules,
             'target_project_id' => [
                 'required',
                 'integer',
@@ -70,6 +89,9 @@ class TaskMoveRequest extends FormRequest
             'project_sprint_id.required' => 'Please choose a sprint to move this task to.',
             'project_sprint_id.integer' => 'The selected sprint is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
+            'project_timeline_id.required' => 'Please select a project timeline.',
+            'project_timeline_id.integer' => 'The selected project timeline is invalid.',
+            'project_timeline_id.exists' => 'The selected project timeline is invalid for the destination project.',
         ];
     }
 
@@ -84,12 +106,36 @@ class TaskMoveRequest extends FormRequest
                     $targetSprintId = $this->filled('project_sprint_id')
                         ? (int) $this->input('project_sprint_id')
                         : null;
+                    $targetTimelineId = $this->filled('project_timeline_id')
+                        ? (int) $this->input('project_timeline_id')
+                        : null;
 
-                    if (! $task || ! $targetSprintId) {
+                    if (! $task) {
                         return;
                     }
 
-                    if ($task->parent_task_id !== null) {
+                    $timelineChanged = $targetTimelineId
+                        && (int) ($task->project_timeline_id ?? 0) !== $targetTimelineId;
+
+                    if (! $targetSprintId && ! $timelineChanged && ! $validator->errors()->has('project_timeline_id')) {
+                        $validator->errors()->add(
+                            'project_timeline_id',
+                            'Please select another timeline or choose a different sprint.'
+                        );
+
+                        return;
+                    }
+
+                    if ($targetSprintId && $this->resolveProject()?->is_linear) {
+                        $validator->errors()->add(
+                            'project_sprint_id',
+                            'Sprint movement is not available for Linear projects.'
+                        );
+
+                        return;
+                    }
+
+                    if ($targetSprintId && $task->parent_task_id !== null) {
                         $validator->errors()->add(
                             'project_sprint_id',
                             'Subtasks cannot be moved to another sprint.'
@@ -98,7 +144,7 @@ class TaskMoveRequest extends FormRequest
                         return;
                     }
 
-                    if ((int) ($task->project_sprint_id ?? 0) === $targetSprintId) {
+                    if ($targetSprintId && (int) ($task->project_sprint_id ?? 0) === $targetSprintId) {
                         $validator->errors()->add(
                             'project_sprint_id',
                             'Please choose a different sprint.'

@@ -123,15 +123,27 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function edit(Project $project)
+    public function edit(Project $project, TaskFormService $taskFormService)
     {
         $project->load(['technologies', 'parentProject', 'projectTimelines', 'serviceTypes']);
+
+        $taskCreateData = [];
+
+        if (auth()->user()?->can('task.create')) {
+            $taskCreateDependencies = $taskFormService->getInitialDependencies();
+            $taskCreateDependencies['projects'] = $taskFormService->buildDependencies($project)['projects'];
+
+            $taskCreateData = [
+                ...$taskFormService->getCreateData(auth()->user()),
+                'taskCreateDependencies' => $taskCreateDependencies,
+            ];
+        }
 
         return view('projects.detail-page', array_merge([
             'project' => $project,
             'projectActivitiesCount' => $this->getProjectActivitiesQuery($project)->count(),
             'projectCommentsCount' => $project->comments()->count(),
-        ], $this->getProjectHeaderData($project)));
+        ], $this->getProjectHeaderData($project), $taskCreateData));
     }
 
     public function activityModal(Project $project): JsonResponse
@@ -214,6 +226,10 @@ class ProjectController extends Controller
             'payments'
         ];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
+
+        if ($tab === 'tasks' && $request->ajax() && $request->boolean('tasks_only')) {
+            return response()->json($service->getTasksTabResponse($project, $request));
+        }
 
         return response()->json([
             'status' => true,
@@ -516,7 +532,11 @@ class ProjectController extends Controller
         return match ($tab) {
             'overview' => $this->renderOverviewTab($project),
             'milestones' => $this->renderMilestonesTab($project),
-            'tasks' => app(ProjectTaskController::class)->renderTasksTab($project),
+            'tasks' => $service->renderTasksTab(
+                $project,
+                $request->filled('preferred_group') ? (string) $request->input('preferred_group') : null,
+                $request->filled('search') ? (string) $request->input('search') : null
+            ),
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
             'notes' => $this->renderNotesTab($project, $request),

@@ -49,6 +49,8 @@
             </div>
         </div>
 
+        @include('projects.import.partials.project-hosting-instructions')
+
         <form id="import-form" action="{{ route('projects.import.process', $module['key']) }}" method="POST" enctype="multipart/form-data" class="mt-6">
             @csrf
 
@@ -262,7 +264,7 @@
                                         $rowStatus = strtolower($outcome['status'] ?? 'unknown');
                                     @endphp
                                     <tr class="result-row hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/50" data-row-status="{{ $rowStatus }}">
-                                        <td class="py-2.5 px-4 font-mono font-bold text-bgray-800 dark:text-bgray-200">
+                                        <td class="py-2.5 px-4 font-mono font-bold text-bgray-800 dark:text-bgray-300">
                                             Row {{ $outcome['excel_row'] ?? '-' }}
                                         </td>
                                         <td class="py-2.5 px-4 font-mono text-bgray-900 dark:text-white">

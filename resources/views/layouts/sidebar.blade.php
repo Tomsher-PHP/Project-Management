@@ -377,9 +377,7 @@
                                             <a href="{{ route('tasks.requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Task</span>
                                                 @if (($requestMenuBadges['task_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['task_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['task_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -390,9 +388,7 @@
                                             <a href="{{ route('tasks.time-log-change-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskTimeChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Task Log</span>
                                                 @if (($requestMenuBadges['task_time'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['task_time'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['task_time']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -403,9 +399,7 @@
                                             <a href="{{ route('handoff_requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isHandoffsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Handoff</span>
                                                 @if (($requestMenuBadges['task_handoff'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['task_handoff'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['task_handoff']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -416,9 +410,7 @@
                                             <a href="{{ route('break-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isBreakRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Break</span>
                                                 @if (($requestMenuBadges['break_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['break_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['break_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -429,9 +421,7 @@
                                             <a href="{{ route('tasks.extend-time-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskTimeExtendRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Time Extend</span>
                                                 @if (($requestMenuBadges['task_time_extend_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['task_time_extend_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['task_time_extend_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -443,9 +433,7 @@
                                                 <span>Leave Requests</span>
 
                                                 @if (($requestMenuBadges['leave_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['leave_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['leave_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -456,9 +444,7 @@
                                             <a href="{{ route('leave-change-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Change</span>
                                                 @if (($requestMenuBadges['leave_change_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['leave_change_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['leave_change_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -470,9 +456,7 @@
                                             <a href="{{ route('leave-cancellation-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Cancel</span>
                                                 @if (($requestMenuBadges['leave_cancellation_request'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['leave_cancellation_request'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['leave_cancellation_request']" />
                                                 @endif
                                             </a>
                                         </li>

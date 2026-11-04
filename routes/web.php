@@ -511,7 +511,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
         Route::get('tasks/{task}/notes-tab', [ProjectTaskController::class, 'taskNotesTab'])->name('projects.tasks.notes-tab');
-        Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware(['permission.type:task.create'])->name('projects.tasks.store');
         Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['can:view,task'])->name('projects.tasks.update');
         Route::put('tasks/{task}/requests/approve-with-update', [TaskRequestController::class, 'updateAndApprove'])->name('projects.tasks.requests.update-approve');
         Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
@@ -535,13 +534,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Project Import routes
-    Route::get('projects/import', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('projects.import.index');
-    Route::get('projects/import/{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('projects.import.template');
-    Route::post('projects/import/{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('projects.import.validate');
-    Route::post('projects/import/{module}/process', [ProjectImportController::class, 'startImport'])->name('projects.import.process');
-    Route::get('projects/import/{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('projects.import.status');
-    Route::get('projects/import/{module}/download-failed/{import}', [ProjectImportController::class, 'downloadFailedRows'])->name('projects.import.download.failed');
-    Route::get('projects/import/{module}/download-results/{import}', [ProjectImportController::class, 'downloadAllResults'])->name('projects.import.download.results');
+    Route::prefix('projects/import')->as('projects.import.')->group(function () {
+        Route::get('/', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('index');
+        Route::get('{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('template');
+        Route::post('{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('validate');
+        Route::post('{module}/process', [ProjectImportController::class, 'startImport'])->name('process');
+        Route::get('{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('status');
+        Route::get('{module}/download-failed/{import}', [ProjectImportController::class, 'downloadFailedRows'])->name('download.failed');
+        Route::get('{module}/download-results/{import}', [ProjectImportController::class, 'downloadAllResults'])->name('download.results');
+    });
 
     // Project common routes
     Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
@@ -579,30 +580,10 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('edit');
 
-
-        // View developer notes
-        Route::get('developer-notes-modal', [
-            TaskController::class,
-            'developerNotesModal',
-        ])
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.modal');
-
-        // Add a developer note
-        Route::post('developer-notes', [
-            TaskController::class,
-            'storeDeveloperNote',
-        ])
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.store');
-
-        Route::delete(
-            'developer-notes',
-            [TaskController::class, 'deleteDeveloperNote']
-        )
-            ->middleware(['permission.type:task.view', 'can:view,task'])
-            ->name('developer-notes.delete');
-
+        // Developer notes routes
+        Route::get('developer-notes-modal', [TaskController::class, 'developerNotesModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.modal');
+        Route::post('developer-notes', [TaskController::class, 'storeDeveloperNote'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.store');
+        Route::delete('developer-notes', [TaskController::class, 'deleteDeveloperNote'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.delete');
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
@@ -630,16 +611,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
     Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.bulk-action');
     Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.action');
-    Route::post('tasks/{task}/requests/cancel', [TaskRequestController::class, 'cancel'])
-        ->name('tasks.requests.cancel');
+    Route::delete('tasks/{task}/requests', [TaskRequestController::class, 'destroy'])->name('tasks.requests.destroy');
 
     // Task time log change request routes
-    Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
-    Route::patch('tasks/time-logs/change-requests/{changeRequest}', [TaskTimeLogChangeRequestController::class, 'update'])->name('tasks.time-log-change-requests.update');
-    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->name('tasks.time-log-change-requests.index');
-    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.bulk-action');
-    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.action');
-    Route::post('tasks/time-logs/change-requests/{changeRequest}/cancel', [TaskTimeLogChangeRequestController::class, 'cancel'])->middleware(['permission.type:task_time_log_change_request.cancel'])->name('tasks.time-log-change-requests.cancel');
+    Route::prefix('tasks/time-logs/change-requests')->as('tasks.time-log-change-requests.')->group(function () {
+        Route::post('/', [TaskTimeLogChangeRequestController::class, 'store'])->name('store');
+        Route::patch('{changeRequest}', [TaskTimeLogChangeRequestController::class, 'update'])->name('update');
+        Route::get('/', [TaskTimeLogChangeRequestController::class, 'index'])->name('index');
+        Route::post('bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('bulk-action');
+        Route::post('{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('action');
+        Route::post('{changeRequest}/cancel', [TaskTimeLogChangeRequestController::class, 'cancel'])->middleware(['permission.type:task_time_log_change_request.cancel'])->name('cancel');
+    });
 
     // Handoff Request routes
     Route::prefix('handoff-requests')->as('handoff_requests.')->group(function () {
@@ -672,10 +654,12 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Activity Log Route
-    Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
-    Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
-    Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
-    Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
+    Route::prefix('activity-log')->as('activity.')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('log');
+        Route::get('{activity}/details', [ActivityLogController::class, 'details'])->name('log.details');
+        Route::delete('bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('log.bulkDelete');
+        Route::delete('{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('log.destroy');
+    });
 
     // User hierarchy tree view route
     Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
@@ -683,7 +667,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('reports')->as('reports.')->group(function () {
 
         // To get choosed projects by flow in report filters
-        Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])->name('projects.by-flow');
+        Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])->middleware('permission.type:reports.project_view')->name('projects.by-flow');
 
         // PROJECT:: PROJECT REPORT
         Route::get('/projects-report', [ReportController::class, 'project'])->middleware('permission.type:reports.project_view')->name('projects');
@@ -811,58 +795,26 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{quickNote}/archive', [QuickNoteController::class, 'toggleArchive'])->name('archive');
     });
 
-    Route::prefix('leave-change-requests')
-        ->name('leave-change-requests.')
-        ->group(function () {
+    // Leave routes
+    Route::prefix('leave-change-requests')->name('leave-change-requests.')->group(function () {
+        Route::get('/', [LeaveChangeRequestController::class, 'index'])->name('index');
+        Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])->name('create');
+        Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])->name('store');
+        Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])->name('show');
+        Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])->name('approve');
+        Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])->name('reject');
+        Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])->name('cancel');
+    });
 
-            Route::get('/', [LeaveChangeRequestController::class, 'index'])
-                ->name('index');
-
-            Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])
-                ->name('create');
-
-            Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])
-                ->name('store');
-
-            Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])
-                ->name('show');
-
-            Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])
-                ->name('approve');
-
-            Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])
-                ->name('reject');
-
-            Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])
-                ->name('cancel');
-        });
-
-
-
-
-    Route::prefix('leave-cancellation-requests')
-        ->name('leave-cancellation-requests.')
-        ->controller(LeaveCancellationRequestController::class)
-        ->group(function () {
-            Route::post('/{leaveRequest}', 'store')
-                ->name('store');
-
-            Route::get('/', 'index')
-                ->name('index');
-
-            Route::get('/{cancellationRequest}/details', 'show')
-                ->name('show');
-
-            Route::post('/{cancellationRequest}/approve', 'approve')
-                ->name('approve');
-
-            Route::post('/{cancellationRequest}/reject', 'reject')
-                ->name('reject');
-
-            Route::post('/{cancellationRequest}/cancel', 'cancel')
-                ->name('cancel');
-        });
-
+    // leave cancelation
+    Route::prefix('leave-cancellation-requests')->name('leave-cancellation-requests.')->controller(LeaveCancellationRequestController::class)->group(function () {
+        Route::post('/{leaveRequest}', 'store')->name('store');
+        Route::get('/', 'index')->name('index');
+        Route::get('/{cancellationRequest}/details', 'show')->name('show');
+        Route::post('/{cancellationRequest}/approve', 'approve')->name('approve');
+        Route::post('/{cancellationRequest}/reject', 'reject')->name('reject');
+        Route::post('/{cancellationRequest}/cancel', 'cancel')->name('cancel');
+    });
 
     // Meeting Management routes
     Route::get('/meetings/calendar-data', [MeetingController::class, 'calendarData'])->middleware('permission.type:meeting.view')->name('meetings.calendar-data');

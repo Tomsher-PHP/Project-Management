@@ -31,9 +31,11 @@
             </svg>
 
             <!--Notification Badge -->
-            <span id="notification-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none {{ $unreadCount > 0 ? '' : 'hidden' }}">
-                {{ $unreadCount }}
-            </span>
+            <x-count-badge
+                id="notification-count"
+                :count="$unreadCount"
+                class="absolute -top-1 -right-1 {{ $unreadCount > 0 ? '' : 'hidden' }}"
+            />
         </button>
         <a href="{{ route('help-center.index') }}" title="Help Center" aria-label="Open Help Center" class="relative flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-bgray-100 focus:outline-none focus:ring-2 focus:ring-success-300 focus:ring-offset-2 dark:hover:bg-darkblack-500 dark:focus:ring-offset-darkblack-600 {{ request()->routeIs('help-center.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-500' : '' }}">
             <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">

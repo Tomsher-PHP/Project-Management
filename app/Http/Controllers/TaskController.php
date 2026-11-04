@@ -67,14 +67,16 @@ class TaskController extends Controller
 
         // Preload relations for all tasks in the list to avoid N+1 queries when rendering the list and task cards
         $taskRowRelations = [
-            'project:id,name,project_code,project_flow',
-            'projectMilestone:id,name',
-            'projectSprint:id,name',
+            'project:id,name,project_code,project_flow,is_system,added_by,deleted_at',
+            'projectTimeline:id,name',
+            'projectMilestone:id,name,is_backlog,is_system',
+            'projectSprint:id,project_milestone_id,name,is_backlog,is_system',
             'currentAssignee:id,name',
             'status:id,name,color,type,is_completed',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];
+        $tasks->getCollection()->load($taskRowRelations);
         $tasks->getCollection()->each(function (Task $task) use ($taskRowRelations) {
             $this->loadTaskDescendantsForList($task, $taskRowRelations);
         });
@@ -244,6 +246,11 @@ class TaskController extends Controller
             'created_count' => $createdCount,
             'request_type' => $firstTask?->request_type,
             'request_status' => $firstTask?->request_status,
+            'project_task_group_key' => $firstTask
+                ? ($project->is_linear
+                    ? 'all-tasks'
+                    : ($firstTask->project_sprint_id ? 'sprint-' . $firstTask->project_sprint_id : 'ungrouped'))
+                : null,
         ], Response::HTTP_OK);
     }
 
@@ -704,8 +711,9 @@ class TaskController extends Controller
     private function loadTaskForDetail(Task $task): Task
     {
         $task->load([
-            'project:id,name,project_code,project_flow,customer_id',
+            'project:id,name,project_code,project_flow,customer_id,is_system,added_by,deleted_at',
             'project.customer:id,name,customer_profile_grade_id',
+            'projectTimeline:id,name',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'projectSprint.projectMilestone:id,name',
