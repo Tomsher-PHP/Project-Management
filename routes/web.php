@@ -612,12 +612,14 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('tasks/{task}/requests', [TaskRequestController::class, 'destroy'])->name('tasks.requests.destroy');
 
     // Task time log change request routes
-    Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
-    Route::patch('tasks/time-logs/change-requests/{changeRequest}', [TaskTimeLogChangeRequestController::class, 'update'])->name('tasks.time-log-change-requests.update');
-    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->name('tasks.time-log-change-requests.index');
-    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.bulk-action');
-    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.action');
-    Route::post('tasks/time-logs/change-requests/{changeRequest}/cancel', [TaskTimeLogChangeRequestController::class, 'cancel'])->middleware(['permission.type:task_time_log_change_request.cancel'])->name('tasks.time-log-change-requests.cancel');
+    Route::prefix('tasks/time-logs/change-requests')->as('tasks.time-log-change-requests.')->group(function () {
+        Route::post('/', [TaskTimeLogChangeRequestController::class, 'store'])->name('store');
+        Route::patch('{changeRequest}', [TaskTimeLogChangeRequestController::class, 'update'])->name('update');
+        Route::get('/', [TaskTimeLogChangeRequestController::class, 'index'])->name('index');
+        Route::post('bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('bulk-action');
+        Route::post('{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('action');
+        Route::post('{changeRequest}/cancel', [TaskTimeLogChangeRequestController::class, 'cancel'])->middleware(['permission.type:task_time_log_change_request.cancel'])->name('cancel');
+    });
 
     // Handoff Request routes
     Route::prefix('handoff-requests')->as('handoff_requests.')->group(function () {
@@ -650,10 +652,12 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Activity Log Route
-    Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
-    Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
-    Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
-    Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
+    Route::prefix('activity-log')->as('activity.')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('log');
+        Route::get('{activity}/details', [ActivityLogController::class, 'details'])->name('log.details');
+        Route::delete('bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('log.bulkDelete');
+        Route::delete('{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('log.destroy');
+    });
 
     // User hierarchy tree view route
     Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
