@@ -19,6 +19,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FeatureSettingsAuthController;
+use App\Http\Controllers\FeatureUpdateController;
+use App\Http\Controllers\FeatureUpdateUserStatusController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\HolidayController;
@@ -28,6 +31,7 @@ use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\LeaveCancellationRequestController;
 use App\Http\Controllers\LeaveChangeRequestController;
+use App\Http\Controllers\LeaveNotificationSettingController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\MeetingController;
@@ -36,9 +40,9 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectHostingController;
 use App\Http\Controllers\ProjectImportController;
-use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectNotificationSettingController;
@@ -74,9 +78,10 @@ use App\Http\Controllers\UserLeaveBalanceImportController;
 use App\Http\Controllers\UserLoginActivityController;
 use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
+use App\Http\Middleware\FeatureSettingsAuth;
+use App\Http\Middleware\SharePendingFeatureUpdates;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LeaveNotificationSettingController;
 
 
 Route::get('/', function () {
@@ -103,7 +108,10 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware([
+    'auth',
+    SharePendingFeatureUpdates::class,
+])->group(function () {
 
     // Dashboard Routes
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->middleware('permission.type:dashboard.view')->name('dashboard');
@@ -894,6 +902,78 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.create')->only(['store']);
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.edit')->only(['edit', 'update']);
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.delete')->only(['destroy']);
+
+    // Feature Settings authentication
+    /*
+    |--------------------------------------------------------------------------
+    | Feature Settings
+    |--------------------------------------------------------------------------
+    */
+
+    Route::prefix('feature-settings')
+        ->name('feature-settings.')
+        ->group(function () {
+
+            // Password screen
+            Route::get('/login', [
+                FeatureSettingsAuthController::class,
+                'showLogin'
+            ])->name('login');
+
+            // Verify management password
+            Route::post('/authenticate', [
+                FeatureSettingsAuthController::class,
+                'authenticate'
+            ])
+                ->middleware('throttle:5,1')
+                ->name('authenticate');
+
+            // Protected management area
+            Route::middleware(FeatureSettingsAuth::class)->group(function () {
+
+                Route::get('/', [
+                    FeatureUpdateController::class,
+                    'index'
+                ])->name('index');
+
+                Route::get('/create', [
+                    FeatureUpdateController::class,
+                    'create'
+                ])->name('create');
+
+                Route::post('/', [
+                    FeatureUpdateController::class,
+                    'store'
+                ])->name('store');
+
+                Route::get('/{featureUpdate}/edit', [
+                    FeatureUpdateController::class,
+                    'edit'
+                ])->name('edit');
+
+                Route::put('/{featureUpdate}', [
+                    FeatureUpdateController::class,
+                    'update'
+                ])->name('update');
+
+                Route::delete('/{featureUpdate}', [
+                    FeatureUpdateController::class,
+                    'destroy'
+                ])->name('destroy');
+
+                Route::post('/logout', [
+                    FeatureSettingsAuthController::class,
+                    'logout'
+                ])->name('logout');
+            });
+        });
+
+
+
+        Route::post(
+            '/feature-updates/{featureUpdate}/acknowledge',
+            [FeatureUpdateUserStatusController::class, 'acknowledge']
+        )->name('feature-updates.acknowledge');
 });
 
 Route::get('api-test', function () {

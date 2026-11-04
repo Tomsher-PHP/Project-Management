@@ -105,3 +105,10 @@ composer dump-autoload
 npm install @fullcalendar/core @fullcalendar/daygrid @fullcalendar/interaction
 
 composer show maatwebsite/excel
+
+PMS Feature Management
+URL: /feature-settings
+
+Access:
+Requires an authenticated PMS account
+and the Feature Settings management password.

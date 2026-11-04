@@ -231,6 +231,7 @@
     </script>
 
     @stack('scripts')
+    @include('feature-updates.partials.login-tour-modal')
 </body>
 
 </html>
