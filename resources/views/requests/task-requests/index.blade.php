@@ -195,9 +195,9 @@
                                     <!-- Due Date -->
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($dueDate)
-                                            <span class="inline-flex min-w-0 items-center gap-1 text-right leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $task) }}" title="{{ $dueDateDisplay }}">
+                                            <span class="inline-flex min-w-0 items-center text-right leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $task) }}" title="{{ $dueDateDisplay }}">
                                                 {!! taskDueDateIcon($dueDate, $task->estimated_time_seconds, $task) !!}
-                                                <span class="text-sm font-semibold">{{ $dueDateDisplay }}</span>
+                                                <span class="text-xs font-semibold">{{ $dueDateDisplay }}</span>
                                             </span>
                                         @endif
                                     </td>
