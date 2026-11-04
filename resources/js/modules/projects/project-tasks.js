@@ -1062,6 +1062,120 @@ const loadGroupTasks = async (group) => {
     }
 };
 
+const initializeTaskSearch = (root) => {
+    const searchWrapper = root.querySelector('[data-project-tasks-search-wrapper]');
+    const searchInput = root.querySelector('[data-project-task-search-input]');
+    const searchBtn = searchWrapper?.querySelector('[data-list-search-button]');
+    const searchUrl = root.dataset.tasksTabUrl;
+
+    if (!searchInput || !searchUrl) {
+        return;
+    }
+
+    let debounceTimer = null;
+    let currentController = null;
+    let lastSearchedValue = searchInput.value.trim();
+
+    const executeSearch = async () => {
+        const query = searchInput.value.trim();
+        lastSearchedValue = query;
+
+        if (currentController) {
+            currentController.abort();
+        }
+        currentController = new AbortController();
+
+        const requestUrl = new URL(searchUrl, window.location.origin);
+        if (query) {
+            requestUrl.searchParams.set('search', query);
+        } else {
+            requestUrl.searchParams.delete('search');
+        }
+        requestUrl.searchParams.set('tasks_only', '1');
+
+        const currentBrowserUrl = new URL(window.location.href);
+        if (query) {
+            currentBrowserUrl.searchParams.set('search', query);
+        } else {
+            currentBrowserUrl.searchParams.delete('search');
+        }
+        window.history.replaceState({}, '', currentBrowserUrl.toString());
+
+        const content = root.querySelector('[data-project-tasks-content]');
+        const totalCountBadge = root.querySelector('[data-project-tasks-total-count]');
+        const sprintCountBadge = root.querySelector('[data-project-tasks-sprint-count]');
+
+        if (content) {
+            content.style.opacity = '0.5';
+            content.style.pointerEvents = 'none';
+        }
+
+        try {
+            const response = await fetch(requestUrl.toString(), {
+                signal: currentController.signal,
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.status) {
+                throw new Error(result.message || 'Unable to filter tasks.');
+            }
+
+            if (content && (result.tasks_html || result.html)) {
+                content.innerHTML = result.tasks_html || result.html;
+                if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                    window.Alpine.initTree(content);
+                }
+                initTomSelect(content);
+                initializeTaskGroupPagination(root);
+            }
+
+            if (totalCountBadge && result.total_count !== undefined) {
+                totalCountBadge.textContent = result.total_count;
+            }
+
+            if (sprintCountBadge && result.sprint_count !== undefined) {
+                sprintCountBadge.textContent = result.sprint_count;
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                Alert.errorModal(error.message || 'Unable to filter tasks.');
+            }
+        } finally {
+            if (content) {
+                content.style.opacity = '';
+                content.style.pointerEvents = '';
+            }
+        }
+    };
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            if (searchInput.value.trim() !== lastSearchedValue) {
+                executeSearch();
+            }
+        }, 350);
+    });
+
+    searchInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            clearTimeout(debounceTimer);
+            executeSearch();
+        }
+    });
+
+    searchBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        clearTimeout(debounceTimer);
+        executeSearch();
+    });
+};
+
 const initializeTasksRoot = (root) => {
     if (!root || root.dataset.projectTasksInitialized === 'true') {
         return;
@@ -1069,6 +1183,7 @@ const initializeTasksRoot = (root) => {
 
     root.dataset.projectTasksInitialized = 'true';
     initTomSelect(root);
+    initializeTaskSearch(root);
     initializeProjectTaskMove(root, {
         onBeforeOpen: closeAllTaskRowMenus,
         onMoved: (result) => handleTaskRootSuccess(root, result, {

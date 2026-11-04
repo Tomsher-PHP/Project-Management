@@ -34,14 +34,16 @@ class ProjectTaskController extends Controller
 
     public function taskGroup(Project $project, string $group): JsonResponse
     {
-        $groupData = $this->findTaskGroup($project, $group);
+        $search = request('search');
+        $groupData = app(ProjectServices::class)->findTaskGroup($project, $group, $search);
 
         abort_unless($groupData, Response::HTTP_NOT_FOUND);
-        $taskPage = $this->getTaskGroupTaskPage(
+        $taskPage = app(ProjectServices::class)->getTaskGroupTaskPage(
             $project,
             $group,
             max((int) request()->integer('page', 1), 1),
-            self::TASKS_PER_GROUP_PAGE
+            self::TASKS_PER_GROUP_PAGE,
+            $search
         );
 
         return response()->json([
@@ -52,12 +54,14 @@ class ProjectTaskController extends Controller
                 'group' => $groupData,
                 'tasks' => $taskPage['tasks'],
                 'pagination' => $taskPage['pagination'],
+                'search' => $search,
             ])->render(),
             'items_html' => view('projects.partials.tasks.task-rows', [
                 'project' => $project,
                 'group' => $groupData,
                 'tasks' => $taskPage['tasks'],
                 'showEmptyState' => false,
+                'search' => $search,
             ])->render(),
             'pagination' => $taskPage['pagination'],
         ], Response::HTTP_OK);
@@ -342,44 +346,9 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function renderTasksTab(Project $project, ?string $preferredGroupKey = null): string
+    public function renderTasksTab(Project $project, ?string $preferredGroupKey = null, ?string $search = null): string
     {
-        $isLinearFlow = $project->project_flow === 'linear';
-        $taskGroupViewData = $this->getInitialTaskGroupViewData($project, $preferredGroupKey);
-        $taskGroups = $taskGroupViewData['taskGroups'];
-        $projectMilestones = $isLinearFlow ? collect() : ProjectMilestone::query()
-            ->where('project_id', $project->id)
-            ->orderForDisplay()
-            ->get(['id', 'name', 'is_backlog', 'is_system']);
-        $projectSprints = $isLinearFlow ? collect() : ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->with(['projectMilestone:id,name'])
-            ->orderForDisplay()
-            ->get(['id', 'project_milestone_id', 'name', 'is_backlog', 'is_system']);
-        $projectTimelines = ProjectTimeline::query()
-            ->where('project_id', $project->id)
-            ->eligibleForTaskMove()
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get(['id', 'name', 'status']);
-        $initialGroupKey = $taskGroupViewData['initialGroupKey'];
-        $initialTaskPage = $initialGroupKey
-            ? $this->getTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
-            : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
-        return view('projects.partials.tabs.tasks', [
-            'project' => $project,
-            'taskGroups' => $taskGroups,
-            'initialGroupKey' => $initialGroupKey,
-            'initialTasks' => $initialTaskPage['tasks'],
-            'initialTasksPagination' => $initialTaskPage['pagination'],
-            'totalTaskCount' => $taskGroupViewData['totalTaskCount'],
-            'sprintCount' => $taskGroupViewData['sprintCount'],
-            'isLinearFlow' => $isLinearFlow,
-            'projectMilestones' => $projectMilestones,
-            'projectSprints' => $projectSprints,
-            'projectTimelines' => $projectTimelines,
-            'taskGroupsPagination' => $taskGroupViewData['pagination'],
-        ])->render();
+        return app(ProjectServices::class)->renderTasksTab($project, $preferredGroupKey, $search);
     }
 
     private function getInitialTaskGroupViewData(Project $project, ?string $preferredGroupKey = null): array

@@ -22,7 +22,9 @@ use App\Models\TaskStatus;
 use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Providers\AppServiceProvider;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -1177,5 +1179,685 @@ class ProjectServices
                 'is_enabled' => $isEnabled,
             ]);
         }
+    }
+
+    public const TASK_GROUPS_PER_PAGE = 5;
+    public const TASKS_PER_GROUP_PAGE = 5;
+
+    public function getMatchingRootTaskIds(Project $project, string $search): array
+    {
+        $search = trim($search);
+        if ($search === '') {
+            return [];
+        }
+
+        $matchingTasks = Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user())
+            ->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            })
+            ->get(['id', 'parent_task_id']);
+
+        if ($matchingTasks->isEmpty()) {
+            return [];
+        }
+
+        $rootIds = $matchingTasks->whereNull('parent_task_id')->pluck('id')->all();
+        $childParentIds = $matchingTasks->whereNotNull('parent_task_id')->pluck('parent_task_id')->unique()->filter()->all();
+
+        while (!empty($childParentIds)) {
+            $parents = Task::query()
+                ->where('project_id', $project->id)
+                ->whereIn('id', $childParentIds)
+                ->get(['id', 'parent_task_id']);
+
+            $childParentIds = [];
+            foreach ($parents as $p) {
+                if ($p->parent_task_id === null) {
+                    $rootIds[] = $p->id;
+                } else {
+                    $childParentIds[] = $p->parent_task_id;
+                }
+            }
+        }
+
+        return array_values(array_unique($rootIds));
+    }
+
+    public function getTasksTabViewData(Project $project, ?string $preferredGroupKey = null, ?string $search = null): array
+    {
+        $search = filled($search) ? trim((string) $search) : null;
+        $isLinearFlow = $project->project_flow === 'linear';
+        $taskGroupViewData = $this->getInitialTaskGroupViewData($project, $preferredGroupKey, $search);
+        $taskGroups = $taskGroupViewData['taskGroups'];
+
+        $projectMilestones = $isLinearFlow ? collect() : ProjectMilestone::query()
+            ->where('project_id', $project->id)
+            ->orderForDisplay()
+            ->get(['id', 'name', 'is_backlog', 'is_system']);
+
+        $projectSprints = $isLinearFlow ? collect() : ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->with(['projectMilestone:id,name'])
+            ->orderForDisplay()
+            ->get(['id', 'project_milestone_id', 'name', 'is_backlog', 'is_system']);
+
+        $projectTimelines = ProjectTimeline::query()
+            ->where('project_id', $project->id)
+            ->eligibleForTaskMove()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'name', 'status']);
+
+        $initialGroupKey = $taskGroupViewData['initialGroupKey'];
+        $initialTasks = $taskGroupViewData['initialTasks'] ?? collect();
+        $initialTasksPagination = $taskGroupViewData['initialTasksPagination'] ?? [
+            'page' => 1,
+            'next_page' => null,
+            'has_more_pages' => false,
+        ];
+
+        $isDeletedProjectView = $project->trashed();
+        $taskGroupsPageUrl = $isDeletedProjectView
+            ? route('projects.restore.tasks.groups.index', ['id' => $project->id])
+            : route('projects.tasks.groups.index', $project);
+
+        if ($search !== null) {
+            $taskGroupsPageUrl .= (str_contains($taskGroupsPageUrl, '?') ? '&' : '?') . 'search=' . urlencode($search);
+        }
+
+        return [
+            'project' => $project,
+            'taskGroups' => $taskGroups,
+            'initialGroupKey' => $initialGroupKey,
+            'initialTasks' => $initialTasks,
+            'initialTasksPagination' => $initialTasksPagination,
+            'totalTaskCount' => $taskGroupViewData['totalTaskCount'],
+            'sprintCount' => $taskGroupViewData['sprintCount'],
+            'isLinearFlow' => $isLinearFlow,
+            'projectMilestones' => $projectMilestones,
+            'projectSprints' => $projectSprints,
+            'projectTimelines' => $projectTimelines,
+            'taskGroupsPagination' => $taskGroupViewData['pagination'],
+            'taskGroupsPageUrl' => $taskGroupsPageUrl,
+            'search' => $search,
+        ];
+    }
+
+    public function renderTasksTab(Project $project, ?string $preferredGroupKey = null, ?string $search = null): string
+    {
+        $viewData = $this->getTasksTabViewData($project, $preferredGroupKey, $search);
+
+        return view('projects.partials.tabs.tasks', $viewData)->render();
+    }
+
+    public function getTasksTabResponse(Project $project, Request $request): array
+    {
+        $preferredGroup = $request->filled('preferred_group') ? (string) $request->input('preferred_group') : null;
+        $search = $request->filled('search') ? trim((string) $request->input('search')) : null;
+
+        $viewData = $this->getTasksTabViewData($project, $preferredGroup, $search);
+
+        return [
+            'status' => true,
+            'total_count' => $viewData['totalTaskCount'],
+            'sprint_count' => $viewData['sprintCount'],
+            'tasks_html' => view('projects.partials.tasks.group-list', $viewData)->render(),
+            'html' => view('projects.partials.tabs.tasks', $viewData)->render(),
+        ];
+    }
+
+    public function getInitialTaskGroupViewData(Project $project, ?string $preferredGroupKey = null, ?string $search = null): array
+    {
+        $search = filled($search) ? trim((string) $search) : null;
+
+        if ($project->project_flow === 'linear') {
+            $rootTaskIds = $search !== null ? $this->getMatchingRootTaskIds($project, $search) : null;
+            if ($search !== null && empty($rootTaskIds)) {
+                return [
+                    'taskGroups' => collect(),
+                    'initialGroupKey' => null,
+                    'initialTasks' => collect(),
+                    'initialTasksPagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                    'totalTaskCount' => 0,
+                    'sprintCount' => 0,
+                    'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                ];
+            }
+
+            $taskGroup = $this->buildLinearTaskGroup($project, $search, $rootTaskIds);
+            $taskPage = $this->getTaskGroupTaskPage($project, 'all-tasks', 1, self::TASKS_PER_GROUP_PAGE, $search, $rootTaskIds);
+            $taskGroup['tasks'] = $taskPage['tasks'];
+            $taskGroup['pagination'] = $taskPage['pagination'];
+
+            return [
+                'taskGroups' => collect([$taskGroup]),
+                'initialGroupKey' => 'all-tasks',
+                'initialTasks' => $taskPage['tasks'],
+                'initialTasksPagination' => $taskPage['pagination'],
+                'totalTaskCount' => $taskGroup['task_count'],
+                'sprintCount' => 0,
+                'pagination' => [
+                    'page' => 1,
+                    'next_page' => null,
+                    'has_more_pages' => false,
+                ],
+            ];
+        }
+
+        if ($search !== null) {
+            $rootTaskIds = $this->getMatchingRootTaskIds($project, $search);
+            if (empty($rootTaskIds)) {
+                return [
+                    'taskGroups' => collect(),
+                    'initialGroupKey' => null,
+                    'initialTasks' => collect(),
+                    'initialTasksPagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                    'totalTaskCount' => 0,
+                    'sprintCount' => 0,
+                    'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                ];
+            }
+
+            $sprintCounts = Task::query()
+                ->where('project_id', $project->id)
+                ->accessibleBy(auth()->user())
+                ->whereIn('id', $rootTaskIds)
+                ->whereNotNull('project_sprint_id')
+                ->selectRaw('project_sprint_id, count(*) as count')
+                ->groupBy('project_sprint_id')
+                ->pluck('count', 'project_sprint_id');
+
+            $ungroupedCount = Task::query()
+                ->where('project_id', $project->id)
+                ->accessibleBy(auth()->user())
+                ->whereIn('id', $rootTaskIds)
+                ->whereNull('project_sprint_id')
+                ->count();
+
+            $sprintIds = $sprintCounts->keys()->all();
+            $projectSprints = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->whereIn('id', $sprintIds)
+                ->with(['projectMilestone:id,name'])
+                ->orderForDisplay()
+                ->get();
+
+            $taskGroups = $projectSprints->values()->map(function (ProjectSprint $projectSprint, int $index) use ($project, $sprintCounts, $search, $rootTaskIds) {
+                $group = $this->mapProjectSprintToTaskGroup($projectSprint, $index);
+                $group['task_count'] = (int) ($sprintCounts[$projectSprint->id] ?? 0);
+                $taskPage = $this->getTaskGroupTaskPage($project, $group['key'], 1, self::TASKS_PER_GROUP_PAGE, $search, $rootTaskIds);
+                $group['tasks'] = $taskPage['tasks'];
+                $group['pagination'] = $taskPage['pagination'];
+                return $group;
+            });
+
+            if ($ungroupedCount > 0) {
+                $ungroupedTasks = Task::query()
+                    ->where('project_id', $project->id)
+                    ->whereNull('project_sprint_id')
+                    ->accessibleBy(auth()->user())
+                    ->whereIn('id', $rootTaskIds);
+                $ungroupedGroup = $this->buildUngroupedTaskGroup($ungroupedTasks, $taskGroups->isEmpty());
+                $ungroupedGroup['task_count'] = $ungroupedCount;
+                $taskPage = $this->getTaskGroupTaskPage($project, 'ungrouped', 1, self::TASKS_PER_GROUP_PAGE, $search, $rootTaskIds);
+                $ungroupedGroup['tasks'] = $taskPage['tasks'];
+                $ungroupedGroup['pagination'] = $taskPage['pagination'];
+                $taskGroups->push($ungroupedGroup);
+            }
+
+            $totalTaskCount = (int) Task::query()
+                ->where('project_id', $project->id)
+                ->accessibleBy(auth()->user())
+                ->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%");
+                })
+                ->count();
+
+            $firstGroup = $taskGroups->first();
+            $initialGroupKey = $firstGroup ? $firstGroup['key'] : null;
+
+            return [
+                'taskGroups' => $taskGroups,
+                'initialGroupKey' => $initialGroupKey,
+                'initialTasks' => $firstGroup['tasks'] ?? collect(),
+                'initialTasksPagination' => $firstGroup['pagination'] ?? ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                'totalTaskCount' => $totalTaskCount,
+                'sprintCount' => $projectSprints->count(),
+                'pagination' => [
+                    'page' => 1,
+                    'next_page' => null,
+                    'has_more_pages' => false,
+                ],
+            ];
+        }
+
+        $perPage = self::TASK_GROUPS_PER_PAGE;
+        $loadedPages = $this->resolveTaskGroupLoadedPages($project, $preferredGroupKey, $perPage);
+        $sprintCount = $this->getSprintCount($project);
+        $loadedSprintLimit = max($loadedPages * $perPage, $perPage);
+        $taskGroups = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->with(['projectMilestone:id,name'])
+            ->withCount([
+                'tasks' => fn($query) => $query->accessibleBy(auth()->user()),
+            ])
+            ->orderForDisplay()
+            ->limit($loadedSprintLimit)
+            ->get()
+            ->values()
+            ->map(fn(ProjectSprint $projectSprint, int $index) => $this->mapProjectSprintToTaskGroup(
+                $projectSprint,
+                $index
+            ));
+        $ungroupedTasks = Task::query()
+            ->where('project_id', $project->id)
+            ->whereNull('project_sprint_id')
+            ->accessibleBy(auth()->user());
+        $ungroupedCount = (clone $ungroupedTasks)->count();
+
+        if ($ungroupedCount > 0 && $loadedSprintLimit >= $sprintCount) {
+            $taskGroups->push($this->buildUngroupedTaskGroup($ungroupedTasks, $taskGroups->isEmpty()));
+        }
+
+        $initialGroupKey = $preferredGroupKey && $taskGroups->contains(fn($group) => $group['key'] === $preferredGroupKey)
+            ? $preferredGroupKey
+            : ($taskGroups->first()['key'] ?? null);
+
+        $initialTaskPage = $initialGroupKey
+            ? $this->getTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
+            : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
+
+        $totalTaskCount = (int) Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user())
+            ->count();
+        $hasMorePages = $loadedSprintLimit < $sprintCount;
+
+        return [
+            'taskGroups' => $taskGroups,
+            'initialGroupKey' => $initialGroupKey,
+            'initialTasks' => $initialTaskPage['tasks'],
+            'initialTasksPagination' => $initialTaskPage['pagination'],
+            'totalTaskCount' => $totalTaskCount,
+            'sprintCount' => $sprintCount,
+            'pagination' => [
+                'page' => $loadedPages,
+                'next_page' => $hasMorePages ? $loadedPages + 1 : null,
+                'has_more_pages' => $hasMorePages,
+            ],
+        ];
+    }
+
+    public function buildTaskGroupTasksQuery(Project $project, string $groupKey, ?string $search = null, ?array $rootTaskIds = null)
+    {
+        $taskRowRelations = $this->getProjectTaskRowRelations();
+
+        $query = Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user())
+            ->whereNull('parent_task_id')
+            ->with($taskRowRelations)
+            ->withCount('childTasks')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+
+        if ($search !== null && trim($search) !== '') {
+            $ids = $rootTaskIds ?? $this->getMatchingRootTaskIds($project, $search);
+            $query->whereIn('id', $ids);
+        }
+
+        if ($groupKey === 'ungrouped') {
+            $query->whereNull('project_sprint_id');
+        } elseif ($groupKey === 'all-tasks') {
+            // Linear-flow projects display a flat task list without sprint grouping.
+        } else {
+            abort_unless(str_starts_with($groupKey, 'sprint-'), 404);
+
+            $projectSprintId = (int) str_replace('sprint-', '', $groupKey);
+
+            abort_unless(
+                $project->projectSprints()->whereKey($projectSprintId)->exists(),
+                404
+            );
+
+            $query->where('project_sprint_id', $projectSprintId);
+        }
+
+        return $query;
+    }
+
+    public function getTaskGroupTaskPage(Project $project, string $groupKey, int $page, int $perPage, ?string $search = null, ?array $rootTaskIds = null): array
+    {
+        $page = max($page, 1);
+        $perPage = max($perPage, 1);
+        $query = $this->buildTaskGroupTasksQuery($project, $groupKey, $search, $rootTaskIds);
+        $total = (clone $query)->count();
+        $lastPage = max((int) ceil($total / $perPage), 1);
+        $page = min($page, $lastPage);
+
+        $tasks = $query
+            ->forPage($page, $perPage)
+            ->get();
+        $taskRowRelations = $this->getProjectTaskRowRelations();
+
+        $tasks->each(function (Task $task) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForGroup($task, $taskRowRelations);
+        });
+
+        return [
+            'tasks' => $tasks,
+            'pagination' => [
+                'page' => $page,
+                'next_page' => $page < $lastPage ? $page + 1 : null,
+                'has_more_pages' => $page < $lastPage,
+                'total' => $total,
+                'per_page' => $perPage,
+            ],
+        ];
+    }
+
+    public function findTaskGroup(Project $project, string $groupKey, ?string $search = null): ?array
+    {
+        if ($groupKey === 'all-tasks' && $project->project_flow === 'linear') {
+            $rootTaskIds = $search !== null ? $this->getMatchingRootTaskIds($project, $search) : null;
+            return $this->buildLinearTaskGroup($project, $search, $rootTaskIds);
+        }
+
+        if ($groupKey === 'ungrouped' && $project->project_flow !== 'linear') {
+            $ungroupedTasks = Task::query()
+                ->where('project_id', $project->id)
+                ->whereNull('project_sprint_id')
+                ->accessibleBy(auth()->user());
+
+            if ($search !== null && trim($search) !== '') {
+                $rootTaskIds = $this->getMatchingRootTaskIds($project, $search);
+                $ungroupedTasks->whereIn('id', $rootTaskIds);
+            }
+
+            if (! (clone $ungroupedTasks)->exists()) {
+                return null;
+            }
+
+            return $this->buildUngroupedTaskGroup($ungroupedTasks, false);
+        }
+
+        if (! str_starts_with($groupKey, 'sprint-')) {
+            return null;
+        }
+
+        $projectSprintId = (int) str_replace('sprint-', '', $groupKey);
+        $projectSprint = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->with(['projectMilestone:id,name'])
+            ->withCount([
+                'tasks' => fn($query) => $query->accessibleBy(auth()->user()),
+            ])
+            ->find($projectSprintId);
+
+        if (! $projectSprint) {
+            return null;
+        }
+
+        $position = $this->getOrderedProjectSprintIds($project)
+            ->search($projectSprint->id);
+
+        $group = $this->mapProjectSprintToTaskGroup($projectSprint, max(($position === false ? 0 : $position), 0));
+
+        if ($search !== null && trim($search) !== '') {
+            $rootTaskIds = $this->getMatchingRootTaskIds($project, $search);
+            $group['task_count'] = Task::query()
+                ->where('project_id', $project->id)
+                ->where('project_sprint_id', $projectSprintId)
+                ->accessibleBy(auth()->user())
+                ->whereIn('id', $rootTaskIds)
+                ->count();
+        }
+
+        return $group;
+    }
+
+    public function resolveTaskGroupLoadedPages(Project $project, ?string $preferredGroupKey, int $perPage): int
+    {
+        if (! $preferredGroupKey || $project->project_flow === 'linear') {
+            return 1;
+        }
+
+        if ($preferredGroupKey === 'ungrouped') {
+            return max((int) ceil($this->getSprintCount($project) / $perPage), 1);
+        }
+
+        if (! str_starts_with($preferredGroupKey, 'sprint-')) {
+            return 1;
+        }
+
+        $projectSprintId = (int) str_replace('sprint-', '', $preferredGroupKey);
+        $targetSprint = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->find($projectSprintId);
+
+        if (! $targetSprint) {
+            return 1;
+        }
+
+        $position = $this->getOrderedProjectSprintIds($project)
+            ->search($targetSprint->id);
+
+        return max((int) ceil((($position === false ? 0 : $position) + 1) / $perPage), 1);
+    }
+
+    public function getSprintCount(Project $project): int
+    {
+        return (int) ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->count();
+    }
+
+    public function getOrderedProjectSprintIds(Project $project): Collection
+    {
+        return ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->orderForDisplay()
+            ->pluck('id')
+            ->values();
+    }
+
+    public function buildLinearTaskGroup(Project $project, ?string $search = null, ?array $rootTaskIds = null): array
+    {
+        $allTasks = Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user());
+
+        if ($search !== null && trim($search) !== '') {
+            $ids = $rootTaskIds ?? $this->getMatchingRootTaskIds($project, $search);
+            $allTasks->whereIn('id', $ids);
+        }
+
+        $taskCount = (clone $allTasks)->count();
+        $derivedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
+        $actualSeconds = (int) (clone $allTasks)->sum('actual_time_seconds');
+
+        $displayTimeline = $project->display_timeline;
+        $timelineEstimate = $displayTimeline?->estimated_time_seconds;
+        $hasEstimate = $displayTimeline !== null && $timelineEstimate !== null && (int) $timelineEstimate > 0;
+        $estimatedSeconds = $timelineEstimate !== null ? (int) $timelineEstimate : null;
+        $derivedColorClass = $this->resolveDerivedColorClass($estimatedSeconds, $derivedSeconds, $hasEstimate);
+
+        return [
+            'key' => 'all-tasks',
+            'sprint_id' => null,
+            'name' => 'All Tasks',
+            'subtitle' => null,
+            'accent_color' => '#3B82F6',
+            'task_count' => $taskCount,
+            'estimated_seconds' => $estimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort((int) ($estimatedSeconds ?? 0)),
+            'derived_seconds' => $derivedSeconds,
+            'derived_label' => $this->formatSecondsShort($derivedSeconds),
+            'actual_seconds' => $actualSeconds,
+            'actual_label' => $this->formatSecondsShort($actualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
+            'date_label' => null,
+            'created_label' => null,
+            'is_latest' => true,
+            'is_unscheduled' => false,
+            'is_linear_group' => true,
+        ];
+    }
+
+    public function mapProjectSprintToTaskGroup(ProjectSprint $projectSprint, int $index): array
+    {
+        $sprintEstimatedSeconds = $projectSprint->estimated_time_seconds !== null
+            ? (int) $projectSprint->estimated_time_seconds
+            : null;
+        $sprintDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
+        $sprintActualSeconds = (int) ($projectSprint->actual_time_seconds ?? 0);
+        $hasEstimate = $sprintEstimatedSeconds !== null && $sprintEstimatedSeconds > 0;
+        $derivedColorClass = $this->resolveDerivedColorClass($sprintEstimatedSeconds, $sprintDerivedSeconds, $hasEstimate);
+
+        return [
+            'key' => 'sprint-' . $projectSprint->id,
+            'sprint_id' => $projectSprint->id,
+            'name' => $projectSprint->name,
+            'subtitle' => $projectSprint->projectMilestone?->name,
+            'accent_color' => $projectSprint->color ?: '#D1D5DB',
+            'task_count' => (int) $projectSprint->tasks_count,
+            'estimated_seconds' => $sprintEstimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort((int) ($sprintEstimatedSeconds ?? 0)),
+            'derived_seconds' => $sprintDerivedSeconds,
+            'derived_label' => $this->formatSecondsShort($sprintDerivedSeconds),
+            'actual_seconds' => $sprintActualSeconds,
+            'actual_label' => $this->formatSecondsShort($sprintActualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
+            'date_label' => $this->formatDateRange($projectSprint->start_date, $projectSprint->end_date),
+            'created_label' => $projectSprint->created_at
+                ? AppServiceProvider::formatAppDate($projectSprint->created_at)
+                : null,
+            'is_latest' => $index === 0,
+            'is_unscheduled' => false,
+            'is_linear_group' => false,
+        ];
+    }
+
+    public function buildUngroupedTaskGroup($ungroupedTasks, bool $isLatest): array
+    {
+        $ungroupedEstimatedSeconds = (int) (clone $ungroupedTasks)->sum('estimated_time_seconds');
+        $ungroupedDerivedSeconds = (int) (clone $ungroupedTasks)->sum('derived_time_seconds');
+        $ungroupedActualSeconds = (int) (clone $ungroupedTasks)->sum('actual_time_seconds');
+        $hasEstimate = $ungroupedEstimatedSeconds > 0;
+        $derivedColorClass = $this->resolveDerivedColorClass($ungroupedEstimatedSeconds, $ungroupedDerivedSeconds, $hasEstimate);
+
+        return [
+            'key' => 'ungrouped',
+            'sprint_id' => null,
+            'name' => 'Unscheduled Tasks',
+            'subtitle' => 'Tasks without a sprint',
+            'accent_color' => '#94A3B8',
+            'task_count' => (clone $ungroupedTasks)->count(),
+            'estimated_seconds' => $ungroupedEstimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort($ungroupedEstimatedSeconds),
+            'derived_seconds' => $ungroupedDerivedSeconds,
+            'derived_label' => $this->formatSecondsShort($ungroupedDerivedSeconds),
+            'actual_seconds' => $ungroupedActualSeconds,
+            'actual_label' => $this->formatSecondsShort($ungroupedActualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
+            'date_label' => 'No sprint dates',
+            'created_label' => null,
+            'is_latest' => $isLatest,
+            'is_unscheduled' => true,
+            'is_linear_group' => false,
+        ];
+    }
+
+    public function resolveDerivedColorClass(?int $estimatedSeconds, int $derivedSeconds, bool $hasEstimate): string
+    {
+        if (! $hasEstimate || $estimatedSeconds === null || $estimatedSeconds <= 0) {
+            return '';
+        }
+
+        return $derivedSeconds > $estimatedSeconds
+            ? 'text-error-300 dark:text-red-400'
+            : 'text-success-400 dark:text-success-300';
+    }
+
+    public function loadTaskDescendantsForGroup(Task $task, array $taskRowRelations): void
+    {
+        if ((int) ($task->child_tasks_count ?? 0) <= 0) {
+            $task->setRelation('childTasks', collect());
+
+            return;
+        }
+
+        $task->load([
+            'childTasks' => fn($query) => $query
+                ->with($taskRowRelations)
+                ->withCount('childTasks')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id'),
+        ]);
+
+        $task->childTasks->each(function (Task $childTask) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForGroup($childTask, $taskRowRelations);
+        });
+    }
+
+    public function getProjectTaskRowRelations(): array
+    {
+        return [
+            'currentAssignee.primaryAttachment',
+            'status',
+            'taskType:id,name,code,color',
+            'taskMode:id,name,code,color',
+            'tags',
+            'projectMilestone:id,name,is_backlog,is_system',
+            'projectSprint:id,name,project_milestone_id,is_backlog,is_system',
+            'projectTimeline:id,name',
+            'parentTask:id,name',
+        ];
+    }
+
+    public function formatSecondsShort(int $seconds): string
+    {
+        $totalSeconds = max(0, $seconds);
+
+        if ($totalSeconds === 0) {
+            return '0h';
+        }
+
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+
+        if ($hours === 0) {
+            return $minutes . 'm';
+        }
+
+        if ($minutes === 0) {
+            return $hours . 'h';
+        }
+
+        return $hours . 'h ' . $minutes . 'm';
+    }
+
+    public function formatDateRange($startDate, $endDate): string
+    {
+        if ($startDate && $endDate) {
+            return AppServiceProvider::formatAppDate($startDate) . ' - ' . AppServiceProvider::formatAppDate($endDate);
+        }
+
+        if ($startDate) {
+            return 'Starts ' . AppServiceProvider::formatAppDate($startDate);
+        }
+
+        if ($endDate) {
+            return 'Ends ' . AppServiceProvider::formatAppDate($endDate);
+        }
+
+        return 'No sprint dates';
     }
 }

@@ -221,14 +221,13 @@
                                                 <div class="flex min-w-[220px] flex-wrap items-center gap-2">
 
                                                     <!-- Approve -->
-                                                    <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-detail-open
-                                                        data-project-task-detail-url="{{ route('projects.tasks.modal', [
-                                                            'project' => $task->project_id,
-                                                            'task' => $task->id,
-                                                            'approve_mode' => 1,
-                                                            'request_id' => $task->id,
-                                                            'action' => 'approve',
-                                                        ]) }}">
+                                                    <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [
+                                                        'project' => $task->project_id,
+                                                        'task' => $task->id,
+                                                        'approve_mode' => 1,
+                                                        'request_id' => $task->id,
+                                                        'action' => 'approve',
+                                                    ]) }}">
                                                         Approve
                                                     </button>
 

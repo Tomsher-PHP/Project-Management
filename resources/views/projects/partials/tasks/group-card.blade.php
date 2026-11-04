@@ -2,6 +2,9 @@
     $isLoaded = $isOpen;
     $isDeletedProjectView = $project->trashed();
     $taskGroupLoadUrl = $isDeletedProjectView ? route('projects.restore.tasks.groups.show', ['id' => $project->id, 'group' => $group['key']]) : route('projects.tasks.groups.show', ['project' => $project, 'group' => $group['key']]);
+    if (filled($search ?? null)) {
+        $taskGroupLoadUrl .= (str_contains($taskGroupLoadUrl, '?') ? '&' : '?') . 'search=' . urlencode($search);
+    }
 
     $hasEstimate = array_key_exists('has_estimate', $group) ? (bool) $group['has_estimate'] : isset($group['estimated_seconds']) && $group['estimated_seconds'] !== null && (int) $group['estimated_seconds'] > 0;
 
@@ -82,6 +85,7 @@
                     'group' => $group,
                     'tasks' => $tasks,
                     'pagination' => $initialTasksPagination ?? ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                    'search' => $search ?? null,
                 ])
             @endif
         </div>

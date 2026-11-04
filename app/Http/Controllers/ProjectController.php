@@ -227,6 +227,10 @@ class ProjectController extends Controller
         ];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
+        if ($tab === 'tasks' && $request->ajax() && $request->boolean('tasks_only')) {
+            return response()->json($service->getTasksTabResponse($project, $request));
+        }
+
         return response()->json([
             'status' => true,
             'tab' => $tab,
@@ -528,9 +532,10 @@ class ProjectController extends Controller
         return match ($tab) {
             'overview' => $this->renderOverviewTab($project),
             'milestones' => $this->renderMilestonesTab($project),
-            'tasks' => app(ProjectTaskController::class)->renderTasksTab(
+            'tasks' => $service->renderTasksTab(
                 $project,
-                $request->filled('preferred_group') ? (string) $request->input('preferred_group') : null
+                $request->filled('preferred_group') ? (string) $request->input('preferred_group') : null,
+                $request->filled('search') ? (string) $request->input('search') : null
             ),
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),

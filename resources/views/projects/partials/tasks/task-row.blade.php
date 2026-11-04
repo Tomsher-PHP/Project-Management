@@ -15,9 +15,21 @@
     $canMoveTask = !$isDeletedProjectView && $showTaskActionColumn && !$isSubtask && auth()->user()?->can('move', $task);
     $canDeleteTask = !$isDeletedProjectView && $showTaskActionColumn && auth()->user()?->can('delete', $task);
     $canEditTask = !$isDeletedProjectView && $showTaskActionColumn && auth()->user()?->can('task.edit');
+
+    $isSearchActive = filled($search ?? null);
+    $isSelfMatch = $isSearchActive && (str_contains(strtolower($task->name), strtolower($search)) || str_contains(strtolower($task->code ?? ''), strtolower($search)));
+    $hasMatchingChild = false;
+    if ($isSearchActive && $task->child_tasks_count > 0 && $task->relationLoaded('childTasks')) {
+        $hasMatchingChild = $task->childTasks->contains(function ($child) use ($search) {
+            return str_contains(strtolower($child->name), strtolower($search))
+                || str_contains(strtolower($child->code ?? ''), strtolower($search));
+        });
+    }
+    $isRowHidden = $isSubtask && !($isSelfMatch || $hasMatchingChild);
+    $subtasksExpanded = $hasMatchingChild;
 @endphp
 
-<tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60 {{ $isSubtask ? 'hidden bg-bgray-50/30 dark:bg-darkblack-500/20' : '' }}" data-project-task-id="{{ $task->id }}" @if ($isSubtask) data-project-task-parent-id="{{ $parentTaskId }}" hidden @endif>
+<tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60 {{ $isRowHidden ? 'hidden' : '' }} {{ $isSubtask ? 'bg-bgray-50/30 dark:bg-darkblack-500/20' : '' }}" data-project-task-id="{{ $task->id }}" @if ($isSubtask) data-project-task-parent-id="{{ $parentTaskId }}" @if ($isRowHidden) hidden @endif @endif>
     <td class="group border border-bgray-200 px-3 py-2 align-top dark:border-darkblack-400">
         <div class="flex items-start gap-2.5">
             @if ($isSubtask)
@@ -43,8 +55,8 @@
                     </div>
 
                     @if ($task->child_tasks_count > 0)
-                        <button type="button" class="mt-1 inline-flex max-w-full items-center gap-1.5 text-xs text-bgray-700 transition hover:text-success-400 dark:text-bgray-300 dark:hover:text-success-300" data-project-task-subtasks-toggle data-project-task-subtasks-parent="{{ $task->id }}" aria-expanded="false">
-                            <span class="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center text-bgray-700 transition duration-200 dark:text-bgray-300" data-project-task-subtasks-icon>
+                        <button type="button" class="mt-1 inline-flex max-w-full items-center gap-1.5 text-xs text-bgray-700 transition hover:text-success-400 dark:text-bgray-300 dark:hover:text-success-300" data-project-task-subtasks-toggle data-project-task-subtasks-parent="{{ $task->id }}" aria-expanded="{{ $subtasksExpanded ? 'true' : 'false' }}">
+                            <span class="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center text-bgray-700 transition duration-200 dark:text-bgray-300 {{ $subtasksExpanded ? 'rotate-90' : '' }}" data-project-task-subtasks-icon>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M7.22 4.97a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 11-1.06-1.06L10.94 10 7.22 6.28a.75.75 0 010-1.06z" clip-rule="evenodd" />
                                 </svg>
