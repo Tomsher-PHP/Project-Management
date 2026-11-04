@@ -134,7 +134,7 @@
     <!-- Accordion Header Button -->
     <button type="button" id="import-instructions-toggle" onclick="toggleInstructionsAccordion()" class="flex w-full items-center justify-between p-4 text-left transition hover:bg-bgray-50 dark:hover:bg-darkblack-500 focus:outline-none" aria-expanded="false" aria-controls="import-instructions-content">
         <div class="flex items-center gap-3">
-            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-400 shrink-0">
+            <span class="flex h-8 w-8 items-center justify-center text-bgray-900 dark:text-bgray-300 shrink-0">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -148,7 +148,7 @@
                         18 Columns
                     </span>
                 </div>
-                <p class="text-xs text-bgray-700 dark:text-bgray-400 mt-0.5">
+                <p class="text-xs text-bgray-700 dark:text-bgray-300 mt-0.5">
                     Review column specifications, required fields, and data formatting guidelines before uploading.
                 </p>
             </div>
@@ -198,7 +198,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 whitespace-nowrap text-bgray-800 dark:text-bgray-200">
+                            <td class="py-3 px-4 whitespace-nowrap text-bgray-800 dark:text-bgray-300">
                                 {{ $row['type'] }}
                             </td>
                             <td class="py-3 px-4 font-mono text-[11px] text-bgray-700 dark:text-bgray-300 whitespace-nowrap">
