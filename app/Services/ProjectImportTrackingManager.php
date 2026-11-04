@@ -66,7 +66,11 @@ class ProjectImportTrackingManager
         int $userId
     ): array {
         // Trigger lightweight cleanup of expired imports periodically
-        $this->cleanupExpired();
+        try {
+            $this->cleanupExpired();
+        } catch (Throwable $e) {
+            Log::warning('Import cleanup failed during initialization', ['error' => $e->getMessage()]);
+        }
 
         $meta = [
             'id' => $importId,
@@ -240,33 +244,40 @@ class ProjectImportTrackingManager
     public function cleanupExpired(): int
     {
         $deletedCount = 0;
-        $directories = Storage::disk(self::DISK)->directories(self::BASE_DIR);
+
+        try {
+            $directories = Storage::disk(self::DISK)->directories(self::BASE_DIR);
+        } catch (Throwable $e) {
+            Log::warning('Failed listing import tracking directories for cleanup', [
+                'error' => $e->getMessage(),
+            ]);
+            return 0;
+        }
 
         foreach ($directories as $dir) {
-            $metaPath = $dir . '/meta.json';
-            if (Storage::disk(self::DISK)->exists($metaPath)) {
-                try {
+            try {
+                $metaPath = $dir . '/meta.json';
+                if (Storage::disk(self::DISK)->exists($metaPath)) {
                     $meta = json_decode(Storage::disk(self::DISK)->get($metaPath), true);
-                    $expiresAt = $meta['expires_at'] ?? 0;
+                    $expiresAt = is_array($meta) ? ($meta['expires_at'] ?? 0) : 0;
                     if ($expiresAt > 0 && now()->timestamp > $expiresAt) {
                         Storage::disk(self::DISK)->deleteDirectory($dir);
                         $deletedCount++;
                     }
-                } catch (Throwable) {
-                    // If corrupt, check last modified time
-                    $lastModified = Storage::disk(self::DISK)->lastModified($metaPath);
+                } else {
+                    // If no meta.json, delete stale orphaned directory after expirySeconds
+                    $lastModified = Storage::disk(self::DISK)->lastModified($dir);
                     if ($lastModified && (now()->timestamp - $lastModified) > $this->expirySeconds) {
                         Storage::disk(self::DISK)->deleteDirectory($dir);
                         $deletedCount++;
                     }
                 }
-            } else {
-                // If no meta.json, delete stale orphaned directory after 24h
-                $lastModified = Storage::disk(self::DISK)->lastModified($dir);
-                if ($lastModified && (now()->timestamp - $lastModified) > $this->expirySeconds) {
-                    Storage::disk(self::DISK)->deleteDirectory($dir);
-                    $deletedCount++;
-                }
+            } catch (Throwable $e) {
+                // If a single directory cannot be read or deleted (e.g. permission or lock issue), log and continue
+                Log::warning('Failed cleaning up expired import tracking directory', [
+                    'directory' => $dir,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 

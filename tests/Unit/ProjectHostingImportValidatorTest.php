@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\User;
 use App\Services\ProjectHostingImportValidator;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
@@ -40,14 +41,14 @@ class ProjectHostingImportValidatorTest extends TestCase
         $provider = (object) [
             'id' => 20,
             'name' => 'AWS Cloud',
-            'code' => 'aws_cloud',
+            'code' => '00100001',
             'is_active' => true,
         ];
 
         $serviceType = (object) [
             'id' => 30,
             'name' => 'Dedicated Server',
-            'code' => 'dedicated_server',
+            'code' => '00100004',
             'is_active' => true,
         ];
 
@@ -109,7 +110,11 @@ class ProjectHostingImportValidatorTest extends TestCase
         foreach ($rows as $rowIndex => $rowData) {
             $rowNum = $rowIndex + 2;
             foreach ($rowData as $col => $val) {
-                $sheet->setCellValue($col . $rowNum, $val);
+                if (in_array($col, ['C', 'D'], true) && $val !== null) {
+                    $sheet->setCellValueExplicit($col . $rowNum, (string) $val, DataType::TYPE_STRING);
+                } else {
+                    $sheet->setCellValue($col . $rowNum, $val);
+                }
             }
         }
 
@@ -126,8 +131,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Primary Web Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
                 'E' => 'Active',
                 'F' => 'company',
                 'G' => 'example.com',
@@ -162,6 +167,8 @@ class ProjectHostingImportValidatorTest extends TestCase
         $this->assertEquals(10, $row['data']['project_id']);
         $this->assertEquals(20, $row['data']['hosting_provider_id']);
         $this->assertEquals(30, $row['data']['hosting_service_id']);
+        $this->assertSame('00100001', $row['raw_values']['Provider']);
+        $this->assertSame('00100004', $row['raw_values']['Service Type']);
         $this->assertEquals(40, $row['data']['hosting_service_status_id']);
         $this->assertEquals('2026-01-01', $row['data']['start_date']);
         $this->assertEquals('2027-01-01', $row['data']['expiry_date']);
@@ -199,8 +206,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Valid Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
             ], // Row 3
             ['A' => null, 'B' => null], // Blank row 4
         ]);
@@ -219,8 +226,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJNONEXISTENT',
                 'B' => 'Test Service',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
             ],
         ]);
 
@@ -238,8 +245,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => '   ',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
             ],
         ]);
 
@@ -256,8 +263,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Test Server',
-                'C' => 'Unknown Host Provider',
-                'D' => 'Unknown Service Type',
+                'C' => '999998',
+                'D' => '999999',
             ],
         ]);
 
@@ -265,8 +272,63 @@ class ProjectHostingImportValidatorTest extends TestCase
         unlink($filePath);
 
         $this->assertEquals(1, $result['total_rows']);
-        $this->assertContains("Provider: The selected provider 'Unknown Host Provider' is not available.", $result['rows'][0]['errors']);
-        $this->assertContains("Service Type: The selected service type 'Unknown Service Type' is not available.", $result['rows'][0]['errors']);
+        $this->assertContains('Provider code "999998" was not found.', $result['rows'][0]['errors']);
+        $this->assertContains('Service Type code "999999" was not found.', $result['rows'][0]['errors']);
+    }
+
+    public function test_empty_provider_and_service_type_codes_keep_required_field_errors(): void
+    {
+        $filePath = $this->createSpreadsheet([
+            [
+                'A' => 'PRJTEST01',
+                'B' => 'Missing Codes Server',
+                'C' => '   ',
+                'D' => null,
+            ],
+        ]);
+
+        $result = $this->validator->validate($filePath, $this->admin, $this->masterData);
+        unlink($filePath);
+
+        $this->assertContains('Provider: Provider is required.', $result['rows'][0]['errors']);
+        $this->assertContains('Service Type: Service Type is required.', $result['rows'][0]['errors']);
+    }
+
+    public function test_provider_and_service_type_names_are_not_resolved_as_codes(): void
+    {
+        $filePath = $this->createSpreadsheet([
+            [
+                'A' => 'PRJTEST01',
+                'B' => 'Name Lookup Server',
+                'C' => 'AWS Cloud',
+                'D' => 'Dedicated Server',
+            ],
+        ]);
+
+        $result = $this->validator->validate($filePath, $this->admin, $this->masterData);
+        unlink($filePath);
+
+        $this->assertContains('Provider code "AWS Cloud" was not found.', $result['rows'][0]['errors']);
+        $this->assertContains('Service Type code "Dedicated Server" was not found.', $result['rows'][0]['errors']);
+    }
+
+    public function test_provider_and_service_type_codes_trim_surrounding_whitespace(): void
+    {
+        $filePath = $this->createSpreadsheet([
+            [
+                'A' => 'PRJTEST01',
+                'B' => 'Trimmed Codes Server',
+                'C' => ' 00100001 ',
+                'D' => "\t00100004\n",
+            ],
+        ]);
+
+        $result = $this->validator->validate($filePath, $this->admin, $this->masterData);
+        unlink($filePath);
+
+        $this->assertSame('Valid', $result['rows'][0]['status']);
+        $this->assertSame(20, $result['rows'][0]['data']['hosting_provider_id']);
+        $this->assertSame(30, $result['rows'][0]['data']['hosting_service_id']);
     }
 
     public function test_blank_status_defaults_to_active_and_blank_ownership_defaults_to_company(): void
@@ -275,8 +337,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Defaulted Fields Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
                 'E' => null, // Blank status -> defaults to Active
                 'F' => null, // Blank ownership -> defaults to company
             ],
@@ -297,8 +359,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Test Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
                 'F' => 'third_party_vendor',
             ],
         ]);
@@ -315,8 +377,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Date Test Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
                 'I' => '2026-06-01',
                 'J' => '2026-01-01', // Expiry before start date
                 'K' => 'not-a-valid-date', // Invalid date string
@@ -336,15 +398,15 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Billing Test Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
                 'N' => 'FreeOfCost',
             ],
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Negative Amount Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
                 'N' => '-50.00',
             ],
         ]);
@@ -363,8 +425,8 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Currency Test Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
                 'O' => 'US_DOLLAR',
             ],
         ]);
@@ -393,14 +455,14 @@ class ProjectHostingImportValidatorTest extends TestCase
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Valid Server',
-                'C' => 'AWS Cloud',
-                'D' => 'Dedicated Server',
+                'C' => '00100001',
+                'D' => '00100004',
             ],
             [
                 'A' => 'PRJTEST01',
                 'B' => 'Invalid Provider Server',
-                'C' => 'Wrong Provider',
-                'D' => 'Dedicated Server',
+                'C' => '999999',
+                'D' => '00100004',
             ],
         ]);
 

@@ -534,13 +534,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Project Import routes
-    Route::get('projects/import', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('projects.import.index');
-    Route::get('projects/import/{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('projects.import.template');
-    Route::post('projects/import/{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('projects.import.validate');
-    Route::post('projects/import/{module}/process', [ProjectImportController::class, 'startImport'])->name('projects.import.process');
-    Route::get('projects/import/{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('projects.import.status');
-    Route::get('projects/import/{module}/download-failed/{import}', [ProjectImportController::class, 'downloadFailedRows'])->name('projects.import.download.failed');
-    Route::get('projects/import/{module}/download-results/{import}', [ProjectImportController::class, 'downloadAllResults'])->name('projects.import.download.results');
+    Route::prefix('projects/import')->as('projects.import.')->group(function () {
+        Route::get('/', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('index');
+        Route::get('{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('template');
+        Route::post('{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('validate');
+        Route::post('{module}/process', [ProjectImportController::class, 'startImport'])->name('process');
+        Route::get('{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('status');
+        Route::get('{module}/download-failed/{import}', [ProjectImportController::class, 'downloadFailedRows'])->name('download.failed');
+        Route::get('{module}/download-results/{import}', [ProjectImportController::class, 'downloadAllResults'])->name('download.results');
+    });
 
     // Project common routes
     Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
