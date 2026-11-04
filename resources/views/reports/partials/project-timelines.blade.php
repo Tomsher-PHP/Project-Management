@@ -8,13 +8,13 @@
                             <table class="w-full min-w-[1000px]">
                                 <thead class="bg-blue-50/80 dark:bg-darkblack-500">
                                     <tr class="border-b border-blue-200 dark:border-darkblack-400">
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-100">Timeline Name</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-100">Status</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-100">Start Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-100">End Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-100">Estimated</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-100">Actual</th>
-                                        <th class="min-w-[260px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-100">Progress</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Timeline Name</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Status</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Start Date</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">End Date</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Estimated</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Actual</th>
+                                        <th class="min-w-[260px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Progress</th>
                                     </tr>
                                 </thead>
 
@@ -37,15 +37,15 @@
                                         @endphp
 
                                         <tr class="hover:bg-gray-50 dark:hover:bg-darkblack-500" {!! $isActiveTimeline ? 'style="border-left-width: 4px; border-left-color: rgb(34, 197, 94);"' : '' !!}>
-                                            <td class="px-4 py-3 text-sm font-semibold text-bgray-900 dark:text-bgray-100">{{ $timeline->name ?? '-' }}</td>
+                                            <td class="px-4 py-3 text-sm font-semibold text-bgray-900 dark:text-bgray-300">{{ $timeline->name ?? '-' }}</td>
                                             <td class="px-4 py-3 text-sm">
                                                 <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $isActiveTimeline ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-200' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200' }}">
                                                     {{ $timeline->report_status_label }}
                                                 </span>
                                             </td>
-                                            <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-200">{{ $timeline->start_date?->format($globalDateFormat) ?? '-' }}</td>
-                                            <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-200">{{ $timeline->end_date?->format($globalDateFormat) ?? '-' }}</td>
-                                            <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-200">{{ formatSecondsToHoursMinutes($timelineEstimatedSeconds) }}</td>
+                                            <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-300">{{ $timeline->start_date?->format($globalDateFormat) ?? '-' }}</td>
+                                            <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-300">{{ $timeline->end_date?->format($globalDateFormat) ?? '-' }}</td>
+                                            <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-300">{{ formatSecondsToHoursMinutes($timelineEstimatedSeconds) }}</td>
                                             <td class="px-4 py-3 text-sm font-medium whitespace-nowrap {{ $timelineActualClasses }}">{{ formatSecondsToHoursMinutes($timelineActualSeconds) }}</td>
                                             <td class="px-4 py-3 text-sm">
                                                 <div class="flex items-center gap-3">
@@ -68,4 +68,3 @@
         </td>
     </tr>
 @endif
-
