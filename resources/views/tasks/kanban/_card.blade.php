@@ -44,12 +44,7 @@
 @endphp
 
 
-<div
-    class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600"
-    data-task-id="{{ $task->id }}"
-    data-is-completed="{{ $isCompleted ? '1' : '0' }}"
-    data-has-developer-note="{{ ($task->developerNotes?->isNotEmpty() ?? false) ? '1' : '0' }}"
->
+<div class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600" data-task-id="{{ $task->id }}" data-is-completed="{{ $isCompleted ? '1' : '0' }}" data-has-developer-note="{{ $task->developerNotes?->isNotEmpty() ?? false ? '1' : '0' }}">
     <div class="space-y-3 p-4">
         <div class="{{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}" @if ($canOpenTask) data-project-task-detail-open
                 data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}"
@@ -132,33 +127,14 @@
                     $activityTotalCount = $commentsCount + $developerNotesCount;
                 @endphp
 
-                <button
-                    type="button"
-                    class="group inline-flex items-center gap-1 rounded-md px-2 py-1 text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white {{ $developerNotesCount > 0 ? '!text-blue-600 dark:!text-blue-400' : '' }}"
-                    title="Completion Notes: {{ $developerNotesCount }} | Comments: {{ $commentsCount }}"
-                    aria-label="Task Activity: {{ $developerNotesCount }} developer notes and {{ $commentsCount }} comments"
-                    data-task-activity-trigger
-                    data-no-task-detail-open
-                    data-task-id="{{ $task->id }}"
-                    data-task-insights-url="{{ route('tasks.comments.modal', $task) }}"
-                    data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
-                    data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
-                    data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
-                    data-has-developer-note="{{ $developerNotesCount > 0 ? '1' : '0' }}"
-                    data-comments-count="{{ $commentsCount }}"
-                    data-developer-notes-count="{{ $developerNotesCount }}"
-                    data-task-name="{{ $task->name }}"
-                >
+                <button type="button" class="group inline-flex items-center gap-1 rounded-md px-2 py-1 text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white {{ $developerNotesCount > 0 ? '!text-blue-600 dark:!text-blue-400' : '' }}" title="Completion Notes: {{ $developerNotesCount }} | Comments: {{ $commentsCount }}" aria-label="Task Activity: {{ $developerNotesCount }} developer notes and {{ $commentsCount }} comments" data-task-activity-trigger data-no-task-detail-open data-task-id="{{ $task->id }}" data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}" data-store-url="{{ route('tasks.developer-notes.store', $task) }}" data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}" data-has-developer-note="{{ $developerNotesCount > 0 ? '1' : '0' }}" data-comments-count="{{ $commentsCount }}" data-developer-notes-count="{{ $developerNotesCount }}" data-task-name="{{ $task->name }}">
 
                     <span class="inline-flex shrink-0">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
                         </svg>
                     </span>
-                    <span
-                        class="font-medium text-[11px]"
-                        data-task-activity-count
-                    >
+                    <span class="font-medium text-[11px]" data-task-activity-count>
                         {{ $activityTotalCount }}
                     </span>
 
