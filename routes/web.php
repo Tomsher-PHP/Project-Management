@@ -8,6 +8,7 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
+use App\Http\Controllers\BulletinCategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\CommonController;
@@ -354,6 +355,13 @@ Route::middleware(['auth'])->group(function () {
         // Leave Notification Settings Routes
         Route::get('leave-notifications', [LeaveNotificationSettingController::class, 'edit',])->name('leave-notifications.edit');
         Route::put('leave-notifications', [LeaveNotificationSettingController::class, 'update',])->name('leave-notifications.update');
+
+        // Bulletin Category Routes
+        Route::patch('/bulletin-categories/toggle-status', [BulletinCategoryController::class, 'toggleStatus'])->middleware('permission.type:bulletin_settings.edit')->name('bulletin_category.toggleStatus');
+        Route::resource('bulletin-categories', BulletinCategoryController::class)->middleware('permission.type:bulletin_settings.view')->only(['index']);
+        Route::resource('bulletin-categories', BulletinCategoryController::class)->middleware('permission.type:bulletin_settings.create')->only(['store']);
+        Route::resource('bulletin-categories', BulletinCategoryController::class)->middleware('permission.type:bulletin_settings.edit')->only(['update']);
+        Route::resource('bulletin-categories', BulletinCategoryController::class)->middleware('permission.type:bulletin_settings.delete')->only(['destroy']);
 
         // Company Expenses Settings Routes
         Route::patch('/expense-payment-modes/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusPaymentMode'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_payment_mode.toggleStatus');

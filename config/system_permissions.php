@@ -315,6 +315,12 @@ return [
     ['name' => 'server_hosting.edit',   'label' => 'Settings - Server & Hosting', 'sort_order' => 69140, 'default_checked' => false],
     ['name' => 'server_hosting.delete', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69160, 'default_checked' => false],
 
+    // Bulletin Settings
+    ['name' => 'bulletin_settings.view',   'label' => 'Settings - Bulletin Settings', 'sort_order' => 69200, 'default_checked' => false],
+    ['name' => 'bulletin_settings.create', 'label' => 'Settings - Bulletin Settings', 'sort_order' => 69220, 'default_checked' => false],
+    ['name' => 'bulletin_settings.edit',   'label' => 'Settings - Bulletin Settings', 'sort_order' => 69240, 'default_checked' => false],
+    ['name' => 'bulletin_settings.delete', 'label' => 'Settings - Bulletin Settings', 'sort_order' => 69260, 'default_checked' => false],
+
     // ---------------------------------------------------------------------------------------------------------------------------------
     // CONFIGURATION  -- Last Settings Module
     ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
