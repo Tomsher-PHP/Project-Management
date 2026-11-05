@@ -8,6 +8,7 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
+use App\Http\Controllers\BulletinController;
 use App\Http\Controllers\BulletinCategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChequeController;
@@ -729,6 +730,20 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{appraisal}/reviewers/{reviewer}', [AppraisalController::class, 'removeReviewer'])->middleware('permission.type:appraisal.create')->name('manage-reviewers.remove');
         Route::get('/{appraisal}', [AppraisalController::class, 'show'])->middleware('permission.type:appraisal.create')->name('show');
         Route::post('/{appraisal}/unpublish', [AppraisalController::class, 'unpublish'])->middleware('permission.type:appraisal.create')->name('unpublish');
+    });
+
+    // Bulletin management routes
+    Route::prefix('bulletins')->as('bulletins.')->group(function () {
+        Route::get('/', [BulletinController::class, 'index'])->middleware('permission.type:bulletin.view')->name('index');
+        Route::get('/create', [BulletinController::class, 'create'])->middleware('permission.type:bulletin.create')->name('create');
+        Route::post('/', [BulletinController::class, 'store'])->middleware('permission.type:bulletin.create')->name('store');
+        Route::patch('/{bulletin}/status', [BulletinController::class, 'updateStatus'])->middleware('permission.type:bulletin.status_change')->name('status');
+        Route::delete('/{bulletin}/attachments/{attachment}', [BulletinController::class, 'deleteAttachment'])->middleware('permission.type:bulletin.edit')->name('attachments.destroy');
+        Route::get('/{bulletin}/attachments/{attachment}/download', [BulletinController::class, 'downloadAttachment'])->middleware('permission.type:bulletin.view')->name('attachments.download');
+        Route::get('/{bulletin}/edit', [BulletinController::class, 'edit'])->middleware('permission.type:bulletin.edit')->name('edit');
+        Route::put('/{bulletin}', [BulletinController::class, 'update'])->middleware('permission.type:bulletin.edit')->name('update');
+        Route::delete('/{bulletin}', [BulletinController::class, 'destroy'])->middleware('permission.type:bulletin.delete')->name('destroy');
+        Route::get('/{bulletin}', [BulletinController::class, 'show'])->middleware('permission.type:bulletin.view')->name('show');
     });
 
     // Help Center routes
