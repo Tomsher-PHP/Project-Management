@@ -7,6 +7,7 @@ use App\Models\BulletinCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class BulletinCategoryController extends Controller
@@ -42,9 +43,16 @@ class BulletinCategoryController extends Controller
     public function store(BulletinCategoryRequest $request): JsonResponse
     {
         $data = $request->validated();
+        $data['is_default'] = $request->boolean('is_default');
         $data['sort_order'] = ((int) BulletinCategory::max('sort_order')) + 1;
 
-        $bulletinCategory = BulletinCategory::create($data);
+        $bulletinCategory = DB::transaction(function () use ($data) {
+            if ($data['is_default']) {
+                $this->clearExistingDefaults();
+            }
+
+            return BulletinCategory::create($data);
+        });
 
         return response()->json([
             'status' => true,
@@ -58,7 +66,18 @@ class BulletinCategoryController extends Controller
      */
     public function update(BulletinCategoryRequest $request, BulletinCategory $bulletinCategory): JsonResponse
     {
-        $bulletinCategory->update($request->validated());
+        $data = $request->validated();
+        $data['is_default'] = $request->boolean('is_default');
+
+        $bulletinCategory = DB::transaction(function () use ($bulletinCategory, $data) {
+            if ($data['is_default']) {
+                $this->clearExistingDefaults($bulletinCategory->id);
+            }
+
+            $bulletinCategory->update($data);
+
+            return $bulletinCategory->refresh();
+        });
 
         return response()->json([
             'status' => true,
@@ -126,5 +145,21 @@ class BulletinCategoryController extends Controller
             'is_active' => $bulletinCategory->is_active,
             'message' => 'Status updated successfully',
         ], 200);
+    }
+
+    /**
+     * Clear is_default flag on existing bulletin categories.
+     */
+    protected function clearExistingDefaults(?int $exceptId = null): void
+    {
+        $query = BulletinCategory::query();
+
+        if ($exceptId !== null) {
+            $query->whereKeyNot($exceptId);
+        }
+
+        $query->update([
+            'is_default' => false,
+        ]);
     }
 }

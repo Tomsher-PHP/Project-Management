@@ -6,7 +6,7 @@
         <x-back-button :url="route('settings.index')" label="Back" />
 
         @can('bulletin_settings.create')
-            <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Bulletin Category" data-url="{{ route('settings.bulletin-categories.store') }}" data-method="POST" data-color="#3B82F6" label="Category" />
+            <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Bulletin Category" data-url="{{ route('settings.bulletin-categories.store') }}" data-method="POST" data-color="#3B82F6" data-is_default="0" label="Category" />
         @endcan
 
         <x-filters.button />
@@ -63,6 +63,11 @@
                                                             System
                                                         </span>
                                                     @endif
+                                                    @if ($bulletinCategory->is_default)
+                                                        <span class="inline-flex px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-300">
+                                                            Default
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -75,7 +80,7 @@
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
                                             @can('bulletin_settings.edit')
-                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.bulletin-categories.update', $bulletinCategory->id) }}" data-name="{{ $bulletinCategory->name }}" data-color="{{ $bulletinCategory->color }}" data-method="PUT" data-module="Bulletin Category" title="Edit Bulletin Category" />
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.bulletin-categories.update', $bulletinCategory->id) }}" data-name="{{ $bulletinCategory->name }}" data-color="{{ $bulletinCategory->color }}" data-is_default="{{ (int) $bulletinCategory->is_default }}" data-method="PUT" data-module="Bulletin Category" title="Edit Bulletin Category" />
                                             @endcan
                                             @can('bulletin_settings.delete')
                                                 @if (!$bulletinCategory->is_system)
@@ -110,6 +115,21 @@
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color <x-red-star /></label>
             <input type="color" name="color" value="#3B82F6" class="h-12 w-full cursor-pointer rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:border-darkblack-400" required>
         </div>
+
+        <label for="is_default" class="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" name="is_default" id="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+            <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                <span>Is Default</span>
+                <span class="group relative inline-flex cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                        The default option is preselected when creating a new bulletin.
+                    </span>
+                </span>
+            </span>
+        </label>
 
     </x-form-modal>
 

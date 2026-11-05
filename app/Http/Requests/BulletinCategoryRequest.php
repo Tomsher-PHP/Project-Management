@@ -39,6 +39,10 @@ class BulletinCategoryRequest extends FormRequest
                 'max:50',
                 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
             ],
+            'is_default' => [
+                'nullable',
+                'boolean',
+            ],
         ];
     }
 

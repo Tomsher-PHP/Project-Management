@@ -74,7 +74,7 @@
                                                         </span>
                                                     @endif
                                                     @if ($serviceType->is_default)
-                                                        <span class="inline-flex rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-600 dark:bg-success-900/30 dark:text-success-300">
+                                                        <span class="inline-flex px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-300">
                                                             Default
                                                         </span>
                                                     @endif

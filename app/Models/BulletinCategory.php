@@ -17,6 +17,7 @@ class BulletinCategory extends Model
         'name',
         'color',
         'sort_order',
+        'is_default',
         'is_system',
         'is_active',
     ];
@@ -25,6 +26,7 @@ class BulletinCategory extends Model
         'name',
         'color',
         'sort_order',
+        'is_default',
         'is_active',
     ];
 
@@ -36,6 +38,7 @@ class BulletinCategory extends Model
             'name' => 'string',
             'color' => 'string',
             'sort_order' => 'integer',
+            'is_default' => 'boolean',
             'is_system' => 'boolean',
             'is_active' => 'boolean',
         ];
