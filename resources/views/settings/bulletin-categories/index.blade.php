@@ -31,11 +31,6 @@
                                         <x-sorting.sortable-column column="name" label="Name" />
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[200px] xl:px-0">
-                                    <div class="flex w-full items-center space-x-2.5">
-                                        <x-sorting.sortable-column column="color" label="Color" />
-                                    </div>
-                                </td>
                                 <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
@@ -56,25 +51,20 @@
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
                                     </td>
                                     <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <div class="flex flex-wrap items-center gap-2">
-                                                <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                    {{ $bulletinCategory->name }}
-                                                </p>
-                                                @if ($bulletinCategory->is_system)
-                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
-                                                        System
-                                                    </span>
-                                                @endif
+                                        <div class="flex items-start space-x-2.5">
+                                            <span class="mt-1.5 inline-flex h-3 w-3 shrink-0 rounded-full border border-bgray-200 dark:border-darkblack-400" style="background-color: {{ $bulletinCategory->color ?: '#E5E7EB' }}"></span>
+                                            <div>
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <p class="text-base font-semibold text-bgray-900 dark:text-white">
+                                                        {{ $bulletinCategory->name }}
+                                                    </p>
+                                                    @if ($bulletinCategory->is_system)
+                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                            System
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[200px] xl:px-0">
-                                        <div class="flex w-full items-center">
-                                            <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 bg-white px-3 py-1.5 text-xs font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200">
-                                                <span class="h-3.5 w-3.5 rounded-full border border-black/10 shadow-sm" style="background-color: {{ $bulletinCategory->color }};"></span>
-                                                <span>{{ strtoupper($bulletinCategory->color) }}</span>
-                                            </span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -96,7 +86,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <x-table-no-data :col-span="5" message="No bulletin categories found." />
+                                <x-table-no-data :col-span="4" message="No bulletin categories found." />
                             @endforelse
                         </table>
                     </div>
