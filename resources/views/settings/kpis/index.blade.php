@@ -61,7 +61,7 @@
                                                     {{ $kpi->name }}
                                                 </p>
                                                 @if ($kpi->is_system)
-                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
                                                         System
                                                     </span>
                                                 @endif
@@ -81,7 +81,7 @@
                                     <td class="px-6 py-5 xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
                                             @can('kpi.edit')
-                                                 <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.kpis.update', $kpi->id) }}" data-name="{{ $kpi->name }}" data-description="{{ $kpi->description }}" data-method="PUT" data-module="KPI" title="Edit KPI" />
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.kpis.update', $kpi->id) }}" data-name="{{ $kpi->name }}" data-description="{{ $kpi->description }}" data-method="PUT" data-module="KPI" title="Edit KPI" />
                                             @endcan
                                             @can('kpi.delete')
                                                 @if (!$kpi->is_system)

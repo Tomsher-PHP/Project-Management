@@ -167,6 +167,13 @@ return [
     ['name' => 'reimbursement.status_change',       'label' => 'Reimbursement', 'sort_order' => 15140, 'default_checked' => false],
     ['name' => 'reimbursement.delete',     'label' => 'Reimbursement', 'sort_order' => 15150, 'default_checked' => false],
 
+    // BULLETIN
+    ['name' => 'bulletin.view',       'label' => 'Bulletin', 'sort_order' => 15210, 'default_checked' => false],
+    ['name' => 'bulletin.create',     'label' => 'Bulletin', 'sort_order' => 15220, 'default_checked' => false],
+    ['name' => 'bulletin.edit',       'label' => 'Bulletin', 'sort_order' => 15230, 'default_checked' => false],
+    ['name' => 'bulletin.status_change',       'label' => 'Bulletin', 'sort_order' => 15240, 'default_checked' => false],
+    ['name' => 'bulletin.delete',     'label' => 'Bulletin', 'sort_order' => 15250, 'default_checked' => false],
+
     //======================================================================
     // Requests Actions Start
     //======================================================================

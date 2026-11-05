@@ -66,7 +66,7 @@
                                                     {{ $industry->name }}
                                                 </p>
                                                 @if ($industry->is_system)
-                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
                                                         System
                                                     </span>
                                                 @endif
@@ -90,9 +90,9 @@
                                     </td>
                                     <td class="px-6 py-5 xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
-                                             @can('industry.edit')
-                                                 <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.industries.update', $industry->id) }}" data-name="{{ $industry->name }}" data-parent_id="{{ $industry->parent_id }}" data-sort_order="{{ $industry->sort_order }}" data-method="PUT" data-module="Industry" title="Edit Industry" />
-                                             @endcan
+                                            @can('industry.edit')
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.industries.update', $industry->id) }}" data-name="{{ $industry->name }}" data-parent_id="{{ $industry->parent_id }}" data-sort_order="{{ $industry->sort_order }}" data-method="PUT" data-module="Industry" title="Edit Industry" />
+                                            @endcan
 
                                             @can('industry.delete')
                                                 @if (!$industry->is_system)
