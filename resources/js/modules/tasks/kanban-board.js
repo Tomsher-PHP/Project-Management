@@ -876,6 +876,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const error = document.getElementById('reopen-task-remark-error');
         const confirmButton = document.getElementById('confirm-reopen-task');
         const cancelButton = document.getElementById('cancel-reopen-task');
+        const closeButton = document.getElementById('close-reopen-task');
 
         return new Promise((resolve) => {
             input.value = '';
@@ -890,6 +891,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 confirmButton.removeEventListener('click', onConfirm);
                 cancelButton.removeEventListener('click', onCancel);
+                closeButton.removeEventListener('click', onCancel);
             };
 
             const onConfirm = () => {
@@ -912,6 +914,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             confirmButton.addEventListener('click', onConfirm);
             cancelButton.addEventListener('click', onCancel);
+            closeButton.addEventListener('click', onCancel);
         });
     };
 

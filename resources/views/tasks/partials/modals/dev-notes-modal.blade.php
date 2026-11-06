@@ -35,20 +35,24 @@
     <!-- Notes list -->
     <div id="developer-notes-list" class="hidden"></div>
 
-    <!-- Developer Note Form -->
-    <div id="editable-dev-notes" class="hidden">
-        <p class="mb-4 text-sm text-bgray-500 dark:text-bgray-400">
-            Add or update the developer note for this task.
-        </p>
-    </div>
-
     <form id="developer-notes-form" class="hidden space-y-4">
         <div>
-            <label for="developer-note-input" class="mb-2 block text-sm font-semibold text-bgray-700 dark:text-white">
+            {{-- <label class="mb-2 block text-sm font-semibold text-bgray-700 dark:text-white">
                 Developer Note
-            </label>
+            </label> --}}
 
-            <textarea id="developer-note-input" rows="7" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-3 text-sm text-bgray-700 outline-none transition focus:border-success-300 focus:ring-2 focus:ring-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Write your developer note here..."></textarea>
+            <input
+                type="hidden"
+                id="developer-note-input"
+                name="developer_note"
+            >
+
+            <div class="custom-quill-wrapper overflow-hidden rounded-lg border border-bgray-300 dark:border-darkblack-400">
+                <div
+                    id="developer-note-editor"
+                    class="h-44 bg-white dark:bg-darkblack-500 dark:text-white"
+                ></div>
+            </div>
         </div>
 
         <div class="flex justify-end">
