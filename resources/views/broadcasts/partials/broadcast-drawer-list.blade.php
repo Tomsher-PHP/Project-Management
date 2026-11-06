@@ -1,12 +1,12 @@
 @if ($broadcasts->isEmpty())
     <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
-        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-bgray-100 dark:bg-darkblack-500 mb-3 text-bgray-400 dark:text-bgray-500">
+        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-bgray-100 dark:bg-darkblack-500 mb-3 text-bgray-400 dark:text-bgray-700">
             <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
         </div>
         <h4 class="text-base font-semibold text-bgray-900 dark:text-white">No Broadcasts Available</h4>
-        <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-400">There are no current or upcoming broadcasts for you.</p>
+        <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">There are no current or upcoming broadcasts for you.</p>
     </div>
 @else
     @php
@@ -22,7 +22,7 @@
                     <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                         <span class="inline-block h-2 w-2 rounded-full bg-amber-500"></span>
                         <span>Upcoming</span>
-                        <span class="text-[11px] font-normal text-bgray-500">({{ $upcomingBroadcasts->count() }})</span>
+                        <span class="text-[11px] font-normal text-bgray-700 dark:text-bgray-300">({{ $upcomingBroadcasts->count() }})</span>
                     </div>
                     <div class="space-y-3" data-broadcast-upcoming-items>
                         @foreach ($upcomingBroadcasts as $broadcast)
@@ -37,7 +37,7 @@
                     <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success-400 dark:text-success-300">
                         <span class="inline-block h-2 w-2 rounded-full bg-success-400"></span>
                         <span>Current</span>
-                        <span class="text-[11px] font-normal text-bgray-500">({{ $currentBroadcasts->count() }})</span>
+                        <span class="text-[11px] font-normal text-bgray-700">({{ $currentBroadcasts->count() }})</span>
                     </div>
                     <div class="space-y-3" data-broadcast-current-items>
                         @foreach ($currentBroadcasts as $broadcast)
@@ -54,10 +54,7 @@
         <!-- Load More Container -->
         @if ($broadcasts->hasMorePages())
             <div class="flex justify-center pt-2 pb-4" data-broadcast-load-more-container>
-                <button type="button"
-                    data-broadcast-load-more-btn
-                    data-next-page="{{ $broadcasts->currentPage() + 1 }}"
-                    class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-4 py-2 text-xs font-semibold text-bgray-700 shadow-sm transition hover:bg-bgray-50 hover:text-bgray-900 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
+                <button type="button" data-broadcast-load-more-btn data-next-page="{{ $broadcasts->currentPage() + 1 }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-4 py-2 text-xs font-semibold text-bgray-700 shadow-sm transition hover:bg-bgray-50 hover:text-bgray-900 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
                     <span data-load-more-label>Load More</span>
                     <svg data-load-more-spinner class="hidden h-3.5 w-3.5 animate-spin text-success-300" viewBox="0 0 24 24" fill="none">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -68,4 +65,3 @@
         @endif
     </div>
 @endif
-

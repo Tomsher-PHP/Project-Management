@@ -10,37 +10,37 @@
             <h2 class="text-xl font-bold text-bgray-900 dark:text-white">{{ $broadcast->title }}</h2>
             <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">Created by {{ $broadcast->creator?->name ?? 'Unknown' }} on {{ $broadcast->created_at?->format($dateFormat) }}</p>
         </div>
-        <button type="button" data-broadcast-modal-close class="rounded-md p-2 text-bgray-600 hover:bg-bgray-100 dark:text-bgray-300 dark:hover:bg-darkblack-400" aria-label="Close modal">✕</button>
+        <button type="button" data-broadcast-modal-close class="rounded-md p-2 text-bgray-700 hover:bg-bgray-100 dark:text-bgray-300 dark:hover:bg-darkblack-400" aria-label="Close modal">✕</button>
     </div>
 
     <div class="max-h-[72vh] overflow-y-auto px-6 py-5">
         <div class="grid grid-cols-2 gap-4 rounded-xl bg-bgray-50 p-4 dark:bg-darkblack-500 sm:grid-cols-4">
             <div>
-                <p class="text-xs text-bgray-700 dark:text-bgray-400">Category</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Category</p>
                 <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ $broadcast->category?->name ?? '—' }}</p>
             </div>
             <div>
-                <p class="text-xs text-bgray-700 dark:text-bgray-400">Priority</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Priority</p>
                 <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ Broadcast::priorityOptions()[$broadcast->priority] ?? 'Unknown' }}</p>
             </div>
             <div>
-                <p class="text-xs text-bgray-700 dark:text-bgray-400">Status</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Status</p>
                 <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ Broadcast::statusOptions()[$broadcast->status] ?? 'Unknown' }}</p>
             </div>
             <div>
-                <p class="text-xs text-bgray-700 dark:text-bgray-400">Audience</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Audience</p>
                 <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ Broadcast::audienceOptions()[$broadcast->audience_type] ?? 'Unknown' }}</p>
             </div>
             <div>
-                <p class="text-xs text-bgray-700 dark:text-bgray-400">Starts</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Starts</p>
                 <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ $broadcast->start_date?->format($dateFormat) ?? 'Immediately' }}</p>
             </div>
             <div>
-                <p class="text-xs text-bgray-700 dark:text-bgray-400">Ends</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Ends</p>
                 <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ $broadcast->end_date?->format($dateFormat) ?? 'No expiry' }}</p>
             </div>
             <div class="col-span-2">
-                <p class="text-xs text-bgray-700 dark:text-bgray-400">Published</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Published</p>
                 <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">@appDateTime($broadcast->published_at)</p>
             </div>
         </div>
@@ -56,7 +56,7 @@
             <div class="mt-6">
                 <div class="mb-2 flex items-center justify-between">
                     <h3 class="text-sm font-semibold text-bgray-900 dark:text-white">Target Audience (Teams)</h3>
-                    <span class="text-xs text-bgray-700 dark:text-bgray-400">{{ isset($teams) ? $teams->count() : $teamNames->count() }} team(s)</span>
+                    <span class="text-xs text-bgray-700 dark:text-bgray-300">{{ isset($teams) ? $teams->count() : $teamNames->count() }} team(s)</span>
                 </div>
                 <div class="max-h-48 overflow-y-auto rounded-xl border border-bgray-200 bg-bgray-50/50 p-3 dark:border-darkblack-400 dark:bg-darkblack-500/50">
                     <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
@@ -71,7 +71,7 @@
                                     <div class="min-w-0 flex-1">
                                         <p class="truncate text-xs font-semibold text-bgray-900 dark:text-white">{{ $team->name }}</p>
                                         @if (isset($team->users_count))
-                                            <p class="text-[11px] text-bgray-700 dark:text-bgray-400">{{ $team->users_count }} member(s)</p>
+                                            <p class="text-[11px] text-bgray-700 dark:text-bgray-300">{{ $team->users_count }} member(s)</p>
                                         @endif
                                     </div>
                                 </div>
@@ -97,7 +97,7 @@
             <div class="mt-6">
                 <div class="mb-2 flex items-center justify-between">
                     <h3 class="text-sm font-semibold text-bgray-900 dark:text-white">Target Audience (Users)</h3>
-                    <span class="text-xs text-bgray-700 dark:text-bgray-400">{{ $broadcast->recipients->count() }} user(s)</span>
+                    <span class="text-xs text-bgray-700 dark:text-bgray-300">{{ $broadcast->recipients->count() }} user(s)</span>
                 </div>
                 <div class="max-h-48 overflow-y-auto rounded-xl border border-bgray-200 bg-bgray-50/50 p-3 dark:border-darkblack-400 dark:bg-darkblack-500/50">
                     <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">

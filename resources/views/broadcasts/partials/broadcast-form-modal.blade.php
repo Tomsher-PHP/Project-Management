@@ -3,11 +3,7 @@
     $isEdit = $broadcast->exists;
     $selectedTeamIds = collect(old('team_ids', $broadcast->target_team_ids ?? []))->map(fn($id) => (string) $id)->all();
     $selectedUserIds = collect(old('user_ids', $isEdit && $broadcast->audience_type === Broadcast::AUDIENCE_USERS ? $broadcast->recipients->pluck('id')->all() : []))->map(fn($id) => (string) $id)->all();
-    $dateRangeValue = old('date_range', ($broadcast->start_date && $broadcast->end_date
-        ? ($broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d')
-            ? $broadcast->start_date->format('Y-m-d')
-            : $broadcast->start_date->format('Y-m-d') . ' to ' . $broadcast->end_date->format('Y-m-d'))
-        : ($broadcast->start_date ? $broadcast->start_date->format('Y-m-d') : '')));
+    $dateRangeValue = old('date_range', $broadcast->start_date && $broadcast->end_date ? ($broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d') ? $broadcast->start_date->format('Y-m-d') : $broadcast->start_date->format('Y-m-d') . ' to ' . $broadcast->end_date->format('Y-m-d')) : ($broadcast->start_date ? $broadcast->start_date->format('Y-m-d') : ''));
 @endphp
 
 <div class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-2xl dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -24,7 +20,7 @@
                 <h2 class="text-xl font-bold text-bgray-900 dark:text-white">{{ $isEdit ? 'Edit Broadcast' : 'Add Broadcast' }}</h2>
                 <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">{{ $isEdit ? 'Update broadcast details and audience.' : 'Create a draft or publish it immediately.' }}</p>
             </div>
-            <button type="button" data-broadcast-modal-close class="rounded-md p-2 text-bgray-600 hover:bg-bgray-100 dark:text-bgray-300 dark:hover:bg-darkblack-400" aria-label="Close modal">✕</button>
+            <button type="button" data-broadcast-modal-close class="rounded-md p-2 text-bgray-700 hover:bg-bgray-100 dark:text-bgray-300 dark:hover:bg-darkblack-400" aria-label="Close modal">✕</button>
         </div>
 
         <div class="max-h-[72vh] space-y-7 overflow-y-auto px-6 py-5">
@@ -33,7 +29,7 @@
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div class="md:col-span-2">
                         <label for="broadcast_title" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Title <span class="text-red-500">*</span></label>
-                        <input id="broadcast_title" name="title" type="text" maxlength="255" value="{{ old('title', $broadcast->title) }}" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 outline-none focus:border-success-300 focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required @if(!$isEdit) autofocus @endif>
+                        <input id="broadcast_title" name="title" type="text" maxlength="255" value="{{ old('title', $broadcast->title) }}" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 outline-none focus:border-success-300 focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required @if (!$isEdit) autofocus @endif>
                         <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="title"></span>
                     </div>
                     <div>
@@ -127,18 +123,18 @@
                                         <div class="flex items-center justify-between gap-2 rounded-lg border border-bgray-200 bg-white p-2.5 dark:border-darkblack-400 dark:bg-darkblack-500" data-attachment-item>
                                             <a href="{{ route('broadcasts.attachments.download', [$broadcast, $attachment]) }}" target="_blank" class="flex items-center gap-2.5 min-w-0 flex-1 hover:text-success-400 transition" title="{{ $attachment->original_name }}">
                                                 <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-bgray-100 dark:bg-darkblack-600 overflow-hidden">
-                                                    <svg class="h-5 w-5 text-bgray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <svg class="h-5 w-5 text-bgray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.5L14.5 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                     </svg>
                                                 </div>
                                                 <div class="min-w-0 flex-1">
                                                     <p class="truncate text-xs font-semibold text-bgray-900 dark:text-white">{{ $attachment->original_name ?: $attachment->file_name }}</p>
-                                                    <p class="text-[11px] text-bgray-500 dark:text-bgray-400">{{ number_format($attachment->file_size / 1024, 1) }} KB</p>
+                                                    <p class="text-[11px] text-bgray-700 dark:text-bgray-300">{{ number_format($attachment->file_size / 1024, 1) }} KB</p>
                                                 </div>
                                             </a>
                                             <button type="button" data-broadcast-attachment-delete data-url="{{ route('broadcasts.attachments.destroy', [$broadcast, $attachment]) }}" class="shrink-0 rounded p-1.5 text-bgray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition" title="Remove attachment" aria-label="Remove attachment">
                                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
                                         </div>

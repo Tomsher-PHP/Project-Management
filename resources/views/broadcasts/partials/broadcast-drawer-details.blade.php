@@ -51,7 +51,7 @@
 
         <div class="grid grid-cols-2 gap-3 rounded-xl bg-bgray-50 p-3 text-xs dark:bg-darkblack-500">
             <div>
-                <span class="text-bgray-500 dark:text-bgray-400">Published:</span>
+                <span class="text-bgray-700 dark:text-bgray-300">Published:</span>
                 <p class="font-semibold text-bgray-900 dark:text-white mt-0.5">
                     @if ($broadcast->published_at)
                         {{ $broadcast->published_at->format($dateFormat) }} {{ $broadcast->published_at->format($timeFormat) }}
@@ -61,7 +61,7 @@
                 </p>
             </div>
             <div>
-                <span class="text-bgray-500 dark:text-bgray-400">Date Range:</span>
+                <span class="text-bgray-700 dark:text-bgray-300">Date Range:</span>
                 <p class="font-semibold text-bgray-900 dark:text-white mt-0.5">
                     @if ($broadcast->start_date && $broadcast->end_date)
                         {{ $broadcast->start_date->format($dateFormat) }} – {{ $broadcast->end_date->format($dateFormat) }}
@@ -79,8 +79,8 @@
 
     <!-- Content -->
     <div class="space-y-2">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Announcement</h4>
-        <div class="prose max-w-none text-sm text-bgray-800 dark:text-bgray-200 dark:prose-invert rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Announcement</h4>
+        <div class="prose max-w-none text-sm text-bgray-800 dark:text-bgray-300 dark:prose-invert rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500">
             {!! $broadcast->content !!}
         </div>
     </div>
@@ -88,7 +88,7 @@
     <!-- Attachments -->
     @if ($broadcast->attachments->isNotEmpty())
         <div class="space-y-2 pt-2 border-t border-bgray-200 dark:border-darkblack-400">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
                 Attachments ({{ $broadcast->attachments->count() }})
             </h4>
             <div class="space-y-2">
@@ -104,15 +104,13 @@
                                 <p class="text-xs font-semibold text-bgray-900 dark:text-white truncate" title="{{ $attachment->original_name ?: $attachment->file_name }}">
                                     {{ $attachment->original_name ?: $attachment->file_name }}
                                 </p>
-                                <p class="text-[11px] text-bgray-500 dark:text-bgray-400">
+                                <p class="text-[11px] text-bgray-700 dark:text-bgray-300">
                                     {{ number_format($attachment->file_size / 1024, 1) }} KB
                                 </p>
                             </div>
                         </div>
 
-                        <a href="{{ route('broadcasts.drawer.attachments.download', [$broadcast, $attachment]) }}"
-                            class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-success-500 shadow-sm transition hover:bg-success-50 hover:text-success-600 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-success-400 dark:hover:bg-darkblack-500"
-                            download>
+                        <a href="{{ route('broadcasts.drawer.attachments.download', [$broadcast, $attachment]) }}" class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-success-500 shadow-sm transition hover:bg-success-50 hover:text-success-600 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-success-400 dark:hover:bg-darkblack-500" download>
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
@@ -124,4 +122,3 @@
         </div>
     @endif
 </div>
-

@@ -7,14 +7,14 @@
         <table class="min-w-[1040px] w-full border-separate border-spacing-0">
             <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                 <tr>
-                    <th class="border-b border-bgray-200 px-4 py-4 text-left text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-50">#</th>
+                    <th class="border-b border-bgray-200 px-4 py-4 text-left text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">#</th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="title" label="Title" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="broadcast_category_id" label="Category" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="priority" label="Priority" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="audience_type" label="Audience" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="start_date" label="Date" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="status" label="Status" /></th>
-                    <th class="border-b border-bgray-200 px-4 py-4 text-left text-base font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-50">Actions</th>
+                    <th class="border-b border-bgray-200 px-4 py-4 text-left text-base font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-darkblack-600">
@@ -60,7 +60,7 @@
                         <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                             {{ Broadcast::audienceOptions()[$broadcast->audience_type] ?? 'Unknown' }}
                             @if ($broadcast->audience_type !== Broadcast::AUDIENCE_ALL)
-                                <span class="block text-xs text-bgray-600 dark:text-bgray-400">{{ $broadcast->allocations_count }} recipient(s)</span>
+                                <span class="block text-xs text-bgray-700 dark:text-bgray-300">{{ $broadcast->allocations_count }} recipient(s)</span>
                             @endif
                         </td>
                         <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">{{ $dateDisplay }}</td>
@@ -107,7 +107,7 @@
                             @endcan
 
                             @if ($broadcast->status === Broadcast::STATUS_PUBLISHED && $broadcast->published_at)
-                                <span class="mt-1 block text-xs text-bgray-600 dark:text-bgray-300 whitespace-nowrap">
+                                <span class="mt-1 block text-xs text-bgray-700 dark:text-bgray-300 whitespace-nowrap">
                                     @appDateTime($broadcast->published_at)
                                 </span>
                             @endif
