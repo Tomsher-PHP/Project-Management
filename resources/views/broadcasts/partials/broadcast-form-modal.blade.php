@@ -5,7 +5,7 @@
     $selectedUserIds = collect(old('user_ids', $isEdit && $broadcast->audience_type === Broadcast::AUDIENCE_USERS ? $broadcast->recipients->pluck('id') : []))->map(fn($id) => (string) $id)->all();
 @endphp
 
-<div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-2xl dark:border-darkblack-400 dark:bg-darkblack-600">
+<div class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-2xl dark:border-darkblack-400 dark:bg-darkblack-600">
     <form data-broadcast-form action="{{ $isEdit ? route('broadcasts.update', $broadcast) : route('broadcasts.store') }}" method="POST" enctype="multipart/form-data" data-mode="{{ $isEdit ? 'edit' : 'create' }}">
         @csrf
         @if ($isEdit)
@@ -123,13 +123,13 @@
         </div>
 
         <div class="flex flex-wrap items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400">
-            <button type="button" data-broadcast-modal-close class="rounded-lg border border-bgray-300 px-4 py-2 text-sm font-semibold text-bgray-700 hover:bg-bgray-100 dark:border-darkblack-400 dark:text-bgray-300 dark:hover:bg-darkblack-400">Cancel</button>
-            <button type="submit" data-broadcast-submit data-submit-status="{{ $isEdit ? $broadcast->status : Broadcast::STATUS_DRAFT }}" class="rounded-lg bg-success-300 px-5 py-2 text-sm font-semibold text-white transition hover:bg-success-400">
+            <button type="button" data-broadcast-modal-close class="rounded-lg border border-bgray-300 px-4 py-2 text-sm font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">Cancel</button>
+            <button type="submit" data-broadcast-submit data-submit-status="{{ $isEdit ? $broadcast->status : Broadcast::STATUS_DRAFT }}" class="rounded-lg border border-success-300 bg-white px-5 py-2 text-sm font-semibold text-success-300 transition hover:bg-success-50 dark:bg-darkblack-500 dark:hover:bg-darkblack-400">
                 <span data-submit-label>{{ $isEdit ? 'Update' : 'Save Draft' }}</span>
             </button>
             @if (!$isEdit)
                 @can('broadcast.status_change')
-                    <button type="submit" data-broadcast-submit data-submit-status="{{ Broadcast::STATUS_PUBLISHED }}" class="rounded-lg border border-success-300 bg-white px-5 py-2 text-sm font-semibold text-success-500 transition hover:bg-success-50 dark:bg-darkblack-500 dark:hover:bg-darkblack-400">
+                    <button type="submit" data-broadcast-submit data-submit-status="{{ Broadcast::STATUS_PUBLISHED }}" class="rounded-lg bg-success-300 px-5 py-2 text-sm font-semibold text-white transition hover:bg-success-400">
                         <span data-submit-label>Publish</span>
                     </button>
                 @endcan
@@ -137,4 +137,3 @@
         </div>
     </form>
 </div>
-
