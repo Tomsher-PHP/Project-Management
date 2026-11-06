@@ -21,13 +21,8 @@
 
 <div id="broadcast-drawer-details-view" class="space-y-5">
     <!-- Back Navigation -->
-    <div>
-        <button type="button" data-broadcast-back-to-list class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition hover:bg-bgray-50 hover:text-bgray-900 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Back to Broadcasts</span>
-        </button>
+    <div data-broadcast-back-to-list>
+        <x-back-button url="javascript:void(0);" label="Back" />
     </div>
 
     <!-- Header / Meta -->
