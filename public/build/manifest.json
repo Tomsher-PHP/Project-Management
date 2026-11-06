@@ -56,8 +56,8 @@
     "file": "assets/sweetalert2.esm.all-YZDMVk0e.js",
     "name": "sweetalert2.esm.all"
   },
-  "_task-comments-DMkPeK_8.js": {
-    "file": "assets/task-comments-DMkPeK_8.js",
+  "_task-comments-BAKIyZHf.js": {
+    "file": "assets/task-comments-BAKIyZHf.js",
     "name": "task-comments"
   },
   "_task-insights-modal-DCLerg8E.js": {
@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Ci7RBNJC.css",
+    "file": "assets/app-DxtYhRr_.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -127,7 +127,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CGy-H9F6.js",
+    "file": "assets/app-am8utunK.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -475,7 +475,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-CVw9CLKb.js",
+    "file": "assets/task-detail-B-n8A8KJ.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -487,7 +487,7 @@
       "_weekpicker-CPVHNp86.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_task-insights-modal-DCLerg8E.js",
-      "_task-comments-DMkPeK_8.js",
+      "_task-comments-BAKIyZHf.js",
       "_note-files-modal-CFZnvcW7.js",
       "_time-log-change-request-Bppiukwp.js",
       "resources/js/modules/projects/project-tasks.js",
@@ -518,7 +518,7 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/developer-notes.js": {
-    "file": "assets/developer-notes-CPrtsoDj.js",
+    "file": "assets/developer-notes-CIS5-940.js",
     "name": "developer-notes",
     "src": "resources/js/modules/tasks/developer-notes.js",
     "isEntry": true,
@@ -558,13 +558,13 @@
     ]
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-Crc5mLEL.js",
+    "file": "assets/kanban-board-CXNSvvHp.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true,
     "imports": [
       "_task-insights-modal-DCLerg8E.js",
-      "_task-comments-DMkPeK_8.js",
+      "_task-comments-BAKIyZHf.js",
       "resources/js/modules/tasks/developer-notes.js",
       "_alert-kNjqpuwD.js",
       "_sweetalert2.esm.all-YZDMVk0e.js"
