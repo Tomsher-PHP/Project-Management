@@ -136,5 +136,21 @@ class Broadcast extends Model
             self::AUDIENCE_USERS => 'Specific Users',
         ];
     }
+
+    public function isUpcoming(?string $today = null): bool
+    {
+        if (! $this->start_date) {
+            return false;
+        }
+
+        $today = $today ?? now()->toDateString();
+
+        return $this->start_date->format('Y-m-d') > $today;
+    }
+
+    public function visibilityState(?string $today = null): string
+    {
+        return $this->isUpcoming($today) ? 'upcoming' : 'current';
+    }
 }
 

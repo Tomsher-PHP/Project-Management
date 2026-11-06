@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -172,6 +173,70 @@ class BroadcastController extends Controller
     public function downloadAttachment(Broadcast $broadcast, Attachment $attachment): StreamedResponse
     {
         $this->ensureBroadcastAttachment($broadcast, $attachment);
+        $disk = $attachment->disk ?? config('filesystems.default');
+        abort_unless(Storage::disk($disk)->exists($attachment->file_path), 404);
+
+        return Storage::disk($disk)->download(
+            $attachment->file_path,
+            $attachment->original_name ?: $attachment->file_name,
+        );
+    }
+
+    public function drawerCount(Request $request): JsonResponse
+    {
+        $count = $this->broadcastService->getEligibleCountForUser($request->user());
+        $label = $count . ' ' . Str::plural('Broadcast', $count);
+
+        return response()->json([
+            'status' => true,
+            'count' => $count,
+            'label' => $label,
+        ]);
+    }
+
+    public function drawerList(Request $request): JsonResponse
+    {
+        $perPage = 10;
+        $page = max(1, (int) $request->input('page', 1));
+        $today = now()->toDateString();
+
+        $broadcasts = $this->broadcastService->getEligibleBroadcastsForDrawer(
+            $request->user(),
+            $perPage,
+            $page,
+            $today
+        );
+
+        $html = $page === 1
+            ? view('broadcasts.partials.broadcast-drawer-list', compact('broadcasts', 'today'))->render()
+            : view('broadcasts.partials.broadcast-drawer-items', compact('broadcasts', 'today'))->render();
+
+        return response()->json([
+            'status' => true,
+            'html' => $html,
+            'has_more' => $broadcasts->hasMorePages(),
+            'current_page' => $broadcasts->currentPage(),
+            'next_page' => $broadcasts->hasMorePages() ? $broadcasts->currentPage() + 1 : null,
+            'total' => $broadcasts->total(),
+        ]);
+    }
+
+    public function drawerShow(Request $request, Broadcast $broadcast): JsonResponse
+    {
+        $detailed = $this->broadcastService->getEligibleBroadcastDetails($broadcast, $request->user());
+        abort_unless($detailed !== null, 403, 'You are not authorized to view this broadcast.');
+
+        return response()->json([
+            'status' => true,
+            'html' => view('broadcasts.partials.broadcast-drawer-details', ['broadcast' => $detailed])->render(),
+        ]);
+    }
+
+    public function downloadDrawerAttachment(Request $request, Broadcast $broadcast, Attachment $attachment): StreamedResponse
+    {
+        $this->broadcastService->ensureUserCanViewBroadcast($broadcast, $request->user());
+        $this->ensureBroadcastAttachment($broadcast, $attachment);
+
         $disk = $attachment->disk ?? config('filesystems.default');
         abort_unless(Storage::disk($disk)->exists($attachment->file_path), 404);
 

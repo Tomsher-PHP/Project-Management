@@ -734,6 +734,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Broadcast management routes
     Route::prefix('broadcasts')->as('broadcasts.')->group(function () {
+        Route::get('/drawer/count', [BroadcastController::class, 'drawerCount'])->name('drawer.count');
+        Route::get('/drawer/list', [BroadcastController::class, 'drawerList'])->name('drawer.list');
+        Route::get('/drawer/{broadcast}', [BroadcastController::class, 'drawerShow'])->name('drawer.show');
+        Route::get('/drawer/{broadcast}/attachments/{attachment}/download', [BroadcastController::class, 'downloadDrawerAttachment'])->name('drawer.attachments.download');
+
         Route::get('/', [BroadcastController::class, 'index'])->middleware('permission.type:broadcast.view')->name('index');
         Route::get('/create', [BroadcastController::class, 'create'])->middleware('permission.type:broadcast.create')->name('create');
         Route::post('/', [BroadcastController::class, 'store'])->middleware('permission.type:broadcast.create')->name('store');

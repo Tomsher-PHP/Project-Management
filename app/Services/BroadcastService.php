@@ -396,5 +396,70 @@ class BroadcastService
             'attachments',
         ];
     }
+
+    public function eligibleForUserQuery(User|int $user, ?string $today = null): Builder
+    {
+        $userId = $user instanceof User ? $user->id : (int) $user;
+        $today = $today ?? now()->toDateString();
+
+        return Broadcast::query()
+            ->where('status', Broadcast::STATUS_PUBLISHED)
+            ->where(function (Builder $query) use ($today) {
+                $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', $today);
+            })
+            ->where(function (Builder $query) use ($userId) {
+                $query->where('audience_type', Broadcast::AUDIENCE_ALL)
+                    ->orWhere(function (Builder $allocated) use ($userId) {
+                        $allocated->whereIn('audience_type', [Broadcast::AUDIENCE_TEAMS, Broadcast::AUDIENCE_USERS])
+                            ->whereHas('allocations', function (Builder $allocations) use ($userId) {
+                                $allocations->where('user_id', $userId);
+                            });
+                    });
+            });
+    }
+
+    public function getEligibleCountForUser(User|int $user, ?string $today = null): int
+    {
+        return $this->eligibleForUserQuery($user, $today)->count();
+    }
+
+    public function getEligibleBroadcastsForDrawer(User|int $user, int $perPage = 10, int $page = 1, ?string $today = null): LengthAwarePaginator
+    {
+        $today = $today ?? now()->toDateString();
+
+        return $this->eligibleForUserQuery($user, $today)
+            ->with(['category:id,name,color', 'creator:id,name'])
+            ->withCount('attachments')
+            ->orderByRaw('CASE WHEN start_date > ? THEN 0 ELSE 1 END ASC', [$today])
+            ->orderByRaw('CASE WHEN start_date > ? THEN start_date END ASC', [$today])
+            ->orderByRaw('COALESCE(published_at, created_at) DESC')
+            ->orderByDesc('id')
+            ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    public function getEligibleBroadcastDetails(Broadcast $broadcast, User|int $user, ?string $today = null): ?Broadcast
+    {
+        $isEligible = $this->eligibleForUserQuery($user, $today)
+            ->where('id', $broadcast->id)
+            ->exists();
+
+        if (! $isEligible) {
+            return null;
+        }
+
+        $broadcast->loadMissing([
+            'category:id,name,color',
+            'creator:id,name',
+            'attachments',
+        ]);
+
+        return $broadcast;
+    }
+
+    public function ensureUserCanViewBroadcast(Broadcast $broadcast, User|int $user, ?string $today = null): void
+    {
+        abort_unless($this->getEligibleBroadcastDetails($broadcast, $user, $today) !== null, 403, 'You are not authorized to view this broadcast.');
+    }
 }
 

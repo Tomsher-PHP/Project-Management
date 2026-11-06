@@ -40,6 +40,26 @@
         </a>
     @endif
 
+    @auth
+        <!-- Global Broadcast Drawer Trigger -->
+        <button type="button"
+            id="broadcast-drawer-toggle-btn"
+            data-broadcast-drawer-toggle
+            class="group inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-xs font-semibold text-bgray-800 transition hover:border-success-300 hover:bg-bgray-50 hover:text-bgray-900 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300/40 dark:hover:bg-darkblack-400 dark:hover:text-white"
+            title="View Broadcasts"
+            aria-label="Open Broadcasts Drawer">
+            <span class="inline-flex items-center justify-center text-success-300 transition-transform duration-200 group-hover:scale-110">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 11v2a2 2 0 002 2h2l4 4V5L7 9H5a2 2 0 00-2 2z" />
+                    <path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
+                </svg>
+            </span>
+            <span id="navbar-broadcast-count-text" data-broadcast-count-text class="whitespace-nowrap font-medium text-bgray-700 dark:text-bgray-300">
+                <span data-broadcast-count-number>0</span> <span data-broadcast-count-label>Broadcasts</span>
+            </span>
+        </button>
+    @endauth
+
     @if (request()->routeIs('project.analytics'))
         <div class="flex items-center gap-3" data-project-analytics-filters>
             <!-- User Filter -->

@@ -19,6 +19,7 @@ import './components/list-search';
 import './components/estimated-time-input';
 import './modules/tasks/task-running-timer'
 import './modules/quick-notes-drawer';
+import './modules/broadcasts/broadcasts-drawer';
 import './modules/expenses/expenses';
 import './modules/cheques/cheques';
 import './modules/reimbursements/reimbursements';

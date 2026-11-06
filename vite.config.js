@@ -69,6 +69,7 @@ export default defineConfig({
                 'resources/js/modules/attendance/attendance.js',
                 'resources/js/modules/holiday.js',
                 'resources/js/modules/broadcasts/broadcasts-management.js',
+                'resources/js/modules/broadcasts/broadcasts-drawer.js',
 
                 'resources/js/modules/analytics/project-analytics-filters.js',
                 'resources/js/modules/analytics/project-analytics-dashboard.js',
