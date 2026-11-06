@@ -17,6 +17,22 @@
 
     <div id="broadcast-drawer-list-view" class="space-y-6">
         <div id="broadcast-drawer-cards-container" class="space-y-6">
+
+            @if ($currentBroadcasts->isNotEmpty())
+                <div class="space-y-3" data-broadcast-section="current">
+                    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success-400 dark:text-success-300">
+                        <span class="inline-block h-2 w-2 rounded-full bg-success-400"></span>
+                        <span>Current</span>
+                        <span class="text-[11px] font-normal text-bgray-700 dark:text-bgray-300">({{ $currentBroadcasts->count() }})</span>
+                    </div>
+                    <div class="space-y-3" data-broadcast-current-items>
+                        @foreach ($currentBroadcasts as $broadcast)
+                            @include('broadcasts.partials.broadcast-drawer-item', ['broadcast' => $broadcast, 'today' => $today])
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             @if ($upcomingBroadcasts->isNotEmpty())
                 <div class="space-y-3" data-broadcast-section="upcoming">
                     <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
@@ -26,21 +42,6 @@
                     </div>
                     <div class="space-y-3" data-broadcast-upcoming-items>
                         @foreach ($upcomingBroadcasts as $broadcast)
-                            @include('broadcasts.partials.broadcast-drawer-item', ['broadcast' => $broadcast, 'today' => $today])
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            @if ($currentBroadcasts->isNotEmpty())
-                <div class="space-y-3" data-broadcast-section="current">
-                    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success-400 dark:text-success-300">
-                        <span class="inline-block h-2 w-2 rounded-full bg-success-400"></span>
-                        <span>Current</span>
-                        <span class="text-[11px] font-normal text-bgray-700">({{ $currentBroadcasts->count() }})</span>
-                    </div>
-                    <div class="space-y-3" data-broadcast-current-items>
-                        @foreach ($currentBroadcasts as $broadcast)
                             @include('broadcasts.partials.broadcast-drawer-item', ['broadcast' => $broadcast, 'today' => $today])
                         @endforeach
                     </div>
