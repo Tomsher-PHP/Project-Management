@@ -21,18 +21,18 @@
                 @forelse ($broadcasts as $broadcast)
                     @php
                         $priorityClass = match ($broadcast->priority) {
-                            Broadcast::PRIORITY_URGENT => 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300',
-                            Broadcast::PRIORITY_IMPORTANT => 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+                            Broadcast::PRIORITY_URGENT => 'bg-error-50 text-error-300',
+                            Broadcast::PRIORITY_IMPORTANT => 'bg-yellow-50 text-warning-600',
                             default => 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300',
                         };
 
                         $dateDisplay = '—';
                         if ($broadcast->start_date && $broadcast->end_date) {
-                            $dateDisplay = $broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d') ? $broadcast->start_date->format('d M Y') : $broadcast->start_date->format('d M Y') . ' - ' . $broadcast->end_date->format('d M Y');
+                            $dateDisplay = $broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d') ? $broadcast->start_date->format($globalDateFormat) : $broadcast->start_date->format($globalDateFormat) . ' - ' . $broadcast->end_date->format($globalDateFormat);
                         } elseif ($broadcast->start_date) {
-                            $dateDisplay = $broadcast->start_date->format('d M Y');
+                            $dateDisplay = $broadcast->start_date->format($globalDateFormat);
                         } elseif ($broadcast->end_date) {
-                            $dateDisplay = $broadcast->end_date->format('d M Y');
+                            $dateDisplay = $broadcast->end_date->format($globalDateFormat);
                         }
 
                         $statusColors = Broadcast::statusColors();
@@ -57,7 +57,7 @@
                         <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                             {{ Broadcast::audienceOptions()[$broadcast->audience_type] ?? 'Unknown' }}
                             @if ($broadcast->audience_type !== Broadcast::AUDIENCE_ALL)
-                                <span class="block text-xs text-bgray-500 dark:text-bgray-400">{{ $broadcast->allocations_count }} recipient(s)</span>
+                                <span class="block text-xs text-bgray-600 dark:text-bgray-400">{{ $broadcast->allocations_count }} recipient(s)</span>
                             @endif
                         </td>
                         <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">{{ $dateDisplay }}</td>
@@ -104,7 +104,7 @@
                             @endcan
                         </td>
                         <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center gap-2">
                                 <x-view-button action="javascript:void(0)" data-broadcast-view data-url="{{ route('broadcasts.show', $broadcast) }}" title="View broadcast" aria-label="View broadcast" />
                                 @can('broadcast.edit')
                                     <x-edit-button action="javascript:void(0)" data-broadcast-edit data-url="{{ route('broadcasts.edit', $broadcast) }}" title="Edit broadcast" aria-label="Edit broadcast" />
