@@ -27,6 +27,8 @@
                         };
 
                         $dateFormat = $globalDateFormat ?? config('constants.date_format', 'd M Y');
+                        $timeFormat = $globalTimeFormat ?? config('constants.time_format', 'h:i A');
+                        $timezone = $globalTimezone ?? config('app.timezone');
                         $dateDisplay = '—';
                         if ($broadcast->start_date && $broadcast->end_date) {
                             $dateDisplay = $broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d')
@@ -105,6 +107,12 @@
                                     {{ $currentStatusName }}
                                 </span>
                             @endcan
+
+                            @if ($broadcast->status === Broadcast::STATUS_PUBLISHED && $broadcast->published_at)
+                                <span class="mt-1 block text-xs text-bgray-500 dark:text-bgray-400 whitespace-nowrap">
+                                    {{ $broadcast->published_at->timezone($timezone)->format($dateFormat . ', ' . $timeFormat) }}
+                                </span>
+                            @endif
                         </td>
                         <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                             <div class="flex items-center gap-2">
