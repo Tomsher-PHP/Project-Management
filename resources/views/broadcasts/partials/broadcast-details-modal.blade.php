@@ -103,13 +103,11 @@
                     <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
                         @foreach ($broadcast->recipients as $recipient)
                             <div class="flex items-center gap-2.5 rounded-lg border border-bgray-200 bg-white p-2.5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-50 text-xs font-bold text-success-500 dark:bg-success-300/10 dark:text-success-300">
-                                    {{ strtoupper(substr($recipient->name, 0, 1)) }}
-                                </div>
+                                <x-user-avatar :user="$recipient" size="sm" />
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate text-xs font-semibold text-bgray-900 dark:text-white">{{ $recipient->name }}</p>
                                     @if ($recipient->email)
-                                        <p class="truncate text-[11px] text-bgray-700 dark:text-bgray-400">{{ $recipient->email }}</p>
+                                        <p class="truncate text-[11px] text-bgray-700 dark:text-bgray-300">{{ $recipient->email }}</p>
                                     @endif
                                 </div>
                             </div>
@@ -124,12 +122,12 @@
                 <h3 class="mb-2 text-sm font-semibold text-bgray-900 dark:text-white">Attachments</h3>
                 <div class="flex flex-wrap gap-2">
                     @foreach ($broadcast->attachments as $attachment)
-                        <a href="{{ route('broadcasts.attachments.download', [$broadcast, $attachment]) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-xs font-medium text-success-500 hover:bg-success-50 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:bg-darkblack-500" target="_blank">
+                        <a href="{{ route('broadcasts.attachments.download', [$broadcast, $attachment]) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-xs font-medium text-success-300 hover:bg-success-50 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:bg-darkblack-500" target="_blank">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.5L14.5 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
                             <span>{{ $attachment->original_name ?: $attachment->file_name }}</span>
-                            <span class="text-[11px] text-bgray-700 dark:text-bgray-400">({{ number_format($attachment->file_size / 1024, 1) }} KB)</span>
+                            <span class="text-[11px] text-bgray-700 dark:text-bgray-300">({{ number_format($attachment->file_size / 1024, 1) }} KB)</span>
                         </a>
                     @endforeach
                 </div>
