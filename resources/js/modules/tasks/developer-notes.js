@@ -1,7 +1,6 @@
 import Alert from '../../alert';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Developer Notes now lives inside the shared Task Activity modal.
     const sharedModal = document.getElementById('task-insights-modal');
 
     if (!sharedModal) {
@@ -14,10 +13,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const emptyState = sharedModal.querySelector('#developer-notes-empty');
     const errorBox = sharedModal.querySelector('#developer-notes-error');
     const readonlyMessage = sharedModal.querySelector('#developer-notes-readonly');
-    const editableDevNotes = sharedModal.querySelector('#editable-dev-notes');
+
     const form = sharedModal.querySelector('#developer-notes-form');
     const noteInput = sharedModal.querySelector('#developer-note-input');
     const submitButton = sharedModal.querySelector('#developer-notes-submit');
+
+    const noteEditorElement = sharedModal.querySelector('#developer-note-editor');
+
+    if (!noteEditorElement || !window.Quill) {
+        console.error('Developer Note Quill editor could not be initialized.');
+        return;
+    }
+
+    const noteEditor = new window.Quill(noteEditorElement, {
+        theme: 'snow',
+        placeholder: 'Write your developer note here...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ header: [1, 2, 3, false] }],
+                ['link']
+            ]
+        }
+    });
+
+    noteEditorElement.__quill = noteEditor;
 
     const noteLabel = sharedModal.querySelector(
         'label[for="developer-note-input"]'
@@ -29,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
         !emptyState ||
         !errorBox ||
         !readonlyMessage ||
-        !editableDevNotes ||
         !form ||
         !noteInput ||
         !submitButton
@@ -56,6 +76,40 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearError() {
         errorBox.textContent = '';
         errorBox.classList.add('hidden');
+    }
+
+    /**
+     * Get Developer Note HTML from Quill.
+     */
+    function getDeveloperNoteContent() {
+        const content = noteEditor.root.innerHTML.trim();
+
+        return noteEditor.getText().trim() ? content : '';
+    }
+
+    /**
+     * Set Developer Note content in Quill.
+     */
+    function setDeveloperNoteContent(content = '') {
+        noteEditor.setText('', 'silent');
+
+        if (content && content.trim()) {
+            noteEditor.clipboard.dangerouslyPasteHTML(content, 'silent');
+        }
+
+        noteInput.value = getDeveloperNoteContent();
+    }
+
+    /**
+     * Enable or disable Developer Note editor.
+     */
+    function setDeveloperNoteReadOnly(readOnly = false) {
+        noteEditor.enable(!readOnly);
+
+        noteEditor.root.classList.toggle(
+            'ql-disabled',
+            readOnly
+        );
     }
 
     /**
@@ -92,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (noteContent.trim() !== '') {
                 if (existingText) {
-                    existingText.textContent = noteContent;
+                    existingText.innerHTML = createSafeNoteContent(noteContent);
                 } else {
                     const paragraph = document.createElement('p');
 
@@ -104,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ''
                     );
 
-                    paragraph.textContent = noteContent;
+                    paragraph.innerHTML = createSafeNoteContent(noteContent);
 
                     if (emptyMessage) {
                         emptyMessage.replaceWith(paragraph);
@@ -188,39 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Update Developer Notes and Task Activity triggers.
-        // document.querySelectorAll(
-        //     '[data-developer-notes-trigger], [data-task-activity-trigger]'
-        // ).forEach((button) => {
-        //     if (String(button.dataset.taskId) !== taskId) return;
-
-        //     button.dataset.hasDeveloperNote = value;
-
-        //     button.setAttribute(
-        //         'data-has-developer-note',
-        //         value
-        //     );
-
-        //     button.classList.toggle(
-        //         '!text-blue-600',
-        //         hasNote
-        //     );
-
-        //     button.classList.toggle(
-        //         'dark:!text-blue-400',
-        //         hasNote
-        //     );
-
-        //     button.classList.toggle(
-        //         'text-gray-500',
-        //         !hasNote
-        //     );
-
-        //     button.classList.toggle(
-        //         'dark:text-bgray-300',
-        //         !hasNote
-        //     );
-        // });
-        // Update Developer Notes and Task Activity triggers.
         document.querySelectorAll(
             '[data-developer-notes-trigger], [data-task-activity-trigger]'
         ).forEach((button) => {
@@ -283,23 +304,13 @@ document.addEventListener('DOMContentLoaded', () => {
         clearError();
 
         loading.classList.remove('hidden');
-
         notesList.replaceChildren();
         notesList.classList.add('hidden');
-
         emptyState.classList.add('hidden');
-
         form.classList.add('hidden');
         readonlyMessage.classList.add('hidden');
-        editableDevNotes.classList.remove('hidden');
-
-        noteInput.value = '';
-        noteInput.readOnly = false;
-
-        noteInput.classList.remove(
-            'pointer-events-none',
-            'select-none'
-        );
+        setDeveloperNoteContent('');
+        setDeveloperNoteReadOnly(false);
 
         submitButton.classList.remove('hidden');
         submitButton.disabled = false;
@@ -356,8 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const isReadOnly =
                 Boolean(data.is_completed) || !data.can_edit;
 
-            noteInput.value = note?.note || '';
-            noteInput.readOnly = isReadOnly;
+            setDeveloperNoteContent(note?.note || '');
+            setDeveloperNoteReadOnly(isReadOnly);
 
             if (isReadOnly) {
                 if (noteLabel) {
@@ -370,9 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 form.classList.remove('hidden');
                 submitButton.classList.add('hidden');
 
-                if (data.is_completed) {
-                    editableDevNotes.classList.add('hidden');
-                }
+
 
                 return;
             }
@@ -387,6 +396,18 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.textContent = hasExistingNote
                 ? 'Update Note'
                 : 'Save Note';
+
+            // Focus the Quill editor after the modal is visible.
+            requestAnimationFrame(() => {
+                if (!noteEditor.isEnabled()) return;
+
+                const editorLength = noteEditor.getLength();
+
+                // Place cursor at the end of the existing content.
+                noteEditor.setSelection(editorLength - 1, 0, 'silent');
+
+                noteEditor.focus();
+            });
 
         } catch (error) {
             showError(
@@ -425,7 +446,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         clearError();
 
-        const note = noteInput.value.trim();
+        const note = getDeveloperNoteContent();
+
+        noteInput.value = note;
 
         // If an existing note is cleared, ask for confirmation before deleting.
         if (hasExistingNote && note === '') {
@@ -441,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     result === true || result?.isConfirmed === true;
 
                 if (!confirmed) {
-                    noteInput.focus();
+                    noteEditor.focus();
                     return;
                 }
 
@@ -461,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!note) {
             showError('Please enter a developer note.');
-            noteInput.focus();
+            noteEditor.focus();
             return;
         }
 
@@ -494,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const savedContent = data.note?.note ?? note;
 
-            noteInput.value = savedContent;
+            setDeveloperNoteContent(savedContent);
             hasExistingNote = true;
 
             // Update the Overview section and Kanban card.
@@ -569,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
             }
 
-            noteInput.value = '';
+            setDeveloperNoteContent('');
             hasExistingNote = false;
 
             // Update the Overview section and Kanban card.
@@ -600,5 +623,65 @@ document.addEventListener('DOMContentLoaded', () => {
                     : 'Save Note';
             }
         }
+    }
+
+    function createSafeNoteContent(html) {
+        const template = document.createElement('template');
+        template.innerHTML = html;
+
+        const allowedTags = new Set([
+            'P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U',
+            'OL', 'UL', 'LI', 'H1', 'H2', 'H3', 'A'
+        ]);
+
+        const cleanNode = (node) => {
+            Array.from(node.childNodes).forEach((child) => {
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    if (!allowedTags.has(child.tagName)) {
+                        child.replaceWith(
+                            document.createTextNode(child.textContent)
+                        );
+                        return;
+                    }
+
+                    Array.from(child.attributes).forEach((attribute) => {
+                        if (
+                            child.tagName !== 'A' ||
+                            !['href', 'target', 'rel'].includes(attribute.name)
+                        ) {
+                            child.removeAttribute(attribute.name);
+                        }
+                    });
+
+                    if (child.tagName === 'A') {
+                        const href = child.getAttribute('href') || '';
+
+                        if (!['http:', 'https:', 'mailto:'].includes(
+                            (() => {
+                                try {
+                                    return new URL(href, window.location.origin).protocol;
+                                } catch {
+                                    return '';
+                                }
+                            })()
+                        )) {
+                            child.removeAttribute('href');
+                        }
+
+                        child.setAttribute('rel', 'noopener noreferrer');
+                    }
+
+                    cleanNode(child);
+                } else if (
+                    child.nodeType !== Node.TEXT_NODE
+                ) {
+                    child.remove();
+                }
+            });
+        };
+
+        cleanNode(template.content);
+
+        return template.innerHTML;
     }
 });

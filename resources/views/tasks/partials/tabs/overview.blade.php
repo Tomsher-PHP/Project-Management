@@ -81,7 +81,12 @@
 
                 <div class="mt-4 rounded-xl bg-bgray-50 px-4 py-4 dark:bg-darkblack-500" data-task-developer-notes-display>
                     @if ($developerNote && filled($developerNoteText))
-                        <p class="{{ $cardTextClasses }} whitespace-pre-wrap break-words" data-task-developer-notes-text>{{ $developerNoteText }}</p>
+                       <div
+                            class="{{ $cardTextClasses }} break-words"
+                            data-task-developer-notes-text
+                        >
+                            {!! $developerNoteText !!}
+                        </div>
                     @else
                         <p class="{{ $emptyTextClasses }}" data-task-developer-notes-empty>
                             No developer notes added yet.
