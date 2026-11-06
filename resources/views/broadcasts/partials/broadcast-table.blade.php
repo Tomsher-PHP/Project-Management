@@ -26,13 +26,16 @@
                             default => 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300',
                         };
 
+                        $dateFormat = $globalDateFormat ?? config('constants.date_format', 'd M Y');
                         $dateDisplay = '—';
                         if ($broadcast->start_date && $broadcast->end_date) {
-                            $dateDisplay = $broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d') ? $broadcast->start_date->format($globalDateFormat) : $broadcast->start_date->format($globalDateFormat) . ' - ' . $broadcast->end_date->format($globalDateFormat);
+                            $dateDisplay = $broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d')
+                                ? $broadcast->start_date->format($dateFormat)
+                                : $broadcast->start_date->format($dateFormat) . ' - ' . $broadcast->end_date->format($dateFormat);
                         } elseif ($broadcast->start_date) {
-                            $dateDisplay = $broadcast->start_date->format($globalDateFormat);
+                            $dateDisplay = $broadcast->start_date->format($dateFormat);
                         } elseif ($broadcast->end_date) {
-                            $dateDisplay = $broadcast->end_date->format($globalDateFormat);
+                            $dateDisplay = $broadcast->end_date->format($dateFormat);
                         }
 
                         $statusColors = Broadcast::statusColors();

@@ -90,14 +90,20 @@ class BroadcastController extends Controller
             'attachments',
         ]);
 
+        $teams = collect();
         $teamNames = collect();
         if ($broadcast->audience_type === Broadcast::AUDIENCE_TEAMS) {
-            $teamNames = Team::query()->whereIn('id', $broadcast->target_team_ids ?? [])->orderBy('name')->pluck('name');
+            $teams = Team::query()
+                ->whereIn('id', $broadcast->target_team_ids ?? [])
+                ->withCount('users')
+                ->orderBy('name')
+                ->get();
+            $teamNames = $teams->pluck('name');
         }
 
         return response()->json([
             'status' => true,
-            'html' => view('broadcasts.partials.broadcast-details-modal', compact('broadcast', 'teamNames'))->render(),
+            'html' => view('broadcasts.partials.broadcast-details-modal', compact('broadcast', 'teams', 'teamNames'))->render(),
         ]);
     }
 

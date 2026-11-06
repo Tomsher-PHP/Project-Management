@@ -109,6 +109,22 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.remove('overflow-hidden');
     };
 
+    modal?.addEventListener('click', (event) => {
+        const insideModalContent = event.target.closest('[data-broadcast-modal-content]')
+            || event.target.closest('[data-broadcast-modal-loading]');
+        const isCloseButton = event.target.closest('[data-broadcast-modal-close]');
+
+        if (isCloseButton || !insideModalContent) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
+
     const setAudienceVisibility = (form, clearInactive = false) => {
         const audience = form.querySelector('[data-broadcast-audience]');
         const teamField = form.querySelector('[data-broadcast-team-field]');

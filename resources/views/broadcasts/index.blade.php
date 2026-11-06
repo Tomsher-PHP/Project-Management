@@ -19,7 +19,7 @@
 
         <div class="fixed inset-0 z-[80] hidden overflow-y-auto" data-broadcast-modal aria-hidden="true">
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-broadcast-modal-close></div>
-            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6" data-broadcast-modal-backdrop>
                 <div class="relative z-10 hidden w-full max-w-5xl" data-broadcast-modal-content></div>
                 <div class="relative z-10 rounded-xl bg-white px-8 py-7 shadow-xl dark:bg-darkblack-600" data-broadcast-modal-loading>
                     <div class="flex items-center gap-3 text-sm font-medium text-bgray-700 dark:text-bgray-300">
