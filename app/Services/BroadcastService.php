@@ -114,12 +114,8 @@ class BroadcastService
 
     public function changeStatus(Broadcast $broadcast, int $status, User $actor): Broadcast
     {
-        if ($status === Broadcast::STATUS_PUBLISHED && $broadcast->status !== Broadcast::STATUS_DRAFT) {
-            throw ValidationException::withMessages(['status' => 'Only draft broadcasts can be published.']);
-        }
-
-        if ($status === Broadcast::STATUS_ARCHIVED && $broadcast->status !== Broadcast::STATUS_PUBLISHED) {
-            throw ValidationException::withMessages(['status' => 'Only published broadcasts can be archived.']);
+        if ($broadcast->status === $status) {
+            return $broadcast;
         }
 
         return DB::transaction(function () use ($broadcast, $status, $actor) {
@@ -187,10 +183,20 @@ class BroadcastService
         $data['team_ids'] = $this->normalizeIds($data['team_ids'] ?? []);
         $data['user_ids'] = $this->normalizeIds($data['user_ids'] ?? []);
 
+        if (blank($data['content'] ?? null)) {
+            throw ValidationException::withMessages([
+                'content' => 'The content field is required.',
+            ]);
+        }
+
         if (empty($data['broadcast_category_id'])) {
             throw ValidationException::withMessages([
                 'broadcast_category_id' => 'Please select a category.',
             ]);
+        }
+
+        if (! empty($data['start_date']) && empty($data['end_date'])) {
+            $data['end_date'] = $data['start_date'];
         }
 
         if ($data['audience_type'] === Broadcast::AUDIENCE_ALL) {
@@ -230,6 +236,9 @@ class BroadcastService
 
         if (blank($data['title'] ?? null)) {
             $errors['title'] = 'Title is required before publishing.';
+        }
+        if (blank($data['content'] ?? null)) {
+            $errors['content'] = 'Content is required before publishing.';
         }
         if (
             blank($data['broadcast_category_id'] ?? null)

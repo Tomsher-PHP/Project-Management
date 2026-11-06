@@ -3,6 +3,11 @@
     $isEdit = $broadcast->exists;
     $selectedTeamIds = collect(old('team_ids', $broadcast->target_team_ids ?? []))->map(fn($id) => (string) $id)->all();
     $selectedUserIds = collect(old('user_ids', $isEdit && $broadcast->audience_type === Broadcast::AUDIENCE_USERS ? $broadcast->recipients->pluck('id') : []))->map(fn($id) => (string) $id)->all();
+    $dateRangeValue = old('date_range', ($broadcast->start_date && $broadcast->end_date
+        ? ($broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d')
+            ? $broadcast->start_date->format('Y-m-d')
+            : $broadcast->start_date->format('Y-m-d') . ' to ' . $broadcast->end_date->format('Y-m-d'))
+        : ($broadcast->start_date ? $broadcast->start_date->format('Y-m-d') : '')));
 @endphp
 
 <div class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-2xl dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -23,17 +28,13 @@
         </div>
 
         <div class="max-h-[72vh] space-y-7 overflow-y-auto px-6 py-5">
-            <div class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300" data-broadcast-errors>
-                <p class="font-semibold">Please correct the following errors:</p>
-                <p class="mt-1 whitespace-pre-line" data-broadcast-error-list></p>
-            </div>
-
             <section>
                 <h3 class="mb-4 text-base font-semibold text-bgray-900 dark:text-white">Broadcast Information</h3>
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div class="md:col-span-2">
                         <label for="broadcast_title" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Title <span class="text-red-500">*</span></label>
-                        <input id="broadcast_title" name="title" type="text" maxlength="255" value="{{ old('title', $broadcast->title) }}" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 outline-none focus:border-success-300 focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required>
+                        <input id="broadcast_title" name="title" type="text" maxlength="255" value="{{ old('title', $broadcast->title) }}" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 outline-none focus:border-success-300 focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required @if(!$isEdit) autofocus @endif>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="title"></span>
                     </div>
                     <div>
                         <label for="broadcast_category" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Category <span class="text-red-500">*</span></label>
@@ -43,6 +44,7 @@
                                 <option value="{{ $category->id }}" @selected((string) old('broadcast_category_id', $broadcast->broadcast_category_id) === (string) $category->id)>{{ $category->name }}</option>
                             @endforeach
                         </select>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="broadcast_category_id"></span>
                     </div>
                     <div>
                         <label for="broadcast_priority" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Priority <span class="text-red-500">*</span></label>
@@ -51,10 +53,12 @@
                                 <option value="{{ $value }}" @selected((int) old('priority', $broadcast->priority ?? Broadcast::PRIORITY_NORMAL) === (int) $value)>{{ $label }}</option>
                             @endforeach
                         </select>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="priority"></span>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Content</label>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Content <span class="text-red-500">*</span></label>
                         <div class="!h-[140px] rounded-lg bg-white text-bgray-900 dark:bg-darkblack-500 dark:text-white" data-broadcast-editor>{!! $broadcast->content !!}</div>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="content"></span>
                     </div>
                 </div>
             </section>
@@ -69,6 +73,7 @@
                                 <option value="{{ $value }}" @selected(old('audience_type', $broadcast->audience_type ?? Broadcast::AUDIENCE_ALL) === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="audience_type"></span>
                     </div>
                     <div class="{{ old('audience_type', $broadcast->audience_type) === Broadcast::AUDIENCE_TEAMS ? '' : 'hidden' }}" data-broadcast-team-field>
                         <label for="broadcast_team_ids" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Select Teams <span class="text-red-500">*</span></label>
@@ -77,6 +82,7 @@
                                 <option value="{{ $team->id }}" @selected(in_array((string) $team->id, $selectedTeamIds, true))>{{ $team->name }}</option>
                             @endforeach
                         </select>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="team_ids"></span>
                     </div>
                     <div class="{{ old('audience_type', $broadcast->audience_type) === Broadcast::AUDIENCE_USERS ? '' : 'hidden' }}" data-broadcast-user-field>
                         <label for="broadcast_user_ids" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Select Users <span class="text-red-500">*</span></label>
@@ -85,6 +91,7 @@
                                 <option value="{{ $user->id }}" data-subtype="{{ $user->email }}" @selected(in_array((string) $user->id, $selectedUserIds, true))>{{ $user->name }}</option>
                             @endforeach
                         </select>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="user_ids"></span>
                     </div>
                 </div>
             </section>
@@ -92,32 +99,54 @@
             <section class="border-t border-bgray-200 pt-6 dark:border-darkblack-400">
                 <h3 class="mb-4 text-base font-semibold text-bgray-900 dark:text-white">Visibility & Attachments</h3>
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <div>
-                        <label for="broadcast_start_date" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Start Date</label>
-                        <input id="broadcast_start_date" name="start_date" type="text" value="{{ old('start_date', $broadcast->start_date?->format('Y-m-d')) }}" class="datepicker w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="Y-m-d" placeholder="YYYY-MM-DD">
-                    </div>
-                    <div>
-                        <label for="broadcast_end_date" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">End Date</label>
-                        <input id="broadcast_end_date" name="end_date" type="text" value="{{ old('end_date', $broadcast->end_date?->format('Y-m-d')) }}" class="datepicker w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="Y-m-d" placeholder="YYYY-MM-DD">
+                    <div class="md:col-span-2">
+                        <label for="broadcast_date_range" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Date Range</label>
+                        <input id="broadcast_date_range" name="date_range" type="text" value="{{ $dateRangeValue }}" class="datepicker w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" placeholder="YYYY-MM-DD to YYYY-MM-DD" autocomplete="off">
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="date_range"></span>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="start_date"></span>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="end_date"></span>
                     </div>
                     <div class="md:col-span-2">
-                        <label for="broadcast_attachments" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Attachments</label>
-                        <input id="broadcast_attachments" name="attachments[]" type="file" multiple accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png" class="block w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-700 file:mr-4 file:rounded-md file:border-0 file:bg-success-50 file:px-4 file:py-1.5 file:font-medium file:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                        <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">Up to 5 files, 15 MB each.</p>
-                    </div>
-                    @if ($isEdit && $broadcast->attachments->isNotEmpty())
-                        <div class="md:col-span-2" data-existing-attachments>
-                            <p class="mb-2 text-sm font-semibold text-bgray-900 dark:text-white">Existing Attachments</p>
-                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                @foreach ($broadcast->attachments as $attachment)
-                                    <div class="flex items-center justify-between gap-3 rounded-lg border border-bgray-200 px-3 py-2 dark:border-darkblack-400" data-attachment-item>
-                                        <a href="{{ route('broadcasts.attachments.download', [$broadcast, $attachment]) }}" class="min-w-0 truncate text-sm font-medium text-success-500 hover:underline" title="{{ $attachment->original_name }}">{{ $attachment->original_name ?: $attachment->file_name }}</a>
-                                        <button type="button" data-broadcast-attachment-delete data-url="{{ route('broadcasts.attachments.destroy', [$broadcast, $attachment]) }}" class="shrink-0 rounded p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10" title="Remove attachment" aria-label="Remove attachment">✕</button>
-                                    </div>
-                                @endforeach
+                        <label for="broadcast_attachments" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Files
+                        </label>
+                        <input type="file" id="broadcast_attachments" name="attachments[]" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-4 py-3 text-sm text-bgray-700 file:mr-4 file:rounded-md file:border-0 file:bg-success-50 file:px-4 file:py-2 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png" data-broadcast-attachments-input>
+                        <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
+                            You can attach multiple files (up to 5). Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 15MB each.
+                        </p>
+                        <div id="selected-broadcast-files" class="mt-3 flex flex-wrap gap-2" data-selected-broadcast-files></div>
+                        <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="attachments"></span>
+
+                        @if ($isEdit && $broadcast->attachments->isNotEmpty())
+                            <div class="pt-3 mt-4 border-t border-bgray-200 dark:border-darkblack-400" data-existing-attachments>
+                                <label class="mb-2 block text-xs font-semibold text-bgray-700 dark:text-bgray-300">
+                                    Existing Attachments
+                                </label>
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    @foreach ($broadcast->attachments as $attachment)
+                                        <div class="flex items-center justify-between gap-2 rounded-lg border border-bgray-200 bg-white p-2.5 dark:border-darkblack-400 dark:bg-darkblack-500" data-attachment-item>
+                                            <a href="{{ route('broadcasts.attachments.download', [$broadcast, $attachment]) }}" target="_blank" class="flex items-center gap-2.5 min-w-0 flex-1 hover:text-success-400 transition" title="{{ $attachment->original_name }}">
+                                                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-bgray-100 dark:bg-darkblack-600 overflow-hidden">
+                                                    <svg class="h-5 w-5 text-bgray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V7.5L14.5 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="truncate text-xs font-semibold text-bgray-900 dark:text-white">{{ $attachment->original_name ?: $attachment->file_name }}</p>
+                                                    <p class="text-[11px] text-bgray-500 dark:text-bgray-400">{{ number_format($attachment->file_size / 1024, 1) }} KB</p>
+                                                </div>
+                                            </a>
+                                            <button type="button" data-broadcast-attachment-delete data-url="{{ route('broadcasts.attachments.destroy', [$broadcast, $attachment]) }}" class="shrink-0 rounded p-1.5 text-bgray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition" title="Remove attachment" aria-label="Remove attachment">
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
                 </div>
             </section>
         </div>

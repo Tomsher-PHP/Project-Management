@@ -4,7 +4,7 @@
 
 <div class="overflow-hidden rounded-[24px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
     <div class="overflow-x-auto">
-        <table class="min-w-[1120px] w-full border-separate border-spacing-0">
+        <table class="min-w-[1040px] w-full border-separate border-spacing-0">
             <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                 <tr>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-50">#</th>
@@ -12,8 +12,7 @@
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="broadcast_category_id" label="Category" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="priority" label="Priority" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="audience_type" label="Audience" /></th>
-                    <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="start_date" label="Start Date" /></th>
-                    <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="end_date" label="End Date" /></th>
+                    <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="start_date" label="Date" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-darkblack-400"><x-sorting.sortable-column column="status" label="Status" /></th>
                     <th class="border-b border-bgray-200 px-4 py-4 text-left text-base font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-50">Actions</th>
                 </tr>
@@ -26,11 +25,20 @@
                             Broadcast::PRIORITY_IMPORTANT => 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
                             default => 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300',
                         };
-                        $statusClass = match ($broadcast->status) {
-                            Broadcast::STATUS_PUBLISHED => 'bg-success-50 text-success-500 dark:bg-success-300/15 dark:text-success-300',
-                            Broadcast::STATUS_DRAFT => 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300',
-                            default => 'bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300',
-                        };
+
+                        $dateDisplay = '—';
+                        if ($broadcast->start_date && $broadcast->end_date) {
+                            $dateDisplay = $broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d') ? $broadcast->start_date->format('d M Y') : $broadcast->start_date->format('d M Y') . ' - ' . $broadcast->end_date->format('d M Y');
+                        } elseif ($broadcast->start_date) {
+                            $dateDisplay = $broadcast->start_date->format('d M Y');
+                        } elseif ($broadcast->end_date) {
+                            $dateDisplay = $broadcast->end_date->format('d M Y');
+                        }
+
+                        $statusColors = Broadcast::statusColors();
+                        $currentStatusName = Broadcast::statusOptions()[$broadcast->status] ?? 'Unknown';
+                        $statusColor = $statusColors[$broadcast->status] ?? '#64748B';
+                        $updateStatusUrl = route('broadcasts.status', $broadcast);
                     @endphp
                     <tr class="transition hover:bg-bgray-50/60 dark:hover:bg-darkblack-500/60">
                         <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">{{ $broadcasts->firstItem() + $loop->index }}</td>
@@ -52,43 +60,65 @@
                                 <span class="block text-xs text-bgray-500 dark:text-bgray-400">{{ $broadcast->allocations_count }} recipient(s)</span>
                             @endif
                         </td>
-                        <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">{{ $broadcast->start_date?->format('d M Y') ?? 'Immediately' }}</td>
-                        <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">{{ $broadcast->end_date?->format('d M Y') ?? 'No expiry' }}</td>
-                        <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">{{ Broadcast::statusOptions()[$broadcast->status] ?? 'Unknown' }}</span></td>
+                        <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">{{ $dateDisplay }}</td>
                         <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                            <div class="flex items-center gap-1.5">
-                                <button type="button" data-broadcast-view data-url="{{ route('broadcasts.show', $broadcast) }}" class="rounded-md p-2 text-bgray-600 transition hover:bg-bgray-100 hover:text-success-400 dark:text-bgray-300 dark:hover:bg-darkblack-400" title="View broadcast" aria-label="View broadcast">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></svg>
-                                </button>
-                                @can('broadcast.edit')
-                                    <button type="button" data-broadcast-edit data-url="{{ route('broadcasts.edit', $broadcast) }}" class="rounded-md p-2 text-bgray-600 transition hover:bg-bgray-100 hover:text-blue-500 dark:text-bgray-300 dark:hover:bg-darkblack-400" title="Edit broadcast" aria-label="Edit broadcast">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4L16.5 3.5z"/></svg>
+                            @can('broadcast.status_change')
+                                <div class="relative inline-block" data-broadcast-status-dropdown>
+                                    <button type="button" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm transition hover:opacity-90" data-broadcast-status-trigger aria-expanded="false" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">
+                                        <span class="inline-flex h-2 w-2 rounded-full" style="background-color: {{ $statusColor }};"></span>
+                                        <span data-broadcast-status-label class="truncate">{{ $currentStatusName }}</span>
+                                        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" class="transition-transform duration-200">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
                                     </button>
-                                @endcan
-                                @can('broadcast.status_change')
-                                    @if ($broadcast->status === Broadcast::STATUS_DRAFT)
-                                        <button type="button" data-broadcast-status data-url="{{ route('broadcasts.status', $broadcast) }}" data-status="{{ Broadcast::STATUS_PUBLISHED }}" data-action="publish" class="rounded-md p-2 text-bgray-600 transition hover:bg-success-50 hover:text-success-500 dark:text-bgray-300 dark:hover:bg-success-300/10" title="Publish broadcast" aria-label="Publish broadcast">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l4 4L19 6"/></svg>
-                                        </button>
-                                    @elseif ($broadcast->status === Broadcast::STATUS_PUBLISHED)
-                                        <button type="button" data-broadcast-status data-url="{{ route('broadcasts.status', $broadcast) }}" data-status="{{ Broadcast::STATUS_ARCHIVED }}" data-action="archive" class="rounded-md p-2 text-bgray-600 transition hover:bg-amber-50 hover:text-amber-600 dark:text-bgray-300 dark:hover:bg-amber-300/10" title="Archive broadcast" aria-label="Archive broadcast">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6"/></svg>
-                                        </button>
-                                    @endif
+
+                                    <div class="hidden min-w-[150px] overflow-hidden rounded-xl border border-bgray-200 bg-white p-1 shadow-lg ring-1 ring-black/5 dark:border-darkblack-400 dark:bg-darkblack-500 dark:ring-white/10 z-20" data-broadcast-status-menu>
+                                        <ul class="max-h-56 overflow-y-auto py-1">
+                                            @foreach (Broadcast::statusOptions() as $statusOptionId => $statusOptionName)
+                                                @php
+                                                    $isCurrent = (int) $broadcast->status === (int) $statusOptionId;
+                                                    $optColor = $statusColors[$statusOptionId] ?? '#64748B';
+                                                @endphp
+                                                <li>
+                                                    <button type="button" class="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-medium transition hover:bg-bgray-100 dark:hover:bg-darkblack-400 {{ $isCurrent ? 'bg-bgray-100 font-semibold text-bgray-900 dark:bg-darkblack-400 dark:text-white' : 'text-bgray-700 dark:text-bgray-300' }}" data-broadcast-status-option data-status-id="{{ $statusOptionId }}" data-status-name="{{ $statusOptionName }}" data-current-status-id="{{ $broadcast->status }}" data-update-url="{{ $updateStatusUrl }}" data-broadcast-title="{{ $broadcast->title }}">
+                                                        <span class="flex items-center gap-2">
+                                                            <span class="inline-flex h-2 w-2 rounded-full" style="background-color: {{ $optColor }};"></span>
+                                                            <span>{{ $statusOptionName }}</span>
+                                                        </span>
+                                                        @if ($isCurrent)
+                                                            <svg class="h-3.5 w-3.5 text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        @endif
+                                                    </button>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">
+                                    <span class="inline-flex h-2 w-2 rounded-full" style="background-color: {{ $statusColor }};"></span>
+                                    {{ $currentStatusName }}
+                                </span>
+                            @endcan
+                        </td>
+                        <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
+                            <div class="flex items-center space-x-2">
+                                <x-view-button action="javascript:void(0)" data-broadcast-view data-url="{{ route('broadcasts.show', $broadcast) }}" title="View broadcast" aria-label="View broadcast" />
+                                @can('broadcast.edit')
+                                    <x-edit-button action="javascript:void(0)" data-broadcast-edit data-url="{{ route('broadcasts.edit', $broadcast) }}" title="Edit broadcast" aria-label="Edit broadcast" />
                                 @endcan
                                 @can('broadcast.delete')
-                                    <button type="button" data-broadcast-delete data-url="{{ route('broadcasts.destroy', $broadcast) }}" data-title="{{ $broadcast->title }}" class="rounded-md p-2 text-bgray-600 transition hover:bg-red-50 hover:text-red-500 dark:text-bgray-300 dark:hover:bg-red-500/10" title="Delete broadcast" aria-label="Delete broadcast">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>
-                                    </button>
+                                    <x-delete-form :action="route('broadcasts.destroy', $broadcast)" confirm-title="Delete Broadcast" confirm-message="The broadcast “{{ $broadcast->title }}” will be permanently deleted." title="Delete broadcast" aria-label="Delete broadcast" />
                                 @endcan
                             </div>
                         </td>
                     </tr>
                 @empty
-                    <x-table-no-data col-span="9" message="No broadcasts found." sub-message="There are no broadcasts to display for the current filters." />
+                    <x-table-no-data col-span="8" message="No broadcasts found." sub-message="There are no broadcasts to display for the current filters." />
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
-

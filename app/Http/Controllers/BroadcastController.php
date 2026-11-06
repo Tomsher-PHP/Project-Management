@@ -26,7 +26,7 @@ class BroadcastController extends Controller
 
     public function index(Request $request): View
     {
-        $perPage = min(500, max(5, (int) $request->input('per_page', config('constants.per_page_count', 20))));
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count', 20));
 
         return view('broadcasts.index', [
             'broadcasts' => $this->broadcastService->paginate($request->all(), $perPage),
@@ -129,6 +129,7 @@ class BroadcastController extends Controller
     {
         $validated = $request->validate([
             'status' => ['required', 'integer', Rule::in([
+                Broadcast::STATUS_DRAFT,
                 Broadcast::STATUS_PUBLISHED,
                 Broadcast::STATUS_ARCHIVED,
             ])],
@@ -136,11 +137,11 @@ class BroadcastController extends Controller
 
         $updated = $this->broadcastService->changeStatus($broadcast, (int) $validated['status'], $request->user());
 
+        $statusLabel = Broadcast::statusOptions()[$updated->status] ?? 'Status';
+
         return response()->json([
             'status' => true,
-            'message' => $updated->status === Broadcast::STATUS_PUBLISHED
-                ? 'Broadcast published successfully.'
-                : 'Broadcast archived successfully.',
+            'message' => "Broadcast status updated to {$statusLabel}.",
         ]);
     }
 
@@ -187,17 +188,16 @@ class BroadcastController extends Controller
 
     protected function optionObjects(array $options): \Illuminate\Support\Collection
     {
-        return collect($options)->map(fn ($name, $id) => (object) ['id' => $id, 'name' => $name])->values();
+        return collect($options)->map(fn($name, $id) => (object) ['id' => $id, 'name' => $name])->values();
     }
 
     protected function ensureBroadcastAttachment(Broadcast $broadcast, Attachment $attachment): void
     {
         abort_unless(
             (int) $attachment->link_id === (int) $broadcast->id
-            && $attachment->link_type === Broadcast::class
-            && $attachment->category === Broadcast::ATTACHMENT_CATEGORY,
+                && $attachment->link_type === Broadcast::class
+                && $attachment->category === Broadcast::ATTACHMENT_CATEGORY,
             404,
         );
     }
 }
-

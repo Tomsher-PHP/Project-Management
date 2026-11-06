@@ -24,6 +24,26 @@ class BroadcastRequest extends FormRequest
             $this->merge(['content' => $plainText === '' ? null : $content]);
         }
 
+        $dateRange = $this->input('date_range');
+        if (is_string($dateRange) && trim($dateRange) !== '') {
+            $parts = array_map('trim', explode(' to ', $dateRange));
+            $startDate = $parts[0] ?: null;
+            $endDate = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : $startDate;
+            $this->merge([
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ]);
+        } elseif ($this->has('date_range')) {
+            $this->merge([
+                'start_date' => null,
+                'end_date' => null,
+            ]);
+        } elseif ($this->filled('start_date') && ! $this->filled('end_date')) {
+            $this->merge([
+                'end_date' => $this->input('start_date'),
+            ]);
+        }
+
         $this->merge([
             'status' => (int) $this->input('status', Broadcast::STATUS_DRAFT),
             'team_ids' => array_values(array_unique(array_filter((array) $this->input('team_ids', []), 'filled'))),
@@ -35,7 +55,7 @@ class BroadcastRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'content' => ['nullable', 'string'],
+            'content' => ['required', 'string'],
             'broadcast_category_id' => [
                 'required',
                 'integer',
@@ -63,6 +83,7 @@ class BroadcastRequest extends FormRequest
             'status' => ['required', 'integer', Rule::in($this->isMethod('post')
                 ? [Broadcast::STATUS_DRAFT, Broadcast::STATUS_PUBLISHED]
                 : [Broadcast::STATUS_DRAFT, Broadcast::STATUS_PUBLISHED, Broadcast::STATUS_ARCHIVED])],
+            'date_range' => ['nullable', 'string'],
             'start_date' => ['nullable', 'date_format:Y-m-d'],
             'end_date' => [
                 'nullable',
@@ -77,6 +98,7 @@ class BroadcastRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'content.required' => 'The content field is required.',
             'broadcast_category_id.required' => 'Please select a category.',
             'team_ids.required' => 'Please select at least one team.',
             'user_ids.required' => 'Please select at least one user.',

@@ -16,6 +16,8 @@ class BroadcastServiceTest extends TestCase
     {
         parent::setUp();
 
+        Schema::disableForeignKeyConstraints();
+
         foreach (['attachments', 'broadcast_users', 'broadcasts', 'team_user', 'teams', 'broadcast_categories', 'users'] as $table) {
             Schema::dropIfExists($table);
         }
@@ -97,6 +99,8 @@ class BroadcastServiceTest extends TestCase
             $table->softDeletes();
         });
 
+        Schema::enableForeignKeyConstraints();
+
         DB::table('users')->insert([
             ['id' => 1, 'name' => 'Manager', 'email' => 'manager@example.com', 'is_active' => true, 'delete_status' => false],
             ['id' => 2, 'name' => 'User Two', 'email' => 'two@example.com', 'is_active' => true, 'delete_status' => false],
@@ -153,7 +157,7 @@ class BroadcastServiceTest extends TestCase
         $broadcast = $service->create($this->data([
             'audience_type' => Broadcast::AUDIENCE_TEAMS,
             'team_ids' => [1],
-            'content' => '',
+            'content' => '<p>Updated content</p>',
         ]), $actor);
 
         DB::table('team_user')->insert(['team_id' => 1, 'user_id' => 2, 'is_active' => true]);

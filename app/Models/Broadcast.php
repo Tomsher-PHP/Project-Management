@@ -119,6 +119,15 @@ class Broadcast extends Model
         ];
     }
 
+    public static function statusColors(): array
+    {
+        return [
+            self::STATUS_DRAFT => '#64748b',
+            self::STATUS_PUBLISHED => '#22c55e',
+            self::STATUS_ARCHIVED => '#f59e0b',
+        ];
+    }
+
     public static function audienceOptions(): array
     {
         return [
