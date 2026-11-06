@@ -162,7 +162,18 @@ document.addEventListener('DOMContentLoaded', () => {
         revokeAllFileUrls();
 
         initTomSelect(form);
+
+        const dateRangeInput = form.querySelector('#broadcast_date_range');
+        if (dateRangeInput && !dateRangeInput.dataset.minDate) {
+            const today = new Date().toISOString().split('T')[0];
+            dateRangeInput.dataset.minDate = today;
+        }
+
         initDatepicker('.datepicker', {}, form);
+
+        if (dateRangeInput?._flatpickr && dateRangeInput.dataset.minDate) {
+            dateRangeInput._flatpickr.set('minDate', dateRangeInput.dataset.minDate);
+        }
 
         const editorElement = form.querySelector('[data-broadcast-editor]');
         let editor = null;

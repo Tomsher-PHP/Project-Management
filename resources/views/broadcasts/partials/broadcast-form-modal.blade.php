@@ -1,6 +1,10 @@
 @php
     use App\Models\Broadcast;
     $isEdit = $broadcast->exists;
+    $today = now()->toDateString();
+    $minDate = ($isEdit && $broadcast->start_date && $broadcast->start_date->format('Y-m-d') < $today)
+        ? $broadcast->start_date->format('Y-m-d')
+        : $today;
     $selectedTeamIds = collect(old('team_ids', $broadcast->target_team_ids ?? []))->map(fn($id) => (string) $id)->all();
     $selectedUserIds = collect(old('user_ids', $isEdit && $broadcast->audience_type === Broadcast::AUDIENCE_USERS ? $broadcast->recipients->pluck('id')->all() : []))->map(fn($id) => (string) $id)->all();
     $dateRangeValue = old('date_range', $broadcast->start_date && $broadcast->end_date ? ($broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d') ? $broadcast->start_date->format('Y-m-d') : $broadcast->start_date->format('Y-m-d') . ' to ' . $broadcast->end_date->format('Y-m-d')) : ($broadcast->start_date ? $broadcast->start_date->format('Y-m-d') : ''));
@@ -97,7 +101,7 @@
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div class="md:col-span-2">
                         <label for="broadcast_date_range" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Date Range</label>
-                        <input id="broadcast_date_range" name="date_range" type="text" value="{{ $dateRangeValue }}" class="datepicker w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" placeholder="YYYY-MM-DD to YYYY-MM-DD" autocomplete="off">
+                        <input id="broadcast_date_range" name="date_range" type="text" value="{{ $dateRangeValue }}" class="datepicker w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ $minDate }}" placeholder="YYYY-MM-DD to YYYY-MM-DD" autocomplete="off">
                         <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="date_range"></span>
                         <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="start_date"></span>
                         <span class="text-xs text-red-500 mt-1 hidden error-text block" data-error-for="end_date"></span>
