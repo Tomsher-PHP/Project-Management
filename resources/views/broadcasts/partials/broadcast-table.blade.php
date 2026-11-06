@@ -31,9 +31,7 @@
                         $timezone = $globalTimezone ?? config('app.timezone');
                         $dateDisplay = '—';
                         if ($broadcast->start_date && $broadcast->end_date) {
-                            $dateDisplay = $broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d')
-                                ? $broadcast->start_date->format($dateFormat)
-                                : $broadcast->start_date->format($dateFormat) . ' - ' . $broadcast->end_date->format($dateFormat);
+                            $dateDisplay = $broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d') ? $broadcast->start_date->format($dateFormat) : $broadcast->start_date->format($dateFormat) . ' - ' . $broadcast->end_date->format($dateFormat);
                         } elseif ($broadcast->start_date) {
                             $dateDisplay = $broadcast->start_date->format($dateFormat);
                         } elseif ($broadcast->end_date) {
@@ -45,7 +43,7 @@
                         $statusColor = $statusColors[$broadcast->status] ?? '#64748B';
                         $updateStatusUrl = route('broadcasts.status', $broadcast);
                     @endphp
-                    <tr class="transition hover:bg-bgray-50/60 dark:hover:bg-darkblack-500/60">
+                    <tr class="transition hover:bg-bgray-100 dark:hover:bg-darkblack-500">
                         <td class="border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">{{ $broadcasts->firstItem() + $loop->index }}</td>
                         <td class="max-w-[260px] border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                             <button type="button" class="block max-w-full truncate text-left text-sm font-semibold text-bgray-900 hover:text-success-400 dark:text-white" data-broadcast-view data-url="{{ route('broadcasts.show', $broadcast) }}" title="{{ $broadcast->title }}">
@@ -109,8 +107,8 @@
                             @endcan
 
                             @if ($broadcast->status === Broadcast::STATUS_PUBLISHED && $broadcast->published_at)
-                                <span class="mt-1 block text-xs text-bgray-500 dark:text-bgray-400 whitespace-nowrap">
-                                    {{ $broadcast->published_at->timezone($timezone)->format($dateFormat . ', ' . $timeFormat) }}
+                                <span class="mt-1 block text-xs text-bgray-600 dark:text-bgray-300 whitespace-nowrap">
+                                    @appDateTime($broadcast->published_at)
                                 </span>
                             @endif
                         </td>
