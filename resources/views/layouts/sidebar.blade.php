@@ -44,7 +44,7 @@
     $canViewProductivityReports = $authUser?->can('reports.productivity_view');
 
     $canViewAppraisal = $authUser?->can('appraisal.view');
-    $canViewBulletins = $authUser?->can('bulletin.view');
+    $canViewBroadcasts = $authUser?->can('broadcast.view');
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
     $canViewLeaveChangeRequests = $authUser?->can('leave_change_request.view');
     $canViewLeaveCancelRequests = $authUser?->can('leave_cancellation_request.view');
@@ -65,7 +65,7 @@
     };
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewBulletins || $canViewAttendance || $canViewHolidays || $canViewExpenses || $canViewLeaveChangeRequests || $canViewLeaveCancelRequests;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewBroadcasts || $canViewAttendance || $canViewHolidays || $canViewExpenses || $canViewLeaveChangeRequests || $canViewLeaveCancelRequests;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
@@ -113,7 +113,7 @@
     $isActivityLogActive = request()->routeIs('activity.log*');
 
     $isAppraisalActive = request()->routeIs('appraisal.*');
-    $isBulletinsActive = request()->routeIs('bulletins.*');
+    $isBroadcastsActive = request()->routeIs('broadcasts.*');
 
     $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
     $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
@@ -578,10 +578,10 @@
                             </li>
                         @endif
 
-                        @if ($canViewBulletins)
-                            <!-- Bulletins -->
-                            <li class="item py-[8px] {{ $isBulletinsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="{{ route('bulletins.index') }}">
+                        @if ($canViewBroadcasts)
+                            <!-- Broadcasts -->
+                            <li class="item py-[8px] {{ $isBroadcastsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('broadcasts.index') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
@@ -590,7 +590,7 @@
                                                     <path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-base font-medium leading-none {{ $isBulletinsActive ? $sidebarItemActiveClass : '' }}">Bulletins</span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isBroadcastsActive ? $sidebarItemActiveClass : '' }}">Broadcasts</span>
                                         </div>
                                     </div>
                                 </a>

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Model;
 
-class Bulletin extends Model
+class Broadcast extends Model
 {
     use Filterable, Sortable;
 
@@ -26,12 +26,12 @@ class Bulletin extends Model
     public const AUDIENCE_TEAMS = 'teams';
     public const AUDIENCE_USERS = 'users';
 
-    public const ATTACHMENT_CATEGORY = 'bulletin_attachment';
+    public const ATTACHMENT_CATEGORY = 'broadcast_attachment';
 
     protected $fillable = [
         'title',
         'content',
-        'bulletin_category_id',
+        'broadcast_category_id',
         'priority',
         'audience_type',
         'target_team_ids',
@@ -47,7 +47,7 @@ class Bulletin extends Model
 
     protected $sortable = [
         'title',
-        'bulletin_category_id',
+        'broadcast_category_id',
         'priority',
         'audience_type',
         'start_date',
@@ -72,7 +72,7 @@ class Bulletin extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(BulletinCategory::class, 'bulletin_category_id');
+        return $this->belongsTo(BroadcastCategory::class, 'broadcast_category_id');
     }
 
     public function creator(): BelongsTo
@@ -87,12 +87,12 @@ class Bulletin extends Model
 
     public function allocations(): HasMany
     {
-        return $this->hasMany(BulletinUser::class);
+        return $this->hasMany(BroadcastUser::class);
     }
 
     public function recipients(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'bulletin_users')->withTimestamps();
+        return $this->belongsToMany(User::class, 'broadcast_users')->withTimestamps();
     }
 
     public function attachments(): MorphMany
@@ -128,3 +128,4 @@ class Bulletin extends Model
         ];
     }
 }
+

@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bulletins', function (Blueprint $table) {
+        Schema::create('broadcasts', function (Blueprint $table) {
             $table->id();
 
             $table->string('title');
             $table->longText('content');
 
-            $table->foreignId('bulletin_category_id')->constrained('bulletin_categories')->restrictOnDelete();
+            $table->foreignId('broadcast_category_id')->constrained('broadcast_categories')->restrictOnDelete();
 
             $table->unsignedTinyInteger('priority')->default(3)->comment('1-urgent, 2-important, 3-normal');
 
@@ -50,6 +50,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bulletins');
+        Schema::dropIfExists('broadcasts');
     }
 };

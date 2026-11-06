@@ -2,21 +2,21 @@
 
 namespace Tests\Feature;
 
-use App\Models\Bulletin;
+use App\Models\Broadcast;
 use App\Models\User;
-use App\Services\BulletinService;
+use App\Services\BroadcastService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
-class BulletinServiceTest extends TestCase
+class BroadcastServiceTest extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
-        foreach (['attachments', 'bulletin_users', 'bulletins', 'team_user', 'teams', 'bulletin_categories', 'users'] as $table) {
+        foreach (['attachments', 'broadcast_users', 'broadcasts', 'team_user', 'teams', 'broadcast_categories', 'users'] as $table) {
             Schema::dropIfExists($table);
         }
 
@@ -29,7 +29,7 @@ class BulletinServiceTest extends TestCase
             $table->softDeletes();
             $table->timestamps();
         });
-        Schema::create('bulletin_categories', function (Blueprint $table) {
+        Schema::create('broadcast_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('color')->nullable();
@@ -55,11 +55,11 @@ class BulletinServiceTest extends TestCase
             $table->softDeletes();
             $table->timestamps();
         });
-        Schema::create('bulletins', function (Blueprint $table) {
+        Schema::create('broadcasts', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->longText('content');
-            $table->unsignedBigInteger('bulletin_category_id');
+            $table->unsignedBigInteger('broadcast_category_id');
             $table->unsignedTinyInteger('priority')->default(3);
             $table->string('audience_type', 20)->default('all');
             $table->json('target_team_ids')->nullable();
@@ -71,12 +71,12 @@ class BulletinServiceTest extends TestCase
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
-        Schema::create('bulletin_users', function (Blueprint $table) {
+        Schema::create('broadcast_users', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('bulletin_id');
+            $table->unsignedBigInteger('broadcast_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
-            $table->unique(['bulletin_id', 'user_id']);
+            $table->unique(['broadcast_id', 'user_id']);
         });
         Schema::create('attachments', function (Blueprint $table) {
             $table->id();
@@ -102,7 +102,7 @@ class BulletinServiceTest extends TestCase
             ['id' => 2, 'name' => 'User Two', 'email' => 'two@example.com', 'is_active' => true, 'delete_status' => false],
             ['id' => 3, 'name' => 'Inactive User', 'email' => 'three@example.com', 'is_active' => false, 'delete_status' => false],
         ]);
-        DB::table('bulletin_categories')->insert([
+        DB::table('broadcast_categories')->insert([
             'id' => 1,
             'name' => 'General',
             'sort_order' => 1,
@@ -125,58 +125,59 @@ class BulletinServiceTest extends TestCase
             ['team_id' => 2, 'user_id' => 3, 'is_active' => true],
         ]);
 
-        $service = app(BulletinService::class);
+        $service = app(BroadcastService::class);
         $actor = User::query()->findOrFail(1);
-        $bulletin = $service->create($this->data([
-            'audience_type' => Bulletin::AUDIENCE_TEAMS,
+        $broadcast = $service->create($this->data([
+            'audience_type' => Broadcast::AUDIENCE_TEAMS,
             'team_ids' => [1, 2],
         ]), $actor);
 
-        $this->assertSame([1, 2], $bulletin->recipients()->orderBy('users.id')->pluck('users.id')->all());
-        $this->assertSame([1, 2], $bulletin->target_team_ids);
+        $this->assertSame([1, 2], $broadcast->recipients()->orderBy('users.id')->pluck('users.id')->all());
+        $this->assertSame([1, 2], $broadcast->target_team_ids);
 
-        $bulletin = $service->update($bulletin, $this->data([
-            'audience_type' => Bulletin::AUDIENCE_ALL,
+        $broadcast = $service->update($broadcast, $this->data([
+            'audience_type' => Broadcast::AUDIENCE_ALL,
             'team_ids' => [],
         ]), $actor);
 
-        $this->assertNull($bulletin->target_team_ids);
-        $this->assertSame(0, $bulletin->recipients()->count());
+        $this->assertNull($broadcast->target_team_ids);
+        $this->assertSame(0, $broadcast->recipients()->count());
     }
 
     public function test_publishing_refreshes_team_members_and_sets_publication_timestamp(): void
     {
         DB::table('team_user')->insert(['team_id' => 1, 'user_id' => 1, 'is_active' => true]);
 
-        $service = app(BulletinService::class);
+        $service = app(BroadcastService::class);
         $actor = User::query()->findOrFail(1);
-        $bulletin = $service->create($this->data([
-            'audience_type' => Bulletin::AUDIENCE_TEAMS,
+        $broadcast = $service->create($this->data([
+            'audience_type' => Broadcast::AUDIENCE_TEAMS,
             'team_ids' => [1],
             'content' => '',
         ]), $actor);
 
         DB::table('team_user')->insert(['team_id' => 1, 'user_id' => 2, 'is_active' => true]);
-        $bulletin = $service->changeStatus($bulletin, Bulletin::STATUS_PUBLISHED, $actor);
+        $broadcast = $service->changeStatus($broadcast, Broadcast::STATUS_PUBLISHED, $actor);
 
-        $this->assertSame(Bulletin::STATUS_PUBLISHED, $bulletin->status);
-        $this->assertNotNull($bulletin->published_at);
-        $this->assertSame([1, 2], $bulletin->recipients()->orderBy('users.id')->pluck('users.id')->all());
+        $this->assertSame(Broadcast::STATUS_PUBLISHED, $broadcast->status);
+        $this->assertNotNull($broadcast->published_at);
+        $this->assertSame([1, 2], $broadcast->recipients()->orderBy('users.id')->pluck('users.id')->all());
     }
 
     protected function data(array $overrides = []): array
     {
         return array_merge([
-            'title' => 'Service bulletin',
+            'title' => 'Service broadcast',
             'content' => '<p>Safe content</p>',
-            'bulletin_category_id' => 1,
-            'priority' => Bulletin::PRIORITY_NORMAL,
-            'audience_type' => Bulletin::AUDIENCE_ALL,
+            'broadcast_category_id' => 1,
+            'priority' => Broadcast::PRIORITY_NORMAL,
+            'audience_type' => Broadcast::AUDIENCE_ALL,
             'team_ids' => [],
             'user_ids' => [],
-            'status' => Bulletin::STATUS_DRAFT,
+            'status' => Broadcast::STATUS_DRAFT,
             'start_date' => null,
             'end_date' => null,
         ], $overrides);
     }
 }
+

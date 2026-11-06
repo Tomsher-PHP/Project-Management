@@ -8,8 +8,8 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
-use App\Http\Controllers\BulletinController;
-use App\Http\Controllers\BulletinCategoryController;
+use App\Http\Controllers\BroadcastController;
+use App\Http\Controllers\BroadcastCategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\CommonController;
@@ -357,12 +357,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('leave-notifications', [LeaveNotificationSettingController::class, 'edit',])->name('leave-notifications.edit');
         Route::put('leave-notifications', [LeaveNotificationSettingController::class, 'update',])->name('leave-notifications.update');
 
-        // Bulletin Category Routes
-        Route::patch('/bulletin-categories/toggle-status', [BulletinCategoryController::class, 'toggleStatus'])->middleware('permission.type:bulletin_settings.edit')->name('bulletin_category.toggleStatus');
-        Route::resource('bulletin-categories', BulletinCategoryController::class)->middleware('permission.type:bulletin_settings.view')->only(['index']);
-        Route::resource('bulletin-categories', BulletinCategoryController::class)->middleware('permission.type:bulletin_settings.create')->only(['store']);
-        Route::resource('bulletin-categories', BulletinCategoryController::class)->middleware('permission.type:bulletin_settings.edit')->only(['update']);
-        Route::resource('bulletin-categories', BulletinCategoryController::class)->middleware('permission.type:bulletin_settings.delete')->only(['destroy']);
+        // Broadcast Category Routes
+        Route::patch('/broadcast-categories/toggle-status', [BroadcastCategoryController::class, 'toggleStatus'])->middleware('permission.type:broadcast_settings.edit')->name('broadcast_category.toggleStatus');
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.view')->only(['index']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.create')->only(['store']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.edit')->only(['update']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.delete')->only(['destroy']);
 
         // Company Expenses Settings Routes
         Route::patch('/expense-payment-modes/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusPaymentMode'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_payment_mode.toggleStatus');
@@ -732,18 +732,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{appraisal}/unpublish', [AppraisalController::class, 'unpublish'])->middleware('permission.type:appraisal.create')->name('unpublish');
     });
 
-    // Bulletin management routes
-    Route::prefix('bulletins')->as('bulletins.')->group(function () {
-        Route::get('/', [BulletinController::class, 'index'])->middleware('permission.type:bulletin.view')->name('index');
-        Route::get('/create', [BulletinController::class, 'create'])->middleware('permission.type:bulletin.create')->name('create');
-        Route::post('/', [BulletinController::class, 'store'])->middleware('permission.type:bulletin.create')->name('store');
-        Route::patch('/{bulletin}/status', [BulletinController::class, 'updateStatus'])->middleware('permission.type:bulletin.status_change')->name('status');
-        Route::delete('/{bulletin}/attachments/{attachment}', [BulletinController::class, 'deleteAttachment'])->middleware('permission.type:bulletin.edit')->name('attachments.destroy');
-        Route::get('/{bulletin}/attachments/{attachment}/download', [BulletinController::class, 'downloadAttachment'])->middleware('permission.type:bulletin.view')->name('attachments.download');
-        Route::get('/{bulletin}/edit', [BulletinController::class, 'edit'])->middleware('permission.type:bulletin.edit')->name('edit');
-        Route::put('/{bulletin}', [BulletinController::class, 'update'])->middleware('permission.type:bulletin.edit')->name('update');
-        Route::delete('/{bulletin}', [BulletinController::class, 'destroy'])->middleware('permission.type:bulletin.delete')->name('destroy');
-        Route::get('/{bulletin}', [BulletinController::class, 'show'])->middleware('permission.type:bulletin.view')->name('show');
+    // Broadcast management routes
+    Route::prefix('broadcasts')->as('broadcasts.')->group(function () {
+        Route::get('/', [BroadcastController::class, 'index'])->middleware('permission.type:broadcast.view')->name('index');
+        Route::get('/create', [BroadcastController::class, 'create'])->middleware('permission.type:broadcast.create')->name('create');
+        Route::post('/', [BroadcastController::class, 'store'])->middleware('permission.type:broadcast.create')->name('store');
+        Route::patch('/{broadcast}/status', [BroadcastController::class, 'updateStatus'])->middleware('permission.type:broadcast.status_change')->name('status');
+        Route::delete('/{broadcast}/attachments/{attachment}', [BroadcastController::class, 'deleteAttachment'])->middleware('permission.type:broadcast.edit')->name('attachments.destroy');
+        Route::get('/{broadcast}/attachments/{attachment}/download', [BroadcastController::class, 'downloadAttachment'])->middleware('permission.type:broadcast.view')->name('attachments.download');
+        Route::get('/{broadcast}/edit', [BroadcastController::class, 'edit'])->middleware('permission.type:broadcast.edit')->name('edit');
+        Route::put('/{broadcast}', [BroadcastController::class, 'update'])->middleware('permission.type:broadcast.edit')->name('update');
+        Route::delete('/{broadcast}', [BroadcastController::class, 'destroy'])->middleware('permission.type:broadcast.delete')->name('destroy');
+        Route::get('/{broadcast}', [BroadcastController::class, 'show'])->middleware('permission.type:broadcast.view')->name('show');
     });
 
     // Help Center routes

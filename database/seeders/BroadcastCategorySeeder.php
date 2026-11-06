@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\BulletinCategory;
+use App\Models\BroadcastCategory;
 use Illuminate\Database\Seeder;
 
-class BulletinCategorySeeder extends Seeder
+class BroadcastCategorySeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -56,7 +56,7 @@ class BulletinCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            BulletinCategory::firstOrCreate(
+            BroadcastCategory::firstOrCreate(
                 ['name' => $category['name']],
                 $category
             );

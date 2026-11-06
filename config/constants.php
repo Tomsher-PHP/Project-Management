@@ -83,7 +83,7 @@ return [
         'meeting_settings.view',
         'leave_types.view',
         'company_expenses.view',
-        'bulletin_settings.view',
+        'broadcast_settings.view',
         'configuration.view',
     ],
 

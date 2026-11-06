@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests;
 
-use App\Models\BulletinCategory;
+use App\Models\BroadcastCategory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class BulletinCategoryRequest extends FormRequest
+class BroadcastCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,15 +23,15 @@ class BulletinCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
-        $category = $this->route('bulletin_category');
-        $id = $category instanceof BulletinCategory ? $category->id : $category;
+        $category = $this->route('broadcast_category');
+        $id = $category instanceof BroadcastCategory ? $category->id : $category;
 
         return [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('bulletin_categories', 'name')->ignore($id),
+                Rule::unique('broadcast_categories', 'name')->ignore($id),
             ],
             'color' => [
                 'required',

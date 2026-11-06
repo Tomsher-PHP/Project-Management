@@ -5,24 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
-class BulletinUser extends Model
+class BroadcastUser extends Model
 {
     protected $fillable = [
-        'bulletin_id',
+        'broadcast_id',
         'user_id',
     ];
 
     protected function casts(): array
     {
         return [
-            'bulletin_id' => 'integer',
+            'broadcast_id' => 'integer',
             'user_id' => 'integer',
         ];
     }
 
-    public function bulletin(): BelongsTo
+    public function broadcast(): BelongsTo
     {
-        return $this->belongsTo(Bulletin::class);
+        return $this->belongsTo(Broadcast::class);
     }
 
     public function user(): BelongsTo
@@ -30,3 +30,4 @@ class BulletinUser extends Model
         return $this->belongsTo(User::class);
     }
 }
+

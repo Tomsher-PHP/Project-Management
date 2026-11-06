@@ -7,11 +7,11 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class BulletinCategory extends Model
+class BroadcastCategory extends Model
 {
     use Filterable, Sortable, SoftDeletes;
 
-    protected $table = 'bulletin_categories';
+    protected $table = 'broadcast_categories';
 
     protected $fillable = [
         'name',
@@ -49,3 +49,4 @@ class BulletinCategory extends Model
         return $query->where('is_active', true);
     }
 }
+

@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
             // Country related seeders
             CountrySeeder::class,
             LeaveTypeSeeder::class,
-            BulletinCategorySeeder::class,
+            BroadcastCategorySeeder::class,
 
             // Notification related seeders
             ProjectNotificationDefaultSeeder::class,

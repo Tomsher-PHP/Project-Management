@@ -3,8 +3,8 @@
         [
             'key' => 'categories',
             'label' => 'Categories',
-            'url' => route('settings.bulletin-categories.index'),
-            'permission' => 'bulletin_settings.view',
+            'url' => route('settings.broadcast-categories.index'),
+            'permission' => 'broadcast_settings.view',
         ],
     ];
 @endphp

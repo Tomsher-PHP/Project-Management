@@ -2,15 +2,15 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Bulletin;
+use App\Models\Broadcast;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class BulletinRequest extends FormRequest
+class BroadcastRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $permission = $this->isMethod('post') ? 'bulletin.create' : 'bulletin.edit';
+        $permission = $this->isMethod('post') ? 'broadcast.create' : 'broadcast.edit';
 
         return (bool) $this->user()?->can($permission);
     }
@@ -25,7 +25,7 @@ class BulletinRequest extends FormRequest
         }
 
         $this->merge([
-            'status' => (int) $this->input('status', Bulletin::STATUS_DRAFT),
+            'status' => (int) $this->input('status', Broadcast::STATUS_DRAFT),
             'team_ids' => array_values(array_unique(array_filter((array) $this->input('team_ids', []), 'filled'))),
             'user_ids' => array_values(array_unique(array_filter((array) $this->input('user_ids', []), 'filled'))),
         ]);
@@ -36,22 +36,22 @@ class BulletinRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'content' => ['nullable', 'string'],
-            'bulletin_category_id' => [
+            'broadcast_category_id' => [
                 'required',
                 'integer',
-                Rule::exists('bulletin_categories', 'id')
+                Rule::exists('broadcast_categories', 'id')
                     ->where('is_active', true)
                     ->whereNull('deleted_at'),
             ],
-            'priority' => ['required', 'integer', Rule::in(array_keys(Bulletin::priorityOptions()))],
-            'audience_type' => ['required', Rule::in(array_keys(Bulletin::audienceOptions()))],
-            'team_ids' => ['nullable', 'array', Rule::requiredIf(fn () => $this->input('audience_type') === Bulletin::AUDIENCE_TEAMS)],
+            'priority' => ['required', 'integer', Rule::in(array_keys(Broadcast::priorityOptions()))],
+            'audience_type' => ['required', Rule::in(array_keys(Broadcast::audienceOptions()))],
+            'team_ids' => ['nullable', 'array', Rule::requiredIf(fn () => $this->input('audience_type') === Broadcast::AUDIENCE_TEAMS)],
             'team_ids.*' => [
                 'integer',
                 'distinct',
                 Rule::exists('teams', 'id')->where('is_active', true)->whereNull('deleted_at'),
             ],
-            'user_ids' => ['nullable', 'array', Rule::requiredIf(fn () => $this->input('audience_type') === Bulletin::AUDIENCE_USERS)],
+            'user_ids' => ['nullable', 'array', Rule::requiredIf(fn () => $this->input('audience_type') === Broadcast::AUDIENCE_USERS)],
             'user_ids.*' => [
                 'integer',
                 'distinct',
@@ -61,8 +61,8 @@ class BulletinRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'status' => ['required', 'integer', Rule::in($this->isMethod('post')
-                ? [Bulletin::STATUS_DRAFT, Bulletin::STATUS_PUBLISHED]
-                : [Bulletin::STATUS_DRAFT, Bulletin::STATUS_PUBLISHED, Bulletin::STATUS_ARCHIVED])],
+                ? [Broadcast::STATUS_DRAFT, Broadcast::STATUS_PUBLISHED]
+                : [Broadcast::STATUS_DRAFT, Broadcast::STATUS_PUBLISHED, Broadcast::STATUS_ARCHIVED])],
             'start_date' => ['nullable', 'date_format:Y-m-d'],
             'end_date' => [
                 'nullable',
@@ -77,7 +77,7 @@ class BulletinRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'bulletin_category_id.required' => 'Please select a category.',
+            'broadcast_category_id.required' => 'Please select a category.',
             'team_ids.required' => 'Please select at least one team.',
             'user_ids.required' => 'Please select at least one user.',
             'end_date.after_or_equal' => 'The end date must be equal to or after the start date.',
@@ -86,3 +86,4 @@ class BulletinRequest extends FormRequest
         ];
     }
 }
+
