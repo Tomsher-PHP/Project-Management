@@ -181,9 +181,60 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const restoreMultiSelectValues = (selectEl) => {
+            if (!selectEl) return;
+            const instance = selectEl.tomselect;
+            let rawSelected = [];
+            if (selectEl.dataset.selectedIds) {
+                try {
+                    rawSelected = JSON.parse(selectEl.dataset.selectedIds);
+                } catch (e) {
+                    rawSelected = [];
+                }
+            }
+            if (!rawSelected.length) {
+                rawSelected = Array.from(selectEl.options)
+                    .filter((opt) => opt.selected && opt.value)
+                    .map((opt) => String(opt.value));
+            }
+            const values = (Array.isArray(rawSelected) ? rawSelected : [rawSelected])
+                .map((v) => String(v))
+                .filter(Boolean);
+
+            if (values.length && instance) {
+                const current = instance.getValue();
+                const currentArr = Array.isArray(current) ? current.map(String) : (current ? [String(current)] : []);
+                const isSynced = values.every((v) => currentArr.includes(v));
+                if (!isSynced) {
+                    instance.setValue(values, true);
+                }
+            }
+        };
+
+        const teamSelect = form.querySelector('#broadcast_team_ids');
+        const userSelect = form.querySelector('#broadcast_user_ids');
+        restoreMultiSelectValues(teamSelect);
+        restoreMultiSelectValues(userSelect);
+        setTimeout(() => {
+            restoreMultiSelectValues(teamSelect);
+            restoreMultiSelectValues(userSelect);
+        }, 10);
+
         const audience = form.querySelector('[data-broadcast-audience]');
-        audience?.addEventListener('change', () => setAudienceVisibility(form, true));
-        setAudienceVisibility(form);
+        let previousAudience = audience?.tomselect?.getValue() || audience?.value || 'all';
+        const handleAudienceChange = () => {
+            const currentAudience = audience?.tomselect?.getValue() || audience?.value || 'all';
+            if (currentAudience !== previousAudience) {
+                previousAudience = currentAudience;
+                setAudienceVisibility(form, true);
+            }
+        };
+
+        audience?.addEventListener('change', handleAudienceChange);
+        if (audience?.tomselect) {
+            audience.tomselect.on('change', handleAudienceChange);
+        }
+        setAudienceVisibility(form, false);
 
         // Attachments management
         const attachmentsInput = form.querySelector('[data-broadcast-attachments-input]');

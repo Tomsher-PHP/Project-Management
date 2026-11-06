@@ -2,7 +2,7 @@
     use App\Models\Broadcast;
     $isEdit = $broadcast->exists;
     $selectedTeamIds = collect(old('team_ids', $broadcast->target_team_ids ?? []))->map(fn($id) => (string) $id)->all();
-    $selectedUserIds = collect(old('user_ids', $isEdit && $broadcast->audience_type === Broadcast::AUDIENCE_USERS ? $broadcast->recipients->pluck('id') : []))->map(fn($id) => (string) $id)->all();
+    $selectedUserIds = collect(old('user_ids', $isEdit && $broadcast->audience_type === Broadcast::AUDIENCE_USERS ? $broadcast->recipients->pluck('id')->all() : []))->map(fn($id) => (string) $id)->all();
     $dateRangeValue = old('date_range', ($broadcast->start_date && $broadcast->end_date
         ? ($broadcast->start_date->format('Y-m-d') === $broadcast->end_date->format('Y-m-d')
             ? $broadcast->start_date->format('Y-m-d')
@@ -77,7 +77,7 @@
                     </div>
                     <div class="{{ old('audience_type', $broadcast->audience_type) === Broadcast::AUDIENCE_TEAMS ? '' : 'hidden' }}" data-broadcast-team-field>
                         <label for="broadcast_team_ids" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Select Teams <span class="text-red-500">*</span></label>
-                        <select id="broadcast_team_ids" name="team_ids[]" class="tom-select w-full" multiple data-sort="0">
+                        <select id="broadcast_team_ids" name="team_ids[]" class="tom-select-multiple w-full" multiple data-sort="0" data-selected-ids='@json($selectedTeamIds)'>
                             @foreach ($teams as $team)
                                 <option value="{{ $team->id }}" @selected(in_array((string) $team->id, $selectedTeamIds, true))>{{ $team->name }}</option>
                             @endforeach
@@ -86,7 +86,7 @@
                     </div>
                     <div class="{{ old('audience_type', $broadcast->audience_type) === Broadcast::AUDIENCE_USERS ? '' : 'hidden' }}" data-broadcast-user-field>
                         <label for="broadcast_user_ids" class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">Select Users <span class="text-red-500">*</span></label>
-                        <select id="broadcast_user_ids" name="user_ids[]" class="tom-select w-full" multiple data-sort="0" data-render-subtype="true">
+                        <select id="broadcast_user_ids" name="user_ids[]" class="tom-select-multiple w-full" multiple data-sort="0" data-render-subtype="true" data-selected-ids='@json($selectedUserIds)'>
                             @foreach ($users as $user)
                                 <option value="{{ $user->id }}" data-subtype="{{ $user->email }}" @selected(in_array((string) $user->id, $selectedUserIds, true))>{{ $user->name }}</option>
                             @endforeach
