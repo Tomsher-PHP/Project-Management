@@ -804,7 +804,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.edit')->only(['edit', 'update']);
     Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.delete')->only(['destroy']);
 
-    Route::prefix('user-leave-balances')->name('user-leave-balances.')->group(function () {
+    Route::prefix('user-leave-balances')->as('user-leave-balances.')->group(function () {
         Route::get('/import', [UserLeaveBalanceImportController::class, 'create'])->middleware('permission.type:user_leave_balance.import')->name('import');
         Route::post('/import', [UserLeaveBalanceImportController::class, 'store'])->middleware('permission.type:user_leave_balance.import')->name('import.store');
         Route::get('/import/sample', [UserLeaveBalanceImportController::class, 'sample'])->middleware('permission.type:user_leave_balance.import')->name('import.sample');
@@ -824,7 +824,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Leave routes
-    Route::prefix('leave-change-requests')->name('leave-change-requests.')->group(function () {
+    Route::prefix('leave-change-requests')->as('leave-change-requests.')->group(function () {
         Route::get('/', [LeaveChangeRequestController::class, 'index'])->name('index');
         Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])->name('create');
         Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])->name('store');
@@ -835,13 +835,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // leave cancelation
-    Route::prefix('leave-cancellation-requests')->name('leave-cancellation-requests.')->controller(LeaveCancellationRequestController::class)->group(function () {
-        Route::post('/{leaveRequest}', 'store')->name('store');
-        Route::get('/', 'index')->name('index');
-        Route::get('/{cancellationRequest}/details', 'show')->name('show');
-        Route::post('/{cancellationRequest}/approve', 'approve')->name('approve');
-        Route::post('/{cancellationRequest}/reject', 'reject')->name('reject');
-        Route::post('/{cancellationRequest}/cancel', 'cancel')->name('cancel');
+    Route::prefix('leave-cancellation-requests')->as('leave-cancellation-requests.')->group(function () {
+        Route::post('/{leaveRequest}', [LeaveCancellationRequestController::class, 'store'])->name('store');
+        Route::get('/', [LeaveCancellationRequestController::class, 'index'])->name('index');
+        Route::get('/{cancellationRequest}/details', [LeaveCancellationRequestController::class, 'show'])->name('show');
+        Route::post('/{cancellationRequest}/approve', [LeaveCancellationRequestController::class, 'approve'])->name('approve');
+        Route::post('/{cancellationRequest}/reject', [LeaveCancellationRequestController::class, 'reject'])->name('reject');
+        Route::post('/{cancellationRequest}/cancel', [LeaveCancellationRequestController::class, 'cancel'])->name('cancel');
     });
 
     // Meeting Management routes
