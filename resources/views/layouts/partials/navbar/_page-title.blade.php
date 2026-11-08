@@ -6,6 +6,7 @@
         </h3>
     </div>
 
+    <!-- User dropdown in Workspace page -->
     @if (request()->routeIs('user.workspace') && $workspaceSelectableUsers->isNotEmpty())
         <div class="min-w-[240px] max-w-[320px]" data-workspace-user-select-root>
             <label for="workspace-user-select" class="sr-only">Workspace user</label>
@@ -20,11 +21,11 @@
         </div>
     @endif
 
+    <!-- Pending Handoff requests in Workspace page -->
     @if (request()->routeIs('user.workspace') && ($pendingHandoffCount ?? 0) > 0)
-        <a href="{{ route('handoff_requests.index') }}" class="group inline-flex items-center gap-2.5  bg-amber-50 px-3.5 py-2 text-xs font-semibold text-amber-800 transition-all duration-200 hover:border-amber-300 hover:bg-amber-100 hover:shadow-md dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10" title="View pending handoff requests">
+        <a href="{{ route('handoff_requests.index') }}" class="group inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold transition-all duration-200 dark:text-white" title="View pending handoff requests">
 
             <span class="relative flex h-2.5 w-2.5 shrink-0">
-                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-60"></span>
                 <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-amber-100 dark:ring-darkblack-600"></span>
             </span>
 
@@ -39,26 +40,6 @@
             </svg>
         </a>
     @endif
-
-    @auth
-        <!-- Global Broadcast Drawer Trigger -->
-        <button type="button"
-            id="broadcast-drawer-toggle-btn"
-            data-broadcast-drawer-toggle
-            class="group inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-xs font-semibold text-bgray-800 transition hover:border-success-300 hover:bg-bgray-50 hover:text-bgray-900 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300/40 dark:hover:bg-darkblack-400 dark:hover:text-white"
-            title="View Broadcasts"
-            aria-label="Open Broadcasts Drawer">
-            <span class="inline-flex items-center justify-center text-success-300 transition-transform duration-200 group-hover:scale-110">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 11v2a2 2 0 002 2h2l4 4V5L7 9H5a2 2 0 00-2 2z" />
-                    <path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
-                </svg>
-            </span>
-            <span id="navbar-broadcast-count-text" data-broadcast-count-text class="whitespace-nowrap font-medium text-bgray-700 dark:text-bgray-300">
-                <span data-broadcast-count-number>0</span> <span data-broadcast-count-label>Broadcasts</span>
-            </span>
-        </button>
-    @endauth
 
     @if (request()->routeIs('project.analytics'))
         <div class="flex items-center gap-3" data-project-analytics-filters>
@@ -89,4 +70,22 @@
             </div>
         </div>
     @endif
+
+    @auth
+        <!-- Global Broadcast Drawer Trigger -->
+        <button type="button" id="broadcast-drawer-toggle-btn" data-broadcast-drawer-toggle class="group inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-amber-800 transition-all duration-200 dark:text-white" title="View Broadcasts" aria-label="Open Broadcasts Drawer">
+            <span class="inline-flex items-center justify-center text-success-300 transition-transform duration-200 group-hover:scale-110">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 11v2a2 2 0 002 2h2l4 4V5L7 9H5a2 2 0 00-2 2z" />
+                    <path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
+                </svg>
+            </span>
+            <span id="navbar-broadcast-count-text" data-broadcast-count-text class="whitespace-nowrap font-semibold transition-all duration-200 text-bgray-900 dark:text-white">
+                <span data-broadcast-count-number>0</span> <span data-broadcast-count-label>Broadcasts</span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+        </button>
+    @endauth
 </div>
