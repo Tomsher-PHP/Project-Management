@@ -72,6 +72,18 @@
     /* bgray-300 */
 }
 
+/* Quill placeholder - Light theme */
+.ql-editor.ql-blank::before {
+    color: #9ca3af !important;
+    opacity: 1;
+}
+
+/* Quill placeholder - Dark theme */
+.dark .ql-editor.ql-blank::before {
+    color: #9ca3af !important;
+    opacity: 1;
+}
+
 /* View Modal Description Heading Styles */
 #viewModalDescription h1 {
     font-size: 1.25rem;
