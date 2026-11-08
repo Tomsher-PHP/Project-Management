@@ -53,10 +53,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Update Navbar Count display with correct singular/plural label.
+     * Update Navbar Count display with correct singular/plural label,
+     * and toggle visibility based on count.
      */
     function updateNavbarCount(count) {
         const numericCount = Math.max(0, parseInt(count, 10) || 0);
+
+        if (toggleBtn) {
+            toggleBtn.classList.toggle('hidden', numericCount === 0);
+            toggleBtn.classList.toggle('inline-flex', numericCount > 0);
+        }
+
         if (countNumberEl) {
             countNumberEl.textContent = String(numericCount);
         }

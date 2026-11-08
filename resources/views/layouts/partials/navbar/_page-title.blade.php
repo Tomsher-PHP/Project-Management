@@ -73,7 +73,7 @@
 
     @auth
         <!-- Global Broadcast Drawer Trigger -->
-        <button type="button" id="broadcast-drawer-toggle-btn" data-broadcast-drawer-toggle class="group inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-amber-800 transition-all duration-200 dark:text-white" title="View Broadcasts" aria-label="Open Broadcasts Drawer">
+        <button type="button" id="broadcast-drawer-toggle-btn" data-broadcast-drawer-toggle class="hidden group items-center gap-2 px-3.5 py-2 text-xs font-semibold text-amber-800 transition-all duration-200 dark:text-white" title="View Broadcasts" aria-label="Open Broadcasts Drawer">
             <span class="inline-flex items-center justify-center text-success-300 transition-transform duration-200 group-hover:scale-110">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 11v2a2 2 0 002 2h2l4 4V5L7 9H5a2 2 0 00-2 2z" />
