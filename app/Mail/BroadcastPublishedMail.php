@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Broadcast;
+use App\Models\Configuration;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -48,11 +49,17 @@ class BroadcastPublishedMail extends Mailable
      */
     public function content(): Content
     {
+        $configuration = Configuration::first();
+        $companyLogoUrl = $configuration?->logo_url;
+        $companyName = $configuration?->company_name ?? config('app.name', 'Tomsher PMS');
+
         return new Content(
             view: 'emails.broadcasts.broadcast_email_preview',
             with: [
                 'broadcast' => $this->broadcast,
                 'recipient' => $this->recipient,
+                'companyLogoUrl' => $companyLogoUrl,
+                'companyName' => $companyName,
                 'categoryName' => $this->broadcast->category?->name,
                 'categoryColor' => $this->broadcast->category?->color,
                 'priorityLabel' => Broadcast::priorityOptions()[$this->broadcast->priority] ?? 'Normal',

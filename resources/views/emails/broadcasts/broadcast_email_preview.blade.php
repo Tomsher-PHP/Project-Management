@@ -35,7 +35,7 @@
         }
 
         .card {
-            max-width: 620px;
+            max-width: 760px;
             margin: auto;
             background: #ffffff;
             border: 1px solid #e5eaf1;
@@ -45,8 +45,17 @@
 
         .header {
             background: #fff;
-            padding: 27px 38px;
+            padding: 24px 42px;
             border-bottom: 1px solid #ebeff5
+        }
+
+        .company-logo {
+            max-height: 44px;
+            max-width: 260px;
+            height: auto;
+            width: auto;
+            display: block;
+            border: 0;
         }
 
         .brand {
@@ -54,19 +63,6 @@
             font-weight: 700;
             letter-spacing: -.3px;
             color: #182940
-        }
-
-        .brand-mark {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            line-height: 30px;
-            text-align: center;
-            color: #fff;
-            background: #0d5fa8;
-            border-radius: 8px;
-            margin-right: 9px;
-            font-size: 17px
         }
 
         .eyebrow {
@@ -251,23 +247,41 @@
 </head>
 
 <body>
+    @php
+        $companyConfig = $companyConfig ?? \App\Models\Configuration::first();
+        $companyLogoUrl = $companyLogoUrl ?? $companyConfig?->logo_url;
+        $companyName = $companyName ?? $companyConfig?->company_name ?? config('app.name', 'Tomsher PMS');
+    @endphp
+    @php
+        if (!isset($companyLogoUrl) && !array_key_exists('companyLogoUrl', get_defined_vars())) {
+            $companyConfig = \App\Models\Configuration::first();
+            $companyLogoUrl = $companyConfig?->logo_url;
+            $companyName = $companyName ?? $companyConfig?->company_name ?? config('app.name', 'Tomsher PMS');
+        } else {
+            $companyName = $companyName ?? config('app.name', 'Tomsher PMS');
+        }
+    @endphp
     <div class="shell">
         <div class="card">
-            <div class="header">
-                <div class="brand"><span class="brand-mark">B</span>{{ config('app.name', 'Tomsher PMS') }}</div>
-            </div>
+            @if (!empty($companyLogoUrl))
+                <div class="header">
+                    <img src="{{ $companyLogoUrl }}" alt="{{ $companyName }}" class="company-logo" style="max-height: 44px; max-width: 260px; height: auto; width: auto; display: block; border: 0;">
+                </div>
+            @elseif (!empty($companyName))
+                <div class="header">
+                    <div class="brand">{{ $companyName }}</div>
+                </div>
+            @endif
             <div class="main">
                 <div class="eyebrow">Company broadcast</div>
                 <h1 class="title">{{ $broadcast->title ?? 'Annual Team Meeting & Updates' }}</h1>
                 <div style="margin-bottom:22px">
                     @if (!empty($categoryName))
                         <span class="pill pill-blue" style="{{ !empty($categoryColor) ? 'background-color: ' . $categoryColor . '20; color: ' . $categoryColor . ';' : '' }}">{{ $categoryName }}</span>
-                    @elseif (!isset($broadcast))
-                        <span class="pill pill-blue">Events</span>
                     @endif
                     <span class="pill">{{ $priorityLabel ?? 'Important' }}</span>
                 </div>
-                <p class="intro">Hello {{ $recipient->name ?? 'Alex' }},<br>This broadcast has been published for your audience. Please review the information below.</p>
+                <p class="intro">Hello {{ $recipient->name ?? '' }},<br>This broadcast has been published for you. Please review the information below.</p>
                 <div class="separator"></div>
                 <div class="content">
                     @if (isset($contentHtml))
@@ -278,11 +292,6 @@
                     <div class="datebox">
                         <div class="date-label">BROADCAST PERIOD</div>
                         <div class="date-text">{{ $dateRangeFormatted }}</div>
-                    </div>
-                @elseif (!isset($broadcast))
-                    <div class="datebox">
-                        <div class="date-label">BROADCAST PERIOD</div>
-                        <div class="date-text">13 Nov 2026 — 16 Nov 2026</div>
                     </div>
                 @endif
                 @if (!empty($attachmentsList) && count($attachmentsList) > 0)
@@ -301,7 +310,7 @@
                 <a class="button" href="{{ $broadcastUrl ?? '#broadcast' }}">View in PMS &rarr;</a>
                 <p class="note">You are receiving this email because this broadcast was shared with you or your team.</p>
             </div>
-            <div class="footer"><strong>{{ config('app.name', 'Tomsher PMS') }}</strong><br>This is an automated message from {{ config('app.name', 'Tomsher PMS') }}. Please do not reply to this email.</div>
+            <div class="footer"><strong>{{ $companyName }}</strong><br>This is an automated message from {{ $companyName }}. Please do not reply to this email.</div>
         </div>
     </div>
 </body>
