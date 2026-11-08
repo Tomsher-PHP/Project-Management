@@ -47,10 +47,10 @@
 
         <div class="grid grid-cols-2 gap-3 rounded-xl bg-bgray-50 p-3 text-xs dark:bg-darkblack-500">
             <div>
-                <span class="text-bgray-700 dark:text-bgray-300">Published:</span>
+                <span class="text-bgray-700 dark:text-bgray-300">Published at:</span>
                 <p class="font-semibold text-bgray-900 dark:text-white mt-0.5">
                     @if ($broadcast->published_at)
-                        {{ $broadcast->published_at->format($dateFormat) }} {{ $broadcast->published_at->format($timeFormat) }}
+                        @appDateTime($broadcast->published_at)
                     @else
                         {{ $broadcast->created_at->format($dateFormat) }}
                     @endif
@@ -104,13 +104,6 @@
                                     {{ number_format($attachment->file_size / 1024, 1) }} KB
                                 </p>
                             </div>
-                        </a>
-
-                        <a href="{{ route('broadcasts.drawer.attachments.download', [$broadcast, $attachment]) }}" target="_blank" rel="noopener noreferrer" class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2 py-1 text-xs font-semibold text-success-500 shadow-sm transition hover:bg-success-50 hover:text-success-600 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-success-400 dark:hover:bg-darkblack-500" title="View Attachment">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
                         </a>
                     </div>
                 @endforeach
