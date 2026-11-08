@@ -118,6 +118,12 @@ class BroadcastService
             return $broadcast;
         }
 
+        if (! $broadcast->canTransitionTo($status)) {
+            $currentName = Broadcast::statusOptions()[$broadcast->status] ?? 'Current Status';
+            $newName = Broadcast::statusOptions()[$status] ?? 'New Status';
+            throw new \InvalidArgumentException("Changing broadcast status from {$currentName} to {$newName} is not allowed.");
+        }
+
         return DB::transaction(function () use ($broadcast, $status, $actor) {
             if ($status === Broadcast::STATUS_PUBLISHED) {
                 $data = [

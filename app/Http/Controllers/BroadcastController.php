@@ -142,7 +142,19 @@ class BroadcastController extends Controller
             ])],
         ]);
 
-        $updated = $this->broadcastService->changeStatus($broadcast, (int) $validated['status'], $request->user());
+        $newStatus = (int) $validated['status'];
+
+        if (! $broadcast->canTransitionTo($newStatus)) {
+            $currentLabel = Broadcast::statusOptions()[$broadcast->status] ?? 'Current Status';
+            $targetLabel = Broadcast::statusOptions()[$newStatus] ?? 'New Status';
+
+            return response()->json([
+                'status' => false,
+                'message' => "Changing broadcast status from {$currentLabel} to {$targetLabel} is not allowed.",
+            ], 422);
+        }
+
+        $updated = $this->broadcastService->changeStatus($broadcast, $newStatus, $request->user());
 
         $statusLabel = Broadcast::statusOptions()[$updated->status] ?? 'Status';
 

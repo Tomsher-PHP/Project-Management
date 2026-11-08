@@ -119,6 +119,44 @@ class Broadcast extends Model
         ];
     }
 
+    public static function allowedStatusTransitions(): array
+    {
+        return [
+            self::STATUS_DRAFT => [
+                self::STATUS_PUBLISHED,
+            ],
+            self::STATUS_PUBLISHED => [
+                self::STATUS_ARCHIVED,
+            ],
+            self::STATUS_ARCHIVED => [
+                self::STATUS_PUBLISHED,
+            ],
+        ];
+    }
+
+    public function allowedStatusOptions(bool $includeCurrent = true): array
+    {
+        $all = static::statusOptions();
+        $allowed = static::allowedStatusTransitions()[$this->status] ?? [];
+
+        if ($includeCurrent) {
+            $allowed[] = (int) $this->status;
+        }
+
+        return array_intersect_key($all, array_flip($allowed));
+    }
+
+    public function canTransitionTo(int $targetStatus): bool
+    {
+        if ((int) $this->status === (int) $targetStatus) {
+            return true;
+        }
+
+        $allowed = static::allowedStatusTransitions()[$this->status] ?? [];
+
+        return in_array((int) $targetStatus, $allowed, true);
+    }
+
     public static function statusColors(): array
     {
         return [

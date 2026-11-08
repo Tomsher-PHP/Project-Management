@@ -699,6 +699,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            if (statusId === 1 && (currentStatusId === 2 || currentStatusId === 3)) {
+                Alert.error('Changing broadcast status to Draft is not allowed.');
+                return;
+            }
+
+            if (currentStatusId === 1 && statusId === 3) {
+                Alert.error('Changing broadcast status from Draft to Archived is not allowed.');
+                return;
+            }
+
             let confirmTitle = `Change status to ${statusName}?`;
             let confirmText = `Are you sure you want to change the status of “${broadcastTitle}” to ${statusName}?`;
             let confirmBtnText = 'Confirm';

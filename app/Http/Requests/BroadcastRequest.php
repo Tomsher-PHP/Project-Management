@@ -80,9 +80,28 @@ class BroadcastRequest extends FormRequest
                     ->where('delete_status', false)
                     ->whereNull('deleted_at'),
             ],
-            'status' => ['required', 'integer', Rule::in($this->isMethod('post')
-                ? [Broadcast::STATUS_DRAFT, Broadcast::STATUS_PUBLISHED]
-                : [Broadcast::STATUS_DRAFT, Broadcast::STATUS_PUBLISHED, Broadcast::STATUS_ARCHIVED])],
+            'status' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    $value = (int) $value;
+                    if ($this->isMethod('post')) {
+                        if (! in_array($value, [Broadcast::STATUS_DRAFT, Broadcast::STATUS_PUBLISHED], true)) {
+                            $fail('The selected status is invalid.');
+                        }
+                    } else {
+                        $broadcast = $this->route('broadcast');
+                        if (is_numeric($broadcast)) {
+                            $broadcast = Broadcast::find($broadcast);
+                        }
+                        if ($broadcast instanceof Broadcast && ! $broadcast->canTransitionTo($value)) {
+                            $currentLabel = Broadcast::statusOptions()[$broadcast->status] ?? 'Current Status';
+                            $targetLabel = Broadcast::statusOptions()[$value] ?? 'New Status';
+                            $fail("Changing broadcast status from {$currentLabel} to {$targetLabel} is not allowed.");
+                        }
+                    }
+                },
+            ],
             'date_range' => ['nullable', 'string'],
             'start_date' => ['nullable', 'date_format:Y-m-d'],
             'end_date' => [

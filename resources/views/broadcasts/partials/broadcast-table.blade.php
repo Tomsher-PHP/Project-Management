@@ -77,7 +77,7 @@
 
                                     <div class="hidden min-w-[150px] overflow-hidden rounded-xl border border-bgray-200 bg-white p-1 shadow-lg ring-1 ring-black/5 dark:border-darkblack-400 dark:bg-darkblack-500 dark:ring-white/10 z-20" data-broadcast-status-menu>
                                         <ul class="max-h-56 overflow-y-auto py-1">
-                                            @foreach (Broadcast::statusOptions() as $statusOptionId => $statusOptionName)
+                                            @foreach ($broadcast->allowedStatusOptions() as $statusOptionId => $statusOptionName)
                                                 @php
                                                     $isCurrent = (int) $broadcast->status === (int) $statusOptionId;
                                                     $optColor = $statusColors[$statusOptionId] ?? '#64748B';
