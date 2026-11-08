@@ -249,17 +249,12 @@
 <body>
     @php
         $companyConfig = $companyConfig ?? \App\Models\Configuration::first();
-        $companyLogoUrl = $companyLogoUrl ?? $companyConfig?->logo_url;
-        $companyName = $companyName ?? $companyConfig?->company_name ?? config('app.name', 'Tomsher PMS');
-    @endphp
-    @php
-        if (!isset($companyLogoUrl) && !array_key_exists('companyLogoUrl', get_defined_vars())) {
-            $companyConfig = \App\Models\Configuration::first();
-            $companyLogoUrl = $companyConfig?->logo_url;
-            $companyName = $companyName ?? $companyConfig?->company_name ?? config('app.name', 'Tomsher PMS');
-        } else {
-            $companyName = $companyName ?? config('app.name', 'Tomsher PMS');
-        }
+        $logoAttachment = $companyConfig?->attachments()
+            ->where('file_path', 'like', 'configurations/logo/%')
+            ->latest('id')
+            ->first() ?? $companyConfig?->attachments()->latest('id')->first();
+        $companyLogoUrl = $companyLogoUrl ?? $logoAttachment?->url;
+        $companyName = $companyName ?? ($companyConfig?->company_name ?? config('app.name', 'Tomsher PMS'));
     @endphp
     <div class="shell">
         <div class="card">
@@ -307,7 +302,6 @@
                         </div>
                     @endforeach
                 @endif
-                <a class="button" href="{{ $broadcastUrl ?? '#broadcast' }}">View in PMS &rarr;</a>
                 <p class="note">You are receiving this email because this broadcast was shared with you or your team.</p>
             </div>
             <div class="footer"><strong>{{ $companyName }}</strong><br>This is an automated message from {{ $companyName }}. Please do not reply to this email.</div>

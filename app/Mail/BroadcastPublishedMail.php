@@ -50,7 +50,11 @@ class BroadcastPublishedMail extends Mailable
     public function content(): Content
     {
         $configuration = Configuration::first();
-        $companyLogoUrl = $configuration?->logo_url;
+        $logoAttachment = $configuration?->attachments()
+            ->where('file_path', 'like', 'configurations/logo/%')
+            ->latest('id')
+            ->first() ?? $configuration?->attachments()->latest('id')->first();
+        $companyLogoUrl = $logoAttachment?->url;
         $companyName = $configuration?->company_name ?? config('app.name', 'Tomsher PMS');
 
         return new Content(
@@ -65,7 +69,6 @@ class BroadcastPublishedMail extends Mailable
                 'priorityLabel' => Broadcast::priorityOptions()[$this->broadcast->priority] ?? 'Normal',
                 'contentHtml' => $this->broadcast->content,
                 'dateRangeFormatted' => $this->formatDateRange(),
-                'broadcastUrl' => route('broadcasts.index'),
                 'attachmentsList' => $this->formatAttachmentsList(),
             ],
         );
