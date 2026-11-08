@@ -240,9 +240,24 @@ class BroadcastController extends Controller
         $disk = $attachment->disk ?? config('filesystems.default');
         abort_unless(Storage::disk($disk)->exists($attachment->file_path), 404);
 
+        $filename = $attachment->original_name ?: $attachment->file_name;
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $fileType = strtolower($attachment->file_type ?? '');
+        $isViewable = in_array($ext, ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'txt', 'html'], true)
+            || str_starts_with($fileType, 'image/')
+            || $fileType === 'application/pdf';
+
+        if ($isViewable && ! $request->boolean('download')) {
+            return Storage::disk($disk)->response(
+                $attachment->file_path,
+                $filename,
+                ['Content-Disposition' => 'inline; filename="' . addslashes($filename) . '"']
+            );
+        }
+
         return Storage::disk($disk)->download(
             $attachment->file_path,
-            $attachment->original_name ?: $attachment->file_name,
+            $filename,
         );
     }
 

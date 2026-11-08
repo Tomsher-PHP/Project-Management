@@ -20,24 +20,25 @@
 @endphp
 
 <div id="broadcast-drawer-details-view" class="space-y-5">
-    <!-- Back Navigation -->
-    <div data-broadcast-back-to-list>
-        <x-back-button url="javascript:void(0);" label="Back" />
-    </div>
-
     <!-- Header / Meta -->
     <div class="space-y-3">
-        <div class="flex items-center gap-2 flex-wrap">
-            @if ($broadcast->category)
-                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium" style="background-color: {{ $categoryColor }}1A; color: {{ $categoryColor }}; border: 1px solid {{ $categoryColor }}40;">
-                    <span class="h-1.5 w-1.5 rounded-full" style="background-color: {{ $categoryColor }};"></span>
-                    {{ $broadcast->category->name }}
-                </span>
-            @endif
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2 flex-wrap">
+                @if ($broadcast->category)
+                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium" style="background-color: {{ $categoryColor }}1A; color: {{ $categoryColor }}; border: 1px solid {{ $categoryColor }}40;">
+                        <span class="h-1.5 w-1.5 rounded-full" style="background-color: {{ $categoryColor }};"></span>
+                        {{ $broadcast->category->name }}
+                    </span>
+                @endif
 
-            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $priorityConfig['class'] }}">
-                {{ $priorityConfig['label'] }}
-            </span>
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $priorityConfig['class'] }}">
+                    {{ $priorityConfig['label'] }}
+                </span>
+            </div>
+
+            <div data-broadcast-back-to-list class="[&>button]:!py-0.5 [&>button]:!px-2 [&>button]:!text-xs [&_svg]:!h-3.5 [&_svg]:!w-3.5">
+                <x-back-button url="javascript:void(0);" label="Back" />
+            </div>
         </div>
 
         <h2 class="text-lg font-bold text-bgray-900 dark:text-white leading-snug">
@@ -89,27 +90,27 @@
             <div class="space-y-2">
                 @foreach ($broadcast->attachments as $attachment)
                     <div class="flex items-center justify-between gap-3 rounded-lg border border-bgray-200 bg-white p-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success-50 text-success-500 dark:bg-success-400/10 dark:text-success-400">
+                        <a href="{{ route('broadcasts.drawer.attachments.download', [$broadcast, $attachment]) }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2.5 min-w-0 group hover:opacity-80 transition" title="View {{ $attachment->original_name ?: $attachment->file_name }}">
+                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success-50 text-success-500 dark:bg-success-400/10 dark:text-success-400 group-hover:bg-success-100 dark:group-hover:bg-success-400/20">
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                 </svg>
                             </span>
                             <div class="min-w-0">
-                                <p class="text-xs font-semibold text-bgray-900 dark:text-white truncate" title="{{ $attachment->original_name ?: $attachment->file_name }}">
+                                <p class="text-xs font-semibold text-bgray-900 dark:text-white truncate group-hover:text-success-500 dark:group-hover:text-success-400">
                                     {{ $attachment->original_name ?: $attachment->file_name }}
                                 </p>
                                 <p class="text-[11px] text-bgray-700 dark:text-bgray-300">
                                     {{ number_format($attachment->file_size / 1024, 1) }} KB
                                 </p>
                             </div>
-                        </div>
+                        </a>
 
-                        <a href="{{ route('broadcasts.drawer.attachments.download', [$broadcast, $attachment]) }}" class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-success-500 shadow-sm transition hover:bg-success-50 hover:text-success-600 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-success-400 dark:hover:bg-darkblack-500" download>
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        <a href="{{ route('broadcasts.drawer.attachments.download', [$broadcast, $attachment]) }}" target="_blank" rel="noopener noreferrer" class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2 py-1 text-xs font-semibold text-success-500 shadow-sm transition hover:bg-success-50 hover:text-success-600 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-success-400 dark:hover:bg-darkblack-500" title="View Attachment">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            <span>Download</span>
                         </a>
                     </div>
                 @endforeach
