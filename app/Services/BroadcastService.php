@@ -17,6 +17,7 @@ class BroadcastService
 {
     public function __construct(
         protected AttachmentService $attachmentService,
+        protected BroadcastEmailService $broadcastEmailService,
     ) {
     }
 
@@ -72,6 +73,12 @@ class BroadcastService
                 $this->syncAudience($broadcast, $data);
                 $this->uploadAttachments($broadcast, $files, $uploaded);
 
+                if ((int) $data['status'] === Broadcast::STATUS_PUBLISHED) {
+                    DB::afterCommit(function () use ($broadcast) {
+                        $this->broadcastEmailService->queueBroadcastPublication($broadcast);
+                    });
+                }
+
                 return $broadcast->fresh($this->detailRelations());
             });
         } catch (\Throwable $exception) {
@@ -124,7 +131,9 @@ class BroadcastService
             throw new \InvalidArgumentException("Changing broadcast status from {$currentName} to {$newName} is not allowed.");
         }
 
-        return DB::transaction(function () use ($broadcast, $status, $actor) {
+        $isFirstPublication = (int) $broadcast->status === Broadcast::STATUS_DRAFT && $status === Broadcast::STATUS_PUBLISHED;
+
+        return DB::transaction(function () use ($broadcast, $status, $actor, $isFirstPublication) {
             if ($status === Broadcast::STATUS_PUBLISHED) {
                 $data = [
                     ...$broadcast->only([
@@ -152,6 +161,12 @@ class BroadcastService
                     : $broadcast->published_at,
                 'updated_by' => $actor->id,
             ]);
+
+            if ($isFirstPublication) {
+                DB::afterCommit(function () use ($broadcast) {
+                    $this->broadcastEmailService->queueBroadcastPublication($broadcast);
+                });
+            }
 
             return $broadcast->fresh($this->detailRelations());
         });

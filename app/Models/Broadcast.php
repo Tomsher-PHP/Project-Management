@@ -101,6 +101,11 @@ class Broadcast extends Model
             ->where('category', self::ATTACHMENT_CATEGORY);
     }
 
+    public function emailDeliveries(): HasMany
+    {
+        return $this->hasMany(BroadcastEmailDelivery::class);
+    }
+
     public static function priorityOptions(): array
     {
         return [
