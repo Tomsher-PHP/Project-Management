@@ -54,8 +54,14 @@ class BroadcastPublishedMail extends Mailable
             ->where('file_path', 'like', 'configurations/logo/%')
             ->latest('id')
             ->first() ?? $configuration?->attachments()->latest('id')->first();
+
         $companyLogoUrl = $logoAttachment?->url;
         $companyName = $configuration?->company_name ?? config('app.name', 'Tomsher PMS');
+
+        $logoDisk = $logoAttachment?->disk ?? config('filesystems.default', 'public');
+        $logoFilePath = $logoAttachment?->file_path;
+        $logoStorage = $logoFilePath ? Storage::disk($logoDisk) : null;
+        $companyLogoPath = ($logoStorage && $logoStorage->exists($logoFilePath)) ? $logoStorage->path($logoFilePath) : null;
 
         return new Content(
             view: 'emails.broadcasts.broadcast_email_preview',
@@ -63,12 +69,14 @@ class BroadcastPublishedMail extends Mailable
                 'broadcast' => $this->broadcast,
                 'recipient' => $this->recipient,
                 'companyLogoUrl' => $companyLogoUrl,
+                'companyLogoPath' => $companyLogoPath,
                 'companyName' => $companyName,
                 'categoryName' => $this->broadcast->category?->name,
                 'categoryColor' => $this->broadcast->category?->color,
                 'priorityLabel' => Broadcast::priorityOptions()[$this->broadcast->priority] ?? 'Normal',
                 'contentHtml' => $this->broadcast->content,
                 'dateRangeFormatted' => $this->formatDateRange(),
+                'broadcastUrl' => route('broadcasts.index'),
                 'attachmentsList' => $this->formatAttachmentsList(),
             ],
         );

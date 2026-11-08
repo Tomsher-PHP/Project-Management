@@ -49,9 +49,9 @@
             border-bottom: 1px solid #ebeff5
         }
 
-        .company-logo {
-            max-height: 44px;
-            max-width: 260px;
+        .brand-logo {
+            max-height: 38px;
+            max-width: 180px;
             height: auto;
             width: auto;
             display: block;
@@ -249,24 +249,42 @@
 <body>
     @php
         $companyConfig = $companyConfig ?? \App\Models\Configuration::first();
-        $logoAttachment = $companyConfig?->attachments()
-            ->where('file_path', 'like', 'configurations/logo/%')
-            ->latest('id')
-            ->first() ?? $companyConfig?->attachments()->latest('id')->first();
+        $logoAttachment = $companyConfig?->attachments()->where('file_path', 'like', 'configurations/logo/%')->latest('id')->first() ?? $companyConfig?->attachments()->latest('id')->first();
         $companyLogoUrl = $companyLogoUrl ?? $logoAttachment?->url;
         $companyName = $companyName ?? ($companyConfig?->company_name ?? config('app.name', 'Tomsher PMS'));
+
+        if (!isset($companyLogoPath)) {
+            $logoDisk = $logoAttachment?->disk ?? config('filesystems.default', 'public');
+            $logoFilePath = $logoAttachment?->file_path;
+            $logoStorage = $logoFilePath ? \Illuminate\Support\Facades\Storage::disk($logoDisk) : null;
+            $companyLogoPath = ($logoStorage && $logoStorage->exists($logoFilePath)) ? $logoStorage->path($logoFilePath) : null;
+        }
+
+        $resolvedLogoSrc = null;
+        if (!empty($companyLogoPath) && file_exists($companyLogoPath) && isset($message) && is_object($message) && method_exists($message, 'embed')) {
+            $resolvedLogoSrc = $message->embed($companyLogoPath);
+        } elseif (!empty($companyLogoUrl)) {
+            $resolvedLogoSrc = $companyLogoUrl;
+        }
     @endphp
     <div class="shell">
         <div class="card">
-            @if (!empty($companyLogoUrl))
-                <div class="header">
-                    <img src="{{ $companyLogoUrl }}" alt="{{ $companyName }}" class="company-logo" style="max-height: 44px; max-width: 260px; height: auto; width: auto; display: block; border: 0;">
-                </div>
-            @elseif (!empty($companyName))
-                <div class="header">
-                    <div class="brand">{{ $companyName }}</div>
-                </div>
-            @endif
+            <div class="header">
+                <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                    <tr>
+                        @if (!empty($resolvedLogoSrc))
+                            <td style="vertical-align:middle; padding-right:12px;">
+                                <img src="{{ $resolvedLogoSrc }}" alt="Logo" class="brand-logo" style="max-height:38px; max-width:180px; height:auto; width:auto; display:block; border:0;">
+                            </td>
+                        @endif
+                        <td style="vertical-align:middle;">
+                            <span class="brand" style="font-size:19px; font-weight:700; letter-spacing:-.3px; color:#182940; line-height:1.2;">
+                                {{ $companyName }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
             <div class="main">
                 <div class="eyebrow">Company broadcast</div>
                 <h1 class="title">{{ $broadcast->title ?? 'Annual Team Meeting & Updates' }}</h1>
