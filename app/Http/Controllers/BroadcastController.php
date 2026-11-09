@@ -219,9 +219,20 @@ class BroadcastController extends Controller
             $today
         );
 
-        $html = $page === 1
-            ? view('broadcasts.partials.broadcast-drawer-list', compact('broadcasts', 'today'))->render()
-            : view('broadcasts.partials.broadcast-drawer-items', compact('broadcasts', 'today'))->render();
+        if ($page === 1) {
+            $birthdays = $this->broadcastService->getTodayAndUpcomingBirthdays($request->user(), 30);
+            $todayBirthdays = $birthdays['todayBirthdays'];
+            $upcomingBirthdays = $birthdays['upcomingBirthdays'];
+
+            $html = view('broadcasts.partials.broadcast-drawer-list', compact(
+                'broadcasts',
+                'today',
+                'todayBirthdays',
+                'upcomingBirthdays'
+            ))->render();
+        } else {
+            $html = view('broadcasts.partials.broadcast-drawer-items', compact('broadcasts', 'today'))->render();
+        }
 
         return response()->json([
             'status' => true,

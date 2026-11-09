@@ -1,4 +1,35 @@
-@if ($broadcasts->isEmpty())
+@php
+    $today = $today ?? now()->toDateString();
+    $todayBirthdays = $todayBirthdays ?? collect();
+    $upcomingBirthdays = $upcomingBirthdays ?? collect();
+
+    $upcomingBroadcasts = $broadcasts->filter(fn($b) => $b->start_date && $b->start_date->format('Y-m-d') > $today);
+    $currentBroadcasts = $broadcasts->reject(fn($b) => $b->start_date && $b->start_date->format('Y-m-d') > $today);
+
+    $hasCurrentItems = $currentBroadcasts->isNotEmpty() || $todayBirthdays->isNotEmpty();
+    $hasUpcomingItems = $upcomingBroadcasts->isNotEmpty() || $upcomingBirthdays->isNotEmpty();
+    $hasAnyItems = $hasCurrentItems || $hasUpcomingItems;
+
+    // Chronologically sorted upcoming items (birthdays + upcoming broadcasts)
+    $upcomingItems = collect();
+    foreach ($upcomingBirthdays as $birthdayItem) {
+        $upcomingItems->push([
+            'type' => 'birthday',
+            'date' => $birthdayItem->next_birthday->format('Y-m-d'),
+            'item' => $birthdayItem,
+        ]);
+    }
+    foreach ($upcomingBroadcasts as $broadcastItem) {
+        $upcomingItems->push([
+            'type' => 'broadcast',
+            'date' => $broadcastItem->start_date ? $broadcastItem->start_date->format('Y-m-d') : '9999-12-31',
+            'item' => $broadcastItem,
+        ]);
+    }
+    $upcomingItems = $upcomingItems->sortBy('date')->values();
+@endphp
+
+@if (! $hasAnyItems)
     <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
         <div class="flex h-14 w-14 items-center justify-center rounded-full bg-bgray-100 dark:bg-darkblack-500 mb-3 text-bgray-400 dark:text-bgray-700">
             <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -9,23 +40,21 @@
         <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">There are no current or upcoming broadcasts for you.</p>
     </div>
 @else
-    @php
-        $today = $today ?? now()->toDateString();
-        $upcomingBroadcasts = $broadcasts->filter(fn($b) => $b->start_date && $b->start_date->format('Y-m-d') > $today);
-        $currentBroadcasts = $broadcasts->reject(fn($b) => $b->start_date && $b->start_date->format('Y-m-d') > $today);
-    @endphp
-
     <div id="broadcast-drawer-list-view" class="space-y-6">
         <div id="broadcast-drawer-cards-container" class="space-y-6">
 
-            @if ($currentBroadcasts->isNotEmpty())
+            @if ($hasCurrentItems)
                 <div class="space-y-3" data-broadcast-section="current">
                     <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success-400 dark:text-success-300">
                         <span class="inline-block h-2 w-2 rounded-full bg-success-400"></span>
                         <span>Current</span>
-                        <span class="text-[11px] font-normal text-bgray-700 dark:text-bgray-300">({{ $currentBroadcasts->count() }})</span>
+                        <span class="text-[11px] font-normal text-bgray-700 dark:text-bgray-300">({{ $currentBroadcasts->count() + $todayBirthdays->count() }})</span>
                     </div>
                     <div class="space-y-3" data-broadcast-current-items>
+                        @foreach ($todayBirthdays as $birthday)
+                            @include('broadcasts.partials.broadcast-drawer-birthday-item', ['birthday' => $birthday, 'isUpcoming' => false])
+                        @endforeach
+
                         @foreach ($currentBroadcasts as $broadcast)
                             @include('broadcasts.partials.broadcast-drawer-item', ['broadcast' => $broadcast, 'today' => $today])
                         @endforeach
@@ -33,16 +62,20 @@
                 </div>
             @endif
 
-            @if ($upcomingBroadcasts->isNotEmpty())
+            @if ($hasUpcomingItems)
                 <div class="space-y-3" data-broadcast-section="upcoming">
                     <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                         <span class="inline-block h-2 w-2 rounded-full bg-amber-500"></span>
                         <span>Upcoming</span>
-                        <span class="text-[11px] font-normal text-bgray-700 dark:text-bgray-300">({{ $upcomingBroadcasts->count() }})</span>
+                        <span class="text-[11px] font-normal text-bgray-700 dark:text-bgray-300">({{ $upcomingItems->count() }})</span>
                     </div>
                     <div class="space-y-3" data-broadcast-upcoming-items>
-                        @foreach ($upcomingBroadcasts as $broadcast)
-                            @include('broadcasts.partials.broadcast-drawer-item', ['broadcast' => $broadcast, 'today' => $today])
+                        @foreach ($upcomingItems as $entry)
+                            @if ($entry['type'] === 'birthday')
+                                @include('broadcasts.partials.broadcast-drawer-birthday-item', ['birthday' => $entry['item'], 'isUpcoming' => true])
+                            @else
+                                @include('broadcasts.partials.broadcast-drawer-item', ['broadcast' => $entry['item'], 'today' => $today])
+                            @endif
                         @endforeach
                     </div>
                 </div>

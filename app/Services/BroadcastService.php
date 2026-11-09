@@ -6,6 +6,7 @@ use App\Models\Attachment;
 use App\Models\Broadcast;
 use App\Models\BroadcastCategory;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -481,6 +482,81 @@ class BroadcastService
     public function ensureUserCanViewBroadcast(Broadcast $broadcast, User|int $user, ?string $today = null): void
     {
         abort_unless($this->getEligibleBroadcastDetails($broadcast, $user, $today) !== null, 403, 'You are not authorized to view this broadcast.');
+    }
+
+    /**
+     * Retrieve active employees with birthdays today and within the upcoming N days.
+     *
+     * @return array{todayBirthdays: \Illuminate\Support\Collection, upcomingBirthdays: \Illuminate\Support\Collection}
+     */
+    public function getTodayAndUpcomingBirthdays(User|int|null $currentUser = null, int $days = 30): array
+    {
+        $currentUserId = $currentUser instanceof User ? $currentUser->id : ($currentUser ? (int) $currentUser : null);
+        $today = now()->startOfDay();
+
+        $users = User::query()
+            ->active()
+            ->where('delete_status', 0)
+            ->whereHas('details', function (Builder $query) {
+                $query->whereNotNull('dob');
+            })
+            ->with([
+                'details:id,user_id,dob,designation_id,department_id',
+                'details.designation:id,name',
+                'details.department:id,name',
+                'primaryAttachment',
+            ])
+            ->get(['id', 'name', 'email']);
+
+        $todayBirthdays = collect();
+        $upcomingBirthdays = collect();
+
+        foreach ($users as $user) {
+            $dob = $user->details?->dob;
+            if (! $dob) {
+                continue;
+            }
+
+            $dobMonth = (int) $dob->month;
+            $dobDay = (int) $dob->day;
+
+            $dayThisYear = ($dobMonth === 2 && $dobDay === 29 && ! $today->isLeapYear()) ? 28 : $dobDay;
+            $bdayThisYear = Carbon::create($today->year, $dobMonth, $dayThisYear, 0, 0, 0, $today->timezone);
+
+            if ($bdayThisYear->lt($today)) {
+                $nextYear = $today->year + 1;
+                $isNextLeap = Carbon::create($nextYear, 1, 1, 0, 0, 0, $today->timezone)->isLeapYear();
+                $dayNextYear = ($dobMonth === 2 && $dobDay === 29 && ! $isNextLeap) ? 28 : $dobDay;
+                $nextBirthday = Carbon::create($nextYear, $dobMonth, $dayNextYear, 0, 0, 0, $today->timezone);
+            } else {
+                $nextBirthday = $bdayThisYear;
+            }
+
+            $diffInDays = (int) $today->diffInDays($nextBirthday, false);
+
+            if ($diffInDays === 0) {
+                $todayBirthdays->push((object) [
+                    'user' => $user,
+                    'next_birthday' => $nextBirthday,
+                    'days_remaining' => 0,
+                    'is_self' => $currentUserId !== null && $user->id === $currentUserId,
+                ]);
+            } elseif ($diffInDays >= 1 && $diffInDays <= $days) {
+                $upcomingBirthdays->push((object) [
+                    'user' => $user,
+                    'next_birthday' => $nextBirthday,
+                    'days_remaining' => $diffInDays,
+                    'is_self' => $currentUserId !== null && $user->id === $currentUserId,
+                ]);
+            }
+        }
+
+        $upcomingBirthdays = $upcomingBirthdays->sortBy('days_remaining')->values();
+
+        return [
+            'todayBirthdays' => $todayBirthdays,
+            'upcomingBirthdays' => $upcomingBirthdays,
+        ];
     }
 }
 
