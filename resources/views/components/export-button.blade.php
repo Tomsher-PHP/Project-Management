@@ -10,7 +10,7 @@
 ])
 
 @php
-    $buttonClasses = 'inline-flex items-center gap-2 rounded-lg border border-bgray-500 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300';
+    $buttonClasses = 'inline-flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-semibold shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:hover:border-success-300 dark:hover:text-success-300';
     $normalizedMethod = strtoupper($method);
     $formMethod = in_array($normalizedMethod, ['GET', 'POST'], true) ? $normalizedMethod : 'POST';
 
