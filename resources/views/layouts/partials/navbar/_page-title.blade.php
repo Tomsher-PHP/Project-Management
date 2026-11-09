@@ -72,17 +72,44 @@
     @endif
 
     @auth
+        @php
+            $broadcastService = app(\App\Services\BroadcastService::class);
+            $navbarBroadcastCount = $broadcastService->getEligibleCountForUser(auth()->user());
+            $navbarBirthdays = $broadcastService->getTodayAndUpcomingBirthdays(auth()->user(), 30);
+            $navbarTodayBirthdayCount = $navbarBirthdays['todayBirthdays']->count();
+            $navbarUpcomingBirthdayCount = $navbarBirthdays['upcomingBirthdays']->count();
+            $navbarTotalCount = $navbarBroadcastCount + $navbarTodayBirthdayCount + $navbarUpcomingBirthdayCount;
+            $navbarHasTodayBirthday = $navbarTodayBirthdayCount > 0;
+        @endphp
+
         <!-- Global Broadcast Drawer Trigger -->
-        <button type="button" id="broadcast-drawer-toggle-btn" data-broadcast-drawer-toggle class="hidden group items-center gap-2 px-3.5 py-2 text-xs font-semibold text-amber-800 transition-all duration-200 dark:text-white" title="View Broadcasts" aria-label="Open Broadcasts Drawer">
-            <span class="inline-flex items-center justify-center text-success-300 transition-transform duration-200 group-hover:scale-110">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" id="broadcast-drawer-toggle-btn" data-broadcast-drawer-toggle class="{{ $navbarTotalCount > 0 ? 'inline-flex' : 'hidden' }} group items-center gap-2 px-3.5 py-2 text-xs font-semibold text-amber-800 transition-all duration-200 dark:text-white" title="{{ $navbarHasTodayBirthday ? "Today's Birthday & Broadcasts" : 'View Broadcasts' }}" aria-label="Open Broadcasts Drawer">
+
+            <span class="inline-flex items-center justify-center transition-transform duration-200 group-hover:scale-110" data-broadcast-icon-container>
+                <!-- Birthday Icon (Shown if today has any user birthday) -->
+                <svg data-icon="birthday" class="{{ $navbarHasTodayBirthday ? '' : 'hidden' }} text-pink-500 dark:text-pink-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" />
+                    <path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1" />
+                    <path d="M2 21h20" />
+                    <path d="M7 8v3" />
+                    <path d="M12 8v3" />
+                    <path d="M17 8v3" />
+                    <path d="M7 4h.01" />
+                    <path d="M12 4h.01" />
+                    <path d="M17 4h.01" />
+                </svg>
+
+                <!-- Broadcast Icon (Shown if no today birthday) -->
+                <svg data-icon="broadcast" class="{{ $navbarHasTodayBirthday ? 'hidden' : '' }} text-success-300 dark:text-success-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 11v2a2 2 0 002 2h2l4 4V5L7 9H5a2 2 0 00-2 2z" />
                     <path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
                 </svg>
             </span>
+
             <span id="navbar-broadcast-count-text" data-broadcast-count-text class="whitespace-nowrap font-semibold transition-all duration-200 text-bgray-900 dark:text-white">
-                <span data-broadcast-count-number>0</span> <span data-broadcast-count-label>Broadcasts</span>
+                <span data-broadcast-count-number>{{ $navbarTotalCount }}</span> <span data-broadcast-count-label>{{ \Illuminate\Support\Str::plural('Broadcast', $navbarTotalCount) }}</span>
             </span>
+
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
             </svg>

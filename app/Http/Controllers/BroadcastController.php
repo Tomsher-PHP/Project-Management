@@ -196,12 +196,24 @@ class BroadcastController extends Controller
 
     public function drawerCount(Request $request): JsonResponse
     {
-        $count = $this->broadcastService->getEligibleCountForUser($request->user());
-        $label = $count . ' ' . Str::plural('Broadcast', $count);
+        $broadcastCount = $this->broadcastService->getEligibleCountForUser($request->user());
+        $birthdays = $this->broadcastService->getTodayAndUpcomingBirthdays($request->user(), 30);
+        $todayBirthdayCount = $birthdays['todayBirthdays']->count();
+        $upcomingBirthdayCount = $birthdays['upcomingBirthdays']->count();
+        $totalBirthdayCount = $todayBirthdayCount + $upcomingBirthdayCount;
+
+        $totalCount = $broadcastCount + $totalBirthdayCount;
+        $hasTodayBirthday = $todayBirthdayCount > 0;
+        $label = $totalCount . ' ' . Str::plural('Broadcast', $totalCount);
 
         return response()->json([
             'status' => true,
-            'count' => $count,
+            'count' => $totalCount,
+            'broadcast_count' => $broadcastCount,
+            'birthday_count' => $totalBirthdayCount,
+            'today_birthday_count' => $todayBirthdayCount,
+            'upcoming_birthday_count' => $upcomingBirthdayCount,
+            'has_today_birthday' => $hasTodayBirthday,
             'label' => $label,
         ]);
     }
@@ -219,10 +231,17 @@ class BroadcastController extends Controller
             $today
         );
 
+        $todayBirthdaysCount = 0;
+        $upcomingBirthdaysCount = 0;
+        $hasTodayBirthday = false;
+
         if ($page === 1) {
             $birthdays = $this->broadcastService->getTodayAndUpcomingBirthdays($request->user(), 30);
             $todayBirthdays = $birthdays['todayBirthdays'];
             $upcomingBirthdays = $birthdays['upcomingBirthdays'];
+            $todayBirthdaysCount = $todayBirthdays->count();
+            $upcomingBirthdaysCount = $upcomingBirthdays->count();
+            $hasTodayBirthday = $todayBirthdaysCount > 0;
 
             $html = view('broadcasts.partials.broadcast-drawer-list', compact(
                 'broadcasts',
@@ -234,13 +253,17 @@ class BroadcastController extends Controller
             $html = view('broadcasts.partials.broadcast-drawer-items', compact('broadcasts', 'today'))->render();
         }
 
+        $totalCombined = $broadcasts->total() + $todayBirthdaysCount + $upcomingBirthdaysCount;
+
         return response()->json([
             'status' => true,
             'html' => $html,
             'has_more' => $broadcasts->hasMorePages(),
             'current_page' => $broadcasts->currentPage(),
             'next_page' => $broadcasts->hasMorePages() ? $broadcasts->currentPage() + 1 : null,
-            'total' => $broadcasts->total(),
+            'total' => $totalCombined,
+            'broadcast_total' => $broadcasts->total(),
+            'has_today_birthday' => $hasTodayBirthday,
         ]);
     }
 

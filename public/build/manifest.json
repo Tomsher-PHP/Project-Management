@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DxtYhRr_.css",
+    "file": "assets/app-BNn2akgq.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -127,7 +127,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-am8utunK.js",
+    "file": "assets/app-BTHTBxu5.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -136,6 +136,7 @@
       "_alert-kNjqpuwD.js",
       "__commonjsHelpers-Cpj98o6Y.js",
       "_estimated-time-input-CIuy8ceU.js",
+      "resources/js/modules/broadcasts/broadcasts-drawer.js",
       "_tom-select-BnPXzLD6.js",
       "_datepicker-DWdH-Ouy.js",
       "resources/js/modules/tasks/developer-notes.js",
@@ -230,6 +231,26 @@
       "_monthpicker-DWQROgmQ.js",
       "_flatpickr.min-Cc3t1Oke.js",
       "__commonjsHelpers-Cpj98o6Y.js"
+    ]
+  },
+  "resources/js/modules/broadcasts/broadcasts-drawer.js": {
+    "file": "assets/broadcasts-drawer-CaScLNBf.js",
+    "name": "broadcasts-drawer",
+    "src": "resources/js/modules/broadcasts/broadcasts-drawer.js",
+    "isEntry": true
+  },
+  "resources/js/modules/broadcasts/broadcasts-management.js": {
+    "file": "assets/broadcasts-management-kmCWWlpJ.js",
+    "name": "broadcasts-management",
+    "src": "resources/js/modules/broadcasts/broadcasts-management.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_tom-select-BnPXzLD6.js",
+      "_datepicker-DWdH-Ouy.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_timepicker-BgMmsOv3.js"
     ]
   },
   "resources/js/modules/checklist-template-form.js": {

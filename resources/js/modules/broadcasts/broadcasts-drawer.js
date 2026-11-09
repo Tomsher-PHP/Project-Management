@@ -54,10 +54,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Update Navbar Count display with correct singular/plural label,
-     * and toggle visibility based on count.
+     * toggle visibility based on count, and switch between birthday/broadcast icon.
      */
-    function updateNavbarCount(count) {
-        const numericCount = Math.max(0, parseInt(count, 10) || 0);
+    function updateNavbarCount(payload) {
+        let numericCount = 0;
+        let hasTodayBirthday = null;
+
+        if (typeof payload === 'object' && payload !== null) {
+            numericCount = Math.max(0, parseInt(payload.count ?? payload.total, 10) || 0);
+            if (typeof payload.has_today_birthday !== 'undefined') {
+                hasTodayBirthday = Boolean(payload.has_today_birthday);
+            }
+        } else {
+            numericCount = Math.max(0, parseInt(payload, 10) || 0);
+        }
 
         if (toggleBtn) {
             toggleBtn.classList.toggle('hidden', numericCount === 0);
@@ -69,6 +79,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (countLabelEl) {
             countLabelEl.textContent = numericCount === 1 ? 'Broadcast' : 'Broadcasts';
+        }
+
+        if (hasTodayBirthday !== null && toggleBtn) {
+            const birthdayIconEl = toggleBtn.querySelector('[data-icon="birthday"]');
+            const broadcastIconEl = toggleBtn.querySelector('[data-icon="broadcast"]');
+
+            if (birthdayIconEl && broadcastIconEl) {
+                if (hasTodayBirthday) {
+                    birthdayIconEl.classList.remove('hidden');
+                    broadcastIconEl.classList.add('hidden');
+                    toggleBtn.setAttribute('title', "Today's Birthday & Broadcasts");
+                } else {
+                    birthdayIconEl.classList.add('hidden');
+                    broadcastIconEl.classList.remove('hidden');
+                    toggleBtn.setAttribute('title', 'View Broadcasts');
+                }
+            }
         }
     }
 
@@ -90,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             if (data.status && typeof data.count !== 'undefined') {
-                updateNavbarCount(data.count);
+                updateNavbarCount(data);
             }
         } catch (error) {
             // Silently fail for count without interrupting user
@@ -201,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setDrawerState('content');
 
             if (typeof data.total !== 'undefined') {
-                updateNavbarCount(data.total);
+                updateNavbarCount(data);
             }
         } catch (error) {
             if (error.name === 'AbortError') return;
