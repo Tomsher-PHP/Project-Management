@@ -45,6 +45,7 @@
     $canViewLeaveReports = $authUser?->can('reports.leave_view');
 
     $canViewAppraisal = $authUser?->can('appraisal.view');
+    $canViewBroadcasts = $authUser?->can('broadcast.view');
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
     $canViewAttendance = $authUser?->can('attendance.view');
     $canViewHolidays = $authUser?->can('holidays.view');
@@ -63,7 +64,7 @@
     };
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAttendance || $canViewAppraisal || $canViewHolidays || $canViewExpenses;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAttendance || $canViewAppraisal || $canViewBroadcasts || $canViewHolidays || $canViewExpenses;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports || $canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports || $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports;
 
@@ -113,6 +114,7 @@
     $isActivityLogActive = request()->routeIs('activity.log*');
 
     $isAppraisalActive = request()->routeIs('appraisal.*');
+    $isBroadcastsActive = request()->routeIs('broadcasts.*');
 
     $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
     $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
@@ -454,6 +456,20 @@
                                             </span>
                                         </a>
                                         <span class="sidebar-tooltip">Appraisal</span>
+                                    </li>
+                                @endif
+
+                                @if ($canViewBroadcasts)
+                                    <li class="item px-[43px] py-[11px] {{ $isBroadcastsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                        <a href="{{ route('broadcasts.index') }}">
+                                            <span class="item-ico">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M3 11v2a2 2 0 002 2h2l4 4V5L7 9H5a2 2 0 00-2 2z" />
+                                                    <path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
+                                                </svg>
+                                            </span>
+                                        </a>
+                                        <span class="sidebar-tooltip">Broadcasts</span>
                                     </li>
                                 @endif
 

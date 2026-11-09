@@ -8,6 +8,8 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
+use App\Http\Controllers\BroadcastController;
+use App\Http\Controllers\BroadcastCategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\CommonController;
@@ -354,6 +356,13 @@ Route::middleware(['auth'])->group(function () {
         // Leave Notification Settings Routes
         Route::get('leave-notifications', [LeaveNotificationSettingController::class, 'edit',])->name('leave-notifications.edit');
         Route::put('leave-notifications', [LeaveNotificationSettingController::class, 'update',])->name('leave-notifications.update');
+
+        // Broadcast Category Routes
+        Route::patch('/broadcast-categories/toggle-status', [BroadcastCategoryController::class, 'toggleStatus'])->middleware('permission.type:broadcast_settings.edit')->name('broadcast_category.toggleStatus');
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.view')->only(['index']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.create')->only(['store']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.edit')->only(['update']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.delete')->only(['destroy']);
 
         // Company Expenses Settings Routes
         Route::patch('/expense-payment-modes/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusPaymentMode'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_payment_mode.toggleStatus');
@@ -723,6 +732,25 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{appraisal}/unpublish', [AppraisalController::class, 'unpublish'])->middleware('permission.type:appraisal.create')->name('unpublish');
     });
 
+    // Broadcast management routes
+    Route::prefix('broadcasts')->as('broadcasts.')->group(function () {
+        Route::get('/drawer/count', [BroadcastController::class, 'drawerCount'])->name('drawer.count');
+        Route::get('/drawer/list', [BroadcastController::class, 'drawerList'])->name('drawer.list');
+        Route::get('/drawer/{broadcast}', [BroadcastController::class, 'drawerShow'])->name('drawer.show');
+        Route::get('/drawer/{broadcast}/attachments/{attachment}/download', [BroadcastController::class, 'downloadDrawerAttachment'])->name('drawer.attachments.download');
+
+        Route::get('/', [BroadcastController::class, 'index'])->middleware('permission.type:broadcast.view')->name('index');
+        Route::get('/create', [BroadcastController::class, 'create'])->middleware('permission.type:broadcast.create')->name('create');
+        Route::post('/', [BroadcastController::class, 'store'])->middleware('permission.type:broadcast.create')->name('store');
+        Route::patch('/{broadcast}/status', [BroadcastController::class, 'updateStatus'])->middleware('permission.type:broadcast.status_change')->name('status');
+        Route::delete('/{broadcast}/attachments/{attachment}', [BroadcastController::class, 'deleteAttachment'])->middleware('permission.type:broadcast.edit')->name('attachments.destroy');
+        Route::get('/{broadcast}/attachments/{attachment}/download', [BroadcastController::class, 'downloadAttachment'])->middleware('permission.type:broadcast.view')->name('attachments.download');
+        Route::get('/{broadcast}/edit', [BroadcastController::class, 'edit'])->middleware('permission.type:broadcast.edit')->name('edit');
+        Route::put('/{broadcast}', [BroadcastController::class, 'update'])->middleware('permission.type:broadcast.edit')->name('update');
+        Route::delete('/{broadcast}', [BroadcastController::class, 'destroy'])->middleware('permission.type:broadcast.delete')->name('destroy');
+        Route::get('/{broadcast}', [BroadcastController::class, 'show'])->middleware('permission.type:broadcast.view')->name('show');
+    });
+
     // Help Center routes
     Route::prefix('help-center')->as('help-center.')->group(function () {
         Route::get('/', [HelpCenterController::class, 'index'])->name('index');
@@ -776,7 +804,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.edit')->only(['edit', 'update']);
     Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.delete')->only(['destroy']);
 
-    Route::prefix('user-leave-balances')->name('user-leave-balances.')->group(function () {
+    Route::prefix('user-leave-balances')->as('user-leave-balances.')->group(function () {
         Route::get('/import', [UserLeaveBalanceImportController::class, 'create'])->middleware('permission.type:user_leave_balance.import')->name('import');
         Route::post('/import', [UserLeaveBalanceImportController::class, 'store'])->middleware('permission.type:user_leave_balance.import')->name('import.store');
         Route::get('/import/sample', [UserLeaveBalanceImportController::class, 'sample'])->middleware('permission.type:user_leave_balance.import')->name('import.sample');
@@ -796,7 +824,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Leave routes
-    Route::prefix('leave-change-requests')->name('leave-change-requests.')->group(function () {
+    Route::prefix('leave-change-requests')->as('leave-change-requests.')->group(function () {
         Route::get('/', [LeaveChangeRequestController::class, 'index'])->name('index');
         Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])->name('create');
         Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])->name('store');
@@ -807,13 +835,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // leave cancelation
-    Route::prefix('leave-cancellation-requests')->name('leave-cancellation-requests.')->controller(LeaveCancellationRequestController::class)->group(function () {
-        Route::post('/{leaveRequest}', 'store')->name('store');
-        Route::get('/', 'index')->name('index');
-        Route::get('/{cancellationRequest}/details', 'show')->name('show');
-        Route::post('/{cancellationRequest}/approve', 'approve')->name('approve');
-        Route::post('/{cancellationRequest}/reject', 'reject')->name('reject');
-        Route::post('/{cancellationRequest}/cancel', 'cancel')->name('cancel');
+    Route::prefix('leave-cancellation-requests')->as('leave-cancellation-requests.')->group(function () {
+        Route::post('/{leaveRequest}', [LeaveCancellationRequestController::class, 'store'])->name('store');
+        Route::get('/', [LeaveCancellationRequestController::class, 'index'])->name('index');
+        Route::get('/{cancellationRequest}/details', [LeaveCancellationRequestController::class, 'show'])->name('show');
+        Route::post('/{cancellationRequest}/approve', [LeaveCancellationRequestController::class, 'approve'])->name('approve');
+        Route::post('/{cancellationRequest}/reject', [LeaveCancellationRequestController::class, 'reject'])->name('reject');
+        Route::post('/{cancellationRequest}/cancel', [LeaveCancellationRequestController::class, 'cancel'])->name('cancel');
     });
 
     // Meeting Management routes
