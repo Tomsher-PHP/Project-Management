@@ -66,11 +66,15 @@ class Project extends Model
     public static function booted()
     {
         static::creating(function ($model) {
-            $model->added_by = Auth::id();
+            if (blank($model->added_by)) {
+                $model->added_by = Auth::id();
+            }
         });
 
         static::updating(function ($model) {
-            $model->updated_by = Auth::id();
+            if (! $model->isDirty('updated_by') && Auth::id() !== null) {
+                $model->updated_by = Auth::id();
+            }
         });
     }
 
@@ -80,7 +84,16 @@ class Project extends Model
         $lastProjectCode = $lastProject ? $lastProject->project_code : 'PRJ00000';
         $lastNumber = (int) substr($lastProjectCode, 3);
         $newNumber = $lastNumber + 1;
-        return 'PRJ' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+
+        do {
+            $candidate = 'PRJ' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+            $exists = self::withTrashed()->where('project_code', $candidate)->exists();
+            if ($exists) {
+                $newNumber++;
+            }
+        } while ($exists);
+
+        return $candidate;
     }
 
     public function scopeAccessibleBy($query, $user)

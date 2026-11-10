@@ -546,7 +546,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Project Import routes
     Route::prefix('projects/import')->as('projects.import.')->group(function () {
-        Route::get('/', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('index');
+        Route::get('/', [ProjectImportController::class, 'index'])->name('index');
         Route::get('{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('template');
         Route::post('{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('validate');
         Route::post('{module}/process', [ProjectImportController::class, 'startImport'])->name('process');

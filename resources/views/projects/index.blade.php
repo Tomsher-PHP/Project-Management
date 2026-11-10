@@ -13,9 +13,9 @@
         <x-filters.list-search />
 
         <div class="flex flex-wrap items-center gap-3 sm:ml-auto">
-            @can('project_hosting.create')
+            @if (app(\App\Services\ProjectImportService::class)->hasAnyAccessibleModule(auth()->user()))
                 <x-button.link-button :href="route('projects.import.index')" icon="import" label="Imports" />
-            @endcan
+            @endif
 
             @can('project.export')
                 <x-button.export-button :action="route('projects.export')" :params="request()->all()" label="Export" button-class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white" />

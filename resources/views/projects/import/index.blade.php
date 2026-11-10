@@ -10,7 +10,7 @@
 
             <!-- Module Selector -->
             <div class="flex w-full items-center gap-4">
-                <label class="shrink-0 whitespace-nowrap text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                <label class="shrink-0 whitespace-nowrap text-md font-semibold text-bgray-900 dark:text-bgray-300">
                     Choose a Module
                 </label>
                 <div class="min-w-0 flex-1 lg:w-80 lg:flex-none">
