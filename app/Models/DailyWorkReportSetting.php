@@ -8,6 +8,7 @@ class DailyWorkReportSetting extends Model
 {
     protected $fillable = [
         'setting_key',
+        'report_key',
         'enabled',
         'frequency',
         'delivery_time',
@@ -31,11 +32,12 @@ class DailyWorkReportSetting extends Model
         ];
     }
 
-    public static function current(): self
+    public static function forReport(string $reportKey): self
     {
         return static::firstOrCreate(
-            ['setting_key' => 'default'],
+            ['report_key' => $reportKey],
             [
+                'setting_key' => $reportKey,
                 'enabled' => false,
                 'frequency' => 'weekdays',
                 'delivery_time' => '18:30:00',
@@ -54,5 +56,10 @@ class DailyWorkReportSetting extends Model
                 'weekly_day' => 1,
             ]
         );
+    }
+
+    public static function current(): self
+    {
+        return static::forReport('daily_work');
     }
 }

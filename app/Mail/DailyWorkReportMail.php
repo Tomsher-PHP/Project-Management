@@ -18,17 +18,29 @@ class DailyWorkReportMail extends Mailable
 
     public function build(): static
     {
+        $report = $this->reportLog->report_data ?? [];
+
+        // For consolidated reports, use the report owner.
+        // Fall back to the report log's user relationship for older reports.
+        $reportOwnerName = data_get($report, 'report_owner.name')
+            ?: $this->reportLog->user?->name
+            ?: 'Team';
+
+        $reportDate = $this->reportLog->report_date;
+
         return $this
             ->subject(
                 'Daily Work Report - '
-                . $this->reportLog->user?->name
+                . $reportOwnerName
                 . ' - '
-                . $this->reportLog->report_date->format('d M Y')
+                . $reportDate->format('d M Y')
             )
             ->view('emails.daily-work-report')
             ->with([
                 'reportLog' => $this->reportLog,
-                'report' => $this->reportLog->report_data ?? [],
+                'report' => $report,
+                'reportOwner' => data_get($report, 'report_owner'),
+                'employees' => data_get($report, 'employees', []),
             ]);
     }
 }

@@ -8,10 +8,13 @@ use App\Http\Requests\UserRequest;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Kpi;
+use App\Models\LeaveType;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserGeneralSetting;
+use App\Models\UserLeaveBalance;
 use App\Models\UserNotificationSetting;
+use App\Models\UserReportPreference;
 use App\Models\UserSetting;
 use App\Services\ScheduleShiftService;
 use App\Services\UserService;
@@ -21,8 +24,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
-use App\Models\UserLeaveBalance;
-use App\Models\LeaveType;
+
 
 class UserController extends Controller
 {
@@ -316,27 +318,25 @@ class UserController extends Controller
             );
 
         } elseif ($request->field === 'send_daily_work_report') {
-
             if (! auth()->user()->can('user.edit')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized to update user settings.'
-                ], Response::HTTP_FORBIDDEN);
+                    'message' => 'You are not authorized to update this setting.',
+                ], 403);
             }
 
             $request->validate([
-                'value' => 'required|boolean',
+                'value' => ['required', 'boolean'],
             ]);
 
-            UserGeneralSetting::updateOrCreate(
+            UserReportPreference::updateOrCreate(
                 [
                     'user_id' => $request->user_id,
+                    'report_key' => 'daily_work',
                 ],
                 [
-                    'send_daily_work_report' => filter_var(
-                        $request->value,
-                        FILTER_VALIDATE_BOOLEAN
-                    ),
+                    'is_enabled' => $request->boolean('value'),
+                    'updated_by' => auth()->id(),
                 ]
             );
 

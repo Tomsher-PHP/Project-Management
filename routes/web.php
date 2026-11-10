@@ -78,6 +78,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LeaveNotificationSettingController;
 use App\Http\Controllers\DailyWorkReportSettingsController;
+use App\Http\Controllers\DailyWorkReportPreviewController;
 
 
 Route::get('/', function () {
@@ -382,27 +383,22 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
 
 
-        // Daily Work Report Settings Routes
+        // General Report Settings
         Route::prefix('daily-work-reports')
             ->name('daily-work-reports.')
+            ->controller(DailyWorkReportSettingsController::class)
             ->group(function () {
-                Route::get('/', [DailyWorkReportSettingsController::class, 'index'])->middleware('permission.type:daily_work_report.view')->name('index');
-
-                Route::post('/settings',[DailyWorkReportSettingsController::class, 'update'])->middleware('permission.type:daily_work_report.edit')->name('settings.update');
-
-                Route::post('/recipients',[DailyWorkReportSettingsController::class, 'storeRecipient'])->middleware('permission.type:daily_work_report.edit')->name('recipients.store');
-
-                Route::patch('/recipients/{recipient}/toggle',[DailyWorkReportSettingsController::class, 'toggleRecipient'])->middleware('permission.type:daily_work_report.edit')->name('recipients.toggle');
-
-                Route::delete('/recipients/{recipient}',[DailyWorkReportSettingsController::class, 'destroyRecipient'])->middleware('permission.type:daily_work_report.edit')->name('recipients.destroy');
+                Route::get('/', 'index')->middleware('permission.type:daily_work_report.view')->name('index');
+                Route::post('/settings', 'update')->middleware('permission.type:daily_work_report.edit')->name('settings.update');
+                Route::post('/recipients', 'storeRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.store');
+                Route::patch('/recipients/{recipient}/toggle', 'toggleRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.toggle');
+                Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.destroy');
+                Route::patch('/users/preference', 'updateUserPreference')->middleware('permission.type:daily_work_report.edit')->name('users.preference');
+                Route::patch('/users/preferences/bulk', 'bulkUpdateUserPreferences')->middleware('permission.type:daily_work_report.edit')->name('users.preferences.bulk');
             });
     });
 
-
-
-
-
-
+    Route::get('/daily-work-report/preview', DailyWorkReportPreviewController::class)->middleware(['auth'])->name('daily-work-report.preview');
 
     // Team management Routes
     Route::patch('/teams/toggle-status', [TeamController::class, 'toggleStatus'])->name('teams.toggleStatus')->middleware('permission.type:user.edit');
