@@ -10,8 +10,8 @@
 
             <!-- Module Selector -->
             <div class="flex w-full items-center gap-4">
-                <label class="shrink-0 whitespace-nowrap text-md font-semibold text-bgray-900 dark:text-bgray-300">
-                    Choose a Module
+                <label class="shrink-0 whitespace-nowrap text-md font-semibold text-bgray-700 dark:text-bgray-300">
+                    Choose a Module :
                 </label>
                 <div class="min-w-0 flex-1 lg:w-80 lg:flex-none">
                     <select id="import-module-selector" name="module" onchange="if(this.value) { window.location.href = '{{ route('projects.import.index') }}?module=' + encodeURIComponent(this.value); }" class="tom-select-no-search w-full" placeholder="Select Import Module">

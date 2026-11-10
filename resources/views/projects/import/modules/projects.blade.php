@@ -7,11 +7,6 @@
                 <h3 class="text-xl font-bold text-bgray-900 dark:text-white">
                     {{ $module['label'] ?? 'Projects' }}
                 </h3>
-                @if (!empty($module['description']))
-                    <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">
-                        {{ $module['description'] }}
-                    </p>
-                @endif
 
                 <!-- Minimal Single-Row Import Steps -->
                 <div class="mt-2.5 flex items-center gap-3 text-xs text-bgray-600 dark:text-bgray-300 flex-wrap">
@@ -100,12 +95,7 @@
     <!-- Active / Recent Queued Import Status & Results Tracker -->
     @if (!empty($activeImport))
         @php
-            $isFinished = in_array($activeImport->status, [
-                \App\Services\ProjectImportTrackingManager::STATUS_COMPLETED,
-                \App\Services\ProjectImportTrackingManager::STATUS_COMPLETED_WITH_ERRORS,
-                \App\Services\ProjectImportTrackingManager::STATUS_FAILED,
-                \App\Services\ProjectImportTrackingManager::STATUS_INTERRUPTED,
-            ], true);
+            $isFinished = in_array($activeImport->status, [\App\Services\ProjectImportTrackingManager::STATUS_COMPLETED, \App\Services\ProjectImportTrackingManager::STATUS_COMPLETED_WITH_ERRORS, \App\Services\ProjectImportTrackingManager::STATUS_FAILED, \App\Services\ProjectImportTrackingManager::STATUS_INTERRUPTED], true);
             $total = (int) ($activeImport->total_rows ?? 0);
             $processed = (int) ($activeImport->processed_rows ?? 0);
             $percent = $total > 0 ? min(100, round(($processed / $total) * 100)) : ($isFinished ? 100 : 0);
@@ -117,14 +107,7 @@
             $failedCount = (int) ($activeImport->failed_rows ?? 0);
         @endphp
 
-        <div id="import-status-card"
-             class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8"
-             data-import-id="{{ $activeImport->id }}"
-             data-module-key="{{ $module['key'] }}"
-             data-import-mode="projects"
-             data-secondary-field="project_name"
-             data-initial-status="{{ $activeImport->status }}"
-             data-status-url="{{ route('projects.import.status', ['module' => $module['key'], 'import' => $activeImport->id]) }}">
+        <div id="import-status-card" class="rounded-lg border border-bgray-200 bg-white p-6 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-8" data-import-id="{{ $activeImport->id }}" data-module-key="{{ $module['key'] }}" data-import-mode="projects" data-secondary-field="project_name" data-initial-status="{{ $activeImport->status }}" data-status-url="{{ route('projects.import.status', ['module' => $module['key'], 'import' => $activeImport->id]) }}">
 
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-bgray-200 pb-4 dark:border-darkblack-400">
                 <div class="flex items-center gap-2 flex-wrap">
@@ -366,4 +349,3 @@
         @vite('resources/js/modules/projects/imports/project-imports.js')
     @endpush
 </div>
-
