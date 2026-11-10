@@ -16,14 +16,10 @@ class ServiceTypeRequest extends FormRequest
         return true;
     }
 
-    protected function prepareForValidation()
+    protected function prepareForValidation(): void
     {
         if ($this->isMethod('post')) {
-            do {
-                $code = (string) random_int(100000, 999999);
-            } while (ServiceType::withTrashed()->where('code', $code)->exists());
-
-            $this->merge(['code' => $code]);
+            $this->merge(['code' => ServiceType::generateUniqueCode()]);
         }
     }
 
@@ -34,7 +30,8 @@ class ServiceTypeRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('service_type') ? $this->route('service_type')->id : null;
+        $routeParam = $this->route('service_type');
+        $id = is_object($routeParam) ? $routeParam->id : $routeParam;
 
         $rules = [
             'name' => ['required', 'string', 'max:255', Rule::unique('service_types', 'name')->ignore($id)->whereNull('deleted_at')],
@@ -45,7 +42,8 @@ class ServiceTypeRequest extends FormRequest
         ];
 
         if ($this->isMethod('post')) {
-            $rules['code'] = ['required', 'digits:6', 'unique:service_types,code'];
+            $prefix = preg_quote(ServiceType::CODE_PREFIX, '/');
+            $rules['code'] = ['required', 'string', "regex:/^{$prefix}-\d{6}$/", 'unique:service_types,code'];
         }
 
         return $rules;

@@ -8,11 +8,12 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ServiceType extends Model
 {
     use SoftDeletes, Filterable, Sortable, HasFormOptions;
+
+    public const CODE_PREFIX = 'pst';
 
     protected $fillable = [
         'service_group_id',
@@ -36,6 +37,28 @@ class ServiceType extends Model
     ];
 
     protected $searchable = ['name', 'code'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (ServiceType $serviceType) {
+            if (empty($serviceType->code) || static::withTrashed()->where('code', $serviceType->code)->exists()) {
+                $serviceType->code = static::generateUniqueCode();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique code using CODE_PREFIX, a hyphen, and 6 digits (e.g. pst-123456).
+     */
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $numbers = (string) random_int(100000, 999999);
+            $code = static::CODE_PREFIX . '-' . $numbers;
+        } while (static::withTrashed()->where('code', $code)->exists());
+
+        return $code;
+    }
 
     protected function casts(): array
     {
