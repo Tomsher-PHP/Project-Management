@@ -23,7 +23,7 @@
             @endcan
 
             @can('project.export')
-                <x-export-button :action="route('projects.export')" :params="request()->all()" label="Export Excel" button-class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white" />
+                <x-export-button :action="route('projects.export')" :params="request()->all()" label="Export" button-class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white" />
             @endcan
 
             @can('project.restore')
