@@ -7,11 +7,25 @@ document.addEventListener("input", function (e) {
 
     document.querySelectorAll(targetSelector).forEach((table) => {
 
-        table.querySelectorAll("tbody tr").forEach((row) => {
+        const rows = Array.from(table.tBodies)
+            .filter((tbody) => tbody.closest("table") === table)
+            .flatMap((tbody) => Array.from(tbody.rows));
 
-            const text = row.textContent.toLowerCase();
+        rows.forEach((row) => {
+            if (row.dataset.searchDetailsFor) return;
 
-            row.style.display = text.includes(value) ? "" : "none";
+            const projectId = row.dataset.projectRow;
+            const detailsRow = projectId
+                ? rows.find((candidate) => candidate.dataset.searchDetailsFor === projectId)
+                : null;
+            const text = `${row.textContent} ${detailsRow?.textContent || ""}`.toLowerCase();
+            const show = text.includes(value);
+
+            row.style.display = show ? "" : "none";
+
+            if (detailsRow) {
+                detailsRow.style.display = show ? "" : "none";
+            }
         });
 
     });

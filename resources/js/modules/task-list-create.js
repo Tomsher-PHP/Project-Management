@@ -125,6 +125,26 @@ const setFieldValue = (field, value = '') => {
     }
 };
 
+const setSelectValue = (field, value = '') => {
+    if (!field) {
+        return;
+    }
+
+    const normalizedValue = value === null || value === undefined ? '' : String(value);
+
+    if (field.tomselect) {
+        if (normalizedValue) {
+            field.tomselect.setValue(normalizedValue, true);
+        } else {
+            field.tomselect.clear(true);
+        }
+
+        return;
+    }
+
+    field.value = normalizedValue;
+};
+
 const setCheckboxValue = (field, checked) => {
     if (!field) {
         return;
@@ -288,6 +308,8 @@ const setTaskCreateMode = (root, mode = 'create') => {
     const form = root.querySelector('[data-task-create-form]');
     const titleNode = root.querySelector('[data-task-create-title]');
     const assigneeFieldWrapper = root.querySelector('[data-task-create-assignee-field]');
+    const timelineFieldWrapper = root.querySelector('[data-task-create-timeline-field]');
+    const timelineField = timelineFieldWrapper?.querySelector('[name="project_timeline_id"]');
     const requestTypeField = form?.querySelector('[data-task-create-request-type]');
     const submitButton = form?.querySelector('[data-task-create-submit]');
 
@@ -307,6 +329,18 @@ const setTaskCreateMode = (root, mode = 'create') => {
 
     if (assigneeFieldWrapper) {
         assigneeFieldWrapper.hidden = normalizedMode === 'request';
+    }
+
+    if (timelineFieldWrapper) {
+        const isRequestMode = normalizedMode === 'request';
+        timelineFieldWrapper.hidden = isRequestMode;
+
+        if (isRequestMode) {
+            setSelectOptions(timelineField, [], {
+                placeholder: 'Select project first',
+                disabled: true,
+            });
+        }
     }
 
     const assigneeTimeDueRow = root.querySelector('[data-task-create-row-assignee-time-due]');
@@ -472,6 +506,10 @@ const setEmptyProjectState = (form, dependencies = null) => {
         placeholder: 'Select project first',
         disabled: true,
     });
+    setSelectOptions(form.querySelector('[name="project_timeline_id"]'), [], {
+        placeholder: 'Select project first',
+        disabled: true,
+    });
     setSelectOptions(form.querySelector('[name="parent_task_id"]'), [], {
         placeholder: 'Select project first',
         disabled: true,
@@ -502,6 +540,10 @@ const setProjectLoadingState = (form) => {
     });
     setSelectOptions(form.querySelector('[name="project_sprint_id"]'), [], {
         placeholder: 'Loading sprints...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="project_timeline_id"]'), [], {
+        placeholder: 'Loading timelines...',
         disabled: true,
     });
     setSelectOptions(form.querySelector('[name="parent_task_id"]'), [], {
@@ -556,6 +598,7 @@ const fetchProjectDependencies = async (dependencies, projectId) => {
 const applyProjectDefaults = async (form, dependencies) => {
     const projectField = form.querySelector('[name="project_id"]');
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
+    const timelineField = form.querySelector('[name="project_timeline_id"]');
     const assigneeField = form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]');
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
@@ -592,6 +635,14 @@ const applyProjectDefaults = async (form, dependencies) => {
     });
 
     updateSprintOptions(form, dependencies);
+
+    if (getTaskCreateMode(form.closest('[data-task-create-root]')) === 'create') {
+        setSelectOptions(timelineField, projectMeta.timelines || [], {
+            placeholder: (projectMeta.timelines || []).length ? 'Select timeline' : 'No active or completed timelines',
+            disabled: !(projectMeta.timelines || []).length,
+            value: projectMeta.default_timeline_id || '',
+        });
+    }
 
     setSelectOptions(assigneeField, projectMeta.assignees || [], {
         placeholder: 'Select assignee',
@@ -692,7 +743,7 @@ const loadParentTaskOptions = async (form, dependencies) => {
     });
 };
 
-const prepareTaskCreateModal = async (root, dependencies) => {
+const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
     const form = root.querySelector('[data-task-create-form]');
 
     if (!form) {
@@ -735,9 +786,49 @@ const prepareTaskCreateModal = async (root, dependencies) => {
     setEmptyProjectState(form, dependencies);
 
     const projectField = form.querySelector('[name="project_id"]');
+    const projectId = String(prefill.projectId || '');
+
+    if (projectField && projectId) {
+        const projectOption = {
+            value: projectId,
+            text: prefill.projectName || `Project #${projectId}`,
+            subtype: prefill.projectCode || '',
+        };
+
+        if (projectField.tomselect) {
+            if (!projectField.tomselect.options[projectId]) {
+                projectField.tomselect.addOption(projectOption);
+            }
+        } else if (
+            projectField.tagName === 'SELECT'
+            && !Array.from(projectField.options).some((option) => String(option.value) === projectId)
+        ) {
+            const option = document.createElement('option');
+            option.value = projectId;
+            option.textContent = projectOption.text;
+            projectField.appendChild(option);
+        }
+
+        setSelectValue(projectField, projectId);
+    }
 
     if (projectField?.value) {
         await applyProjectDefaults(form, dependencies);
+
+        const projectMeta = getProjectMeta(dependencies, projectField.value);
+        const sprintId = String(prefill.sprintId || '');
+        const selectedSprint = (projectMeta?.sprints || []).find((option) => option.value === sprintId);
+        const milestoneId = String(prefill.milestoneId || selectedSprint?.project_milestone_id || '');
+        const parentTaskId = String(prefill.parentTaskId || '');
+        const milestoneField = form.querySelector('[name="project_milestone_id"]');
+
+        setSelectValue(milestoneField, milestoneId);
+        updateSprintOptions(form, dependencies, {
+            selectedMilestoneId: milestoneId,
+            selectedSprintId: sprintId,
+        });
+        await loadParentTaskOptions(form, dependencies);
+        setSelectValue(form.querySelector('[name="parent_task_id"]'), parentTaskId);
     }
 };
 
@@ -849,7 +940,14 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             openTaskCreateModal(root.querySelector('[data-task-create-modal]'));
 
             try {
-                await prepareTaskCreateModal(root, dependencies);
+                await prepareTaskCreateModal(root, dependencies, {
+                    projectId: openButton.dataset.taskCreateProjectId || '',
+                    projectName: openButton.dataset.taskCreateProjectName || '',
+                    projectCode: openButton.dataset.taskCreateProjectCode || '',
+                    milestoneId: openButton.dataset.taskCreateMilestoneId || '',
+                    sprintId: openButton.dataset.taskCreateSprintId || '',
+                    parentTaskId: openButton.dataset.taskCreateParentTaskId || '',
+                });
             } catch (error) {
                 Alert.errorModal(error.message || 'Unable to load project task options.');
             }
@@ -1025,6 +1123,27 @@ const initializeTaskCreateRoot = (root, dependencies) => {
                 throw new Error(
                     result.message || 'Unable to save the task.'
                 );
+            }
+
+            if (root.dataset.taskCreateSuccessMode === 'refresh-project-tasks') {
+                closeTaskCreateModal(root.querySelector('[data-task-create-modal]'));
+                Alert.success(result.message || 'Task added successfully.');
+                document.dispatchEvent(new CustomEvent('project-tab:reload', {
+                    detail: {
+                        tab: 'tasks',
+                        query: {
+                            preferred_group: result.project_task_group_key || '',
+                        },
+                    },
+                }));
+                isTaskCreateSubmitting = false;
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Save Task';
+                }
+
+                return;
             }
 
             window.location.reload();

@@ -65,7 +65,7 @@
             <!-- Task OONotes & Files Modal -->
             @include('tasks.partials.modals.notes-modal')
 
-            {{-- Task Developer Notes Modal --}}
+            <!-- Task Developer Notes Modal -->
             @include('tasks.partials.modals.dev-notes-modal')
 
             @include('tasks.partials.modals.reopen-task-remark-modal')

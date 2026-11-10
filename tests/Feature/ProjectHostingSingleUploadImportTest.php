@@ -146,6 +146,40 @@ class ProjectHostingSingleUploadImportTest extends TestCase
         );
     }
 
+    public function test_downloaded_template_uses_text_codes_without_provider_or_service_type_dropdowns(): void
+    {
+        $response = $this->actingAs($this->authorizedUser)
+            ->get(route('projects.import.template', 'project_hosting'));
+
+        $response->assertOk();
+        $response->assertDownload('project-hosting-records-import-template.xlsx');
+
+        $templatePath = public_path(config('project_constants.project_import_modules.project_hosting.template_path'));
+        $spreadsheet = IOFactory::load($templatePath);
+        $sheet = $spreadsheet->getSheetByName(ProjectHostingImportValidator::WORKSHEET_NAME);
+
+        $this->assertNotNull($sheet);
+        foreach (ProjectHostingImportValidator::EXPECTED_HEADERS as $column => $header) {
+            $this->assertSame($header, $sheet->getCell($column . '1')->getValue());
+        }
+
+        $this->assertSame('@', $sheet->getStyle('C2:C101')->getNumberFormat()->getFormatCode());
+        $this->assertSame('@', $sheet->getStyle('D2:D101')->getNumberFormat()->getFormatCode());
+
+        $archive = new \ZipArchive();
+        $this->assertTrue($archive->open($templatePath) === true);
+        $worksheetXml = $archive->getFromName('xl/worksheets/sheet1.xml');
+        $archive->close();
+
+        $this->assertIsString($worksheetXml);
+        $this->assertStringNotContainsString('sqref="C2:C101"', $worksheetXml);
+        $this->assertStringNotContainsString('sqref="D2:D101"', $worksheetXml);
+        $this->assertStringContainsString('sqref="E2:E101"', $worksheetXml);
+        $this->assertStringContainsString('sqref="F2:F101"', $worksheetXml);
+        $this->assertStringContainsString('sqref="H2:H101"', $worksheetXml);
+        $this->assertStringContainsString('sqref="M2:M101"', $worksheetXml);
+    }
+
     /**
      * Test single upload starts an import, creates zero database import records,
      * processes valid rows while reporting failed rows, and does not stop valid rows.
@@ -162,8 +196,8 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Database Primary Server',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
                 'F' => 'company',
                 'G' => 'db1.example.com',
@@ -177,15 +211,15 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Invalid Provider Service',
-                'C' => 'Non Existent Provider XYZ',
-                'D' => $this->serviceType->name,
+                'C' => '999999',
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
             ],
             [
                 'A' => $this->project2->project_code,
                 'B' => 'Redis Cache Instance',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
                 'F' => 'company',
                 'G' => 'redis.example.com',
@@ -266,8 +300,8 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Row 2 Service',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
             ],
             // Row 3: Blank
@@ -279,8 +313,8 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Row 4 Service',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
             ],
         ]);
@@ -351,8 +385,8 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Secure Service',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
             ],
         ]);
 
@@ -398,8 +432,8 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Initial Failed Service',
-                'C' => 'Invalid Provider Name',
-                'D' => $this->serviceType->name,
+                'C' => '999999',
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
             ],
         ]);
@@ -430,11 +464,11 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Corrected Service Now Valid',
-                'C' => $this->provider->name, // Corrected to valid provider
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code, // Corrected to valid provider code
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
                 'F' => 'company',
-                'S' => 'Provider: The selected provider was not available.', // Old error in column S
+                'S' => 'Provider code "999999" was not found.', // Previous error in column S
             ],
         ], sheetName: 'Hosting Upload', includeImportErrorCol: true);
 
@@ -472,8 +506,8 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'All Results Audit Service',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
             ],
         ]);
@@ -513,22 +547,22 @@ class ProjectHostingSingleUploadImportTest extends TestCase
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Rollback Row 1 Good',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
             ],
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Rollback Row 2 Bad',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
             ],
             [
                 'A' => $this->project1->project_code,
                 'B' => 'Rollback Row 3 Good',
-                'C' => $this->provider->name,
-                'D' => $this->serviceType->name,
+                'C' => $this->provider->code,
+                'D' => $this->serviceType->code,
                 'E' => $this->activeStatus->name,
             ],
         ]);

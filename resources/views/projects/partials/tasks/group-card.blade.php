@@ -2,6 +2,9 @@
     $isLoaded = $isOpen;
     $isDeletedProjectView = $project->trashed();
     $taskGroupLoadUrl = $isDeletedProjectView ? route('projects.restore.tasks.groups.show', ['id' => $project->id, 'group' => $group['key']]) : route('projects.tasks.groups.show', ['project' => $project, 'group' => $group['key']]);
+    if (filled($search ?? null)) {
+        $taskGroupLoadUrl .= (str_contains($taskGroupLoadUrl, '?') ? '&' : '?') . 'search=' . urlencode($search);
+    }
 
     $hasEstimate = array_key_exists('has_estimate', $group) ? (bool) $group['has_estimate'] : isset($group['estimated_seconds']) && $group['estimated_seconds'] !== null && (int) $group['estimated_seconds'] > 0;
 
@@ -65,7 +68,7 @@
             @if (!$isDeletedProjectView)
                 @can('task.create')
                     @if (!$group['is_unscheduled'] && empty($group['is_linear_group']))
-                        <span class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $group['sprint_id'] }}">
+                        <span class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-task-create-open data-task-create-sprint-id="{{ $group['sprint_id'] }}">
                             + Task
                         </span>
                     @endif
@@ -82,6 +85,7 @@
                     'group' => $group,
                     'tasks' => $tasks,
                     'pagination' => $initialTasksPagination ?? ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                    'search' => $search ?? null,
                 ])
             @endif
         </div>

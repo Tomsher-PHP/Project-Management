@@ -44,13 +44,8 @@
                         </button>
                     @endcan
 
-                    <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300"
-                    data-task-insights-initial-tab="comments"
-                    data-task-id="{{ $task->id }}"
-                    data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
-                    data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
-                    data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
-                    data-task-name="{{ $task->name }}">
+                    <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-task-insights-initial-tab="comments" data-task-id="{{ $task->id }}"
+                        data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}" data-store-url="{{ route('tasks.developer-notes.store', $task) }}" data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}" data-task-name="{{ $task->name }}">
                         <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-300">
                             <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M5.25 6.75H12.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
@@ -64,10 +59,10 @@
                         </span>
                     </button>
 
-                    @if ($project && auth()->user()->can('view', $project))
-                        <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
-                            <span>Open Project</span>
-                        </a>
+                    @if ($project && !$project->trashed() && !$task->parent_task_id && auth()->user()->can('update', $project) && auth()->user()->can('move', $task))
+                        <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-task-move-open data-project-task-move-url="{{ route('projects.tasks.move', [$project, $task]) }}" data-project-task-name="{{ $task->name }}" data-project-task-code="{{ $task->code ?: 'T-' . str_pad($task->id, 3, '0', STR_PAD_LEFT) }}" data-project-task-current-sprint="{{ $task->projectSprint?->name ?? 'Unscheduled' }}" data-project-task-current-sprint-id="{{ $task->project_sprint_id ?? '' }}" data-project-task-current-module="{{ $task->projectMilestone?->name ?? 'None' }}" data-project-task-current-timeline="{{ $task->projectTimeline?->name ?? 'None' }}" data-project-task-current-timeline-id="{{ $task->project_timeline_id ?? '' }}" data-project-task-source-project-id="{{ $project->id }}" data-project-task-source-project-name="{{ $project->name }}" data-project-task-source-project-code="{{ $project->project_code }}" data-project-task-source-project-flow="{{ $project->project_flow }}">
+                            <span>Move task</span>
+                        </button>
                     @endif
 
                     @can('delete', $task)
@@ -92,6 +87,14 @@
                 <div class="relative z-10 w-full max-w-[95vw] 2xl:max-w-[1550px]" data-project-task-detail-content></div>
             </div>
         </div>
+
+        @include('projects.partials.modals.task-move', [
+            'project' => null,
+            'projectTimelines' => collect(),
+            'projectMilestones' => collect(),
+            'projectSprints' => collect(),
+            'isDeletedProjectView' => false,
+        ])
     </section>
 
     @include('tasks.partials.modals.insights-modal')
@@ -107,5 +110,5 @@
 @push('scripts')
     @vite('resources/js/modules/task-detail.js')
     @vite('resources/js/modules/tasks/extend-task.js')
-     @vite('resources/js/modules/tasks/developer-notes.js')
+    @vite('resources/js/modules/tasks/developer-notes.js')
 @endpush

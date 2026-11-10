@@ -61,7 +61,7 @@
                                                     {{ $designation->name }}
                                                 </p>
                                                 @if ($designation->is_system)
-                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
                                                         System
                                                     </span>
                                                 @endif
@@ -80,9 +80,9 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
-                                             @can('designation.edit')
-                                                 <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.designations.update', $designation->id) }}" data-name="{{ $designation->name }}" data-sort_order="{{ $designation->sort_order }}" data-method="PUT" data-module="Designation" title="Edit Designation" />
-                                             @endcan
+                                            @can('designation.edit')
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.designations.update', $designation->id) }}" data-name="{{ $designation->name }}" data-sort_order="{{ $designation->sort_order }}" data-method="PUT" data-module="Designation" title="Edit Designation" />
+                                            @endcan
 
                                             @can('designation.delete')
                                                 @if (!$designation->is_system)

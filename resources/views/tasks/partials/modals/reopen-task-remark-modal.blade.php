@@ -1,41 +1,70 @@
 
 <div id="reopen-task-remark-modal"
-     class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/50 p-4">
+     class="modal fixed inset-0 z-[10000] hidden items-center justify-center overflow-y-auto">
 
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Reopen Task
-        </h3>
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"></div>
 
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Please explain why this completed task is being moved
-            to an incomplete status.
-        </p>
+    <!-- Modal wrapper -->
+    <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
+        <div class="relative z-10 w-full max-w-lg">
 
-        <textarea
-            id="reopen-task-remark-input"
-            rows="4"
-            class="mt-4 w-full rounded-md border border-gray-300 bg-white p-3 text-sm text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            placeholder="Enter the reason for reopening this task..."
-        ></textarea>
+            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
 
-        <p id="reopen-task-remark-error"
-           class="mt-2 hidden text-sm text-red-600">
-            A remark is required to reopen this task.
-        </p>
+                <!-- Header -->
+                <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                    <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
+                        Reopen Task
+                    </h3>
 
-        <div class="mt-5 flex justify-end gap-3">
-            <button type="button"
-                    id="cancel-reopen-task"
-                    class="rounded-md border border-gray-300 px-4 py-2 text-sm dark:border-gray-600 dark:text-white">
-                Cancel
-            </button>
+                    <button type="button"
+                            id="close-reopen-task"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300">
+                        ✕
+                    </button>
+                </div>
 
-            <button type="button"
-                    id="confirm-reopen-task"
-                    class="inline-flex items-center justify-center rounded-lg bg-success-300 px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60">
-                Reopen Task
-            </button>
+                <!-- Body -->
+                <div class="px-5 py-5">
+                    <div>
+                        <label for="reopen-task-remark-input"
+                               class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                            Reason for reopening <span class="text-red-500">*</span>
+                        </label>
+
+                        <textarea
+                            id="reopen-task-remark-input"
+                            rows="4"
+                            class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-3 text-sm text-bgray-700 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:placeholder:text-bgray-500"
+                            placeholder="Enter the reason for reopening this task..."
+                        ></textarea>
+
+                        <p id="reopen-task-remark-error"
+                           class="mt-2 hidden text-xs text-red-500">
+                            A remark is required to reopen this task.
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3 border-t border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+
+                    <button type="button"
+                            id="cancel-reopen-task"
+                            class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300">
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            id="confirm-reopen-task"
+                            class="inline-flex items-center justify-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60">
+                        Reopen Task
+                    </button>
+
+                </div>
+
+            </div>
         </div>
     </div>
 </div>

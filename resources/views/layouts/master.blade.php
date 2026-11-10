@@ -83,6 +83,7 @@
 
     @auth
         @include('quick-notes.partials.drawer')
+        @include('broadcasts.partials.broadcast-drawer')
     @endauth
 
     @stack('modals')

@@ -40,21 +40,15 @@
     $commentsCount = $task->comments_count ?? ($task->relationLoaded('comments') ? $task->comments->count() : 0);
     $taskNotesCount = (int) ($task->task_notes_count ?? ($task->relationLoaded('taskNotes') ? $task->taskNotes->count() : 0));
 
-    $prjLimit = $milestoneName ? 16 : 40;
+    $prjLimit = 40;
+    $isAgile = ($project?->project_flow ?? null) === 'agile';
+    $projectTooltip = ($isAgile && $milestoneName) ? ($projectName . ' - ' . $milestoneName) : $projectName;
 @endphp
 
 
-<div
-    class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600"
-    data-task-id="{{ $task->id }}"
-    data-is-completed="{{ $isCompleted ? '1' : '0' }}"
-    data-has-developer-note="{{ ($task->developerNotes?->isNotEmpty() ?? false) ? '1' : '0' }}"
->
+<div class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600" data-task-id="{{ $task->id }}" data-is-completed="{{ $isCompleted ? '1' : '0' }}" data-has-developer-note="{{ $task->developerNotes?->isNotEmpty() ?? false ? '1' : '0' }}">
     <div class="space-y-3 p-4">
-        <div class="{{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}" @if ($canOpenTask) data-project-task-detail-open
-                data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}"
-                data-project-task-group-key=""
-                title="Open task" @endif>
+        <div class="{{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}" @if ($canOpenTask) data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}" data-project-task-group-key="" title="Open task" @endif>
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1 text-[11px] font-medium text-bgray-900 dark:text-bgray-300">
@@ -62,16 +56,7 @@
                             @if ($customer)
                                 <x-profile-grade-badge :grade="$customer->profileGrade" size="sm" class="mt-0.5" />
                             @endif
-                            <span class="truncate" title="{{ $projectName }}">{{ limitStringChar($projectName, $prjLimit) }}</span>
-                        @endif
-
-                        @if (($project?->project_flow ?? null) === 'agile' && $milestoneName)
-                            <span class="shrink-0 text-bgray-900 dark:text-bgray-300">
-                                <svg width="8" height="8" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
-                                </svg>
-                            </span>
-                            <span class="truncate" title="{{ $milestoneName }}">{{ limitStringChar($milestoneName, 16) }}</span>
+                            <span class="truncate" title="{{ $projectTooltip }}">{{ limitStringChar($projectName, $prjLimit) }}</span>
                         @endif
                     </div>
                 </div>
@@ -132,33 +117,14 @@
                     $activityTotalCount = $commentsCount + $developerNotesCount;
                 @endphp
 
-                <button
-                    type="button"
-                    class="group inline-flex items-center gap-1 rounded-md px-2 py-1 text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white {{ $developerNotesCount > 0 ? '!text-blue-600 dark:!text-blue-400' : '' }}"
-                    title="Completion Notes: {{ $developerNotesCount }} | Comments: {{ $commentsCount }}"
-                    aria-label="Task Activity: {{ $developerNotesCount }} developer notes and {{ $commentsCount }} comments"
-                    data-task-activity-trigger
-                    data-no-task-detail-open
-                    data-task-id="{{ $task->id }}"
-                    data-task-insights-url="{{ route('tasks.comments.modal', $task) }}"
-                    data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
-                    data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
-                    data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
-                    data-has-developer-note="{{ $developerNotesCount > 0 ? '1' : '0' }}"
-                    data-comments-count="{{ $commentsCount }}"
-                    data-developer-notes-count="{{ $developerNotesCount }}"
-                    data-task-name="{{ $task->name }}"
-                >
+                <button type="button" class="group inline-flex items-center gap-1 rounded-md px-2 py-1 text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white {{ $developerNotesCount > 0 ? '!text-blue-600 dark:!text-blue-400' : '' }}" title="Completion Notes: {{ $developerNotesCount }} | Comments: {{ $commentsCount }}" aria-label="Task Activity: {{ $developerNotesCount }} developer notes and {{ $commentsCount }} comments" data-task-activity-trigger data-no-task-detail-open data-task-id="{{ $task->id }}" data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}" data-store-url="{{ route('tasks.developer-notes.store', $task) }}" data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}" data-has-developer-note="{{ $developerNotesCount > 0 ? '1' : '0' }}" data-comments-count="{{ $commentsCount }}" data-developer-notes-count="{{ $developerNotesCount }}" data-task-name="{{ $task->name }}">
 
                     <span class="inline-flex shrink-0">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
                         </svg>
                     </span>
-                    <span
-                        class="font-medium text-[11px]"
-                        data-task-activity-count
-                    >
+                    <span class="font-medium text-[11px]" data-task-activity-count>
                         {{ $activityTotalCount }}
                     </span>
 
