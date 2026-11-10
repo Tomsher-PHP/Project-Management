@@ -431,6 +431,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/currencies/search', [CommonController::class, 'searchCurrencies'])->name('currencies.search');
 
     // Project Routes
+    Route::get('projects/export', [ProjectController::class, 'export'])->middleware(['permission.type:project.view', 'permission.type:project.export'])->name('projects.export');
+
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
         Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
         Route::put('settings/notifications', [ProjectController::class, 'updateNotificationSettings'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.settings.notifications.update');
@@ -544,7 +546,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Project Import routes
     Route::prefix('projects/import')->as('projects.import.')->group(function () {
-        Route::get('/', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('index');
+        Route::get('/', [ProjectImportController::class, 'index'])->name('index');
         Route::get('{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('template');
         Route::post('{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('validate');
         Route::post('{module}/process', [ProjectImportController::class, 'startImport'])->name('process');

@@ -49,6 +49,7 @@ return [
     ['name' => 'project.customer_end_date',     'label' => 'Project', 'sort_order' => 4260, 'default_checked' => false],
     ['name' => 'project.add_payment_status',    'label' => 'Project', 'sort_order' => 4280, 'default_checked' => false],
     ['name' => 'project.view_payment_status',   'label' => 'Project', 'sort_order' => 4290, 'default_checked' => false],
+    ['name' => 'project.export',                'label' => 'Project', 'sort_order' => 4300, 'default_checked' => false],
 
     // PROJECT MILESTONE
     ['name' => 'project_milestone.view',    'label' => 'Project Milestone', 'sort_order' => 5000, 'default_checked' => true],
