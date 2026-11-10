@@ -32,7 +32,7 @@ class ProjectCategoryCodeTest extends TestCase
         $codes = [];
         for ($i = 0; $i < 25; $i++) {
             $code = ProjectCategory::generateUniqueCode();
-            $this->assertMatchesRegularExpression('/^pct-\d{6}$/', $code);
+            $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
             $this->assertArrayNotHasKey($code, $codes);
             $codes[$code] = true;
         }
@@ -57,7 +57,7 @@ class ProjectCategoryCodeTest extends TestCase
         $createdCode = $storeResponse->json('data.code');
 
         $this->assertNotNull($createdCode);
-        $this->assertMatchesRegularExpression('/^pct-\d{6}$/', $createdCode);
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $createdCode);
 
         $updateResponse = $this->actingAs($user)
             ->putJson(route('settings.project-categories.update', $createdId), [
@@ -75,7 +75,7 @@ class ProjectCategoryCodeTest extends TestCase
     {
         $existingWithCode = ProjectCategory::create([
             'name' => 'Already Coded',
-            'code' => 'abc-123456',
+            'code' => '123456',
             'sort_order' => 1,
         ]);
 
@@ -108,15 +108,15 @@ class ProjectCategoryCodeTest extends TestCase
         $this->seed(ProjectCategoryCodeSeeder::class);
 
         $existingWithCode->refresh();
-        $this->assertSame('abc-123456', $existingWithCode->code);
+        $this->assertSame('123456', $existingWithCode->code);
 
         $activeRow = ProjectCategory::find($missingActiveId);
         $this->assertNotNull($activeRow);
-        $this->assertMatchesRegularExpression('/^pct-\d{6}$/', $activeRow->code);
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $activeRow->code);
 
         $deletedRow = ProjectCategory::withTrashed()->find($missingDeletedId);
         $this->assertNotNull($deletedRow);
-        $this->assertMatchesRegularExpression('/^pct-\d{6}$/', $deletedRow->code);
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $deletedRow->code);
         $this->assertNotSame($activeRow->code, $deletedRow->code);
     }
 
@@ -128,10 +128,9 @@ class ProjectCategoryCodeTest extends TestCase
         $this->assertGreaterThan(0, $categories->count());
 
         foreach ($categories as $category) {
-            $this->assertMatchesRegularExpression('/^pct-\d{6}$/', $category->code);
+            $this->assertMatchesRegularExpression('/^\d{6}$/', $category->code);
         }
 
         $this->assertSame($categories->count(), $categories->pluck('code')->unique()->count());
     }
 }
-

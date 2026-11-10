@@ -15,14 +15,13 @@ class ServiceTypeCodeTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_generate_unique_code_uses_code_prefix_and_six_digits(): void
+    public function test_generate_unique_code_is_six_digit_numeric(): void
     {
-        $pattern = '/^' . preg_quote(ServiceType::CODE_PREFIX, '/') . '-\d{6}$/';
         $codes = [];
 
         for ($i = 0; $i < 25; $i++) {
             $code = ServiceType::generateUniqueCode();
-            $this->assertMatchesRegularExpression($pattern, $code);
+            $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
             $this->assertArrayNotHasKey($code, $codes);
             $codes[$code] = true;
         }
@@ -54,7 +53,7 @@ class ServiceTypeCodeTest extends TestCase
         $createdCode = $storeResponse->json('data.code');
 
         $this->assertNotNull($createdCode);
-        $this->assertMatchesRegularExpression('/^pst-\d{6}$/', $createdCode);
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $createdCode);
 
         $updateResponse = $this->actingAs($user)
             ->putJson(route('settings.service-types.update', $createdId), [
@@ -77,17 +76,17 @@ class ServiceTypeCodeTest extends TestCase
             ['name' => 'Seed Group', 'sort_order' => 1, 'is_active' => true]
         );
 
-        $alreadyPrefixed = ServiceType::create([
+        $alreadyValid = ServiceType::create([
             'service_group_id' => $group->id,
-            'name' => 'Already Prefixed',
-            'code' => 'pst-123456',
+            'name' => 'Already Six Digits',
+            'code' => '123456',
             'sort_order' => 1,
         ]);
 
-        $legacyNumericId = DB::table('service_types')->insertGetId([
+        $oldPrefixedId = DB::table('service_types')->insertGetId([
             'service_group_id' => $group->id,
-            'name' => 'Legacy Numeric',
-            'code' => '654321',
+            'name' => 'Old Prefixed',
+            'code' => 'pst-654321',
             'sort_order' => 2,
             'is_active' => true,
             'created_at' => now(),
@@ -107,17 +106,16 @@ class ServiceTypeCodeTest extends TestCase
 
         $this->seed(ServiceTypeCodeSeeder::class);
 
-        $alreadyPrefixed->refresh();
-        $this->assertSame('pst-123456', $alreadyPrefixed->code);
+        $alreadyValid->refresh();
+        $this->assertSame('123456', $alreadyValid->code);
 
-        $legacyNumeric = ServiceType::find($legacyNumericId);
-        $this->assertNotNull($legacyNumeric);
-        $this->assertMatchesRegularExpression('/^pst-\d{6}$/', $legacyNumeric->code);
+        $normalizedPrefixed = ServiceType::find($oldPrefixedId);
+        $this->assertNotNull($normalizedPrefixed);
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $normalizedPrefixed->code);
 
         $legacyDeleted = ServiceType::withTrashed()->find($legacyEmptyDeletedId);
         $this->assertNotNull($legacyDeleted);
-        $this->assertMatchesRegularExpression('/^pst-\d{6}$/', $legacyDeleted->code);
-        $this->assertNotSame($legacyNumeric->code, $legacyDeleted->code);
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $legacyDeleted->code);
+        $this->assertNotSame($normalizedPrefixed->code, $legacyDeleted->code);
     }
 }
-

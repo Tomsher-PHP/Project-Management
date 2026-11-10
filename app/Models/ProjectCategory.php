@@ -12,8 +12,6 @@ class ProjectCategory extends Model
 {
     use SoftDeletes, Filterable, Sortable, HasFormOptions;
 
-    protected const CODE_PREFIX = 'pct';
-
     protected $fillable = [
         'name',
         'code',
@@ -40,13 +38,12 @@ class ProjectCategory extends Model
     }
 
     /**
-     * Generate a unique code using CODE_PREFIX, a hyphen, and 6 digits (e.g. pct-123456).
+     * Generate a unique 6-digit numeric code (e.g. 123456).
      */
     public static function generateUniqueCode(): string
     {
         do {
-            $numbers = (string) random_int(100000, 999999);
-            $code = static::CODE_PREFIX . '-' . $numbers;
+            $code = (string) random_int(100000, 999999);
         } while (static::withTrashed()->where('code', $code)->exists());
 
         return $code;

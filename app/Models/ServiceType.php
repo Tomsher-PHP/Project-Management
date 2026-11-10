@@ -13,8 +13,6 @@ class ServiceType extends Model
 {
     use SoftDeletes, Filterable, Sortable, HasFormOptions;
 
-    public const CODE_PREFIX = 'pst';
-
     protected $fillable = [
         'service_group_id',
         'name',
@@ -48,13 +46,12 @@ class ServiceType extends Model
     }
 
     /**
-     * Generate a unique code using CODE_PREFIX, a hyphen, and 6 digits (e.g. pst-123456).
+     * Generate a unique 6-digit numeric code (e.g. 123456).
      */
     public static function generateUniqueCode(): string
     {
         do {
-            $numbers = (string) random_int(100000, 999999);
-            $code = static::CODE_PREFIX . '-' . $numbers;
+            $code = (string) random_int(100000, 999999);
         } while (static::withTrashed()->where('code', $code)->exists());
 
         return $code;

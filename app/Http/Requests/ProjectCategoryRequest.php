@@ -39,7 +39,7 @@ class ProjectCategoryRequest extends FormRequest
         ];
 
         if ($this->isMethod('post')) {
-            $rules['code'] = ['required', 'string', 'regex:/^[a-z]{3}-\d{6}$/', 'unique:project_categories,code'];
+            $rules['code'] = ['required', 'digits:6', 'unique:project_categories,code'];
         }
 
         return $rules;

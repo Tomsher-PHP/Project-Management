@@ -8,17 +8,17 @@ use Illuminate\Database\Seeder;
 class ProjectCategoryCodeSeeder extends Seeder
 {
     /**
-     * Backfill unique codes for existing project categories that do not have one.
+     * Backfill or normalize unique 6-digit numeric codes for existing project categories.
      */
     public function run(): void
     {
         ProjectCategory::withTrashed()
-            ->where(function ($query) {
-                $query->whereNull('code')
-                    ->orWhere('code', '');
-            })
             ->orderBy('id')
             ->each(function (ProjectCategory $category) {
+                if (preg_match('/^\d{6}$/', (string) $category->code)) {
+                    return;
+                }
+
                 $category->code = ProjectCategory::generateUniqueCode();
                 $category->save();
             });

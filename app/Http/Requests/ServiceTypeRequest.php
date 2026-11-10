@@ -42,8 +42,7 @@ class ServiceTypeRequest extends FormRequest
         ];
 
         if ($this->isMethod('post')) {
-            $prefix = preg_quote(ServiceType::CODE_PREFIX, '/');
-            $rules['code'] = ['required', 'string', "regex:/^{$prefix}-\d{6}$/", 'unique:service_types,code'];
+            $rules['code'] = ['required', 'digits:6', 'unique:service_types,code'];
         }
 
         return $rules;

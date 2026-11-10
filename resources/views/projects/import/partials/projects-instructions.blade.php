@@ -62,7 +62,7 @@
             'update_req' => 'Optional',
             'type' => 'Comma-separated Codes',
             'rules' => 'Comma-separated existing PMS service type codes. Blank preserves existing values on update.',
-            'example' => 'pst-100001, pst-100002',
+            'example' => '100001, 100002',
         ],
         [
             'name' => 'Category Codes',
@@ -70,7 +70,7 @@
             'update_req' => 'Optional',
             'type' => 'Comma-separated Codes',
             'rules' => 'Comma-separated existing PMS project category codes. Blank preserves existing values on update.',
-            'example' => 'pct-100001, pct-100002',
+            'example' => '100001, 100002',
         ],
         [
             'name' => 'Timeline Name',

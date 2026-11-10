@@ -8,16 +8,14 @@ use Illuminate\Database\Seeder;
 class ServiceTypeCodeSeeder extends Seeder
 {
     /**
-     * Backfill or normalize unique prefixed codes for existing service types.
+     * Backfill or normalize unique 6-digit numeric codes for existing service types.
      */
     public function run(): void
     {
-        $pattern = '/^' . preg_quote(ServiceType::CODE_PREFIX, '/') . '-\d{6}$/';
-
         ServiceType::withTrashed()
             ->orderBy('id')
-            ->each(function (ServiceType $serviceType) use ($pattern) {
-                if (preg_match($pattern, (string) $serviceType->code)) {
+            ->each(function (ServiceType $serviceType) {
+                if (preg_match('/^\d{6}$/', (string) $serviceType->code)) {
                     return;
                 }
 
