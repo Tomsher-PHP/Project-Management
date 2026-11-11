@@ -488,24 +488,11 @@ class BroadcastService
      *
      * @return array{todayBirthdays: \Illuminate\Support\Collection, upcomingBirthdays: \Illuminate\Support\Collection}
      */
-    public function getTodayAndUpcomingBirthdays(User|int|null $currentUser = null, int $days = 7): array
+    public function getTodayAndUpcomingBirthdays(User|int|null $currentUser = null, int $days = Broadcast::BDAY_DELAY_DAYS): array
     {
-        $currentUserId = $currentUser instanceof User ? $currentUser->id : ($currentUser ? (int) $currentUser : null);
+        $currentUserId = $this->resolveUserId($currentUser);
         $today = now()->startOfDay();
-
-        $users = User::query()
-            ->active()
-            ->where('delete_status', 0)
-            ->whereHas('details', function (Builder $query) {
-                $query->whereNotNull('dob');
-            })
-            ->with([
-                'details:id,user_id,dob,designation_id,department_id',
-                'details.designation:id,name',
-                'details.department:id,name',
-                'primaryAttachment',
-            ])
-            ->get(['id', 'name', 'email']);
+        $users = $this->getActiveEmployeesWithDetailDate('dob');
 
         $todayBirthdays = collect();
         $upcomingBirthdays = collect();
@@ -516,20 +503,10 @@ class BroadcastService
                 continue;
             }
 
-            $dobMonth = (int) $dob->month;
-            $dobDay = (int) $dob->day;
-
-            $dayThisYear = ($dobMonth === 2 && $dobDay === 29 && ! $today->isLeapYear()) ? 28 : $dobDay;
-            $bdayThisYear = Carbon::create($today->year, $dobMonth, $dayThisYear, 0, 0, 0, $today->timezone);
-
-            if ($bdayThisYear->lt($today)) {
-                $nextYear = $today->year + 1;
-                $isNextLeap = Carbon::create($nextYear, 1, 1, 0, 0, 0, $today->timezone)->isLeapYear();
-                $dayNextYear = ($dobMonth === 2 && $dobDay === 29 && ! $isNextLeap) ? 28 : $dobDay;
-                $nextBirthday = Carbon::create($nextYear, $dobMonth, $dayNextYear, 0, 0, 0, $today->timezone);
-            } else {
-                $nextBirthday = $bdayThisYear;
-            }
+            $bdayThisYear = $this->resolveAnnualDateInYear($dob, $today->year, $today->timezone);
+            $nextBirthday = $bdayThisYear->lt($today)
+                ? $this->resolveAnnualDateInYear($dob, $today->year + 1, $today->timezone)
+                : $bdayThisYear;
 
             $diffInDays = (int) $today->diffInDays($nextBirthday, false);
 
@@ -556,5 +533,86 @@ class BroadcastService
             'todayBirthdays' => $todayBirthdays,
             'upcomingBirthdays' => $upcomingBirthdays,
         ];
+    }
+
+    /**
+     * Retrieve active employees celebrating a work anniversary today (at least 1 completed year).
+     *
+     * @return \Illuminate\Support\Collection<int, object>
+     */
+    public function getTodayWorkAnniversaries(User|int|null $currentUser = null): \Illuminate\Support\Collection
+    {
+        $currentUserId = $this->resolveUserId($currentUser);
+        $today = now()->startOfDay();
+        $users = $this->getActiveEmployeesWithDetailDate('joining_date');
+
+        $todayWorkAnniversaries = collect();
+
+        foreach ($users as $user) {
+            $joiningDate = $user->details?->joining_date;
+            if (! $joiningDate) {
+                continue;
+            }
+
+            $years = $today->year - $joiningDate->year;
+            if ($years < 1) {
+                continue;
+            }
+
+            $anniversaryThisYear = $this->resolveAnnualDateInYear($joiningDate, $today->year, $today->timezone);
+            if (! $anniversaryThisYear->equalTo($today)) {
+                continue;
+            }
+
+            $todayWorkAnniversaries->push((object) [
+                'user' => $user,
+                'joining_date' => $joiningDate,
+                'anniversary_date' => $anniversaryThisYear,
+                'years' => $years,
+                'is_self' => $currentUserId !== null && $user->id === $currentUserId,
+            ]);
+        }
+
+        return $todayWorkAnniversaries
+            ->sortBy([
+                ['years', 'desc'],
+                [fn($item) => strtolower($item->user->name ?? ''), 'asc'],
+            ])
+            ->values();
+    }
+
+    protected function resolveUserId(User|int|null $user): ?int
+    {
+        return $user instanceof User ? $user->id : ($user ? (int) $user : null);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     */
+    protected function getActiveEmployeesWithDetailDate(string $dateColumn)
+    {
+        return User::query()
+            ->active()
+            ->where('delete_status', 0)
+            ->whereHas('details', function (Builder $query) use ($dateColumn) {
+                $query->whereNotNull($dateColumn);
+            })
+            ->with([
+                "details:id,user_id,{$dateColumn},designation_id,department_id",
+                'details.designation:id,name',
+                'details.department:id,name',
+                'primaryAttachment',
+            ])
+            ->get(['id', 'name', 'email']);
+    }
+
+    protected function resolveAnnualDateInYear(Carbon $date, int $year, mixed $timezone): Carbon
+    {
+        $month = (int) $date->month;
+        $day = (int) $date->day;
+        $isLeap = Carbon::create($year, 1, 1, 0, 0, 0, $timezone)->isLeapYear();
+        $resolvedDay = ($month === 2 && $day === 29 && ! $isLeap) ? 28 : $day;
+
+        return Carbon::create($year, $month, $resolvedDay, 0, 0, 0, $timezone);
     }
 }

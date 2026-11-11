@@ -197,13 +197,16 @@ class BroadcastController extends Controller
     public function drawerCount(Request $request): JsonResponse
     {
         $broadcastCount = $this->broadcastService->getEligibleCountForUser($request->user());
-        $birthdays = $this->broadcastService->getTodayAndUpcomingBirthdays($request->user(), 30);
+        $birthdays = $this->broadcastService->getTodayAndUpcomingBirthdays($request->user(), Broadcast::BDAY_DELAY_DAYS);
         $todayBirthdayCount = $birthdays['todayBirthdays']->count();
         $upcomingBirthdayCount = $birthdays['upcomingBirthdays']->count();
         $totalBirthdayCount = $todayBirthdayCount + $upcomingBirthdayCount;
 
-        $totalCount = $broadcastCount + $totalBirthdayCount;
+        $todayWorkAnniversaryCount = $this->broadcastService->getTodayWorkAnniversaries($request->user())->count();
+
+        $totalCount = $broadcastCount + $totalBirthdayCount + $todayWorkAnniversaryCount;
         $hasTodayBirthday = $todayBirthdayCount > 0;
+        $hasTodayWorkAnniversary = $todayWorkAnniversaryCount > 0;
         $label = $totalCount . ' ' . Str::plural('Broadcast', $totalCount);
 
         return response()->json([
@@ -214,6 +217,9 @@ class BroadcastController extends Controller
             'today_birthday_count' => $todayBirthdayCount,
             'upcoming_birthday_count' => $upcomingBirthdayCount,
             'has_today_birthday' => $hasTodayBirthday,
+            'work_anniversary_count' => $todayWorkAnniversaryCount,
+            'today_work_anniversary_count' => $todayWorkAnniversaryCount,
+            'has_today_work_anniversary' => $hasTodayWorkAnniversary,
             'label' => $label,
         ]);
     }
@@ -233,7 +239,9 @@ class BroadcastController extends Controller
 
         $todayBirthdaysCount = 0;
         $upcomingBirthdaysCount = 0;
+        $todayWorkAnniversariesCount = 0;
         $hasTodayBirthday = false;
+        $hasTodayWorkAnniversary = false;
 
         if ($page === 1) {
             $birthdays = $this->broadcastService->getTodayAndUpcomingBirthdays($request->user(), Broadcast::BDAY_DELAY_DAYS);
@@ -243,17 +251,22 @@ class BroadcastController extends Controller
             $upcomingBirthdaysCount = $upcomingBirthdays->count();
             $hasTodayBirthday = $todayBirthdaysCount > 0;
 
+            $todayWorkAnniversaries = $this->broadcastService->getTodayWorkAnniversaries($request->user());
+            $todayWorkAnniversariesCount = $todayWorkAnniversaries->count();
+            $hasTodayWorkAnniversary = $todayWorkAnniversariesCount > 0;
+
             $html = view('broadcasts.partials.broadcast-drawer-list', compact(
                 'broadcasts',
                 'today',
                 'todayBirthdays',
-                'upcomingBirthdays'
+                'upcomingBirthdays',
+                'todayWorkAnniversaries'
             ))->render();
         } else {
             $html = view('broadcasts.partials.broadcast-drawer-items', compact('broadcasts', 'today'))->render();
         }
 
-        $totalCombined = $broadcasts->total() + $todayBirthdaysCount + $upcomingBirthdaysCount;
+        $totalCombined = $broadcasts->total() + $todayBirthdaysCount + $upcomingBirthdaysCount + $todayWorkAnniversariesCount;
 
         return response()->json([
             'status' => true,
@@ -264,6 +277,7 @@ class BroadcastController extends Controller
             'total' => $totalCombined,
             'broadcast_total' => $broadcasts->total(),
             'has_today_birthday' => $hasTodayBirthday,
+            'has_today_work_anniversary' => $hasTodayWorkAnniversary,
         ]);
     }
 

@@ -75,15 +75,24 @@
         @php
             $broadcastService = app(\App\Services\BroadcastService::class);
             $navbarBroadcastCount = $broadcastService->getEligibleCountForUser(auth()->user());
-            $navbarBirthdays = $broadcastService->getTodayAndUpcomingBirthdays(auth()->user(), 30);
+            $navbarBirthdays = $broadcastService->getTodayAndUpcomingBirthdays(auth()->user(), \App\Models\Broadcast::BDAY_DELAY_DAYS);
             $navbarTodayBirthdayCount = $navbarBirthdays['todayBirthdays']->count();
             $navbarUpcomingBirthdayCount = $navbarBirthdays['upcomingBirthdays']->count();
-            $navbarTotalCount = $navbarBroadcastCount + $navbarTodayBirthdayCount + $navbarUpcomingBirthdayCount;
+            $navbarTodayWorkAnniversaryCount = $broadcastService->getTodayWorkAnniversaries(auth()->user())->count();
+            $navbarTotalCount = $navbarBroadcastCount + $navbarTodayBirthdayCount + $navbarUpcomingBirthdayCount + $navbarTodayWorkAnniversaryCount;
             $navbarHasTodayBirthday = $navbarTodayBirthdayCount > 0;
+            $navbarHasTodayWorkAnniversary = $navbarTodayWorkAnniversaryCount > 0;
+            $navbarShowAnniversaryIcon = ! $navbarHasTodayBirthday && $navbarHasTodayWorkAnniversary;
+            $navbarDrawerTitle = match (true) {
+                $navbarHasTodayBirthday && $navbarHasTodayWorkAnniversary => "Today's Birthday, Work Anniversary & Broadcasts",
+                $navbarHasTodayBirthday => "Today's Birthday & Broadcasts",
+                $navbarHasTodayWorkAnniversary => "Today's Work Anniversary & Broadcasts",
+                default => 'View Broadcasts',
+            };
         @endphp
 
         <!-- Global Broadcast Drawer Trigger -->
-        <button type="button" id="broadcast-drawer-toggle-btn" data-broadcast-drawer-toggle class="{{ $navbarTotalCount > 0 ? 'inline-flex' : 'hidden' }} group items-center gap-2 px-3.5 py-2 text-xs font-semibold text-amber-800 transition-all duration-200 dark:text-white" title="{{ $navbarHasTodayBirthday ? "Today's Birthday & Broadcasts" : 'View Broadcasts' }}" aria-label="Open Broadcasts Drawer">
+        <button type="button" id="broadcast-drawer-toggle-btn" data-broadcast-drawer-toggle class="{{ $navbarTotalCount > 0 ? 'inline-flex' : 'hidden' }} group items-center gap-2 px-3.5 py-2 text-xs font-semibold text-amber-800 transition-all duration-200 dark:text-white" title="{{ $navbarDrawerTitle }}" aria-label="Open Broadcasts Drawer">
 
             <span class="inline-flex items-center justify-center transition-transform duration-200 group-hover:scale-110" data-broadcast-icon-container>
                 <!-- Birthday Icon (Shown if today has any user birthday) -->
@@ -99,8 +108,14 @@
                     <path d="M17 4h.01" />
                 </svg>
 
-                <!-- Broadcast Icon (Shown if no today birthday) -->
-                <svg data-icon="broadcast" class="{{ $navbarHasTodayBirthday ? 'hidden' : '' }} text-success-300 dark:text-success-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Work Anniversary Icon (Shown if today has a work anniversary and no birthday) -->
+                <svg data-icon="anniversary" class="{{ $navbarShowAnniversaryIcon ? '' : 'hidden' }} text-amber-500 dark:text-amber-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="6" />
+                    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+                </svg>
+
+                <!-- Broadcast Icon (Shown if no today birthday or work anniversary) -->
+                <svg data-icon="broadcast" class="{{ $navbarHasTodayBirthday || $navbarHasTodayWorkAnniversary ? 'hidden' : '' }} text-success-300 dark:text-success-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 11v2a2 2 0 002 2h2l4 4V5L7 9H5a2 2 0 00-2 2z" />
                     <path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
                 </svg>

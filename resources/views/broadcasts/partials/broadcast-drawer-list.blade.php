@@ -2,11 +2,12 @@
     $today = $today ?? now()->toDateString();
     $todayBirthdays = $todayBirthdays ?? collect();
     $upcomingBirthdays = $upcomingBirthdays ?? collect();
+    $todayWorkAnniversaries = $todayWorkAnniversaries ?? collect();
 
     $upcomingBroadcasts = $broadcasts->filter(fn($b) => $b->start_date && $b->start_date->format('Y-m-d') > $today);
     $currentBroadcasts = $broadcasts->reject(fn($b) => $b->start_date && $b->start_date->format('Y-m-d') > $today);
 
-    $hasCurrentItems = $currentBroadcasts->isNotEmpty() || $todayBirthdays->isNotEmpty();
+    $hasCurrentItems = $currentBroadcasts->isNotEmpty() || $todayBirthdays->isNotEmpty() || $todayWorkAnniversaries->isNotEmpty();
     $hasUpcomingItems = $upcomingBroadcasts->isNotEmpty() || $upcomingBirthdays->isNotEmpty();
     $hasAnyItems = $hasCurrentItems || $hasUpcomingItems;
 
@@ -48,11 +49,15 @@
                     <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success-400 dark:text-success-300">
                         <span class="inline-block h-2 w-2 rounded-full bg-success-400"></span>
                         <span>Current</span>
-                        <span class="text-[11px] font-normal text-bgray-700 dark:text-bgray-300">({{ $currentBroadcasts->count() + $todayBirthdays->count() }})</span>
+                        <span class="text-[11px] font-normal text-bgray-700 dark:text-bgray-300">({{ $currentBroadcasts->count() + $todayBirthdays->count() + $todayWorkAnniversaries->count() }})</span>
                     </div>
                     <div class="space-y-3" data-broadcast-current-items>
                         @foreach ($todayBirthdays as $birthday)
                             @include('broadcasts.partials.broadcast-drawer-birthday-item', ['birthday' => $birthday, 'isUpcoming' => false])
+                        @endforeach
+
+                        @foreach ($todayWorkAnniversaries as $anniversary)
+                            @include('broadcasts.partials.broadcast-drawer-anniversary-item', ['anniversary' => $anniversary])
                         @endforeach
 
                         @foreach ($currentBroadcasts as $broadcast)
