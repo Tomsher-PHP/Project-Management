@@ -2,6 +2,10 @@
     $user = $anniversary->user;
     $isSelf = (bool) ($anniversary->is_self ?? false);
     $years = max(1, (int) ($anniversary->years ?? 1));
+    $daysRemaining = (int) ($anniversary->days_remaining ?? 0);
+    $isUpcoming = $isUpcoming ?? $daysRemaining > 0;
+    $anniversaryDate = $anniversary->anniversary_date;
+    $formattedDate = $anniversaryDate->format('F j');
     $yearLabel = $years . ' ' . \Illuminate\Support\Str::plural('Year', $years);
     $ordinalYear = match (true) {
         $years % 100 >= 11 && $years % 100 <= 13 => $years . 'th',
@@ -20,19 +24,33 @@
 @endphp
 
 <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm transition hover:border-amber-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-500 dark:hover:border-amber-400/40" data-work-anniversary-card="{{ $user->id }}">
-    <!-- Header Row: Indicator & Today Badge -->
+    <!-- Header Row: Indicator & Status Badge -->
     <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <div class="flex items-center gap-2 flex-wrap">
-            <span class="{{ $badgeClass }}" style="{{ $badgeStyle }}">
-                <span>🏆</span>
-                <span>{{ $ordinalYear }} Work Anniversary!</span>
-            </span>
+            @if (! $isUpcoming)
+                <span class="{{ $badgeClass }}" style="{{ $badgeStyle }}">
+                    <span>🏆</span>
+                    <span>{{ $ordinalYear }} Work Anniversary!</span>
+                </span>
+            @else
+                <span class="{{ $badgeClass }}" style="{{ $badgeStyle }}">
+                    <span>🏆</span>
+                    <span>{{ $isSelf ? "Your {$ordinalYear} Work Anniversary" : "Upcoming {$ordinalYear} Work Anniversary" }}</span>
+                </span>
+            @endif
         </div>
 
-        <span class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2.5 py-0.5 text-[11px] font-semibold text-success-600 border border-success-200 dark:bg-success-400/10 dark:text-success-400 dark:border-success-400/20">
-            <span class="h-1.5 w-1.5 rounded-full bg-success-300"></span>
-            Today
-        </span>
+        @if ($isUpcoming)
+            <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 border border-amber-200 dark:bg-amber-400/10 dark:text-amber-400 dark:border-amber-400/20">
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                {{ $daysRemaining === 1 ? 'In 1 day' : "In {$daysRemaining} days" }}
+            </span>
+        @else
+            <span class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2.5 py-0.5 text-[11px] font-semibold text-success-600 border border-success-200 dark:bg-success-400/10 dark:text-success-400 dark:border-success-400/20">
+                <span class="h-1.5 w-1.5 rounded-full bg-success-300"></span>
+                Today
+            </span>
+        @endif
     </div>
 
     <!-- User Info Row -->
@@ -55,13 +73,22 @@
         </div>
     </div>
 
-    <!-- Greeting Row -->
-    <div class="mt-2 text-xs text-bgray-700 dark:text-bgray-300">
-        @if ($isSelf)
-            Congratulations on completing {{ $yearLabel }} with us! Thank you for your dedication.
-        @else
-            Congratulations to {{ $firstName }} on completing {{ $yearLabel }} with the team!
-        @endif
-    </div>
+    <!-- Greeting / Date Row -->
+    @if (! $isUpcoming)
+        <div class="mt-2 text-xs text-bgray-700 dark:text-bgray-300">
+            @if ($isSelf)
+                Congratulations on completing {{ $yearLabel }} with us! Thank you for your dedication.
+            @else
+                Congratulations to {{ $firstName }} on completing {{ $yearLabel }} with the team!
+            @endif
+        </div>
+    @else
+        <div class="mt-2 flex items-center gap-1.5 text-xs text-bgray-700 dark:text-bgray-300">
+            <svg class="h-3.5 w-3.5 shrink-0 text-bgray-700 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>{{ $formattedDate }}</span>
+        </div>
+    @endif
 </div>
 

@@ -78,8 +78,17 @@
             $navbarBirthdays = $broadcastService->getTodayAndUpcomingBirthdays(auth()->user(), \App\Models\Broadcast::BDAY_DELAY_DAYS);
             $navbarTodayBirthdayCount = $navbarBirthdays['todayBirthdays']->count();
             $navbarUpcomingBirthdayCount = $navbarBirthdays['upcomingBirthdays']->count();
-            $navbarTodayWorkAnniversaryCount = $broadcastService->getTodayWorkAnniversaries(auth()->user())->count();
-            $navbarTotalCount = $navbarBroadcastCount + $navbarTodayBirthdayCount + $navbarUpcomingBirthdayCount + $navbarTodayWorkAnniversaryCount;
+            $navbarWorkAnniversaryDelayDays = defined(\App\Models\Broadcast::class . '::WORK_ANNIVERSARY_DELAY_DAYS')
+                ? max(0, (int) \App\Models\Broadcast::WORK_ANNIVERSARY_DELAY_DAYS)
+                : 0;
+            $navbarWorkAnniversaries = $broadcastService->getTodayAndUpcomingWorkAnniversaries(auth()->user(), $navbarWorkAnniversaryDelayDays);
+            $navbarTodayWorkAnniversaryCount = $navbarWorkAnniversaries['todayWorkAnniversaries']->count();
+            $navbarUpcomingWorkAnniversaryCount = $navbarWorkAnniversaries['upcomingWorkAnniversaries']->count();
+            $navbarTotalCount = $navbarBroadcastCount
+                + $navbarTodayBirthdayCount
+                + $navbarUpcomingBirthdayCount
+                + $navbarTodayWorkAnniversaryCount
+                + $navbarUpcomingWorkAnniversaryCount;
             $navbarHasTodayBirthday = $navbarTodayBirthdayCount > 0;
             $navbarHasTodayWorkAnniversary = $navbarTodayWorkAnniversaryCount > 0;
             $navbarShowAnniversaryIcon = ! $navbarHasTodayBirthday && $navbarHasTodayWorkAnniversary;

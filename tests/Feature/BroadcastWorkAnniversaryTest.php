@@ -179,17 +179,30 @@ class BroadcastWorkAnniversaryTest extends TestCase
         ]);
 
         $service = app(BroadcastService::class);
-        $anniversaries = $service->getTodayWorkAnniversaries(1);
 
-        $this->assertCount(2, $anniversaries);
+        // Default (Broadcast::WORK_ANNIVERSARY_DELAY_DAYS === 0): only today's work anniversaries
+        $resultDefault = $service->getTodayAndUpcomingWorkAnniversaries(1);
+        $todayAnniversaries = $resultDefault['todayWorkAnniversaries'];
+        $upcomingAnniversaries = $resultDefault['upcomingWorkAnniversaries'];
+
+        $this->assertCount(2, $todayAnniversaries);
+        $this->assertCount(0, $upcomingAnniversaries);
         // Sorted by years desc: Bob (3 years) then Alice (1 year)
-        $this->assertSame(2, $anniversaries[0]->user->id);
-        $this->assertSame(3, $anniversaries[0]->years);
-        $this->assertFalse($anniversaries[0]->is_self);
+        $this->assertSame(2, $todayAnniversaries[0]->user->id);
+        $this->assertSame(3, $todayAnniversaries[0]->years);
+        $this->assertFalse($todayAnniversaries[0]->is_self);
 
-        $this->assertSame(1, $anniversaries[1]->user->id);
-        $this->assertSame(1, $anniversaries[1]->years);
-        $this->assertTrue($anniversaries[1]->is_self);
+        $this->assertSame(1, $todayAnniversaries[1]->user->id);
+        $this->assertSame(1, $todayAnniversaries[1]->years);
+        $this->assertTrue($todayAnniversaries[1]->is_self);
+
+        // Delay = 1 day: includes today's AND tomorrow's work anniversaries
+        $resultOneDay = $service->getTodayAndUpcomingWorkAnniversaries(1, 1);
+        $this->assertCount(2, $resultOneDay['todayWorkAnniversaries']);
+        $this->assertCount(1, $resultOneDay['upcomingWorkAnniversaries']);
+        $this->assertSame(4, $resultOneDay['upcomingWorkAnniversaries'][0]->user->id);
+        $this->assertSame(2, $resultOneDay['upcomingWorkAnniversaries'][0]->years);
+        $this->assertSame(1, $resultOneDay['upcomingWorkAnniversaries'][0]->days_remaining);
     }
 
     public function test_leap_day_joining_date_is_celebrated_on_feb_28_in_non_leap_year(): void
@@ -203,7 +216,7 @@ class BroadcastWorkAnniversaryTest extends TestCase
             ['user_id' => 1, 'joining_date' => '2024-02-29'],
         ]);
 
-        $anniversaries = app(BroadcastService::class)->getTodayWorkAnniversaries(1);
+        $anniversaries = app(BroadcastService::class)->getTodayAndUpcomingWorkAnniversaries(1)['todayWorkAnniversaries'];
 
         $this->assertCount(1, $anniversaries);
         $this->assertSame(2, $anniversaries[0]->years);
@@ -330,5 +343,43 @@ class BroadcastWorkAnniversaryTest extends TestCase
         $this->assertStringNotContainsString('data-broadcast-section="upcoming"', $anniversaryOnlyHtml);
         $this->assertStringContainsString('2nd Work Anniversary!', $anniversaryOnlyHtml);
         $this->assertStringContainsString('(You)', $anniversaryOnlyHtml);
+    }
+
+    public function test_drawer_list_renders_upcoming_work_anniversaries_when_days_delay_is_non_zero(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 11, 11, 10, 0, 0));
+
+        DB::table('users')->insert([
+            ['id' => 1, 'name' => 'Self Today', 'email' => 'self@example.com', 'is_active' => true, 'delete_status' => false],
+            ['id' => 2, 'name' => 'Tomorrow Veteran', 'email' => 'tomorrow@example.com', 'is_active' => true, 'delete_status' => false],
+            ['id' => 3, 'name' => 'Two Days Later', 'email' => 'later@example.com', 'is_active' => true, 'delete_status' => false],
+        ]);
+
+        DB::table('user_details')->insert([
+            ['user_id' => 1, 'department_id' => 1, 'designation_id' => 1, 'joining_date' => '2025-11-11'],
+            ['user_id' => 2, 'department_id' => 1, 'designation_id' => 1, 'joining_date' => '2022-11-12'],
+            ['user_id' => 3, 'department_id' => 1, 'designation_id' => 1, 'joining_date' => '2022-11-13'],
+        ]);
+
+        $service = app(BroadcastService::class);
+        $workAnniversaries = $service->getTodayAndUpcomingWorkAnniversaries(1, 1);
+
+        $html = view('broadcasts.partials.broadcast-drawer-list', [
+            'broadcasts' => $service->getEligibleBroadcastsForDrawer(1, 10, 1, '2026-11-11'),
+            'today' => '2026-11-11',
+            'todayBirthdays' => collect(),
+            'upcomingBirthdays' => collect(),
+            'todayWorkAnniversaries' => $workAnniversaries['todayWorkAnniversaries'],
+            'upcomingWorkAnniversaries' => $workAnniversaries['upcomingWorkAnniversaries'],
+        ])->render();
+
+        $this->assertStringContainsString('data-broadcast-section="current"', $html);
+        $this->assertStringContainsString('data-broadcast-section="upcoming"', $html);
+        $this->assertStringContainsString('data-work-anniversary-card="1"', $html);
+        $this->assertStringContainsString('data-work-anniversary-card="2"', $html);
+        $this->assertStringNotContainsString('data-work-anniversary-card="3"', $html);
+        $this->assertStringContainsString('Upcoming 4th Work Anniversary', $html);
+        $this->assertStringContainsString('In 1 day', $html);
+        $this->assertStringContainsString('November 12', $html);
     }
 }

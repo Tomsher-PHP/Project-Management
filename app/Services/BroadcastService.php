@@ -503,11 +503,7 @@ class BroadcastService
                 continue;
             }
 
-            $bdayThisYear = $this->resolveAnnualDateInYear($dob, $today->year, $today->timezone);
-            $nextBirthday = $bdayThisYear->lt($today)
-                ? $this->resolveAnnualDateInYear($dob, $today->year + 1, $today->timezone)
-                : $bdayThisYear;
-
+            $nextBirthday = $this->resolveNextAnnualDate($dob, $today);
             $diffInDays = (int) $today->diffInDays($nextBirthday, false);
 
             if ($diffInDays === 0) {
@@ -536,17 +532,19 @@ class BroadcastService
     }
 
     /**
-     * Retrieve active employees celebrating a work anniversary today (at least 1 completed year).
+     * Retrieve active employees celebrating a work anniversary today and within the upcoming N days (at least 1 completed year).
      *
-     * @return \Illuminate\Support\Collection<int, object>
+     * @return array{todayWorkAnniversaries: \Illuminate\Support\Collection, upcomingWorkAnniversaries: \Illuminate\Support\Collection}
      */
-    public function getTodayWorkAnniversaries(User|int|null $currentUser = null): \Illuminate\Support\Collection
+    public function getTodayAndUpcomingWorkAnniversaries(User|int|null $currentUser = null, ?int $days = null): array
     {
+        $days = max(0, $days ?? (defined(Broadcast::class . '::WORK_ANNIVERSARY_DELAY_DAYS') ? (int) Broadcast::WORK_ANNIVERSARY_DELAY_DAYS : 0));
         $currentUserId = $this->resolveUserId($currentUser);
         $today = now()->startOfDay();
         $users = $this->getActiveEmployeesWithDetailDate('joining_date');
 
         $todayWorkAnniversaries = collect();
+        $upcomingWorkAnniversaries = collect();
 
         foreach ($users as $user) {
             $joiningDate = $user->details?->joining_date;
@@ -554,31 +552,54 @@ class BroadcastService
                 continue;
             }
 
-            $years = $today->year - $joiningDate->year;
+            $nextAnniversary = $this->resolveNextAnnualDate($joiningDate, $today);
+            $years = $nextAnniversary->year - $joiningDate->year;
             if ($years < 1) {
                 continue;
             }
 
-            $anniversaryThisYear = $this->resolveAnnualDateInYear($joiningDate, $today->year, $today->timezone);
-            if (! $anniversaryThisYear->equalTo($today)) {
-                continue;
-            }
+            $diffInDays = (int) $today->diffInDays($nextAnniversary, false);
 
-            $todayWorkAnniversaries->push((object) [
-                'user' => $user,
-                'joining_date' => $joiningDate,
-                'anniversary_date' => $anniversaryThisYear,
-                'years' => $years,
-                'is_self' => $currentUserId !== null && $user->id === $currentUserId,
-            ]);
+            if ($diffInDays === 0) {
+                $todayWorkAnniversaries->push((object) [
+                    'user' => $user,
+                    'joining_date' => $joiningDate,
+                    'anniversary_date' => $nextAnniversary,
+                    'days_remaining' => 0,
+                    'years' => $years,
+                    'is_self' => $currentUserId !== null && $user->id === $currentUserId,
+                ]);
+            } elseif ($diffInDays >= 1 && $diffInDays <= $days) {
+                $upcomingWorkAnniversaries->push((object) [
+                    'user' => $user,
+                    'joining_date' => $joiningDate,
+                    'anniversary_date' => $nextAnniversary,
+                    'days_remaining' => $diffInDays,
+                    'years' => $years,
+                    'is_self' => $currentUserId !== null && $user->id === $currentUserId,
+                ]);
+            }
         }
 
-        return $todayWorkAnniversaries
+        $todayWorkAnniversaries = $todayWorkAnniversaries
             ->sortBy([
                 ['years', 'desc'],
                 [fn($item) => strtolower($item->user->name ?? ''), 'asc'],
             ])
             ->values();
+
+        $upcomingWorkAnniversaries = $upcomingWorkAnniversaries
+            ->sortBy([
+                ['days_remaining', 'asc'],
+                ['years', 'desc'],
+                [fn($item) => strtolower($item->user->name ?? ''), 'asc'],
+            ])
+            ->values();
+
+        return [
+            'todayWorkAnniversaries' => $todayWorkAnniversaries,
+            'upcomingWorkAnniversaries' => $upcomingWorkAnniversaries,
+        ];
     }
 
     protected function resolveUserId(User|int|null $user): ?int
@@ -604,6 +625,15 @@ class BroadcastService
                 'primaryAttachment',
             ])
             ->get(['id', 'name', 'email']);
+    }
+
+    protected function resolveNextAnnualDate(Carbon $date, Carbon $today): Carbon
+    {
+        $thisYear = $this->resolveAnnualDateInYear($date, $today->year, $today->timezone);
+
+        return $thisYear->lt($today)
+            ? $this->resolveAnnualDateInYear($date, $today->year + 1, $today->timezone)
+            : $thisYear;
     }
 
     protected function resolveAnnualDateInYear(Carbon $date, int $year, mixed $timezone): Carbon
