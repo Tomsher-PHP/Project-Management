@@ -236,7 +236,7 @@ class BroadcastController extends Controller
         $hasTodayBirthday = false;
 
         if ($page === 1) {
-            $birthdays = $this->broadcastService->getTodayAndUpcomingBirthdays($request->user(), 30);
+            $birthdays = $this->broadcastService->getTodayAndUpcomingBirthdays($request->user(), Broadcast::BDAY_DELAY_DAYS);
             $todayBirthdays = $birthdays['todayBirthdays'];
             $upcomingBirthdays = $birthdays['upcomingBirthdays'];
             $todayBirthdaysCount = $todayBirthdays->count();

@@ -19,8 +19,7 @@ class BroadcastService
     public function __construct(
         protected AttachmentService $attachmentService,
         protected BroadcastEmailService $broadcastEmailService,
-    ) {
-    }
+    ) {}
 
     public function paginate(array $filters, int $perPage): LengthAwarePaginator
     {
@@ -43,12 +42,12 @@ class BroadcastService
             ->with(['category:id,name,color', 'creator:id,name'])
             ->withCount('allocations')
             ->when(filled($filters['search'] ?? null), function (Builder $query) use ($filters) {
-                $query->where('title', 'like', '%'.trim($filters['search']).'%');
+                $query->where('title', 'like', '%' . trim($filters['search']) . '%');
             })
-            ->when(filled($filters['broadcast_category_id'] ?? null), fn (Builder $query) => $query->whereIn('broadcast_category_id', (array) $filters['broadcast_category_id']))
-            ->when(filled($filters['priority'] ?? null), fn (Builder $query) => $query->whereIn('priority', (array) $filters['priority']))
-            ->when(filled($filters['audience_type'] ?? null), fn (Builder $query) => $query->whereIn('audience_type', (array) $filters['audience_type']))
-            ->when(filled($filters['status'] ?? null), fn (Builder $query) => $query->whereIn('status', (array) $filters['status']))
+            ->when(filled($filters['broadcast_category_id'] ?? null), fn(Builder $query) => $query->whereIn('broadcast_category_id', (array) $filters['broadcast_category_id']))
+            ->when(filled($filters['priority'] ?? null), fn(Builder $query) => $query->whereIn('priority', (array) $filters['priority']))
+            ->when(filled($filters['audience_type'] ?? null), fn(Builder $query) => $query->whereIn('audience_type', (array) $filters['audience_type']))
+            ->when(filled($filters['status'] ?? null), fn(Builder $query) => $query->whereIn('status', (array) $filters['status']))
             ->orderBy($sortBy, $sortDirection)
             ->orderByDesc('id')
             ->paginate($perPage)
@@ -287,7 +286,7 @@ class BroadcastService
         if ((int) $data['status'] === Broadcast::STATUS_PUBLISHED && $recipientIds === []) {
             throw ValidationException::withMessages([
                 $data['audience_type'] === Broadcast::AUDIENCE_TEAMS ? 'team_ids' : 'user_ids'
-                    => 'A published broadcast must have at least one eligible recipient.',
+                => 'A published broadcast must have at least one eligible recipient.',
             ]);
         }
 
@@ -313,7 +312,7 @@ class BroadcastService
             ->whereNull('users.deleted_at')
             ->distinct()
             ->pluck('users.id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->all();
     }
 
@@ -328,7 +327,7 @@ class BroadcastService
             ->where('delete_status', false)
             ->whereIn('id', $userIds)
             ->pluck('id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->all();
     }
 
@@ -489,7 +488,7 @@ class BroadcastService
      *
      * @return array{todayBirthdays: \Illuminate\Support\Collection, upcomingBirthdays: \Illuminate\Support\Collection}
      */
-    public function getTodayAndUpcomingBirthdays(User|int|null $currentUser = null, int $days = 30): array
+    public function getTodayAndUpcomingBirthdays(User|int|null $currentUser = null, int $days = 7): array
     {
         $currentUserId = $currentUser instanceof User ? $currentUser->id : ($currentUser ? (int) $currentUser : null);
         $today = now()->startOfDay();
@@ -559,4 +558,3 @@ class BroadcastService
         ];
     }
 }
-

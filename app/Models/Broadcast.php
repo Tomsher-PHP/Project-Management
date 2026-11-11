@@ -28,6 +28,9 @@ class Broadcast extends Model
 
     public const ATTACHMENT_CATEGORY = 'broadcast_attachment';
 
+    public const BDAY_DELAY_DAYS = 7;
+    public const WORK_ANNIVERSARY_DELAY_DAYS = 0;
+
     protected $fillable = [
         'title',
         'content',
@@ -196,4 +199,3 @@ class Broadcast extends Model
         return $this->isUpcoming($today) ? 'upcoming' : 'current';
     }
 }
-
