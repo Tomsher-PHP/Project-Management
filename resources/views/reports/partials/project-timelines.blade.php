@@ -5,16 +5,25 @@
                 <div class="min-h-0 overflow-hidden">
                     <div class="mx-4 mb-4 ml-16 mt-3 overflow-hidden rounded-lg border border-blue-200 bg-white shadow-sm dark:border-darkblack-300 dark:bg-darkblack-600">
                         <div class="overflow-x-auto">
-                            <table class="w-full min-w-[1000px]">
+                            <table class="w-full {{ $canViewCustomerColumns ? 'min-w-[1380px]' : 'min-w-[1000px]' }}">
                                 <thead class="bg-blue-50/80 dark:bg-darkblack-500">
                                     <tr class="border-b border-blue-200 dark:border-darkblack-400">
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Timeline Name</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Status</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Start Date</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">End Date</th>
+                                        @if ($canViewCustomerColumns)
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Cust End Date</th>
+                                        @endif
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Estimated</th>
+                                        @if ($canViewCustomerColumns)
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Cust Estimate</th>
+                                        @endif
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Actual</th>
                                         <th class="min-w-[260px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Progress</th>
+                                        @if ($canViewCustomerColumns)
+                                            <th class="min-w-[260px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Cust Progress</th>
+                                        @endif
                                     </tr>
                                 </thead>
 
@@ -22,17 +31,15 @@
                                     @foreach ($eligibleTimelines as $timeline)
                                         @php
                                             $timelineEstimatedSeconds = (int) $timeline->report_estimated_seconds;
+                                            $timelineCustomerEstimatedSeconds = (int) ($timeline->report_customer_estimated_seconds ?? 0);
                                             $timelineActualSeconds = (int) $timeline->report_actual_seconds;
                                             $timelineProgress = (float) $timeline->report_progress_percentage;
+                                            $timelineCustomerProgress = (float) ($timeline->report_customer_progress_percentage ?? 0);
                                             $timelineProgressBarWidth = min($timelineProgress, 100);
+                                            $timelineCustomerProgressBarWidth = min($timelineCustomerProgress, 100);
                                             $timelineActualClasses = $timelineActualSeconds <= $timelineEstimatedSeconds ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
-                                            $timelineProgressClasses = match (true) {
-                                                $timelineEstimatedSeconds <= 0 => 'bg-gray-300 text-bgray-700 dark:text-bgray-300',
-                                                $timelineProgress <= 50 => 'bg-success-400 text-success-400 dark:text-success-300',
-                                                $timelineProgress <= 100 => 'bg-orange-400 text-orange-500 dark:text-orange-300',
-                                                default => 'bg-red-500 text-red-500 dark:text-red-400',
-                                            };
-                                            [$timelineProgressBarClass, $timelineProgressTextClass] = explode(' ', $timelineProgressClasses, 2);
+                                            [$timelineProgressBarClass, $timelineProgressTextClass] = $resolveProgressClasses($timelineEstimatedSeconds, $timelineProgress);
+                                            [$timelineCustomerProgressBarClass, $timelineCustomerProgressTextClass] = $resolveProgressClasses($timelineCustomerEstimatedSeconds, $timelineCustomerProgress);
                                             $isActiveTimeline = $timeline->status === \App\Models\ProjectTimeline::STATUS_ACTIVE;
                                         @endphp
 
@@ -45,7 +52,13 @@
                                             </td>
                                             <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-300">{{ $timeline->start_date?->format($globalDateFormat) ?? '-' }}</td>
                                             <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-300">{{ $timeline->end_date?->format($globalDateFormat) ?? '-' }}</td>
+                                            @if ($canViewCustomerColumns)
+                                                <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-300">{{ $timeline->customer_end_date?->format($globalDateFormat) ?? '-' }}</td>
+                                            @endif
                                             <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-300">{{ formatSecondsToHoursMinutes($timelineEstimatedSeconds) }}</td>
+                                            @if ($canViewCustomerColumns)
+                                                <td class="px-4 py-3 text-sm whitespace-nowrap text-bgray-700 dark:text-bgray-300">{{ formatSecondsToHoursMinutes($timelineCustomerEstimatedSeconds) }}</td>
+                                            @endif
                                             <td class="px-4 py-3 text-sm font-medium whitespace-nowrap {{ $timelineActualClasses }}">{{ formatSecondsToHoursMinutes($timelineActualSeconds) }}</td>
                                             <td class="px-4 py-3 text-sm">
                                                 <div class="flex items-center gap-3">
@@ -57,6 +70,18 @@
                                                     </span>
                                                 </div>
                                             </td>
+                                            @if ($canViewCustomerColumns)
+                                                <td class="px-4 py-3 text-sm">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-400">
+                                                            <div class="h-2.5 rounded-full transition-all duration-300 {{ $timelineCustomerProgressBarClass }}" style="width: {{ $timelineCustomerProgressBarWidth }}%"></div>
+                                                        </div>
+                                                        <span class="min-w-[56px] text-xs font-semibold {{ $timelineCustomerProgressTextClass }}">
+                                                            {{ rtrim(rtrim(number_format($timelineCustomerProgress, 2, '.', ''), '0'), '.') }}%
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                 </tbody>

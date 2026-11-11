@@ -26,7 +26,7 @@ class ProjectReportService
                 'salesPerson:id,name',
                 'projectStatus:id,name,color',
                 'projectStage:id,name,color',
-                'projectTimelines' => fn ($query) => $query
+                'projectTimelines' => fn($query) => $query
                     ->select([
                         'id',
                         'project_id',
@@ -34,7 +34,9 @@ class ProjectReportService
                         'status',
                         'start_date',
                         'end_date',
+                        'customer_end_date',
                         'estimated_time_seconds',
+                        'customer_estimate_seconds',
                         'actual_time_seconds',
                         'sort_order',
                     ])
@@ -54,23 +56,47 @@ class ProjectReportService
         return $query;
     }
 
-    public function getColumnLabels(): array
+    public function canViewCustomerColumns(): bool
     {
-        return [
+        return auth()->user()?->can('project.customer_end_date') ?? false;
+    }
+
+    public function getColumnLabels(?bool $includeCustomerColumns = null): array
+    {
+        $includeCustomerColumns ??= $this->canViewCustomerColumns();
+
+        $columns = [
             'project_name' => 'Project Name',
             'customer' => 'Customer',
             'sales_person' => 'Sales Person',
             'timeline' => 'Timeline',
             'start_date' => 'Start Date',
             'end_date' => 'End Date',
-            'estimated_hours' => 'Estimated Hours',
-            'actual_hours' => 'Actual Hours',
-            'progress' => 'Progress',
+        ];
+
+        if ($includeCustomerColumns) {
+            $columns['customer_end_date'] = 'Cust End Date';
+        }
+
+        $columns['estimated_hours'] = 'Estimated Hours';
+
+        if ($includeCustomerColumns) {
+            $columns['customer_estimated_hours'] = 'Cust Estimate';
+        }
+
+        $columns['actual_hours'] = 'Actual Hours';
+        $columns['progress'] = 'Progress';
+
+        if ($includeCustomerColumns) {
+            $columns['customer_progress'] = 'Cust Progress';
+        }
+
+        return array_merge($columns, [
             'priority' => 'Priority',
             'milestone_status' => 'Milestone Status',
             'status' => 'Status',
             'stage' => 'Stage',
-        ];
+        ]);
     }
 
     public function getExportColumnLabels(): array
@@ -107,7 +133,7 @@ class ProjectReportService
         }
 
         $requestedLookup = collect($requestedColumns)
-            ->map(fn ($column) => (string) $column)
+            ->map(fn($column) => (string) $column)
             ->filter()
             ->values()
             ->flip();
@@ -117,7 +143,7 @@ class ProjectReportService
         }
 
         $columns = collect($allowedColumns)
-            ->filter(fn ($_label, $key) => $requestedLookup->has($key))
+            ->filter(fn($_label, $key) => $requestedLookup->has($key))
             ->all();
 
         return $columns !== [] ? $columns : $allowedColumns;
@@ -164,7 +190,7 @@ class ProjectReportService
 
     public function prepareProjects(Collection $projects): Collection
     {
-        return $projects->transform(fn (Project $project) => $this->prepareProject($project));
+        return $projects->transform(fn(Project $project) => $this->prepareProject($project));
     }
 
     public function prepareProject(Project $project): Project
@@ -172,16 +198,18 @@ class ProjectReportService
         $timelines = $project->relationLoaded('projectTimelines')
             ? $project->projectTimelines->values()
             : $project->projectTimelines()
-                ->reorder()
-                ->eligibleForProjectReport()
-                ->orderForProjectReport()
-                ->get();
+            ->reorder()
+            ->eligibleForProjectReport()
+            ->orderForProjectReport()
+            ->get();
 
         $timelines->each(function (ProjectTimeline $timeline) {
             $estimatedSeconds = max(0, (int) ($timeline->estimated_time_seconds ?? 0));
+            $customerEstimatedSeconds = max(0, (int) ($timeline->customer_estimate_seconds ?? 0));
             $actualSeconds = max(0, (int) ($timeline->actual_time_seconds ?? 0));
 
             $timeline->setAttribute('report_estimated_seconds', $estimatedSeconds);
+            $timeline->setAttribute('report_customer_estimated_seconds', $customerEstimatedSeconds);
             $timeline->setAttribute('report_actual_seconds', $actualSeconds);
             $timeline->setAttribute(
                 'report_progress_percentage',
@@ -190,9 +218,15 @@ class ProjectReportService
                     : 0
             );
             $timeline->setAttribute(
+                'report_customer_progress_percentage',
+                $customerEstimatedSeconds > 0
+                    ? round(($actualSeconds / $customerEstimatedSeconds) * 100, 2)
+                    : 0
+            );
+            $timeline->setAttribute(
                 'report_status_label',
                 ucfirst((string) config(
-                    'project_constants.project_timeline_statuses.'.$timeline->status,
+                    'project_constants.project_timeline_statuses.' . $timeline->status,
                     'Unknown'
                 ))
             );
@@ -242,12 +276,22 @@ class ProjectReportService
         $sortDir = strtolower((string) ($filters['sort_dir'] ?? 'asc'));
         $sortDir = in_array($sortDir, ['asc', 'desc'], true) ? $sortDir : 'asc';
 
-        if (in_array($sortBy, ['start_date', 'end_date'], true)) {
+        $allowedTimelineSortColumns = ['start_date', 'end_date'];
+
+        if ($this->canViewCustomerColumns()) {
+            $allowedTimelineSortColumns[] = 'customer_end_date';
+        }
+
+        if (in_array($sortBy, $allowedTimelineSortColumns, true)) {
             $query
                 ->orderBy($this->primaryTimelineColumnSubquery($sortBy), $sortDir)
                 ->orderByDesc('projects.id');
 
             return;
+        }
+
+        if ($sortBy === 'customer_end_date') {
+            $filters = Arr::except($filters, ['sort_by', 'sort_dir']);
         }
 
         $query->sort($filters);
@@ -256,7 +300,7 @@ class ProjectReportService
     protected function primaryTimelineColumnSubquery(string $column): Builder
     {
         return ProjectTimeline::query()
-            ->select('project_timelines.'.$column)
+            ->select('project_timelines.' . $column)
             ->whereColumn('project_timelines.project_id', 'projects.id')
             ->eligibleForProjectReport()
             ->orderForProjectReport()

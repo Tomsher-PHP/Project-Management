@@ -97,6 +97,10 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             $metrics['estimated_seconds'],
             $metrics['actual_seconds']
         );
+        $customerProgressPercentage = $this->calculateProgressPercentage(
+            $metrics['customer_estimated_seconds'],
+            $metrics['actual_seconds']
+        );
 
         return match ($column) {
             'project_name' => $project->name ?? '-',
@@ -106,9 +110,12 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             'timeline_status' => $timeline?->report_status_label ?? '-',
             'start_date' => AppServiceProvider::formatAppDate($timeline?->start_date, '-'),
             'end_date' => AppServiceProvider::formatAppDate($timeline?->end_date, '-'),
+            'customer_end_date' => AppServiceProvider::formatAppDate($timeline?->customer_end_date, '-'),
             'estimated_hours' => $timeline ? formatSecondsToHoursMinutes($metrics['estimated_seconds']) : '-',
+            'customer_estimated_hours' => $timeline ? formatSecondsToHoursMinutes($metrics['customer_estimated_seconds']) : '-',
             'actual_hours' => $timeline ? formatSecondsToHoursMinutes($metrics['actual_seconds']) : '-',
             'progress' => $timeline ? $progressPercentage.'%' : '-',
+            'customer_progress' => $timeline ? $customerProgressPercentage.'%' : '-',
             'priority' => $this->resolvePriorityLabel($project->priority),
             'milestone_status' => sprintf(
                 '%d / %d',
@@ -271,7 +278,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             $range = "{$columnLetter}{$headerRow}:{$columnLetter}".max($lastDataRow, $headerRow);
 
             $sheet->getStyle($range)->getAlignment()->setHorizontal(
-                in_array($columnKey, ['start_date', 'end_date', 'estimated_hours', 'actual_hours', 'progress', 'milestone_status'], true)
+                in_array($columnKey, ['start_date', 'end_date', 'customer_end_date', 'estimated_hours', 'customer_estimated_hours', 'actual_hours', 'progress', 'customer_progress', 'milestone_status'], true)
                     ? Alignment::HORIZONTAL_CENTER
                     : Alignment::HORIZONTAL_LEFT
             );
@@ -322,22 +329,21 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             }
 
             if ($timeline && isset($columnIndexes['progress'])) {
-                $progressColumn = Coordinate::stringFromColumnIndex($columnIndexes['progress'] + 1);
-                $progressPalette = $this->resolveProgressPalette(
+                $this->applyProgressBadgeStyle(
+                    $sheet,
+                    Coordinate::stringFromColumnIndex($columnIndexes['progress'] + 1).$rowNumber,
                     $metrics['estimated_seconds'],
                     $metrics['actual_seconds']
                 );
+            }
 
-                $sheet->getStyle("{$progressColumn}{$rowNumber}")->applyFromArray([
-                    'font' => [
-                        'bold' => true,
-                        'color' => ['rgb' => $progressPalette['text']],
-                    ],
-                    'fill' => [
-                        'fillType' => Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => $progressPalette['fill']],
-                    ],
-                ]);
+            if ($timeline && isset($columnIndexes['customer_progress'])) {
+                $this->applyProgressBadgeStyle(
+                    $sheet,
+                    Coordinate::stringFromColumnIndex($columnIndexes['customer_progress'] + 1).$rowNumber,
+                    $metrics['customer_estimated_seconds'],
+                    $metrics['actual_seconds']
+                );
             }
 
             if (isset($columnIndexes['status'])) {
@@ -560,6 +566,22 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             : null;
     }
 
+    protected function applyProgressBadgeStyle($sheet, string $cell, int $estimatedSeconds, int $actualSeconds): void
+    {
+        $progressPalette = $this->resolveProgressPalette($estimatedSeconds, $actualSeconds);
+
+        $sheet->getStyle($cell)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => $progressPalette['text']],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $progressPalette['fill']],
+            ],
+        ]);
+    }
+
     protected function resolveProgressPalette(int $estimatedSeconds, int $actualSeconds): array
     {
         if ($estimatedSeconds <= 0) {
@@ -668,6 +690,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
     {
         return [
             'estimated_seconds' => max(0, (int) ($timeline?->report_estimated_seconds ?? $timeline?->estimated_time_seconds ?? 0)),
+            'customer_estimated_seconds' => max(0, (int) ($timeline?->report_customer_estimated_seconds ?? $timeline?->customer_estimate_seconds ?? 0)),
             'actual_seconds' => max(0, (int) ($timeline?->report_actual_seconds ?? $timeline?->actual_time_seconds ?? 0)),
         ];
     }
