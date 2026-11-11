@@ -202,10 +202,7 @@ class BroadcastController extends Controller
         $upcomingBirthdayCount = $birthdays['upcomingBirthdays']->count();
         $totalBirthdayCount = $todayBirthdayCount + $upcomingBirthdayCount;
 
-        $workAnniversaries = $this->broadcastService->getTodayAndUpcomingWorkAnniversaries(
-            $request->user(),
-            $this->workAnniversaryDelayDays()
-        );
+        $workAnniversaries = $this->broadcastService->getTodayAndUpcomingWorkAnniversaries($request->user(), Broadcast::WORK_ANNIVERSARY_DELAY_DAYS);
         $todayWorkAnniversaryCount = $workAnniversaries['todayWorkAnniversaries']->count();
         $upcomingWorkAnniversaryCount = $workAnniversaries['upcomingWorkAnniversaries']->count();
         $totalWorkAnniversaryCount = $todayWorkAnniversaryCount + $upcomingWorkAnniversaryCount;
