@@ -6,10 +6,12 @@ use App\Exports\ProjectReportExport;
 use App\Models\Project;
 use App\Models\ProjectTimeline;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Services\Reports\ProjectReportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class ProjectReportMultipleTimelinesTest extends TestCase
@@ -145,6 +147,128 @@ class ProjectReportMultipleTimelinesTest extends TestCase
         $this->assertSame(['Visible timeline'], $projects->first()->reportTimelines->pluck('name')->all());
     }
 
+    public function test_customer_columns_are_hidden_without_permission_in_report_and_export(): void
+    {
+        Permission::firstOrCreate(['name' => 'reports.project_view', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'project.customer_end_date', 'guard_name' => 'web']);
+        $this->user->givePermissionTo('reports.project_view');
+
+        $project = $this->createProject('No Customer Permission');
+        $this->createTimeline(
+            $project,
+            ProjectTimeline::STATUS_ACTIVE,
+            'Active timeline',
+            '2026-10-01',
+            '2026-10-31',
+            3600,
+            1800,
+            '2026-11-15',
+            7200
+        );
+        $this->createTimeline(
+            $project,
+            ProjectTimeline::STATUS_COMPLETED,
+            'Completed timeline',
+            '2026-09-01',
+            '2026-09-30',
+            3600,
+            3600,
+            '2026-10-05',
+            7200
+        );
+
+        $columns = $this->service->getColumnLabels();
+        $this->assertArrayNotHasKey('customer_end_date', $columns);
+        $this->assertArrayNotHasKey('customer_estimated_hours', $columns);
+        $this->assertArrayNotHasKey('customer_progress', $columns);
+
+        $exportRequest = Request::create('/reports/project/export', 'GET', [
+            'visible_columns' => 'project_name,end_date,customer_end_date,estimated_hours,customer_estimated_hours,progress,customer_progress',
+        ]);
+        $exportColumns = $this->service->resolveExportColumns($exportRequest);
+        $this->assertSame([
+            'project_name' => 'Project Name',
+            'end_date' => 'End Date',
+            'estimated_hours' => 'Estimated Hours',
+            'progress' => 'Progress',
+        ], $exportColumns);
+
+        $response = $this->get(route('reports.projects'));
+        $response->assertOk();
+        $response->assertDontSee('Customer End Date');
+        $response->assertDontSee('Cust Estimate');
+        $response->assertDontSee('Cust Progress');
+        $response->assertDontSee('col-customer_end_date');
+        $response->assertDontSee('col-customer_estimated_hours');
+        $response->assertDontSee('col-customer_progress');
+    }
+
+    public function test_customer_columns_are_included_with_permission_in_report_accordion_and_export(): void
+    {
+        Permission::firstOrCreate(['name' => 'reports.project_view', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'reports.project_export', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'project.customer_end_date', 'guard_name' => 'web']);
+        $this->user->givePermissionTo(['reports.project_view', 'reports.project_export', 'project.customer_end_date']);
+
+        $project = $this->createProject('With Customer Permission');
+        $this->createTimeline(
+            $project,
+            ProjectTimeline::STATUS_ACTIVE,
+            'Active customer timeline',
+            '2026-10-01',
+            '2026-10-31',
+            3600,
+            3600,
+            '2026-11-15',
+            7200
+        );
+        $this->createTimeline(
+            $project,
+            ProjectTimeline::STATUS_COMPLETED,
+            'Completed customer timeline',
+            '2026-09-01',
+            '2026-09-30',
+            3600,
+            5400,
+            '2026-10-05',
+            3600
+        );
+
+        $columns = $this->service->getColumnLabels();
+        $columnKeys = array_keys($columns);
+        $this->assertSame(array_search('end_date', $columnKeys, true) + 1, array_search('customer_end_date', $columnKeys, true));
+        $this->assertSame(array_search('estimated_hours', $columnKeys, true) + 1, array_search('customer_estimated_hours', $columnKeys, true));
+        $this->assertSame(array_search('progress', $columnKeys, true) + 1, array_search('customer_progress', $columnKeys, true));
+        $this->assertSame('Customer End Date', $columns['customer_end_date']);
+        $this->assertSame('Cust Estimate', $columns['customer_estimated_hours']);
+        $this->assertSame('Cust Progress', $columns['customer_progress']);
+
+        $exportRequest = Request::create('/reports/project/export', 'GET', [
+            'visible_columns' => 'project_name,end_date,customer_end_date,estimated_hours,customer_estimated_hours,actual_hours,progress,customer_progress',
+        ]);
+        $projects = $this->service->exportProjects($exportRequest);
+        $exportColumns = $this->service->resolveExportColumns($exportRequest);
+        $rows = (new ProjectReportExport($projects, $exportColumns))->collection();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame(AppServiceProvider::formatAppDate('2026-11-15', '-'), $rows[0]['Customer End Date']);
+        $this->assertSame('02h : 00m', $rows[0]['Cust Estimate']);
+        $this->assertSame('50%', $rows[0]['Cust Progress']);
+        $this->assertSame(AppServiceProvider::formatAppDate('2026-10-05', '-'), $rows[1]['Customer End Date']);
+        $this->assertSame('01h : 00m', $rows[1]['Cust Estimate']);
+        $this->assertSame('150%', $rows[1]['Cust Progress']);
+
+        $response = $this->get(route('reports.projects'));
+        $response->assertOk();
+        $response->assertSee('Customer End Date');
+        $response->assertSee('Cust Estimate');
+        $response->assertSee('Cust Progress');
+        $response->assertSee(AppServiceProvider::formatAppDate('2026-11-15', '-'));
+        $response->assertSee(AppServiceProvider::formatAppDate('2026-10-05', '-'));
+        $response->assertSee('50%');
+        $response->assertSee('150%');
+    }
+
     private function createProject(string $name, array $attributes = []): Project
     {
         return Project::factory()->create(array_merge([
@@ -162,6 +286,8 @@ class ProjectReportMultipleTimelinesTest extends TestCase
         string $endDate = '2026-10-31',
         int $estimatedSeconds = 3600,
         int $actualSeconds = 0,
+        ?string $customerEndDate = null,
+        ?int $customerEstimateSeconds = null,
     ): ProjectTimeline {
         return ProjectTimeline::create([
             'project_id' => $project->id,
@@ -170,7 +296,9 @@ class ProjectReportMultipleTimelinesTest extends TestCase
             'status' => $status,
             'start_date' => $startDate,
             'end_date' => $endDate,
+            'customer_end_date' => $customerEndDate,
             'estimated_time_seconds' => $estimatedSeconds,
+            'customer_estimate_seconds' => $customerEstimateSeconds,
             'actual_time_seconds' => $actualSeconds,
             'sort_order' => ((int) $project->projectTimelines()->max('sort_order')) + 1,
             'created_by' => $this->user->id,

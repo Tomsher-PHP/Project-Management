@@ -3,7 +3,18 @@
 
 @section('page-content')
     @php
+        $canViewCustomerColumns = $canViewCustomerColumns ?? (auth()->user()?->can('project.customer_end_date') ?? false);
         $visibleColumnCount = collect($columns)->except('actions')->count() + 1;
+        $resolveProgressClasses = static function (int $estimatedSeconds, float $progressPercentage): array {
+            $classes = match (true) {
+                $estimatedSeconds <= 0 => 'bg-gray-300 text-bgray-700 dark:text-bgray-300',
+                $progressPercentage <= 50 => 'bg-success-400 text-success-400 dark:text-success-300',
+                $progressPercentage <= 100 => 'bg-orange-400 text-orange-500 dark:text-orange-300',
+                default => 'bg-red-500 text-red-500 dark:text-red-400',
+            };
+
+            return explode(' ', $classes, 2);
+        };
     @endphp
 
     <div class="mb-6 flex flex-wrap items-center gap-3">
@@ -112,7 +123,7 @@
     <!-- TABLE -->
     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
         <div class="overflow-x-auto">
-            <table class="project-table w-full min-w-[2230px]">
+            <table class="project-table w-full {{ $canViewCustomerColumns ? 'min-w-[2780px]' : 'min-w-[2230px]' }}">
                 <!-- TABLE HEADER -->
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
@@ -144,9 +155,21 @@
                             <x-sorting.sortable-column column="end_date" label="End Date" />
                         </th>
 
+                        @if ($canViewCustomerColumns)
+                            <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-customer_end_date">
+                                <x-sorting.sortable-column column="customer_end_date" label="Cust End Date" />
+                            </th>
+                        @endif
+
                         <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-estimated_hours">
                             Estimated
                         </th>
+
+                        @if ($canViewCustomerColumns)
+                            <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-customer_estimated_hours">
+                                Cust Estimate
+                            </th>
+                        @endif
 
                         <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-actual_hours">
                             Actual
@@ -155,6 +178,12 @@
                         <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px] col-progress">
                             Progress
                         </th>
+
+                        @if ($canViewCustomerColumns)
+                            <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px] col-customer_progress">
+                                Cust Progress
+                            </th>
+                        @endif
 
                         <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-priority">
                             <x-sorting.sortable-column column="priority" label="Priority" />
@@ -188,17 +217,15 @@
                             $projectStageColor = $project->projectStage->color ?? '#94A3B8';
                             $priorityConfig = config('project_constants.project_priorities.' . $project->priority);
                             $estimatedSeconds = (int) ($primaryTimeline?->report_estimated_seconds ?? 0);
+                            $customerEstimatedSeconds = (int) ($primaryTimeline?->report_customer_estimated_seconds ?? 0);
                             $actualSeconds = (int) ($primaryTimeline?->report_actual_seconds ?? 0);
                             $progressPercentage = (float) ($primaryTimeline?->report_progress_percentage ?? 0);
+                            $customerProgressPercentage = (float) ($primaryTimeline?->report_customer_progress_percentage ?? 0);
                             $progressBarWidth = min($progressPercentage, 100);
+                            $customerProgressBarWidth = min($customerProgressPercentage, 100);
                             $actualTimeClasses = $actualSeconds <= $estimatedSeconds ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
-                            $progressColorClasses = match (true) {
-                                $estimatedSeconds <= 0 => 'bg-gray-300 text-bgray-700 dark:text-bgray-300',
-                                $progressPercentage <= 50 => 'bg-success-400 text-success-400 dark:text-success-300',
-                                $progressPercentage <= 100 => 'bg-orange-400 text-orange-500 dark:text-orange-300',
-                                default => 'bg-red-500 text-red-500 dark:text-red-400',
-                            };
-                            [$progressBarClass, $progressTextClass] = explode(' ', $progressColorClasses, 2);
+                            [$progressBarClass, $progressTextClass] = $resolveProgressClasses($estimatedSeconds, $progressPercentage);
+                            [$customerProgressBarClass, $customerProgressTextClass] = $resolveProgressClasses($customerEstimatedSeconds, $customerProgressPercentage);
                         @endphp
 
                         <tr data-project-row="{{ $project->id }}" class="text-bgray-700 transition-colors dark:text-bgray-50 {{ config('assets.classes.table_row_hover') }}">
@@ -258,9 +285,21 @@
                                 {{ $primaryTimeline?->end_date?->format($globalDateFormat) ?? '-' }}
                             </td>
 
+                            @if ($canViewCustomerColumns)
+                                <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-customer_end_date">
+                                    {{ $primaryTimeline?->customer_end_date?->format($globalDateFormat) ?? '-' }}
+                                </td>
+                            @endif
+
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-estimated_hours">
                                 {{ $primaryTimeline ? formatSecondsToHoursMinutes($estimatedSeconds) : '-' }}
                             </td>
+
+                            @if ($canViewCustomerColumns)
+                                <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-customer_estimated_hours">
+                                    {{ $primaryTimeline ? formatSecondsToHoursMinutes($customerEstimatedSeconds) : '-' }}
+                                </td>
+                            @endif
 
                             <td class="px-2 py-2 text-sm font-medium whitespace-nowrap col-actual_hours {{ $actualTimeClasses }}">
                                 {{ $primaryTimeline ? formatSecondsToHoursMinutes($actualSeconds) : '-' }}
@@ -277,6 +316,20 @@
                                     </span>
                                 </div>
                             </td>
+
+                            @if ($canViewCustomerColumns)
+                                <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 min-w-[220px] col-customer_progress">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-400">
+                                            <div class="h-2.5 rounded-full transition-all duration-300 {{ $customerProgressBarClass }}" style="width: {{ $customerProgressBarWidth }}%"></div>
+                                        </div>
+
+                                        <span class="min-w-[48px] text-xs font-semibold {{ $customerProgressTextClass }}">
+                                            {{ $primaryTimeline ? rtrim(rtrim(number_format($customerProgressPercentage, 2, '.', ''), '0'), '.') . '%' : '-' }}
+                                        </span>
+                                    </div>
+                                </td>
+                            @endif
 
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-priority">
                                 <span class="inline-flex items-center rounded-md px-3 py-1 text-xs font-medium {{ $priorityConfig['bg_class'] ?? 'bg-bgray-100 dark:bg-darkblack-500' }} {{ $priorityConfig['bg_text'] ?? 'text-bgray-700 dark:text-bgray-300' }}">

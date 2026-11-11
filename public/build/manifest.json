@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B1E3hUL4.css",
+    "file": "assets/app-3P9rdwEm.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -127,7 +127,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BTHTBxu5.js",
+    "file": "assets/app-B6lgNNxU.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -234,7 +234,7 @@
     ]
   },
   "resources/js/modules/broadcasts/broadcasts-drawer.js": {
-    "file": "assets/broadcasts-drawer-CaScLNBf.js",
+    "file": "assets/broadcasts-drawer-Cfyvi7rh.js",
     "name": "broadcasts-drawer",
     "src": "resources/js/modules/broadcasts/broadcasts-drawer.js",
     "isEntry": true
@@ -496,7 +496,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-B-n8A8KJ.js",
+    "file": "assets/task-detail-B0B_8ovC.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -539,7 +539,7 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/developer-notes.js": {
-    "file": "assets/developer-notes-CIS5-940.js",
+    "file": "assets/developer-notes-CPIowZEm.js",
     "name": "developer-notes",
     "src": "resources/js/modules/tasks/developer-notes.js",
     "isEntry": true,
@@ -579,7 +579,7 @@
     ]
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-CXNSvvHp.js",
+    "file": "assets/kanban-board-CJPOQTmM.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true,

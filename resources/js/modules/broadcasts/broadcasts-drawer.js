@@ -54,16 +54,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Update Navbar Count display with correct singular/plural label,
-     * toggle visibility based on count, and switch between birthday/broadcast icon.
+     * toggle visibility based on count, and switch between birthday/anniversary/broadcast icon.
      */
     function updateNavbarCount(payload) {
         let numericCount = 0;
         let hasTodayBirthday = null;
+        let hasTodayWorkAnniversary = null;
 
         if (typeof payload === 'object' && payload !== null) {
             numericCount = Math.max(0, parseInt(payload.count ?? payload.total, 10) || 0);
             if (typeof payload.has_today_birthday !== 'undefined') {
                 hasTodayBirthday = Boolean(payload.has_today_birthday);
+            }
+            if (typeof payload.has_today_work_anniversary !== 'undefined') {
+                hasTodayWorkAnniversary = Boolean(payload.has_today_work_anniversary);
             }
         } else {
             numericCount = Math.max(0, parseInt(payload, 10) || 0);
@@ -81,20 +85,27 @@ document.addEventListener('DOMContentLoaded', () => {
             countLabelEl.textContent = numericCount === 1 ? 'Broadcast' : 'Broadcasts';
         }
 
-        if (hasTodayBirthday !== null && toggleBtn) {
+        if ((hasTodayBirthday !== null || hasTodayWorkAnniversary !== null) && toggleBtn) {
             const birthdayIconEl = toggleBtn.querySelector('[data-icon="birthday"]');
+            const anniversaryIconEl = toggleBtn.querySelector('[data-icon="anniversary"]');
             const broadcastIconEl = toggleBtn.querySelector('[data-icon="broadcast"]');
 
-            if (birthdayIconEl && broadcastIconEl) {
-                if (hasTodayBirthday) {
-                    birthdayIconEl.classList.remove('hidden');
-                    broadcastIconEl.classList.add('hidden');
-                    toggleBtn.setAttribute('title', "Today's Birthday & Broadcasts");
-                } else {
-                    birthdayIconEl.classList.add('hidden');
-                    broadcastIconEl.classList.remove('hidden');
-                    toggleBtn.setAttribute('title', 'View Broadcasts');
-                }
+            const showBirthday = Boolean(hasTodayBirthday);
+            const showAnniversary = !showBirthday && Boolean(hasTodayWorkAnniversary);
+            const showBroadcast = !showBirthday && !showAnniversary;
+
+            birthdayIconEl?.classList.toggle('hidden', !showBirthday);
+            anniversaryIconEl?.classList.toggle('hidden', !showAnniversary);
+            broadcastIconEl?.classList.toggle('hidden', !showBroadcast);
+
+            if (hasTodayBirthday && hasTodayWorkAnniversary) {
+                toggleBtn.setAttribute('title', "Today's Birthday, Work Anniversary & Broadcasts");
+            } else if (showBirthday) {
+                toggleBtn.setAttribute('title', "Today's Birthday & Broadcasts");
+            } else if (showAnniversary) {
+                toggleBtn.setAttribute('title', "Today's Work Anniversary & Broadcasts");
+            } else {
+                toggleBtn.setAttribute('title', 'View Broadcasts');
             }
         }
     }

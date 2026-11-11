@@ -103,6 +103,7 @@ class ReportController extends Controller
 
         $columns = $this->projectReportService->getColumnLabels();
         $columns['actions'] = 'Actions';
+        $canViewCustomerColumns = $this->projectReportService->canViewCustomerColumns();
 
         $projectStats = $this->projectReportService->getStats($request);
 
@@ -116,6 +117,7 @@ class ReportController extends Controller
             'projectCategories',
             'projectsFilter',
             'columns',
+            'canViewCustomerColumns',
             'projectStats'
         ));
     }
