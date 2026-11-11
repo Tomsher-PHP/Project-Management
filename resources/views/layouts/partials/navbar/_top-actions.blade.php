@@ -37,13 +37,30 @@
                 class="absolute -top-1 -right-1 {{ $unreadCount > 0 ? '' : 'hidden' }}"
             />
         </button>
-        <a href="{{ route('help-center.index') }}" title="Help Center" aria-label="Open Help Center" class="relative flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-bgray-100 focus:outline-none focus:ring-2 focus:ring-success-300 focus:ring-offset-2 dark:hover:bg-darkblack-500 dark:focus:ring-offset-darkblack-600 {{ request()->routeIs('help-center.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-500' : '' }}">
-            <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+
+        <a href="{{ route('help-center.index') }}"
+            title="Help Center"
+            aria-label="Open Help Center{{ ($skippedFeatureUpdatesCount ?? 0) > 0 ? ', ' . $skippedFeatureUpdatesCount . ' unread announcements' : '' }}"
+            class="relative flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-bgray-100 focus:outline-none focus:ring-2 focus:ring-success-300 focus:ring-offset-2 dark:hover:bg-darkblack-500 dark:focus:ring-offset-darkblack-600 {{ request()->routeIs('help-center.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-500' : '' }}">
+
+            <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="9" stroke-width="1.5" />
-                <path d="M9.75 9.25a2.35 2.35 0 0 1 4.5.95c0 1.65-2.25 1.9-2.25 3.3" stroke-width="1.5" stroke-linecap="round" />
+                <path d="M9.75 9.25a2.35 2.35 0 0 1 4.5.95c0 1.65-2.25 1.9-2.25 3.3"
+                    stroke-width="1.5" stroke-linecap="round" />
                 <path d="M12 16.75h.01" stroke-width="2" stroke-linecap="round" />
             </svg>
+
+
+            @if(($unreadFeatureUpdatesCount ?? 0) > 0)
+                <span class="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-error-300 px-1 text-[10px] font-bold leading-none text-white">
+                    {{ $unreadFeatureUpdatesCount > 99 ? '99+' : $unreadFeatureUpdatesCount }}
+                </span>
+            @endif
+
         </a>
+
         @can('user.tree_view')
             <a href="{{ route('user.tree_view') }}" title="User Hierarchy" class="relative flex h-5 w-5 items-center justify-center  {{ request()->routeIs('user.tree_view') ? 'bg-success-50 dark:bg-darkblack-500' : '' }}">
                 <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
