@@ -20,10 +20,7 @@
         </svg>
 
         <div>
-            <p class="font-semibold">Read-only developer note</p>
-            <p class="mt-1">
-                This task is completed or you do not have permission to edit this note.
-            </p>
+            <p class="font-semibold">This note cannot be edited once the task is completed.</p>
         </div>
     </div>
 
@@ -37,21 +34,10 @@
 
     <form id="developer-notes-form" class="hidden space-y-4">
         <div>
-            {{-- <label class="mb-2 block text-sm font-semibold text-bgray-700 dark:text-white">
-                Developer Note
-            </label> --}}
-
-            <input
-                type="hidden"
-                id="developer-note-input"
-                name="developer_note"
-            >
+            <input type="hidden" id="developer-note-input" name="developer_note">
 
             <div class="custom-quill-wrapper overflow-hidden rounded-lg border border-bgray-300 dark:border-darkblack-400">
-                <div
-                    id="developer-note-editor"
-                    class="h-44 bg-white dark:bg-darkblack-500 dark:text-white"
-                ></div>
+                <div id="developer-note-editor" class="h-44 bg-white dark:bg-darkblack-500 dark:text-white"></div>
             </div>
         </div>
 

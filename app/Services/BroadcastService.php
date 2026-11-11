@@ -19,8 +19,7 @@ class BroadcastService
     public function __construct(
         protected AttachmentService $attachmentService,
         protected BroadcastEmailService $broadcastEmailService,
-    ) {
-    }
+    ) {}
 
     public function paginate(array $filters, int $perPage): LengthAwarePaginator
     {
@@ -43,12 +42,12 @@ class BroadcastService
             ->with(['category:id,name,color', 'creator:id,name'])
             ->withCount('allocations')
             ->when(filled($filters['search'] ?? null), function (Builder $query) use ($filters) {
-                $query->where('title', 'like', '%'.trim($filters['search']).'%');
+                $query->where('title', 'like', '%' . trim($filters['search']) . '%');
             })
-            ->when(filled($filters['broadcast_category_id'] ?? null), fn (Builder $query) => $query->whereIn('broadcast_category_id', (array) $filters['broadcast_category_id']))
-            ->when(filled($filters['priority'] ?? null), fn (Builder $query) => $query->whereIn('priority', (array) $filters['priority']))
-            ->when(filled($filters['audience_type'] ?? null), fn (Builder $query) => $query->whereIn('audience_type', (array) $filters['audience_type']))
-            ->when(filled($filters['status'] ?? null), fn (Builder $query) => $query->whereIn('status', (array) $filters['status']))
+            ->when(filled($filters['broadcast_category_id'] ?? null), fn(Builder $query) => $query->whereIn('broadcast_category_id', (array) $filters['broadcast_category_id']))
+            ->when(filled($filters['priority'] ?? null), fn(Builder $query) => $query->whereIn('priority', (array) $filters['priority']))
+            ->when(filled($filters['audience_type'] ?? null), fn(Builder $query) => $query->whereIn('audience_type', (array) $filters['audience_type']))
+            ->when(filled($filters['status'] ?? null), fn(Builder $query) => $query->whereIn('status', (array) $filters['status']))
             ->orderBy($sortBy, $sortDirection)
             ->orderByDesc('id')
             ->paginate($perPage)
@@ -287,7 +286,7 @@ class BroadcastService
         if ((int) $data['status'] === Broadcast::STATUS_PUBLISHED && $recipientIds === []) {
             throw ValidationException::withMessages([
                 $data['audience_type'] === Broadcast::AUDIENCE_TEAMS ? 'team_ids' : 'user_ids'
-                    => 'A published broadcast must have at least one eligible recipient.',
+                => 'A published broadcast must have at least one eligible recipient.',
             ]);
         }
 
@@ -313,7 +312,7 @@ class BroadcastService
             ->whereNull('users.deleted_at')
             ->distinct()
             ->pluck('users.id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->all();
     }
 
@@ -328,7 +327,7 @@ class BroadcastService
             ->where('delete_status', false)
             ->whereIn('id', $userIds)
             ->pluck('id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->all();
     }
 
@@ -489,24 +488,11 @@ class BroadcastService
      *
      * @return array{todayBirthdays: \Illuminate\Support\Collection, upcomingBirthdays: \Illuminate\Support\Collection}
      */
-    public function getTodayAndUpcomingBirthdays(User|int|null $currentUser = null, int $days = 30): array
+    public function getTodayAndUpcomingBirthdays(User|int|null $currentUser = null, int $days = Broadcast::BDAY_DELAY_DAYS): array
     {
-        $currentUserId = $currentUser instanceof User ? $currentUser->id : ($currentUser ? (int) $currentUser : null);
+        $currentUserId = $this->resolveUserId($currentUser);
         $today = now()->startOfDay();
-
-        $users = User::query()
-            ->active()
-            ->where('delete_status', 0)
-            ->whereHas('details', function (Builder $query) {
-                $query->whereNotNull('dob');
-            })
-            ->with([
-                'details:id,user_id,dob,designation_id,department_id',
-                'details.designation:id,name',
-                'details.department:id,name',
-                'primaryAttachment',
-            ])
-            ->get(['id', 'name', 'email']);
+        $users = $this->getActiveEmployeesWithDetailDate('dob');
 
         $todayBirthdays = collect();
         $upcomingBirthdays = collect();
@@ -517,21 +503,7 @@ class BroadcastService
                 continue;
             }
 
-            $dobMonth = (int) $dob->month;
-            $dobDay = (int) $dob->day;
-
-            $dayThisYear = ($dobMonth === 2 && $dobDay === 29 && ! $today->isLeapYear()) ? 28 : $dobDay;
-            $bdayThisYear = Carbon::create($today->year, $dobMonth, $dayThisYear, 0, 0, 0, $today->timezone);
-
-            if ($bdayThisYear->lt($today)) {
-                $nextYear = $today->year + 1;
-                $isNextLeap = Carbon::create($nextYear, 1, 1, 0, 0, 0, $today->timezone)->isLeapYear();
-                $dayNextYear = ($dobMonth === 2 && $dobDay === 29 && ! $isNextLeap) ? 28 : $dobDay;
-                $nextBirthday = Carbon::create($nextYear, $dobMonth, $dayNextYear, 0, 0, 0, $today->timezone);
-            } else {
-                $nextBirthday = $bdayThisYear;
-            }
-
+            $nextBirthday = $this->resolveNextAnnualDate($dob, $today);
             $diffInDays = (int) $today->diffInDays($nextBirthday, false);
 
             if ($diffInDays === 0) {
@@ -558,5 +530,119 @@ class BroadcastService
             'upcomingBirthdays' => $upcomingBirthdays,
         ];
     }
-}
 
+    /**
+     * Retrieve active employees celebrating a work anniversary today and within the upcoming N days (at least 1 completed year).
+     *
+     * @return array{todayWorkAnniversaries: \Illuminate\Support\Collection, upcomingWorkAnniversaries: \Illuminate\Support\Collection}
+     */
+    public function getTodayAndUpcomingWorkAnniversaries(User|int|null $currentUser = null, ?int $days = null): array
+    {
+        $days = max(0, $days ?? (defined(Broadcast::class . '::WORK_ANNIVERSARY_DELAY_DAYS') ? (int) Broadcast::WORK_ANNIVERSARY_DELAY_DAYS : 0));
+        $currentUserId = $this->resolveUserId($currentUser);
+        $today = now()->startOfDay();
+        $users = $this->getActiveEmployeesWithDetailDate('joining_date');
+
+        $todayWorkAnniversaries = collect();
+        $upcomingWorkAnniversaries = collect();
+
+        foreach ($users as $user) {
+            $joiningDate = $user->details?->joining_date;
+            if (! $joiningDate) {
+                continue;
+            }
+
+            $nextAnniversary = $this->resolveNextAnnualDate($joiningDate, $today);
+            $years = $nextAnniversary->year - $joiningDate->year;
+            if ($years < 1) {
+                continue;
+            }
+
+            $diffInDays = (int) $today->diffInDays($nextAnniversary, false);
+
+            if ($diffInDays === 0) {
+                $todayWorkAnniversaries->push((object) [
+                    'user' => $user,
+                    'joining_date' => $joiningDate,
+                    'anniversary_date' => $nextAnniversary,
+                    'days_remaining' => 0,
+                    'years' => $years,
+                    'is_self' => $currentUserId !== null && $user->id === $currentUserId,
+                ]);
+            } elseif ($diffInDays >= 1 && $diffInDays <= $days) {
+                $upcomingWorkAnniversaries->push((object) [
+                    'user' => $user,
+                    'joining_date' => $joiningDate,
+                    'anniversary_date' => $nextAnniversary,
+                    'days_remaining' => $diffInDays,
+                    'years' => $years,
+                    'is_self' => $currentUserId !== null && $user->id === $currentUserId,
+                ]);
+            }
+        }
+
+        $todayWorkAnniversaries = $todayWorkAnniversaries
+            ->sortBy([
+                ['years', 'desc'],
+                [fn($item) => strtolower($item->user->name ?? ''), 'asc'],
+            ])
+            ->values();
+
+        $upcomingWorkAnniversaries = $upcomingWorkAnniversaries
+            ->sortBy([
+                ['days_remaining', 'asc'],
+                ['years', 'desc'],
+                [fn($item) => strtolower($item->user->name ?? ''), 'asc'],
+            ])
+            ->values();
+
+        return [
+            'todayWorkAnniversaries' => $todayWorkAnniversaries,
+            'upcomingWorkAnniversaries' => $upcomingWorkAnniversaries,
+        ];
+    }
+
+    protected function resolveUserId(User|int|null $user): ?int
+    {
+        return $user instanceof User ? $user->id : ($user ? (int) $user : null);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     */
+    protected function getActiveEmployeesWithDetailDate(string $dateColumn)
+    {
+        return User::query()
+            ->active()
+            ->where('delete_status', 0)
+            ->whereHas('details', function (Builder $query) use ($dateColumn) {
+                $query->whereNotNull($dateColumn);
+            })
+            ->with([
+                "details:id,user_id,{$dateColumn},designation_id,department_id",
+                'details.designation:id,name',
+                'details.department:id,name',
+                'primaryAttachment',
+            ])
+            ->get(['id', 'name', 'email']);
+    }
+
+    protected function resolveNextAnnualDate(Carbon $date, Carbon $today): Carbon
+    {
+        $thisYear = $this->resolveAnnualDateInYear($date, $today->year, $today->timezone);
+
+        return $thisYear->lt($today)
+            ? $this->resolveAnnualDateInYear($date, $today->year + 1, $today->timezone)
+            : $thisYear;
+    }
+
+    protected function resolveAnnualDateInYear(Carbon $date, int $year, mixed $timezone): Carbon
+    {
+        $month = (int) $date->month;
+        $day = (int) $date->day;
+        $isLeap = Carbon::create($year, 1, 1, 0, 0, 0, $timezone)->isLeapYear();
+        $resolvedDay = ($month === 2 && $day === 29 && ! $isLeap) ? 28 : $day;
+
+        return Carbon::create($year, $month, $resolvedDay, 0, 0, 0, $timezone);
+    }
+}

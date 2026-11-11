@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    if (noteEditorElement.__quill) {
+        return;
+    }
+
     const noteEditor = new window.Quill(noteEditorElement, {
         theme: 'snow',
         placeholder: 'Write your developer note here...',
@@ -436,11 +440,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     );
 
+    // Ctrl + Enter submits the note only after text is entered in the editor.
+    noteEditor.root.addEventListener(
+        'keydown',
+        (event) => {
+            if (
+                event.key !== 'Enter' ||
+                !event.ctrlKey ||
+                event.altKey ||
+                event.metaKey ||
+                event.shiftKey ||
+                event.isComposing
+            ) {
+                return;
+            }
+
+            if (
+                !noteEditor.isEnabled() ||
+                isSubmitting ||
+                submitButton.disabled ||
+                submitButton.classList.contains('hidden')
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+
+            if (!getDeveloperNoteContent()) {
+                return;
+            }
+
+            form.requestSubmit();
+        },
+        true
+    );
+
     // Save or update the single developer note.
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        if (isSubmitting || !activeStoreUrl || noteInput.readOnly) {
+        if (isSubmitting || !activeStoreUrl || noteInput.readOnly || !noteEditor.isEnabled()) {
             return;
         }
 

@@ -10,9 +10,7 @@
     $designationName = $user->details?->designation?->name;
     $departmentName = $user->details?->department?->name;
     $badgeClass = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold';
-    $badgeStyle = $isSelf
-        ? 'background-color: #f5f0ff; color: #6b21a8; border: 1px solid #d8b4fe;'
-        : 'background-color: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8;';
+    $badgeStyle = $isSelf ? 'background-color: #f5f0ff; color: #6b21a8; border: 1px solid #d8b4fe;' : 'background-color: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8;';
 @endphp
 
 <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm transition hover:border-pink-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-500 dark:hover:border-pink-400/40" data-birthday-card="{{ $user->id }}">
@@ -40,7 +38,7 @@
                 @else
                     <span class="{{ $badgeClass }}" style="{{ $badgeStyle }}">
                         <span>🎂</span>
-                        <span>Upcoming Birthday</span>
+                        <span>Birthday</span>
                     </span>
                 @endif
             @endif
