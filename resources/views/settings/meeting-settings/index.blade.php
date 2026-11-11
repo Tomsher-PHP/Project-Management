@@ -87,12 +87,12 @@
                                                         {{ $record->name }}
                                                     </p>
                                                     @if ($record->is_system)
-                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
                                                             System
                                                         </span>
                                                     @endif
                                                     @if ($currentTab !== 'tags' && $record->is_default)
-                                                        <span class="inline-flex rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-600 dark:bg-success-900/30 dark:text-success-300">
+                                                        <span class="inline-flex px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-300">
                                                             Default
                                                         </span>
                                                     @endif

@@ -49,6 +49,7 @@ return [
     ['name' => 'project.customer_end_date',     'label' => 'Project', 'sort_order' => 4260, 'default_checked' => false],
     ['name' => 'project.add_payment_status',    'label' => 'Project', 'sort_order' => 4280, 'default_checked' => false],
     ['name' => 'project.view_payment_status',   'label' => 'Project', 'sort_order' => 4290, 'default_checked' => false],
+    ['name' => 'project.export',                'label' => 'Project', 'sort_order' => 4300, 'default_checked' => false],
 
     // PROJECT MILESTONE
     ['name' => 'project_milestone.view',    'label' => 'Project Milestone', 'sort_order' => 5000, 'default_checked' => true],
@@ -166,6 +167,13 @@ return [
     ['name' => 'reimbursement.edit',       'label' => 'Reimbursement', 'sort_order' => 15130, 'default_checked' => false],
     ['name' => 'reimbursement.status_change',       'label' => 'Reimbursement', 'sort_order' => 15140, 'default_checked' => false],
     ['name' => 'reimbursement.delete',     'label' => 'Reimbursement', 'sort_order' => 15150, 'default_checked' => false],
+
+    // BROADCAST
+    ['name' => 'broadcast.view',          'label' => 'Broadcast', 'sort_order' => 15210, 'default_checked' => false],
+    ['name' => 'broadcast.create',        'label' => 'Broadcast', 'sort_order' => 15220, 'default_checked' => false],
+    ['name' => 'broadcast.edit',          'label' => 'Broadcast', 'sort_order' => 15230, 'default_checked' => false],
+    ['name' => 'broadcast.status_change', 'label' => 'Broadcast', 'sort_order' => 15240, 'default_checked' => false],
+    ['name' => 'broadcast.delete',        'label' => 'Broadcast', 'sort_order' => 15250, 'default_checked' => false],
 
     //======================================================================
     // Requests Actions Start
@@ -320,6 +328,12 @@ return [
     ['name' => 'server_hosting.create', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69120, 'default_checked' => false],
     ['name' => 'server_hosting.edit',   'label' => 'Settings - Server & Hosting', 'sort_order' => 69140, 'default_checked' => false],
     ['name' => 'server_hosting.delete', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69160, 'default_checked' => false],
+
+    // Broadcast Settings
+    ['name' => 'broadcast_settings.view',   'label' => 'Settings - Broadcast Settings', 'sort_order' => 69200, 'default_checked' => false],
+    ['name' => 'broadcast_settings.create', 'label' => 'Settings - Broadcast Settings', 'sort_order' => 69220, 'default_checked' => false],
+    ['name' => 'broadcast_settings.edit',   'label' => 'Settings - Broadcast Settings', 'sort_order' => 69240, 'default_checked' => false],
+    ['name' => 'broadcast_settings.delete', 'label' => 'Settings - Broadcast Settings', 'sort_order' => 69260, 'default_checked' => false],
 
     // ---------------------------------------------------------------------------------------------------------------------------------
     // CONFIGURATION  -- Last Settings Module

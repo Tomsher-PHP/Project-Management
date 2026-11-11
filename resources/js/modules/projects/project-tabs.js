@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    const loadTab = async (tab, { forceReload = false } = {}) => {
+    const loadTab = async (tab, { forceReload = false, query = {} } = {}) => {
         const panel = getPanel(tab);
 
         if (!panel) {
@@ -119,6 +119,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             params.forEach((value, key) => {
                 requestUrl.searchParams.append(key, value);
+            });
+
+            Object.entries(query).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    requestUrl.searchParams.set(key, String(value));
+                }
             });
 
             const response = await fetch(requestUrl.toString(), {
@@ -175,6 +181,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         replaceTabContent(tab, html, activate);
+    });
+
+    document.addEventListener('project-tab:reload', function (event) {
+        const tab = event.detail?.tab;
+
+        if (!tab || !availableTabs.includes(tab)) {
+            return;
+        }
+
+        loadTab(tab, {
+            forceReload: true,
+            query: event.detail?.query || {},
+        });
     });
 
     const savedTab = localStorage.getItem(storageKey);

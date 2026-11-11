@@ -8,6 +8,8 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
+use App\Http\Controllers\BroadcastController;
+use App\Http\Controllers\BroadcastCategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\CommonController;
@@ -19,6 +21,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FeatureSettingsAuthController;
+use App\Http\Controllers\FeatureUpdateController;
+use App\Http\Controllers\FeatureUpdateUserStatusController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\HolidayController;
@@ -28,6 +33,7 @@ use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\LeaveCancellationRequestController;
 use App\Http\Controllers\LeaveChangeRequestController;
+use App\Http\Controllers\LeaveNotificationSettingController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\MeetingController;
@@ -36,9 +42,9 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectAnalyticsController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectHostingController;
 use App\Http\Controllers\ProjectImportController;
-use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectNotificationSettingController;
@@ -74,9 +80,10 @@ use App\Http\Controllers\UserLeaveBalanceImportController;
 use App\Http\Controllers\UserLoginActivityController;
 use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
+use App\Http\Middleware\FeatureSettingsAuth;
+use App\Http\Middleware\SharePendingFeatureUpdates;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LeaveNotificationSettingController;
 use App\Http\Controllers\DailyWorkReportSettingsController;
 
 
@@ -104,7 +111,10 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware([
+    'auth',
+    SharePendingFeatureUpdates::class,
+])->group(function () {
 
     // Dashboard Routes
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->middleware('permission.type:dashboard.view')->name('dashboard');
@@ -356,6 +366,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('leave-notifications', [LeaveNotificationSettingController::class, 'edit',])->name('leave-notifications.edit');
         Route::put('leave-notifications', [LeaveNotificationSettingController::class, 'update',])->name('leave-notifications.update');
 
+        // Broadcast Category Routes
+        Route::patch('/broadcast-categories/toggle-status', [BroadcastCategoryController::class, 'toggleStatus'])->middleware('permission.type:broadcast_settings.edit')->name('broadcast_category.toggleStatus');
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.view')->only(['index']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.create')->only(['store']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.edit')->only(['update']);
+        Route::resource('broadcast-categories', BroadcastCategoryController::class)->middleware('permission.type:broadcast_settings.delete')->only(['destroy']);
+
         // Company Expenses Settings Routes
         Route::patch('/expense-payment-modes/toggle-status', [CompanyExpensesSettingsController::class, 'toggleStatusPaymentMode'])->middleware('permission.type:company_expenses.edit')->name('company_expenses_payment_mode.toggleStatus');
         Route::resource('expense-payment-modes', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.view')->only(['index']);
@@ -445,6 +462,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/currencies/search', [CommonController::class, 'searchCurrencies'])->name('currencies.search');
 
     // Project Routes
+    Route::get('projects/export', [ProjectController::class, 'export'])->middleware(['permission.type:project.view', 'permission.type:project.export'])->name('projects.export');
+
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
         Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
         Route::put('settings/notifications', [ProjectController::class, 'updateNotificationSettings'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.settings.notifications.update');
@@ -534,7 +553,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
         Route::get('tasks/{task}/notes-tab', [ProjectTaskController::class, 'taskNotesTab'])->name('projects.tasks.notes-tab');
-        Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware(['permission.type:task.create'])->name('projects.tasks.store');
         Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['can:view,task'])->name('projects.tasks.update');
         Route::put('tasks/{task}/requests/approve-with-update', [TaskRequestController::class, 'updateAndApprove'])->name('projects.tasks.requests.update-approve');
         Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
@@ -558,13 +576,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Project Import routes
-    Route::get('projects/import', [ProjectImportController::class, 'index'])->middleware('permission.type:project_hosting.create')->name('projects.import.index');
-    Route::get('projects/import/{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('projects.import.template');
-    Route::post('projects/import/{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('projects.import.validate');
-    Route::post('projects/import/{module}/process', [ProjectImportController::class, 'startImport'])->name('projects.import.process');
-    Route::get('projects/import/{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('projects.import.status');
-    Route::get('projects/import/{module}/download-failed/{import}', [ProjectImportController::class, 'downloadFailedRows'])->name('projects.import.download.failed');
-    Route::get('projects/import/{module}/download-results/{import}', [ProjectImportController::class, 'downloadAllResults'])->name('projects.import.download.results');
+    Route::prefix('projects/import')->as('projects.import.')->group(function () {
+        Route::get('/', [ProjectImportController::class, 'index'])->name('index');
+        Route::get('{module}/template', [ProjectImportController::class, 'downloadTemplate'])->name('template');
+        Route::post('{module}/validate', [ProjectImportController::class, 'validateUpload'])->name('validate');
+        Route::post('{module}/process', [ProjectImportController::class, 'startImport'])->name('process');
+        Route::get('{module}/status/{import}', [ProjectImportController::class, 'importStatus'])->name('status');
+        Route::get('{module}/download-failed/{import}', [ProjectImportController::class, 'downloadFailedRows'])->name('download.failed');
+        Route::get('{module}/download-results/{import}', [ProjectImportController::class, 'downloadAllResults'])->name('download.results');
+    });
 
     // Project common routes
     Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
@@ -602,14 +622,10 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('edit');
 
-
-        // View developer notes
-        Route::get('developer-notes-modal', [TaskController::class,'developerNotesModal',])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.modal');
-
-        // Add a developer note
-        Route::post('developer-notes', [TaskController::class,'storeDeveloperNote',])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.store');
-
-        Route::delete('developer-notes',[TaskController::class, 'deleteDeveloperNote'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.delete');
+        // Developer notes routes
+        Route::get('developer-notes-modal', [TaskController::class, 'developerNotesModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.modal');
+        Route::post('developer-notes', [TaskController::class, 'storeDeveloperNote'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.store');
+        Route::delete('developer-notes', [TaskController::class, 'deleteDeveloperNote'])->middleware(['permission.type:task.view', 'can:view,task'])->name('developer-notes.delete');
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
@@ -637,16 +653,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
     Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.bulk-action');
     Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.action');
-    Route::post('tasks/{task}/requests/cancel', [TaskRequestController::class, 'cancel'])
-        ->name('tasks.requests.cancel');
+    Route::delete('tasks/{task}/requests', [TaskRequestController::class, 'destroy'])->name('tasks.requests.destroy');
 
     // Task time log change request routes
-    Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
-    Route::patch('tasks/time-logs/change-requests/{changeRequest}', [TaskTimeLogChangeRequestController::class, 'update'])->name('tasks.time-log-change-requests.update');
-    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->name('tasks.time-log-change-requests.index');
-    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.bulk-action');
-    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.action');
-    Route::post('tasks/time-logs/change-requests/{changeRequest}/cancel', [TaskTimeLogChangeRequestController::class, 'cancel'])->middleware(['permission.type:task_time_log_change_request.cancel'])->name('tasks.time-log-change-requests.cancel');
+    Route::prefix('tasks/time-logs/change-requests')->as('tasks.time-log-change-requests.')->group(function () {
+        Route::post('/', [TaskTimeLogChangeRequestController::class, 'store'])->name('store');
+        Route::patch('{changeRequest}', [TaskTimeLogChangeRequestController::class, 'update'])->name('update');
+        Route::get('/', [TaskTimeLogChangeRequestController::class, 'index'])->name('index');
+        Route::post('bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('bulk-action');
+        Route::post('{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('action');
+        Route::post('{changeRequest}/cancel', [TaskTimeLogChangeRequestController::class, 'cancel'])->middleware(['permission.type:task_time_log_change_request.cancel'])->name('cancel');
+    });
 
     // Handoff Request routes
     Route::prefix('handoff-requests')->as('handoff_requests.')->group(function () {
@@ -679,10 +696,12 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Activity Log Route
-    Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
-    Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
-    Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
-    Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
+    Route::prefix('activity-log')->as('activity.')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('log');
+        Route::get('{activity}/details', [ActivityLogController::class, 'details'])->name('log.details');
+        Route::delete('bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('log.bulkDelete');
+        Route::delete('{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('log.destroy');
+    });
 
     // User hierarchy tree view route
     Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
@@ -690,7 +709,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('reports')->as('reports.')->group(function () {
 
         // To get choosed projects by flow in report filters
-        Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])->name('projects.by-flow');
+        Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])->middleware('permission.type:reports.project_view')->name('projects.by-flow');
 
         // PROJECT:: PROJECT REPORT
         Route::get('/projects-report', [ReportController::class, 'project'])->middleware('permission.type:reports.project_view')->name('projects');
@@ -746,6 +765,25 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{appraisal}/unpublish', [AppraisalController::class, 'unpublish'])->middleware('permission.type:appraisal.create')->name('unpublish');
     });
 
+    // Broadcast management routes
+    Route::prefix('broadcasts')->as('broadcasts.')->group(function () {
+        Route::get('/drawer/count', [BroadcastController::class, 'drawerCount'])->name('drawer.count');
+        Route::get('/drawer/list', [BroadcastController::class, 'drawerList'])->name('drawer.list');
+        Route::get('/drawer/{broadcast}', [BroadcastController::class, 'drawerShow'])->name('drawer.show');
+        Route::get('/drawer/{broadcast}/attachments/{attachment}/download', [BroadcastController::class, 'downloadDrawerAttachment'])->name('drawer.attachments.download');
+
+        Route::get('/', [BroadcastController::class, 'index'])->middleware('permission.type:broadcast.view')->name('index');
+        Route::get('/create', [BroadcastController::class, 'create'])->middleware('permission.type:broadcast.create')->name('create');
+        Route::post('/', [BroadcastController::class, 'store'])->middleware('permission.type:broadcast.create')->name('store');
+        Route::patch('/{broadcast}/status', [BroadcastController::class, 'updateStatus'])->middleware('permission.type:broadcast.status_change')->name('status');
+        Route::delete('/{broadcast}/attachments/{attachment}', [BroadcastController::class, 'deleteAttachment'])->middleware('permission.type:broadcast.edit')->name('attachments.destroy');
+        Route::get('/{broadcast}/attachments/{attachment}/download', [BroadcastController::class, 'downloadAttachment'])->middleware('permission.type:broadcast.view')->name('attachments.download');
+        Route::get('/{broadcast}/edit', [BroadcastController::class, 'edit'])->middleware('permission.type:broadcast.edit')->name('edit');
+        Route::put('/{broadcast}', [BroadcastController::class, 'update'])->middleware('permission.type:broadcast.edit')->name('update');
+        Route::delete('/{broadcast}', [BroadcastController::class, 'destroy'])->middleware('permission.type:broadcast.delete')->name('destroy');
+        Route::get('/{broadcast}', [BroadcastController::class, 'show'])->middleware('permission.type:broadcast.view')->name('show');
+    });
+
     // Help Center routes
     Route::prefix('help-center')->as('help-center.')->group(function () {
         Route::get('/', [HelpCenterController::class, 'index'])->name('index');
@@ -799,7 +837,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.edit')->only(['edit', 'update']);
     Route::resource('holidays', HolidayController::class)->middleware('permission.type:team.delete')->only(['destroy']);
 
-    Route::prefix('user-leave-balances')->name('user-leave-balances.')->group(function () {
+    Route::prefix('user-leave-balances')->as('user-leave-balances.')->group(function () {
         Route::get('/import', [UserLeaveBalanceImportController::class, 'create'])->middleware('permission.type:user_leave_balance.import')->name('import');
         Route::post('/import', [UserLeaveBalanceImportController::class, 'store'])->middleware('permission.type:user_leave_balance.import')->name('import.store');
         Route::get('/import/sample', [UserLeaveBalanceImportController::class, 'sample'])->middleware('permission.type:user_leave_balance.import')->name('import.sample');
@@ -842,6 +880,15 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{cancellationRequest}/cancel', 'cancel')->name('cancel');
         });
 
+    // leave cancelation
+    Route::prefix('leave-cancellation-requests')->as('leave-cancellation-requests.')->group(function () {
+        Route::post('/{leaveRequest}', [LeaveCancellationRequestController::class, 'store'])->name('store');
+        Route::get('/', [LeaveCancellationRequestController::class, 'index'])->name('index');
+        Route::get('/{cancellationRequest}/details', [LeaveCancellationRequestController::class, 'show'])->name('show');
+        Route::post('/{cancellationRequest}/approve', [LeaveCancellationRequestController::class, 'approve'])->name('approve');
+        Route::post('/{cancellationRequest}/reject', [LeaveCancellationRequestController::class, 'reject'])->name('reject');
+        Route::post('/{cancellationRequest}/cancel', [LeaveCancellationRequestController::class, 'cancel'])->name('cancel');
+    });
 
     // Meeting Management routes
     Route::get('/meetings/calendar-data', [MeetingController::class, 'calendarData'])->middleware('permission.type:meeting.view')->name('meetings.calendar-data');
@@ -873,6 +920,82 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.create')->only(['store']);
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.edit')->only(['edit', 'update']);
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.delete')->only(['destroy']);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Feature Settings
+    |--------------------------------------------------------------------------
+    */
+
+    Route::prefix('feature-settings')
+        ->name('feature-settings.')
+        ->group(function () {
+
+            // Password screen
+            Route::get('/login', [
+                FeatureSettingsAuthController::class,
+                'showLogin'
+            ])->name('login');
+
+            // Verify management password
+            Route::post('/authenticate', [
+                FeatureSettingsAuthController::class,
+                'authenticate'
+            ])
+                ->middleware('throttle:5,1')
+                ->name('authenticate');
+
+            // Protected management area
+            Route::middleware(FeatureSettingsAuth::class)->group(function () {
+
+                Route::get('/', [
+                    FeatureUpdateController::class,
+                    'index'
+                ])->name('index');
+
+                Route::get('/create', [
+                    FeatureUpdateController::class,
+                    'create'
+                ])->name('create');
+
+                Route::post('/', [
+                    FeatureUpdateController::class,
+                    'store'
+                ])->name('store');
+
+                Route::get('/{featureUpdate}/edit', [
+                    FeatureUpdateController::class,
+                    'edit'
+                ])->name('edit');
+
+                Route::put('/{featureUpdate}', [
+                    FeatureUpdateController::class,
+                    'update'
+                ])->name('update');
+
+                Route::delete('/{featureUpdate}', [
+                    FeatureUpdateController::class,
+                    'destroy'
+                ])->name('destroy');
+
+                Route::post('/logout', [
+                    FeatureSettingsAuthController::class,
+                    'logout'
+                ])->name('logout');
+            });
+        });
+
+        Route::post(
+            '/feature-updates/{featureUpdate}/acknowledge',
+            [FeatureUpdateUserStatusController::class, 'acknowledge']
+        )->name('feature-updates.acknowledge');
+
+        Route::post(
+            '/feature-updates/{featureUpdate}/skip',
+            [FeatureUpdateUserStatusController::class, 'skip']
+        )->name('feature-updates.skip');
+
 });
 
 Route::get('api-test', function () {

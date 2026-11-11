@@ -193,7 +193,7 @@
                     <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Start Date</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-900 dark:text-white">
                         @if ($record->start_date)
-                            @appDate($record->start_date)
+                            {{ $record->start_date->format($globalDateFormat) }}
                         @else
                             —
                         @endif
@@ -204,7 +204,7 @@
                     <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Expiry Date</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-900 dark:text-white">
                         @if ($record->expiry_date)
-                            @appDate($record->expiry_date)
+                            {{ $record->expiry_date->format($globalDateFormat) }}
                         @else
                             —
                         @endif
@@ -215,7 +215,7 @@
                     <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Next Renewal Date</span>
                     <p class="mt-0.5 text-sm font-medium text-bgray-900 dark:text-white">
                         @if ($record->next_renewal_date)
-                            @appDate($record->next_renewal_date)
+                            {{ $record->next_renewal_date->format($globalDateFormat) }}
                         @else
                             —
                         @endif
@@ -226,7 +226,7 @@
                     <div>
                         <span class="text-xs font-medium text-bgray-700 dark:text-bgray-400">Last Renewed Date</span>
                         <p class="mt-0.5 text-sm font-medium text-bgray-900 dark:text-white">
-                            @appDate($record->last_renewed_date)
+                            {{ $record->last_renewed_date->format($globalDateFormat) }}
                         </p>
                     </div>
                 @endif
@@ -278,14 +278,14 @@
         <div class="border-t border-bgray-200 pt-4 text-xs text-bgray-600 dark:border-darkblack-400 dark:text-bgray-400">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    Created: {{ $record->created_at?->format('d M Y, h:i A') }}
+                    Created: @appDateTime($record->created_at)
                     @if ($record->creator)
                         by <span class="font-medium text-bgray-800 dark:text-bgray-200">{{ $record->creator->name }}</span>
                     @endif
                 </div>
                 @if ($record->updated_at && $record->updated_at != $record->created_at)
                     <div>
-                        Updated: {{ $record->updated_at->format('d M Y, h:i A') }}
+                        Updated: @appDateTime($record->updated_at)
                         @if ($record->updater)
                             by <span class="font-medium text-bgray-800 dark:text-bgray-200">{{ $record->updater->name }}</span>
                         @endif

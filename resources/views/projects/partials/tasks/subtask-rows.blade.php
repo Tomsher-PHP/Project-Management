@@ -7,6 +7,7 @@
         'isSubtask' => true,
         'parentTaskId' => $parentTaskId,
         'depth' => $depth,
+        'search' => $search ?? null,
     ])
 
     @if ($subtask->childTasks->isNotEmpty())
@@ -17,6 +18,7 @@
             'showTaskActionColumn' => $showTaskActionColumn,
             'parentTaskId' => $subtask->id,
             'depth' => $depth + 1,
+            'search' => $search ?? null,
         ])
     @endif
 @endforeach

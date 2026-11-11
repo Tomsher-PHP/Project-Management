@@ -56,9 +56,21 @@
     "file": "assets/sweetalert2.esm.all-YZDMVk0e.js",
     "name": "sweetalert2.esm.all"
   },
-  "_task-comments-BCaf8cZV.js": {
-    "file": "assets/task-comments-BCaf8cZV.js",
+  "_task-comments-BAKIyZHf.js": {
+    "file": "assets/task-comments-BAKIyZHf.js",
     "name": "task-comments"
+  },
+  "_task-insights-modal-DCLerg8E.js": {
+    "file": "assets/task-insights-modal-DCLerg8E.js",
+    "name": "task-insights-modal"
+  },
+  "_time-log-change-request-Bppiukwp.js": {
+    "file": "assets/time-log-change-request-Bppiukwp.js",
+    "name": "time-log-change-request",
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_datepicker-DWdH-Ouy.js"
+    ]
   },
   "_timepicker-BgMmsOv3.js": {
     "file": "assets/timepicker-BgMmsOv3.js",
@@ -79,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BrUtbFle.css",
+    "file": "assets/app-3P9rdwEm.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -115,7 +127,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DirUzOmx.js",
+    "file": "assets/app-B6lgNNxU.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -124,8 +136,11 @@
       "_alert-kNjqpuwD.js",
       "__commonjsHelpers-Cpj98o6Y.js",
       "_estimated-time-input-CIuy8ceU.js",
+      "resources/js/modules/broadcasts/broadcasts-drawer.js",
       "_tom-select-BnPXzLD6.js",
       "_datepicker-DWdH-Ouy.js",
+      "resources/js/modules/tasks/developer-notes.js",
+      "_task-insights-modal-DCLerg8E.js",
       "_timepicker-BgMmsOv3.js",
       "_weekpicker-CPVHNp86.js",
       "_flatpickr.min-Cc3t1Oke.js"
@@ -216,6 +231,26 @@
       "_monthpicker-DWQROgmQ.js",
       "_flatpickr.min-Cc3t1Oke.js",
       "__commonjsHelpers-Cpj98o6Y.js"
+    ]
+  },
+  "resources/js/modules/broadcasts/broadcasts-drawer.js": {
+    "file": "assets/broadcasts-drawer-Cfyvi7rh.js",
+    "name": "broadcasts-drawer",
+    "src": "resources/js/modules/broadcasts/broadcasts-drawer.js",
+    "isEntry": true
+  },
+  "resources/js/modules/broadcasts/broadcasts-management.js": {
+    "file": "assets/broadcasts-management-kmCWWlpJ.js",
+    "name": "broadcasts-management",
+    "src": "resources/js/modules/broadcasts/broadcasts-management.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_tom-select-BnPXzLD6.js",
+      "_datepicker-DWdH-Ouy.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_timepicker-BgMmsOv3.js"
     ]
   },
   "resources/js/modules/checklist-template-form.js": {
@@ -316,7 +351,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/imports/project-imports.js": {
-    "file": "assets/project-imports-py23BsRi.js",
+    "file": "assets/project-imports-DBHzFLiD.js",
     "name": "project-imports",
     "src": "resources/js/modules/projects/imports/project-imports.js",
     "isEntry": true
@@ -331,7 +366,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-0v_2ED22.js",
+    "file": "assets/project-detail-DVO2_DuL.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -344,6 +379,7 @@
       "resources/js/modules/projects/project-tasks.js",
       "_timepicker-BgMmsOv3.js",
       "_weekpicker-CPVHNp86.js",
+      "resources/js/modules/task-list-create.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
@@ -374,7 +410,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-6aJqGRWT.js",
+    "file": "assets/project-tasks-D9sykXFn.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -398,6 +434,56 @@
       "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
+  "resources/js/modules/requests/break-requests.js": {
+    "file": "assets/break-requests-Cg4yK0G0.js",
+    "name": "break-requests",
+    "src": "resources/js/modules/requests/break-requests.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/requests/task-requests.js": {
+    "file": "assets/task-requests-BcLBAYAE.js",
+    "name": "task-requests",
+    "src": "resources/js/modules/requests/task-requests.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "resources/js/modules/projects/project-tasks.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_datepicker-DWdH-Ouy.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_timepicker-BgMmsOv3.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-BnPXzLD6.js"
+    ]
+  },
+  "resources/js/modules/requests/task-time-extend-request.js": {
+    "file": "assets/task-time-extend-request-B2dZTLWW.js",
+    "name": "task-time-extend-request",
+    "src": "resources/js/modules/requests/task-time-extend-request.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/requests/task-time-requests.js": {
+    "file": "assets/task-time-requests-CuIgEib5.js",
+    "name": "task-time-requests",
+    "src": "resources/js/modules/requests/task-time-requests.js",
+    "isEntry": true,
+    "imports": [
+      "_time-log-change-request-Bppiukwp.js",
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_datepicker-DWdH-Ouy.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_timepicker-BgMmsOv3.js"
+    ]
+  },
   "resources/js/modules/schedule-shift.js": {
     "file": "assets/schedule-shift-B9GEX8L1.js",
     "name": "schedule-shift",
@@ -410,7 +496,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-DQv0Rr8d.js",
+    "file": "assets/task-detail-B0B_8ovC.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -421,9 +507,10 @@
       "_timepicker-BgMmsOv3.js",
       "_weekpicker-CPVHNp86.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_task-comments-BCaf8cZV.js",
+      "_task-insights-modal-DCLerg8E.js",
+      "_task-comments-BAKIyZHf.js",
       "_note-files-modal-CFZnvcW7.js",
-      "resources/js/modules/tasks/time-log-change-request.js",
+      "_time-log-change-request-Bppiukwp.js",
       "resources/js/modules/projects/project-tasks.js",
       "resources/js/modules/tasks/developer-notes.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
@@ -431,7 +518,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-BRFi4sMn.js",
+    "file": "assets/task-list-create-DDUufdfo.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
@@ -451,18 +538,8 @@
     "src": "resources/js/modules/task-list-subtasks.js",
     "isEntry": true
   },
-  "resources/js/modules/tasks/approve-extend-time.js": {
-    "file": "assets/approve-extend-time-hZQoTGQ3.js",
-    "name": "approve-extend-time",
-    "src": "resources/js/modules/tasks/approve-extend-time.js",
-    "isEntry": true,
-    "imports": [
-      "_alert-kNjqpuwD.js",
-      "_sweetalert2.esm.all-YZDMVk0e.js"
-    ]
-  },
   "resources/js/modules/tasks/developer-notes.js": {
-    "file": "assets/developer-notes-BZK2TpsD.js",
+    "file": "assets/developer-notes-CPIowZEm.js",
     "name": "developer-notes",
     "src": "resources/js/modules/tasks/developer-notes.js",
     "isEntry": true,
@@ -502,12 +579,13 @@
     ]
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-CPPbxWF6.js",
+    "file": "assets/kanban-board-CJPOQTmM.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true,
     "imports": [
-      "_task-comments-BCaf8cZV.js",
+      "_task-insights-modal-DCLerg8E.js",
+      "_task-comments-BAKIyZHf.js",
       "resources/js/modules/tasks/developer-notes.js",
       "_alert-kNjqpuwD.js",
       "_sweetalert2.esm.all-YZDMVk0e.js"
@@ -523,19 +601,6 @@
       "_datepicker-DWdH-Ouy.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-BnPXzLD6.js",
-      "_sweetalert2.esm.all-YZDMVk0e.js",
-      "_flatpickr.min-Cc3t1Oke.js",
-      "_timepicker-BgMmsOv3.js"
-    ]
-  },
-  "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-2kvpcXyJ.js",
-    "name": "time-log-change-request",
-    "src": "resources/js/modules/tasks/time-log-change-request.js",
-    "isEntry": true,
-    "imports": [
-      "_alert-kNjqpuwD.js",
-      "_datepicker-DWdH-Ouy.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js",
       "_timepicker-BgMmsOv3.js"
@@ -604,13 +669,13 @@
     ]
   },
   "resources/js/modules/workspace/user-timeline.js": {
-    "file": "assets/user-timeline-DK5APXsN.js",
+    "file": "assets/user-timeline-y9z3nGr2.js",
     "name": "user-timeline",
     "src": "resources/js/modules/workspace/user-timeline.js",
     "isEntry": true,
     "imports": [
       "_datepicker-DWdH-Ouy.js",
-      "resources/js/modules/tasks/time-log-change-request.js",
+      "_time-log-change-request-Bppiukwp.js",
       "_flatpickr.min-Cc3t1Oke.js",
       "_timepicker-BgMmsOv3.js",
       "_alert-kNjqpuwD.js",

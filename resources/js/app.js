@@ -19,9 +19,12 @@ import './components/list-search';
 import './components/estimated-time-input';
 import './modules/tasks/task-running-timer'
 import './modules/quick-notes-drawer';
+import './modules/broadcasts/broadcasts-drawer';
 import './modules/expenses/expenses';
 import './modules/cheques/cheques';
 import './modules/reimbursements/reimbursements';
+import './modules/tasks/developer-notes';
+import './modules/task-insights-modal';
 import './components/calendar';
 
 import "tom-select/dist/css/tom-select.css";

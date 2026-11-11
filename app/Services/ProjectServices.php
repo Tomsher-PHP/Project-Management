@@ -21,8 +21,12 @@ use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
 use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
+use App\Models\User;
 use App\Providers\AppServiceProvider;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -52,84 +56,149 @@ class ProjectServices
         $this->filesystemDisk = env('FILESYSTEM_DISK', 'public');
     }
 
-    public function create(array $data)
+    public function create(array $data, ?User $actor = null)
     {
-        return DB::transaction(function () use ($data) {
-            $data['project_flow'] = $data['project_flow'] ?? 'agile';
-            $data['priority'] = $data['priority'] ?? 'medium';
+        $maxAttempts = 5;
+        $attempt = 0;
 
-            $startDate = $data['start_date'] ?? now(config('constants.timezone'))->toDateString();
+        while (true) {
+            $attempt++;
 
-            if (empty($data['end_date'])) {
-                $data['end_date'] = Carbon::parse($startDate)->addDays(30)->toDateString();
+            try {
+                return DB::transaction(function () use ($data, $actor) {
+                    $actor = $actor ?? auth()->user();
+                    $actorId = $actor?->id;
+
+                    $data['project_flow'] = $data['project_flow'] ?? 'agile';
+                    $data['priority'] = $data['priority'] ?? 'medium';
+
+                    $startDate = $data['start_date'] ?? now(config('constants.timezone'))->toDateString();
+
+                    if (empty($data['end_date'])) {
+                        $data['end_date'] = Carbon::parse($startDate)->addDays(30)->toDateString();
+                    }
+
+                    // Convert minutes -> seconds if provided as minutes
+                    if (! array_key_exists('estimated_time_seconds', $data) && array_key_exists('estimated_time_minutes', $data)) {
+                        $data['estimated_time_seconds'] = $data['estimated_time_minutes'] !== null
+                            ? (int) $data['estimated_time_minutes'] * 60
+                            : null;
+                    }
+                    if (! array_key_exists('customer_estimate_seconds', $data) && array_key_exists('customer_estimate_minutes', $data)) {
+                        $data['customer_estimate_seconds'] = $data['customer_estimate_minutes'] !== null
+                            ? (int) $data['customer_estimate_minutes'] * 60
+                            : null;
+                    }
+
+                    $statusId = $data['status_id'] ?? ProjectStatus::active()->where('is_default', true)->value('id');
+                    $projectStageId = array_key_exists('project_stage_id', $data) && $data['project_stage_id'] !== null
+                        ? $data['project_stage_id']
+                        : ProjectStage::active()->where('is_default', true)->value('id');
+
+                    $customer = ! empty($data['customer_id']) ? Customer::find($data['customer_id']) : null;
+
+                    $categoryIds = null;
+                    if (array_key_exists('project_category_ids', $data)) {
+                        $categoryIds = is_array($data['project_category_ids'])
+                            ? array_values(array_unique(array_filter(array_map('intval', $data['project_category_ids']))))
+                            : null;
+                    } elseif (array_key_exists('project_category_id', $data) && $data['project_category_id'] !== null && $data['project_category_id'] !== '') {
+                        $categoryIds = [(int) $data['project_category_id']];
+                    }
+
+                    // Lock latest project row to serialize project code generation under concurrency
+                    Project::withTrashed()->orderByDesc('id')->lockForUpdate()->first();
+                    $projectCode = Project::generateProjectCode();
+
+                    $salesPersonId = array_key_exists('sales_person_id', $data) && $data['sales_person_id'] !== null
+                        ? (int) $data['sales_person_id']
+                        : ($customer ? $customer->sales_person_id : null);
+
+                    $project = Project::create([
+                        'project_code' => $projectCode,
+                        'name' => $data['name'],
+                        'customer_id' => $customer?->id,
+                        'project_flow' => $data['project_flow'],
+                        'priority' => $data['priority'],
+                        'status_id' => $statusId,
+                        'project_stage_id' => $projectStageId,
+                        'start_date' => $startDate,
+                        'end_date' => $data['end_date'],
+                        'customer_end_date' => $data['customer_end_date'] ?? null,
+                        'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
+                        'customer_estimate_seconds' => $data['customer_estimate_seconds'] ?? null,
+                        'domain' => $data['domain'] ?? null,
+                        'sales_person_id' => $salesPersonId,
+                        'project_category_ids' => ! empty($categoryIds) ? $categoryIds : null,
+                        'default_billable' => $data['default_billable'] ?? 1,
+                        'added_by' => $actorId,
+                    ]);
+
+                    if (isset($data['project_technology_ids']) && is_array($data['project_technology_ids'])) {
+                        $technologyIds = array_values(array_unique(array_filter(array_map('intval', $data['project_technology_ids']))));
+                        if (! empty($technologyIds)) {
+                            $project->technologies()->sync($technologyIds);
+                        }
+                    }
+
+                    if (isset($data['service_type_ids']) && is_array($data['service_type_ids'])) {
+                        $serviceTypeIds = array_values(array_unique(array_filter(array_map('intval', $data['service_type_ids']))));
+                        if (! empty($serviceTypeIds)) {
+                            $project->serviceTypes()->sync($serviceTypeIds);
+                        }
+                    }
+
+                    //status history
+                    ProjectStatusHistory::create([
+                        'project_id' => $project->id,
+                        'status_id' => $project->status_id,
+                        'added_by' => $actorId,
+                    ]);
+
+                    //stage history
+                    ProjectStageHistory::create([
+                        'project_id' => $project->id,
+                        'stage_id' => $project->project_stage_id,
+                        'added_by' => $actorId,
+                    ]);
+
+                    // Generate Original Timeline for the new project
+                    $timelineName = isset($data['timeline_name']) && trim((string) $data['timeline_name']) !== ''
+                        ? trim((string) $data['timeline_name'])
+                        : 'Original Timeline';
+
+                    ProjectTimeline::create([
+                        'project_id' => $project->id,
+                        'name' => $timelineName,
+                        'type' => 'original',
+                        'status' => ProjectTimeline::STATUS_ACTIVE,
+                        'start_date' => $project->start_date,
+                        'end_date' => $project->end_date,
+                        'customer_end_date' => $project->customer_end_date,
+                        'estimated_time_seconds' => $project->estimated_time_seconds,
+                        'customer_estimate_seconds' => $project->customer_estimate_seconds,
+                        'sort_order' => 1,
+                        'created_by' => $actorId,
+                    ]);
+
+                    // Default Project Notification Preferences
+                    $this->getNotificationDefaultsForProject($project);
+
+                    return $project;
+                });
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= $maxAttempts) {
+                    throw $e;
+                }
             }
-
-            $defaultStatusId = ProjectStatus::active()->where('is_default', true)->value('id');
-            $defaultProjectStageId = ProjectStage::active()->where('is_default', true)->value('id');
-
-            $customer = Customer::find($data['customer_id']);
-
-            $categoryIds = null;
-            if (array_key_exists('project_category_ids', $data)) {
-                $categoryIds = is_array($data['project_category_ids'])
-                    ? array_values(array_unique(array_filter(array_map('intval', $data['project_category_ids']))))
-                    : null;
-            } elseif (array_key_exists('project_category_id', $data) && $data['project_category_id'] !== null && $data['project_category_id'] !== '') {
-                $categoryIds = [(int) $data['project_category_id']];
-            }
-
-            $project = Project::create([
-                'project_code' => Project::generateProjectCode(),
-                'name' => $data['name'],
-                'customer_id' => $customer?->id,
-                'project_flow' => $data['project_flow'],
-                'priority' => $data['priority'],
-                'status_id' => $defaultStatusId,
-                'project_stage_id' => $defaultProjectStageId,
-                'start_date' => $startDate,
-                'end_date' => $data['end_date'],
-                'sales_person_id' => $customer ? $customer->sales_person_id : null,
-                'project_category_ids' => ! empty($categoryIds) ? $categoryIds : null,
-                'default_billable' => $data['default_billable'] ?? 1,
-            ]);
-
-            //status history
-            ProjectStatusHistory::create([
-                'project_id' => $project->id,
-                'status_id' => $project->status_id,
-            ]);
-
-            //stage history
-            ProjectStageHistory::create([
-                'project_id' => $project->id,
-                'stage_id' => $project->project_stage_id,
-            ]);
-
-            // Generate Original Timeline for the new project
-            ProjectTimeline::create([
-                'project_id' => $project->id,
-                'name' => 'Original Timeline',
-                'type' => 'original',
-                'status' => ProjectTimeline::STATUS_ACTIVE,
-                'start_date' => $project->start_date,
-                'end_date' => $project->end_date,
-                'customer_end_date' => $project->customer_end_date,
-                'estimated_time_seconds' => $project->estimated_time_seconds,
-                'customer_estimate_seconds' => $project->customer_estimate_seconds,
-                'sort_order' => 1,
-                'created_by' => auth()->id(),
-            ]);
-
-            // Default Project Notification Preferences
-            $this->getNotificationDefaultsForProject($project);
-
-            return $project;
-        });
+        }
     }
 
-    public function update(Project $project, array $data)
+    public function update(Project $project, array $data, ?User $actor = null)
     {
-        return DB::transaction(function () use ($project, $data) {
+        return DB::transaction(function () use ($project, $data, $actor) {
+            $actor = $actor ?? auth()->user();
+
             // Convert minutes -> seconds
             if (array_key_exists('estimated_time_minutes', $data)) {
                 $data['estimated_time_seconds'] = $data['estimated_time_minutes'] !== null
@@ -163,6 +232,7 @@ class ProjectServices
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
                 'default_billable' => $data['default_billable'],
+                'updated_by' => $actor?->id,
             ];
 
             if (array_key_exists('start_date', $data)) {
@@ -220,11 +290,14 @@ class ProjectServices
             }
 
             // Sync original timeline
-            app(ProjectTimelineService::class)->syncOriginalTimelineFromProject($project);
+            $timelineName = array_key_exists('timeline_name', $data) && $data['timeline_name'] !== null
+                ? trim((string) $data['timeline_name'])
+                : null;
+            app(ProjectTimelineService::class)->syncOriginalTimelineFromProject($project, $timelineName);
 
             $updatedProject = $project->fresh();
 
-            if ($timelineChanges !== [] && ($actor = auth()->user())) {
+            if ($timelineChanges !== [] && $actor) {
                 $this->notificationService->notifyProjectTimelineChanged(
                     $updatedProject,
                     $actor,
@@ -233,6 +306,69 @@ class ProjectServices
             }
 
             return $updatedProject; // return updated model
+        });
+    }
+
+    /**
+     * Update an existing project from bulk import data, preserving unspecified fields
+     * and maintaining status/stage histories and Original Timeline synchronization.
+     */
+    public function updateFromImport(Project $project, array $data, ?User $actor = null): Project
+    {
+        return DB::transaction(function () use ($project, $data, $actor) {
+            $actor = $actor ?? auth()->user();
+
+            $mergedData = [
+                'parent_project_id' => $project->parent_project_id,
+                'name' => $data['name'] ?? $project->name,
+                'customer_id' => array_key_exists('customer_id', $data) ? $data['customer_id'] : $project->customer_id,
+                'priority' => $data['priority'] ?? $project->priority,
+                'domain' => array_key_exists('domain', $data) ? $data['domain'] : $project->domain,
+                'sales_person_id' => array_key_exists('sales_person_id', $data) ? $data['sales_person_id'] : $project->sales_person_id,
+                'default_billable' => array_key_exists('default_billable', $data) ? $data['default_billable'] : $project->default_billable,
+                'project_category_ids' => array_key_exists('project_category_ids', $data) ? $data['project_category_ids'] : ($project->project_category_ids ?? []),
+                'start_date' => array_key_exists('start_date', $data) ? $data['start_date'] : $project->start_date?->toDateString(),
+                'end_date' => array_key_exists('end_date', $data) ? $data['end_date'] : $project->end_date?->toDateString(),
+                'customer_end_date' => array_key_exists('customer_end_date', $data) ? $data['customer_end_date'] : $project->customer_end_date?->toDateString(),
+                'estimated_time_seconds' => array_key_exists('estimated_time_seconds', $data) ? $data['estimated_time_seconds'] : $project->estimated_time_seconds,
+                'customer_estimate_seconds' => array_key_exists('customer_estimate_seconds', $data) ? $data['customer_estimate_seconds'] : $project->customer_estimate_seconds,
+            ];
+
+            if (array_key_exists('project_technology_ids', $data)) {
+                $mergedData['project_technology_ids'] = $data['project_technology_ids'];
+            }
+
+            if (array_key_exists('service_type_ids', $data)) {
+                $mergedData['service_type_ids'] = $data['service_type_ids'];
+            }
+
+            if (array_key_exists('timeline_name', $data)) {
+                $mergedData['timeline_name'] = $data['timeline_name'];
+            }
+
+            $updatedProject = $this->update($project, $mergedData, $actor);
+
+            if (array_key_exists('status_id', $data) && $data['status_id'] !== null) {
+                $updatedProject = $this->updateStatus(
+                    $updatedProject,
+                    (int) $data['status_id'],
+                    null,
+                    'Updated via bulk project import',
+                    $actor
+                );
+            }
+
+            if (array_key_exists('project_stage_id', $data) && $data['project_stage_id'] !== null) {
+                $updatedProject = $this->updateStage(
+                    $updatedProject,
+                    (int) $data['project_stage_id'],
+                    null,
+                    'Updated via bulk project import',
+                    $actor
+                );
+            }
+
+            return $updatedProject;
         });
     }
 
@@ -260,9 +396,11 @@ class ProjectServices
         return AppServiceProvider::formatAppDate($value);
     }
 
-    public function updateStatus(Project $project, int $statusId, ?string $statusDate = null, ?string $remarks = null): Project
+    public function updateStatus(Project $project, int $statusId, ?string $statusDate = null, ?string $remarks = null, ?User $actor = null): Project
     {
-        return DB::transaction(function () use ($project, $statusId, $statusDate, $remarks) {
+        return DB::transaction(function () use ($project, $statusId, $statusDate, $remarks, $actor) {
+            $actor = $actor ?? auth()->user();
+
             if ((int) $project->status_id !== $statusId) {
                 $fromStatusId = $project->status_id;
                 $statusNames = ProjectStatus::withTrashed()
@@ -271,6 +409,7 @@ class ProjectServices
 
                 $project->update([
                     'status_id' => $statusId,
+                    'updated_by' => $actor?->id,
                 ]);
 
                 $historyAddedAt = $this->resolveHistoryAddedAt($statusDate);
@@ -279,11 +418,12 @@ class ProjectServices
                     'project_id' => $project->id,
                     'from_status_id' => $fromStatusId,
                     'status_id' => $statusId,
+                    'added_by' => $actor?->id,
                     'added_at' => $historyAddedAt,
                     'remarks' => blank($remarks) ? null : $remarks,
                 ]);
 
-                if ($actor = auth()->user()) {
+                if ($actor) {
                     $this->notificationService->notifyProjectStatusChanged(
                         $project->fresh(),
                         $actor,
@@ -297,9 +437,11 @@ class ProjectServices
         });
     }
 
-    public function updateStage(Project $project, ?int $projectStageId, ?string $changeDate = null, ?string $remarks = null): Project
+    public function updateStage(Project $project, ?int $projectStageId, ?string $changeDate = null, ?string $remarks = null, ?User $actor = null): Project
     {
-        return DB::transaction(function () use ($project, $projectStageId, $changeDate, $remarks) {
+        return DB::transaction(function () use ($project, $projectStageId, $changeDate, $remarks, $actor) {
+            $actor = $actor ?? auth()->user();
+
             if ((int) ($project->project_stage_id ?? 0) !== (int) ($projectStageId ?? 0)) {
                 $fromStageId = $project->project_stage_id;
                 $stageNames = ProjectStage::withTrashed()
@@ -308,6 +450,7 @@ class ProjectServices
 
                 $project->update([
                     'project_stage_id' => $projectStageId,
+                    'updated_by' => $actor?->id,
                 ]);
 
                 $historyAddedAt = $this->resolveHistoryAddedAt($changeDate);
@@ -316,11 +459,12 @@ class ProjectServices
                     'project_id' => $project->id,
                     'from_stage_id' => $fromStageId,
                     'stage_id' => $projectStageId,
+                    'added_by' => $actor?->id,
                     'added_at' => $historyAddedAt,
                     'remarks' => blank($remarks) ? null : $remarks,
                 ]);
 
-                if ($actor = auth()->user()) {
+                if ($actor) {
                     $this->notificationService->notifyProjectStageChanged(
                         $project->fresh(),
                         $actor,
@@ -659,54 +803,94 @@ class ProjectServices
         ];
     }
 
-    public function moveTaskToSprint(Project $project, Task $task, ?int $projectSprintId = null): Task
+    public function moveTaskToSprint(Project $project, Task $task, ?int $projectSprintId = null, ?int $projectTimelineId = null): Task
     {
         if ((int) $task->project_id !== (int) $project->id) {
             throw new InvalidArgumentException('The provided task does not belong to the given project.');
         }
 
-        if (! $projectSprintId) {
-            throw new InvalidArgumentException('A target sprint is required to move this task.');
+        $targetTimelineId = $projectTimelineId ?: (int) ($task->project_timeline_id ?? 0);
+        $timelineChanged = $targetTimelineId
+            && (int) ($task->project_timeline_id ?? 0) !== $targetTimelineId;
+
+        if ($projectTimelineId) {
+            $this->resolveEligibleTaskMoveTimeline($project, $projectTimelineId);
         }
 
-        $projectSprint = ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->find($projectSprintId);
-
-        if (! $projectSprint) {
-            throw new InvalidArgumentException('The selected sprint is invalid.');
+        if (! $projectSprintId && ! $timelineChanged) {
+            throw new InvalidArgumentException('Please select another timeline or choose a different sprint.');
         }
 
-        if ($task->parent_task_id !== null) {
-            throw new InvalidArgumentException('Subtasks cannot be moved to another sprint.');
+        if ($projectSprintId && $project->is_linear) {
+            throw new InvalidArgumentException('Sprint movement is not available for Linear projects.');
         }
 
-        if ((int) ($task->project_sprint_id ?? 0) === (int) $projectSprint->id) {
-            throw new InvalidArgumentException('Please choose a different sprint.');
+        $projectSprint = null;
+
+        if ($projectSprintId) {
+            $projectSprint = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->find($projectSprintId);
+
+            if (! $projectSprint) {
+                throw new InvalidArgumentException('The selected sprint is invalid.');
+            }
+
+            if ($task->parent_task_id !== null) {
+                throw new InvalidArgumentException('Subtasks cannot be moved to another sprint.');
+            }
+
+            if ((int) ($task->project_sprint_id ?? 0) === (int) $projectSprint->id) {
+                throw new InvalidArgumentException('Please choose a different sprint.');
+            }
         }
 
-        DB::transaction(function () use ($project, $task, $projectSprint) {
-            $task->update([
-                'project_sprint_id' => $projectSprint->id,
-                'project_milestone_id' => $projectSprint->project_milestone_id,
-                'sort_order' => Task::nextSortOrder($project->id, (int) $projectSprint->id),
-            ]);
+        DB::transaction(function () use ($project, $task, $projectSprint, $targetTimelineId, $timelineChanged) {
+            $updateData = [];
 
-            $this->syncTaskDescendantPlacement(
-                $task,
-                (int) $projectSprint->project_milestone_id,
-                (int) $projectSprint->id
-            );
+            if ($projectSprint) {
+                $updateData = [
+                    'project_sprint_id' => $projectSprint->id,
+                    'project_milestone_id' => $projectSprint->project_milestone_id,
+                    'sort_order' => Task::nextSortOrder($project->id, (int) $projectSprint->id),
+                ];
+            }
+
+            if ($timelineChanged) {
+                $updateData['project_timeline_id'] = $targetTimelineId;
+            }
+
+            $task->update($updateData);
+
+            if ($projectSprint) {
+                $this->syncTaskDescendantPlacement(
+                    $task,
+                    (int) $projectSprint->project_milestone_id,
+                    (int) $projectSprint->id,
+                    null,
+                    null,
+                    $timelineChanged,
+                    $timelineChanged ? $targetTimelineId : null
+                );
+            } elseif ($timelineChanged) {
+                $this->syncTaskDescendantTimeline($task, $targetTimelineId);
+            }
         });
 
         return $task->fresh();
     }
 
-    public function moveTaskToProject(Project $sourceProject, Project $targetProject, Task $task, ?int $targetMilestoneId = null, ?int $targetSprintId = null): Task
+    public function moveTaskToProject(Project $sourceProject, Project $targetProject, Task $task, ?int $targetMilestoneId = null, ?int $targetSprintId = null, ?int $targetTimelineId = null): Task
     {
         if ((int) $task->project_id !== (int) $sourceProject->id) {
             throw new InvalidArgumentException('The provided task does not belong to the source project.');
         }
+
+        if (! $targetTimelineId) {
+            throw new InvalidArgumentException('A target project timeline is required to move this task.');
+        }
+
+        $this->resolveEligibleTaskMoveTimeline($targetProject, $targetTimelineId);
 
         $placement = $this->finalizeTaskPlacement($targetProject, $targetMilestoneId, $targetSprintId);
 
@@ -716,10 +900,8 @@ class ProjectServices
         $isFlowChanged = ($sourceProject->project_flow !== $targetProject->project_flow);
         $newStatusId = $isFlowChanged ? $this->resolveTargetStatusIdForFlow($targetProject->project_flow) : null;
 
-        return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId) {
+        return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId, $targetTimelineId) {
             $movingTasks = $this->collectTaskTree($task);
-
-            $targetTimelineId = $targetProject->display_timeline?->id;
 
             foreach ($movingTasks as $t) {
                 // If assigned to a user, add user to target project team if not exists
@@ -750,6 +932,7 @@ class ProjectServices
                     TaskStatusHistory::create([
                         'task_id' => $task->id,
                         'status_id' => $newStatusId,
+                        'remarks' => 'Moved from project '.$sourceProject->name,
                     ]);
                 }
                 $updateData['status_id'] = $newStatusId;
@@ -875,6 +1058,30 @@ class ProjectServices
         return $tasks;
     }
 
+    private function resolveEligibleTaskMoveTimeline(Project $project, int $projectTimelineId): ProjectTimeline
+    {
+        $timeline = ProjectTimeline::query()
+            ->where('project_id', $project->id)
+            ->eligibleForTaskMove()
+            ->find($projectTimelineId);
+
+        if (! $timeline) {
+            throw new InvalidArgumentException('The selected project timeline is invalid for the destination project.');
+        }
+
+        return $timeline;
+    }
+
+    private function syncTaskDescendantTimeline(Task $task, int $projectTimelineId): void
+    {
+        $task->childTasks()
+            ->get()
+            ->each(function (Task $childTask) use ($projectTimelineId) {
+                $childTask->update(['project_timeline_id' => $projectTimelineId]);
+                $this->syncTaskDescendantTimeline($childTask, $projectTimelineId);
+            });
+    }
+
     public function syncTaskPlacementToDescendants(Task $task): void
     {
         $this->syncTaskDescendantPlacement(
@@ -885,15 +1092,8 @@ class ProjectServices
         );
     }
 
-    private function syncTaskDescendantPlacement(
-        Task $task,
-        ?int $projectMilestoneId,
-        ?int $projectSprintId,
-        ?int $projectId = null,
-        ?int $newStatusId = null,
-        bool $updateTimeline = false,
-        ?int $targetTimelineId = null
-    ): void {
+    private function syncTaskDescendantPlacement(Task $task, ?int $projectMilestoneId, ?int $projectSprintId, ?int $projectId = null, ?int $newStatusId = null, bool $updateTimeline = false, ?int $targetTimelineId = null): void
+    {
         $targetProjectId = $projectId ?: (int) $task->project_id;
 
         $task->childTasks()
@@ -1121,5 +1321,685 @@ class ProjectServices
                 'is_enabled' => $isEnabled,
             ]);
         }
+    }
+
+    public const TASK_GROUPS_PER_PAGE = 5;
+    public const TASKS_PER_GROUP_PAGE = 5;
+
+    public function getMatchingRootTaskIds(Project $project, string $search): array
+    {
+        $search = trim($search);
+        if ($search === '') {
+            return [];
+        }
+
+        $matchingTasks = Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user())
+            ->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            })
+            ->get(['id', 'parent_task_id']);
+
+        if ($matchingTasks->isEmpty()) {
+            return [];
+        }
+
+        $rootIds = $matchingTasks->whereNull('parent_task_id')->pluck('id')->all();
+        $childParentIds = $matchingTasks->whereNotNull('parent_task_id')->pluck('parent_task_id')->unique()->filter()->all();
+
+        while (!empty($childParentIds)) {
+            $parents = Task::query()
+                ->where('project_id', $project->id)
+                ->whereIn('id', $childParentIds)
+                ->get(['id', 'parent_task_id']);
+
+            $childParentIds = [];
+            foreach ($parents as $p) {
+                if ($p->parent_task_id === null) {
+                    $rootIds[] = $p->id;
+                } else {
+                    $childParentIds[] = $p->parent_task_id;
+                }
+            }
+        }
+
+        return array_values(array_unique($rootIds));
+    }
+
+    public function getTasksTabViewData(Project $project, ?string $preferredGroupKey = null, ?string $search = null): array
+    {
+        $search = filled($search) ? trim((string) $search) : null;
+        $isLinearFlow = $project->project_flow === 'linear';
+        $taskGroupViewData = $this->getInitialTaskGroupViewData($project, $preferredGroupKey, $search);
+        $taskGroups = $taskGroupViewData['taskGroups'];
+
+        $projectMilestones = $isLinearFlow ? collect() : ProjectMilestone::query()
+            ->where('project_id', $project->id)
+            ->orderForDisplay()
+            ->get(['id', 'name', 'is_backlog', 'is_system']);
+
+        $projectSprints = $isLinearFlow ? collect() : ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->with(['projectMilestone:id,name'])
+            ->orderForDisplay()
+            ->get(['id', 'project_milestone_id', 'name', 'is_backlog', 'is_system']);
+
+        $projectTimelines = ProjectTimeline::query()
+            ->where('project_id', $project->id)
+            ->eligibleForTaskMove()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'name', 'status']);
+
+        $initialGroupKey = $taskGroupViewData['initialGroupKey'];
+        $initialTasks = $taskGroupViewData['initialTasks'] ?? collect();
+        $initialTasksPagination = $taskGroupViewData['initialTasksPagination'] ?? [
+            'page' => 1,
+            'next_page' => null,
+            'has_more_pages' => false,
+        ];
+
+        $isDeletedProjectView = $project->trashed();
+        $taskGroupsPageUrl = $isDeletedProjectView
+            ? route('projects.restore.tasks.groups.index', ['id' => $project->id])
+            : route('projects.tasks.groups.index', $project);
+
+        if ($search !== null) {
+            $taskGroupsPageUrl .= (str_contains($taskGroupsPageUrl, '?') ? '&' : '?') . 'search=' . urlencode($search);
+        }
+
+        return [
+            'project' => $project,
+            'taskGroups' => $taskGroups,
+            'initialGroupKey' => $initialGroupKey,
+            'initialTasks' => $initialTasks,
+            'initialTasksPagination' => $initialTasksPagination,
+            'totalTaskCount' => $taskGroupViewData['totalTaskCount'],
+            'sprintCount' => $taskGroupViewData['sprintCount'],
+            'isLinearFlow' => $isLinearFlow,
+            'projectMilestones' => $projectMilestones,
+            'projectSprints' => $projectSprints,
+            'projectTimelines' => $projectTimelines,
+            'taskGroupsPagination' => $taskGroupViewData['pagination'],
+            'taskGroupsPageUrl' => $taskGroupsPageUrl,
+            'search' => $search,
+        ];
+    }
+
+    public function renderTasksTab(Project $project, ?string $preferredGroupKey = null, ?string $search = null): string
+    {
+        $viewData = $this->getTasksTabViewData($project, $preferredGroupKey, $search);
+
+        return view('projects.partials.tabs.tasks', $viewData)->render();
+    }
+
+    public function getTasksTabResponse(Project $project, Request $request): array
+    {
+        $preferredGroup = $request->filled('preferred_group') ? (string) $request->input('preferred_group') : null;
+        $search = $request->filled('search') ? trim((string) $request->input('search')) : null;
+
+        $viewData = $this->getTasksTabViewData($project, $preferredGroup, $search);
+
+        return [
+            'status' => true,
+            'total_count' => $viewData['totalTaskCount'],
+            'sprint_count' => $viewData['sprintCount'],
+            'tasks_html' => view('projects.partials.tasks.group-list', $viewData)->render(),
+            'html' => view('projects.partials.tabs.tasks', $viewData)->render(),
+        ];
+    }
+
+    public function getInitialTaskGroupViewData(Project $project, ?string $preferredGroupKey = null, ?string $search = null): array
+    {
+        $search = filled($search) ? trim((string) $search) : null;
+
+        if ($project->project_flow === 'linear') {
+            $rootTaskIds = $search !== null ? $this->getMatchingRootTaskIds($project, $search) : null;
+            if ($search !== null && empty($rootTaskIds)) {
+                return [
+                    'taskGroups' => collect(),
+                    'initialGroupKey' => null,
+                    'initialTasks' => collect(),
+                    'initialTasksPagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                    'totalTaskCount' => 0,
+                    'sprintCount' => 0,
+                    'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                ];
+            }
+
+            $taskGroup = $this->buildLinearTaskGroup($project, $search, $rootTaskIds);
+            $taskPage = $this->getTaskGroupTaskPage($project, 'all-tasks', 1, self::TASKS_PER_GROUP_PAGE, $search, $rootTaskIds);
+            $taskGroup['tasks'] = $taskPage['tasks'];
+            $taskGroup['pagination'] = $taskPage['pagination'];
+
+            return [
+                'taskGroups' => collect([$taskGroup]),
+                'initialGroupKey' => 'all-tasks',
+                'initialTasks' => $taskPage['tasks'],
+                'initialTasksPagination' => $taskPage['pagination'],
+                'totalTaskCount' => $taskGroup['task_count'],
+                'sprintCount' => 0,
+                'pagination' => [
+                    'page' => 1,
+                    'next_page' => null,
+                    'has_more_pages' => false,
+                ],
+            ];
+        }
+
+        if ($search !== null) {
+            $rootTaskIds = $this->getMatchingRootTaskIds($project, $search);
+            if (empty($rootTaskIds)) {
+                return [
+                    'taskGroups' => collect(),
+                    'initialGroupKey' => null,
+                    'initialTasks' => collect(),
+                    'initialTasksPagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                    'totalTaskCount' => 0,
+                    'sprintCount' => 0,
+                    'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                ];
+            }
+
+            $sprintCounts = Task::query()
+                ->where('project_id', $project->id)
+                ->accessibleBy(auth()->user())
+                ->whereIn('id', $rootTaskIds)
+                ->whereNotNull('project_sprint_id')
+                ->selectRaw('project_sprint_id, count(*) as count')
+                ->groupBy('project_sprint_id')
+                ->pluck('count', 'project_sprint_id');
+
+            $ungroupedCount = Task::query()
+                ->where('project_id', $project->id)
+                ->accessibleBy(auth()->user())
+                ->whereIn('id', $rootTaskIds)
+                ->whereNull('project_sprint_id')
+                ->count();
+
+            $sprintIds = $sprintCounts->keys()->all();
+            $projectSprints = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->whereIn('id', $sprintIds)
+                ->with(['projectMilestone:id,name'])
+                ->orderForDisplay()
+                ->get();
+
+            $taskGroups = $projectSprints->values()->map(function (ProjectSprint $projectSprint, int $index) use ($project, $sprintCounts, $search, $rootTaskIds) {
+                $group = $this->mapProjectSprintToTaskGroup($projectSprint, $index);
+                $group['task_count'] = (int) ($sprintCounts[$projectSprint->id] ?? 0);
+                $taskPage = $this->getTaskGroupTaskPage($project, $group['key'], 1, self::TASKS_PER_GROUP_PAGE, $search, $rootTaskIds);
+                $group['tasks'] = $taskPage['tasks'];
+                $group['pagination'] = $taskPage['pagination'];
+                return $group;
+            });
+
+            if ($ungroupedCount > 0) {
+                $ungroupedTasks = Task::query()
+                    ->where('project_id', $project->id)
+                    ->whereNull('project_sprint_id')
+                    ->accessibleBy(auth()->user())
+                    ->whereIn('id', $rootTaskIds);
+                $ungroupedGroup = $this->buildUngroupedTaskGroup($ungroupedTasks, $taskGroups->isEmpty());
+                $ungroupedGroup['task_count'] = $ungroupedCount;
+                $taskPage = $this->getTaskGroupTaskPage($project, 'ungrouped', 1, self::TASKS_PER_GROUP_PAGE, $search, $rootTaskIds);
+                $ungroupedGroup['tasks'] = $taskPage['tasks'];
+                $ungroupedGroup['pagination'] = $taskPage['pagination'];
+                $taskGroups->push($ungroupedGroup);
+            }
+
+            $totalTaskCount = (int) Task::query()
+                ->where('project_id', $project->id)
+                ->accessibleBy(auth()->user())
+                ->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%");
+                })
+                ->count();
+
+            $firstGroup = $taskGroups->first();
+            $initialGroupKey = $firstGroup ? $firstGroup['key'] : null;
+
+            return [
+                'taskGroups' => $taskGroups,
+                'initialGroupKey' => $initialGroupKey,
+                'initialTasks' => $firstGroup['tasks'] ?? collect(),
+                'initialTasksPagination' => $firstGroup['pagination'] ?? ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                'totalTaskCount' => $totalTaskCount,
+                'sprintCount' => $projectSprints->count(),
+                'pagination' => [
+                    'page' => 1,
+                    'next_page' => null,
+                    'has_more_pages' => false,
+                ],
+            ];
+        }
+
+        $perPage = self::TASK_GROUPS_PER_PAGE;
+        $loadedPages = $this->resolveTaskGroupLoadedPages($project, $preferredGroupKey, $perPage);
+        $sprintCount = $this->getSprintCount($project);
+        $loadedSprintLimit = max($loadedPages * $perPage, $perPage);
+        $taskGroups = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->with(['projectMilestone:id,name'])
+            ->withCount([
+                'tasks' => fn($query) => $query->accessibleBy(auth()->user()),
+            ])
+            ->orderForDisplay()
+            ->limit($loadedSprintLimit)
+            ->get()
+            ->values()
+            ->map(fn(ProjectSprint $projectSprint, int $index) => $this->mapProjectSprintToTaskGroup(
+                $projectSprint,
+                $index
+            ));
+        $ungroupedTasks = Task::query()
+            ->where('project_id', $project->id)
+            ->whereNull('project_sprint_id')
+            ->accessibleBy(auth()->user());
+        $ungroupedCount = (clone $ungroupedTasks)->count();
+
+        if ($ungroupedCount > 0 && $loadedSprintLimit >= $sprintCount) {
+            $taskGroups->push($this->buildUngroupedTaskGroup($ungroupedTasks, $taskGroups->isEmpty()));
+        }
+
+        $initialGroupKey = $preferredGroupKey && $taskGroups->contains(fn($group) => $group['key'] === $preferredGroupKey)
+            ? $preferredGroupKey
+            : ($taskGroups->first()['key'] ?? null);
+
+        $initialTaskPage = $initialGroupKey
+            ? $this->getTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
+            : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
+
+        $totalTaskCount = (int) Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user())
+            ->count();
+        $hasMorePages = $loadedSprintLimit < $sprintCount;
+
+        return [
+            'taskGroups' => $taskGroups,
+            'initialGroupKey' => $initialGroupKey,
+            'initialTasks' => $initialTaskPage['tasks'],
+            'initialTasksPagination' => $initialTaskPage['pagination'],
+            'totalTaskCount' => $totalTaskCount,
+            'sprintCount' => $sprintCount,
+            'pagination' => [
+                'page' => $loadedPages,
+                'next_page' => $hasMorePages ? $loadedPages + 1 : null,
+                'has_more_pages' => $hasMorePages,
+            ],
+        ];
+    }
+
+    public function buildTaskGroupTasksQuery(Project $project, string $groupKey, ?string $search = null, ?array $rootTaskIds = null)
+    {
+        $taskRowRelations = $this->getProjectTaskRowRelations();
+
+        $query = Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user())
+            ->whereNull('parent_task_id')
+            ->with($taskRowRelations)
+            ->withCount('childTasks')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+
+        if ($search !== null && trim($search) !== '') {
+            $ids = $rootTaskIds ?? $this->getMatchingRootTaskIds($project, $search);
+            $query->whereIn('id', $ids);
+        }
+
+        if ($groupKey === 'ungrouped') {
+            $query->whereNull('project_sprint_id');
+        } elseif ($groupKey === 'all-tasks') {
+            // Linear-flow projects display a flat task list without sprint grouping.
+        } else {
+            abort_unless(str_starts_with($groupKey, 'sprint-'), 404);
+
+            $projectSprintId = (int) str_replace('sprint-', '', $groupKey);
+
+            abort_unless(
+                $project->projectSprints()->whereKey($projectSprintId)->exists(),
+                404
+            );
+
+            $query->where('project_sprint_id', $projectSprintId);
+        }
+
+        return $query;
+    }
+
+    public function getTaskGroupTaskPage(Project $project, string $groupKey, int $page, int $perPage, ?string $search = null, ?array $rootTaskIds = null): array
+    {
+        $page = max($page, 1);
+        $perPage = max($perPage, 1);
+        $query = $this->buildTaskGroupTasksQuery($project, $groupKey, $search, $rootTaskIds);
+        $total = (clone $query)->count();
+        $lastPage = max((int) ceil($total / $perPage), 1);
+        $page = min($page, $lastPage);
+
+        $tasks = $query
+            ->forPage($page, $perPage)
+            ->get();
+        $taskRowRelations = $this->getProjectTaskRowRelations();
+
+        $tasks->each(function (Task $task) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForGroup($task, $taskRowRelations);
+        });
+
+        return [
+            'tasks' => $tasks,
+            'pagination' => [
+                'page' => $page,
+                'next_page' => $page < $lastPage ? $page + 1 : null,
+                'has_more_pages' => $page < $lastPage,
+                'total' => $total,
+                'per_page' => $perPage,
+            ],
+        ];
+    }
+
+    public function findTaskGroup(Project $project, string $groupKey, ?string $search = null): ?array
+    {
+        if ($groupKey === 'all-tasks' && $project->project_flow === 'linear') {
+            $rootTaskIds = $search !== null ? $this->getMatchingRootTaskIds($project, $search) : null;
+            return $this->buildLinearTaskGroup($project, $search, $rootTaskIds);
+        }
+
+        if ($groupKey === 'ungrouped' && $project->project_flow !== 'linear') {
+            $ungroupedTasks = Task::query()
+                ->where('project_id', $project->id)
+                ->whereNull('project_sprint_id')
+                ->accessibleBy(auth()->user());
+
+            if ($search !== null && trim($search) !== '') {
+                $rootTaskIds = $this->getMatchingRootTaskIds($project, $search);
+                $ungroupedTasks->whereIn('id', $rootTaskIds);
+            }
+
+            if (! (clone $ungroupedTasks)->exists()) {
+                return null;
+            }
+
+            return $this->buildUngroupedTaskGroup($ungroupedTasks, false);
+        }
+
+        if (! str_starts_with($groupKey, 'sprint-')) {
+            return null;
+        }
+
+        $projectSprintId = (int) str_replace('sprint-', '', $groupKey);
+        $projectSprint = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->with(['projectMilestone:id,name'])
+            ->withCount([
+                'tasks' => fn($query) => $query->accessibleBy(auth()->user()),
+            ])
+            ->find($projectSprintId);
+
+        if (! $projectSprint) {
+            return null;
+        }
+
+        $position = $this->getOrderedProjectSprintIds($project)
+            ->search($projectSprint->id);
+
+        $group = $this->mapProjectSprintToTaskGroup($projectSprint, max(($position === false ? 0 : $position), 0));
+
+        if ($search !== null && trim($search) !== '') {
+            $rootTaskIds = $this->getMatchingRootTaskIds($project, $search);
+            $group['task_count'] = Task::query()
+                ->where('project_id', $project->id)
+                ->where('project_sprint_id', $projectSprintId)
+                ->accessibleBy(auth()->user())
+                ->whereIn('id', $rootTaskIds)
+                ->count();
+        }
+
+        return $group;
+    }
+
+    public function resolveTaskGroupLoadedPages(Project $project, ?string $preferredGroupKey, int $perPage): int
+    {
+        if (! $preferredGroupKey || $project->project_flow === 'linear') {
+            return 1;
+        }
+
+        if ($preferredGroupKey === 'ungrouped') {
+            return max((int) ceil($this->getSprintCount($project) / $perPage), 1);
+        }
+
+        if (! str_starts_with($preferredGroupKey, 'sprint-')) {
+            return 1;
+        }
+
+        $projectSprintId = (int) str_replace('sprint-', '', $preferredGroupKey);
+        $targetSprint = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->find($projectSprintId);
+
+        if (! $targetSprint) {
+            return 1;
+        }
+
+        $position = $this->getOrderedProjectSprintIds($project)
+            ->search($targetSprint->id);
+
+        return max((int) ceil((($position === false ? 0 : $position) + 1) / $perPage), 1);
+    }
+
+    public function getSprintCount(Project $project): int
+    {
+        return (int) ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->count();
+    }
+
+    public function getOrderedProjectSprintIds(Project $project): Collection
+    {
+        return ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->orderForDisplay()
+            ->pluck('id')
+            ->values();
+    }
+
+    public function buildLinearTaskGroup(Project $project, ?string $search = null, ?array $rootTaskIds = null): array
+    {
+        $allTasks = Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user());
+
+        if ($search !== null && trim($search) !== '') {
+            $ids = $rootTaskIds ?? $this->getMatchingRootTaskIds($project, $search);
+            $allTasks->whereIn('id', $ids);
+        }
+
+        $taskCount = (clone $allTasks)->count();
+        $derivedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
+        $actualSeconds = (int) (clone $allTasks)->sum('actual_time_seconds');
+
+        $displayTimeline = $project->display_timeline;
+        $timelineEstimate = $displayTimeline?->estimated_time_seconds;
+        $hasEstimate = $displayTimeline !== null && $timelineEstimate !== null && (int) $timelineEstimate > 0;
+        $estimatedSeconds = $timelineEstimate !== null ? (int) $timelineEstimate : null;
+        $derivedColorClass = $this->resolveDerivedColorClass($estimatedSeconds, $derivedSeconds, $hasEstimate);
+
+        return [
+            'key' => 'all-tasks',
+            'sprint_id' => null,
+            'name' => 'All Tasks',
+            'subtitle' => null,
+            'accent_color' => '#3B82F6',
+            'task_count' => $taskCount,
+            'estimated_seconds' => $estimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort((int) ($estimatedSeconds ?? 0)),
+            'derived_seconds' => $derivedSeconds,
+            'derived_label' => $this->formatSecondsShort($derivedSeconds),
+            'actual_seconds' => $actualSeconds,
+            'actual_label' => $this->formatSecondsShort($actualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
+            'date_label' => null,
+            'created_label' => null,
+            'is_latest' => true,
+            'is_unscheduled' => false,
+            'is_linear_group' => true,
+        ];
+    }
+
+    public function mapProjectSprintToTaskGroup(ProjectSprint $projectSprint, int $index): array
+    {
+        $sprintEstimatedSeconds = $projectSprint->estimated_time_seconds !== null
+            ? (int) $projectSprint->estimated_time_seconds
+            : null;
+        $sprintDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
+        $sprintActualSeconds = (int) ($projectSprint->actual_time_seconds ?? 0);
+        $hasEstimate = $sprintEstimatedSeconds !== null && $sprintEstimatedSeconds > 0;
+        $derivedColorClass = $this->resolveDerivedColorClass($sprintEstimatedSeconds, $sprintDerivedSeconds, $hasEstimate);
+
+        return [
+            'key' => 'sprint-' . $projectSprint->id,
+            'sprint_id' => $projectSprint->id,
+            'name' => $projectSprint->name,
+            'subtitle' => $projectSprint->projectMilestone?->name,
+            'accent_color' => $projectSprint->color ?: '#D1D5DB',
+            'task_count' => (int) $projectSprint->tasks_count,
+            'estimated_seconds' => $sprintEstimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort((int) ($sprintEstimatedSeconds ?? 0)),
+            'derived_seconds' => $sprintDerivedSeconds,
+            'derived_label' => $this->formatSecondsShort($sprintDerivedSeconds),
+            'actual_seconds' => $sprintActualSeconds,
+            'actual_label' => $this->formatSecondsShort($sprintActualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
+            'date_label' => $this->formatDateRange($projectSprint->start_date, $projectSprint->end_date),
+            'created_label' => $projectSprint->created_at
+                ? AppServiceProvider::formatAppDate($projectSprint->created_at)
+                : null,
+            'is_latest' => $index === 0,
+            'is_unscheduled' => false,
+            'is_linear_group' => false,
+        ];
+    }
+
+    public function buildUngroupedTaskGroup($ungroupedTasks, bool $isLatest): array
+    {
+        $ungroupedEstimatedSeconds = (int) (clone $ungroupedTasks)->sum('estimated_time_seconds');
+        $ungroupedDerivedSeconds = (int) (clone $ungroupedTasks)->sum('derived_time_seconds');
+        $ungroupedActualSeconds = (int) (clone $ungroupedTasks)->sum('actual_time_seconds');
+        $hasEstimate = $ungroupedEstimatedSeconds > 0;
+        $derivedColorClass = $this->resolveDerivedColorClass($ungroupedEstimatedSeconds, $ungroupedDerivedSeconds, $hasEstimate);
+
+        return [
+            'key' => 'ungrouped',
+            'sprint_id' => null,
+            'name' => 'Unscheduled Tasks',
+            'subtitle' => 'Tasks without a sprint',
+            'accent_color' => '#94A3B8',
+            'task_count' => (clone $ungroupedTasks)->count(),
+            'estimated_seconds' => $ungroupedEstimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort($ungroupedEstimatedSeconds),
+            'derived_seconds' => $ungroupedDerivedSeconds,
+            'derived_label' => $this->formatSecondsShort($ungroupedDerivedSeconds),
+            'actual_seconds' => $ungroupedActualSeconds,
+            'actual_label' => $this->formatSecondsShort($ungroupedActualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
+            'date_label' => 'No sprint dates',
+            'created_label' => null,
+            'is_latest' => $isLatest,
+            'is_unscheduled' => true,
+            'is_linear_group' => false,
+        ];
+    }
+
+    public function resolveDerivedColorClass(?int $estimatedSeconds, int $derivedSeconds, bool $hasEstimate): string
+    {
+        if (! $hasEstimate || $estimatedSeconds === null || $estimatedSeconds <= 0) {
+            return '';
+        }
+
+        return $derivedSeconds > $estimatedSeconds
+            ? 'text-error-300 dark:text-red-400'
+            : 'text-success-400 dark:text-success-300';
+    }
+
+    public function loadTaskDescendantsForGroup(Task $task, array $taskRowRelations): void
+    {
+        if ((int) ($task->child_tasks_count ?? 0) <= 0) {
+            $task->setRelation('childTasks', collect());
+
+            return;
+        }
+
+        $task->load([
+            'childTasks' => fn($query) => $query
+                ->with($taskRowRelations)
+                ->withCount('childTasks')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id'),
+        ]);
+
+        $task->childTasks->each(function (Task $childTask) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForGroup($childTask, $taskRowRelations);
+        });
+    }
+
+    public function getProjectTaskRowRelations(): array
+    {
+        return [
+            'currentAssignee.primaryAttachment',
+            'status',
+            'taskType:id,name,code,color',
+            'taskMode:id,name,code,color',
+            'tags',
+            'projectMilestone:id,name,is_backlog,is_system',
+            'projectSprint:id,name,project_milestone_id,is_backlog,is_system',
+            'projectTimeline:id,name',
+            'parentTask:id,name',
+        ];
+    }
+
+    public function formatSecondsShort(int $seconds): string
+    {
+        $totalSeconds = max(0, $seconds);
+
+        if ($totalSeconds === 0) {
+            return '0h';
+        }
+
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+
+        if ($hours === 0) {
+            return $minutes . 'm';
+        }
+
+        if ($minutes === 0) {
+            return $hours . 'h';
+        }
+
+        return $hours . 'h ' . $minutes . 'm';
+    }
+
+    public function formatDateRange($startDate, $endDate): string
+    {
+        if ($startDate && $endDate) {
+            return AppServiceProvider::formatAppDate($startDate) . ' - ' . AppServiceProvider::formatAppDate($endDate);
+        }
+
+        if ($startDate) {
+            return 'Starts ' . AppServiceProvider::formatAppDate($startDate);
+        }
+
+        if ($endDate) {
+            return 'Ends ' . AppServiceProvider::formatAppDate($endDate);
+        }
+
+        return 'No sprint dates';
     }
 }

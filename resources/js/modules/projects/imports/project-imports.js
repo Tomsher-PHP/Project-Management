@@ -132,6 +132,8 @@ export function initProjectImports() {
 
     const importId = card.getAttribute('data-import-id');
     const moduleKey = card.getAttribute('data-module-key');
+    const importMode = card.getAttribute('data-import-mode') || 'default';
+    const secondaryField = card.getAttribute('data-secondary-field') || 'service_name';
     const statusUrl = card.getAttribute('data-status-url')
         || (importId && moduleKey ? `/projects/import/${encodeURIComponent(moduleKey)}/status/${encodeURIComponent(importId)}` : null);
 
@@ -194,15 +196,59 @@ export function initProjectImports() {
         }
     }
 
+    function getSecondaryValue(item) {
+        if (secondaryField === 'project_name') {
+            return item.project_name || item.name || '-';
+        }
+        return item[secondaryField] || '-';
+    }
+
+    function getRowStatusPresentation(rowStatus) {
+        if (rowStatus === 'created') {
+            return {
+                badge: '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-success-50 text-success-600 ring-1 ring-inset ring-success-600/20 dark:bg-darkblack-500 dark:text-success-400"><span class="h-1.5 w-1.5 rounded-full bg-success-500"></span> Created</span>',
+                textColor: 'text-success-600 dark:text-success-400',
+            };
+        }
+        if (rowStatus === 'updated') {
+            return {
+                badge: '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-600/20 dark:bg-darkblack-500 dark:text-blue-400"><span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span> Updated</span>',
+                textColor: 'text-blue-600 dark:text-blue-400',
+            };
+        }
+        if (rowStatus === 'unchanged') {
+            return {
+                badge: '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-bgray-100 text-bgray-700 ring-1 ring-inset ring-bgray-300 dark:bg-darkblack-500 dark:text-bgray-300"><span class="h-1.5 w-1.5 rounded-full bg-bgray-400"></span> Unchanged</span>',
+                textColor: 'text-bgray-600 dark:text-bgray-300',
+            };
+        }
+        if (rowStatus === 'success') {
+            return {
+                badge: '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-success-50 text-success-600 ring-1 ring-inset ring-success-600/20 dark:bg-darkblack-500 dark:text-success-400"><span class="h-1.5 w-1.5 rounded-full bg-success-500"></span> Success</span>',
+                textColor: 'text-success-600 dark:text-success-400',
+            };
+        }
+        if (rowStatus === 'unprocessed') {
+            return {
+                badge: '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-bgray-100 text-bgray-700 ring-1 ring-inset ring-bgray-300 dark:bg-darkblack-500 dark:text-bgray-300">Unprocessed</span>',
+                textColor: 'text-bgray-500 dark:text-bgray-400',
+            };
+        }
+
+        return {
+            badge: '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 ring-1 ring-inset ring-red-600/20 dark:bg-darkblack-500 dark:text-red-400"><span class="h-1.5 w-1.5 rounded-full bg-red-500"></span> Failed</span>',
+            textColor: 'text-red-600 dark:text-red-400',
+        };
+    }
+
     function renderRowResultsTable() {
         const tbody = document.getElementById('import-row-results-body');
         if (!tbody) return;
 
         const filtered = cachedRowResults.filter(row => {
             const st = (row.status || '').toLowerCase();
-            if (currentFilter === 'failed') return st === 'failed';
-            if (currentFilter === 'success') return st === 'success';
-            return true;
+            if (currentFilter === 'all') return true;
+            return st === currentFilter;
         });
 
         const totalFiltered = filtered.length;
@@ -219,26 +265,14 @@ export function initProjectImports() {
         } else {
             pageRows.forEach(item => {
                 const rowStatus = (item.status || 'unknown').toLowerCase();
-                let statusBadge = '';
-                let textColor = '';
-
-                if (rowStatus === 'success') {
-                    statusBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-success-50 text-success-600 ring-1 ring-inset ring-success-600/20 dark:bg-darkblack-500 dark:text-success-400"><span class="h-1.5 w-1.5 rounded-full bg-success-500"></span> Success</span>';
-                    textColor = 'text-success-600 dark:text-success-400';
-                } else if (rowStatus === 'unprocessed') {
-                    statusBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-bgray-100 text-bgray-700 ring-1 ring-inset ring-bgray-300 dark:bg-darkblack-500 dark:text-bgray-300">Unprocessed</span>';
-                    textColor = 'text-bgray-500 dark:text-bgray-400';
-                } else {
-                    statusBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 ring-1 ring-inset ring-red-600/20 dark:bg-darkblack-500 dark:text-red-400"><span class="h-1.5 w-1.5 rounded-full bg-red-500"></span> Failed</span>';
-                    textColor = 'text-red-600 dark:text-red-400';
-                }
+                const presentation = getRowStatusPresentation(rowStatus);
 
                 html += `<tr class="result-row hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/50" data-row-status="${escapeHtml(rowStatus)}">
                     <td class="py-2.5 px-4 font-mono font-bold text-bgray-800 dark:text-bgray-200">Row ${escapeHtml(item.excel_row || '-')}</td>
                     <td class="py-2.5 px-4 font-mono text-bgray-900 dark:text-white">${escapeHtml(item.project_code || '-')}</td>
-                    <td class="py-2.5 px-4 text-bgray-900 dark:text-white font-medium">${escapeHtml(item.service_name || '-')}</td>
-                    <td class="py-2.5 px-4">${statusBadge}</td>
-                    <td class="py-2.5 px-4 ${textColor}">${escapeHtml(item.message || '-')}</td>
+                    <td class="py-2.5 px-4 text-bgray-900 dark:text-white font-medium">${escapeHtml(getSecondaryValue(item))}</td>
+                    <td class="py-2.5 px-4">${presentation.badge}</td>
+                    <td class="py-2.5 px-4 ${presentation.textColor}">${escapeHtml(item.message || '-')}</td>
                 </tr>`;
             });
         }
@@ -326,19 +360,35 @@ export function initProjectImports() {
             if (!payload || !payload.data) return;
 
             const d = payload.data;
+            const rows = Array.isArray(d.row_results) ? d.row_results : [];
             const total = d.total_rows !== null && d.total_rows !== undefined ? d.total_rows : null;
             const processed = d.processed_rows ?? 0;
             const success = d.successful_rows ?? 0;
             const failed = d.failed_rows ?? 0;
+            const created = d.created_rows !== undefined
+                ? d.created_rows
+                : rows.filter(r => (r.status || '').toLowerCase() === 'created').length;
+            const updated = d.updated_rows !== undefined
+                ? d.updated_rows
+                : rows.filter(r => (r.status || '').toLowerCase() === 'updated').length;
+            const unchanged = d.unchanged_rows !== undefined
+                ? d.unchanged_rows
+                : rows.filter(r => (r.status || '').toLowerCase() === 'unchanged').length;
 
             const totalEl = document.getElementById('metric-total-rows');
             const procEl = document.getElementById('metric-processed-rows');
             const succEl = document.getElementById('metric-successful-rows');
+            const createdEl = document.getElementById('metric-created-rows');
+            const updatedEl = document.getElementById('metric-updated-rows');
+            const unchangedEl = document.getElementById('metric-unchanged-rows');
             const failEl = document.getElementById('metric-failed-rows');
 
             if (totalEl) totalEl.textContent = total !== null ? total : '-';
             if (procEl) procEl.textContent = processed;
             if (succEl) succEl.textContent = success;
+            if (createdEl) createdEl.textContent = created;
+            if (updatedEl) updatedEl.textContent = updated;
+            if (unchangedEl) unchangedEl.textContent = unchanged;
             if (failEl) failEl.textContent = failed;
 
             renderStatusBadge(d.status);
@@ -361,7 +411,11 @@ export function initProjectImports() {
                 const summaryBanner = document.getElementById('import-summary-banner');
                 const summaryText = document.getElementById('import-summary-text');
                 if (summaryBanner && summaryText) {
-                    if (d.status === 'interrupted') {
+                    if (importMode === 'projects') {
+                        summaryText.textContent = d.status === 'interrupted'
+                            ? `Import interrupted: ${processed} rows processed, ${created} created, ${updated} updated, ${unchanged} unchanged, ${failed} failed.`
+                            : `Import completed: ${processed} rows processed, ${created} created, ${updated} updated, ${unchanged} unchanged, ${failed} failed.`;
+                    } else if (d.status === 'interrupted') {
                         summaryText.textContent = `Import interrupted: ${processed} rows processed, ${success} successful, ${failed} failed.`;
                     } else {
                         summaryText.textContent = `Import completed: ${processed} rows processed, ${success} successful, ${failed} failed.`;
@@ -388,18 +442,24 @@ export function initProjectImports() {
                 }
 
                 // Row Results
-                if (Array.isArray(d.row_results) && d.row_results.length > 0) {
-                    cachedRowResults = d.row_results;
+                if (rows.length > 0) {
+                    cachedRowResults = rows;
                     const resultsSection = document.getElementById('import-results-section');
                     if (resultsSection) resultsSection.classList.remove('hidden');
 
                     const countAll = document.getElementById('filter-count-all');
                     const countFailed = document.getElementById('filter-count-failed');
                     const countSuccess = document.getElementById('filter-count-success');
+                    const countCreated = document.getElementById('filter-count-created');
+                    const countUpdated = document.getElementById('filter-count-updated');
+                    const countUnchanged = document.getElementById('filter-count-unchanged');
 
                     if (countAll) countAll.textContent = cachedRowResults.length;
                     if (countFailed) countFailed.textContent = failed;
                     if (countSuccess) countSuccess.textContent = success;
+                    if (countCreated) countCreated.textContent = created;
+                    if (countUpdated) countUpdated.textContent = updated;
+                    if (countUnchanged) countUnchanged.textContent = unchanged;
 
                     renderRowResultsTable();
                 }
@@ -431,13 +491,15 @@ export function initProjectImports() {
             cachedRowResults = Array.from(existingRows).map(tr => {
                 const cols = tr.querySelectorAll('td');
                 const rowText = cols[0] ? cols[0].textContent.replace('Row ', '').trim() : '';
-                return {
+                const secondaryValue = cols[2] ? cols[2].textContent.trim() : '';
+                const item = {
                     excel_row: rowText,
                     project_code: cols[1] ? cols[1].textContent.trim() : '',
-                    service_name: cols[2] ? cols[2].textContent.trim() : '',
                     status: tr.getAttribute('data-row-status') || 'unknown',
                     message: cols[4] ? cols[4].textContent.trim() : '',
                 };
+                item[secondaryField] = secondaryValue;
+                return item;
             });
             renderRowResultsTable();
         }

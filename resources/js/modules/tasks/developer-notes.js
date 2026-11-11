@@ -1,22 +1,50 @@
 import Alert from '../../alert';
+
 document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('developer-notes-modal');
+    const sharedModal = document.getElementById('task-insights-modal');
 
-    if (!modal) return;
+    if (!sharedModal) {
+        console.error('Task Activity modal was not found.');
+        return;
+    }
 
-    const closeButton = document.getElementById('developer-notes-close');
-    const readOnlyCloseBtn = document.getElementById('readonly-developer-notes-close');
-    const loading = document.getElementById('developer-notes-loading');
-    const notesList = document.getElementById('developer-notes-list');
-    const emptyState = document.getElementById('developer-notes-empty');
-    const errorBox = document.getElementById('developer-notes-error');
-    const readonlyMessage = document.getElementById('developer-notes-readonly');
-    const editableDevNotes = document.getElementById('editable-dev-notes');
-    const form = document.getElementById('developer-notes-form');
-    const noteInput = document.getElementById('developer-note-input');
-    const submitButton = document.getElementById('developer-notes-submit');
+    const loading = sharedModal.querySelector('#developer-notes-loading');
+    const notesList = sharedModal.querySelector('#developer-notes-list');
+    const emptyState = sharedModal.querySelector('#developer-notes-empty');
+    const errorBox = sharedModal.querySelector('#developer-notes-error');
+    const readonlyMessage = sharedModal.querySelector('#developer-notes-readonly');
 
-    const noteLabel = document.querySelector(
+    const form = sharedModal.querySelector('#developer-notes-form');
+    const noteInput = sharedModal.querySelector('#developer-note-input');
+    const submitButton = sharedModal.querySelector('#developer-notes-submit');
+
+    const noteEditorElement = sharedModal.querySelector('#developer-note-editor');
+
+    if (!noteEditorElement || !window.Quill) {
+        console.error('Developer Note Quill editor could not be initialized.');
+        return;
+    }
+
+    if (noteEditorElement.__quill) {
+        return;
+    }
+
+    const noteEditor = new window.Quill(noteEditorElement, {
+        theme: 'snow',
+        placeholder: 'Write your developer note here...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ header: [1, 2, 3, false] }],
+                ['link']
+            ]
+        }
+    });
+
+    noteEditorElement.__quill = noteEditor;
+
+    const noteLabel = sharedModal.querySelector(
         'label[for="developer-note-input"]'
     );
 
@@ -26,12 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
         !emptyState ||
         !errorBox ||
         !readonlyMessage ||
-        !editableDevNotes ||
         !form ||
         !noteInput ||
         !submitButton
     ) {
-        console.error('Developer Notes modal is missing required elements.');
+        console.error('Developer Notes content is missing required elements.');
         return;
     }
 
@@ -53,6 +80,40 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearError() {
         errorBox.textContent = '';
         errorBox.classList.add('hidden');
+    }
+
+    /**
+     * Get Developer Note HTML from Quill.
+     */
+    function getDeveloperNoteContent() {
+        const content = noteEditor.root.innerHTML.trim();
+
+        return noteEditor.getText().trim() ? content : '';
+    }
+
+    /**
+     * Set Developer Note content in Quill.
+     */
+    function setDeveloperNoteContent(content = '') {
+        noteEditor.setText('', 'silent');
+
+        if (content && content.trim()) {
+            noteEditor.clipboard.dangerouslyPasteHTML(content, 'silent');
+        }
+
+        noteInput.value = getDeveloperNoteContent();
+    }
+
+    /**
+     * Enable or disable Developer Note editor.
+     */
+    function setDeveloperNoteReadOnly(readOnly = false) {
+        noteEditor.enable(!readOnly);
+
+        noteEditor.root.classList.toggle(
+            'ql-disabled',
+            readOnly
+        );
     }
 
     /**
@@ -89,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (noteContent.trim() !== '') {
                 if (existingText) {
-                    existingText.textContent = noteContent;
+                    existingText.innerHTML = createSafeNoteContent(noteContent);
                 } else {
                     const paragraph = document.createElement('p');
 
@@ -101,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ''
                     );
 
-                    paragraph.textContent = noteContent;
+                    paragraph.innerHTML = createSafeNoteContent(noteContent);
 
                     if (emptyMessage) {
                         emptyMessage.replaceWith(paragraph);
@@ -133,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Update the Overview Add/Edit Notes button.
+     * Update the Overview Add/Edit Notes button and Task Activity button.
      */
     function updateOverviewNotesButton(hasNote) {
         const taskId = String(activeTrigger?.dataset.taskId || '');
@@ -141,18 +202,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!taskId) return;
 
         document.querySelectorAll(
-            '[data-developer-notes-trigger]'
+            '[data-developer-notes-trigger], [data-task-activity-trigger]'
         ).forEach((button) => {
             if (String(button.dataset.taskId) !== taskId) return;
 
-            // Keep the note state synchronized without replacing the markup.
             button.dataset.hasDeveloperNote = hasNote ? '1' : '0';
+
             button.setAttribute(
                 'data-has-developer-note',
                 hasNote ? '1' : '0'
             );
 
-            // Update the label only when the Blade markup provides a label span.
             const label = button.querySelector(
                 '[data-developer-notes-label]'
             );
@@ -178,37 +238,52 @@ document.addEventListener('DOMContentLoaded', () => {
             if (String(element.dataset.taskId) !== taskId) return;
 
             element.dataset.hasDeveloperNote = value;
-            element.setAttribute('data-has-developer-note', value);
+
+            element.setAttribute(
+                'data-has-developer-note',
+                value
+            );
         });
 
-        // Update Developer Notes triggers without rebuilding their markup.
+        // Update Developer Notes and Task Activity triggers.
         document.querySelectorAll(
-            '[data-developer-notes-trigger]'
+            '[data-developer-notes-trigger], [data-task-activity-trigger]'
         ).forEach((button) => {
             if (String(button.dataset.taskId) !== taskId) return;
 
             button.dataset.hasDeveloperNote = value;
             button.setAttribute('data-has-developer-note', value);
 
-            button.classList.toggle(
-                '!text-blue-600',
-                hasNote
-            );
+            button.classList.toggle('!text-blue-600', hasNote);
+            button.classList.toggle('dark:!text-blue-400', hasNote);
+            button.classList.toggle('text-gray-500', !hasNote);
+            button.classList.toggle('dark:text-bgray-300', !hasNote);
 
-            button.classList.toggle(
-                'dark:!text-blue-400',
-                hasNote
-            );
+            // Update the Developer Notes count and total Activity count.
+            if (button.matches('[data-task-activity-trigger]')) {
+                const developerNotesCount = hasNote ? 1 : 0;
+                const commentsCount = Number(button.dataset.commentsCount || 0);
 
-            button.classList.toggle(
-                'text-gray-500',
-                !hasNote
-            );
+                button.dataset.developerNotesCount = String(developerNotesCount);
 
-            button.classList.toggle(
-                'dark:text-bgray-300',
-                !hasNote
-            );
+                const totalCount = commentsCount + developerNotesCount;
+
+                const countElement = button.querySelector(
+                    '[data-task-activity-count]'
+                );
+
+                if (countElement) {
+                    countElement.textContent = String(totalCount);
+                }
+
+                button.title =
+                    `Completion Notes: ${developerNotesCount} | Comments: ${commentsCount}`;
+
+                button.setAttribute(
+                    'aria-label',
+                    `Task Activity: ${developerNotesCount} developer notes and ${commentsCount} comments`
+                );
+            }
         });
 
         // Keep the Task Status dropdown options synchronized.
@@ -218,44 +293,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (String(option.dataset.taskId) !== taskId) return;
 
             option.dataset.hasDeveloperNote = value;
-            option.setAttribute('data-has-developer-note', value);
+
+            option.setAttribute(
+                'data-has-developer-note',
+                value
+            );
         });
     }
 
-    function openModal() {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.classList.add('overflow-hidden');
-    }
-
-    function closeModal() {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.classList.remove('overflow-hidden');
-
-        clearError();
-    }
-
+    /**
+     * Reset the Developer Notes panel before loading another task.
+     */
     function resetModalState() {
         clearError();
 
         loading.classList.remove('hidden');
-
         notesList.replaceChildren();
         notesList.classList.add('hidden');
         emptyState.classList.add('hidden');
-
         form.classList.add('hidden');
         readonlyMessage.classList.add('hidden');
-        editableDevNotes.classList.remove('hidden');
-
-        noteInput.value = '';
-        noteInput.readOnly = false;
-
-        noteInput.classList.remove(
-            'pointer-events-none',
-            'select-none'
-        );
+        setDeveloperNoteContent('');
+        setDeveloperNoteReadOnly(false);
 
         submitButton.classList.remove('hidden');
         submitButton.disabled = false;
@@ -268,6 +327,9 @@ document.addEventListener('DOMContentLoaded', () => {
         hasExistingNote = false;
     }
 
+    /**
+     * Load Developer Notes using the existing modal endpoint.
+     */
     async function loadNotes(button) {
         resetModalState();
 
@@ -309,8 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const isReadOnly =
                 Boolean(data.is_completed) || !data.can_edit;
 
-            noteInput.value = note?.note || '';
-            noteInput.readOnly = isReadOnly;
+            setDeveloperNoteContent(note?.note || '');
+            setDeveloperNoteReadOnly(isReadOnly);
 
             if (isReadOnly) {
                 if (noteLabel) {
@@ -318,12 +380,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 readonlyMessage.classList.remove('hidden');
+                readonlyMessage.classList.add('flex');
+
                 form.classList.remove('hidden');
                 submitButton.classList.add('hidden');
 
-                if (data.is_completed) {
-                    editableDevNotes.classList.add('hidden');
-                }
+
 
                 return;
             }
@@ -338,6 +400,19 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.textContent = hasExistingNote
                 ? 'Update Note'
                 : 'Save Note';
+
+            // Focus the Quill editor after the modal is visible.
+            requestAnimationFrame(() => {
+                if (!noteEditor.isEnabled()) return;
+
+                const editorLength = noteEditor.getLength();
+
+                // Place cursor at the end of the existing content.
+                noteEditor.setSelection(editorLength - 1, 0, 'silent');
+
+                noteEditor.focus();
+            });
+
         } catch (error) {
             showError(
                 error.message || 'Unable to load developer notes.'
@@ -347,59 +422,74 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Open the modal using event delegation.
+    /**
+     * The shared modal dispatches this event when Developer Notes is opened.
+     * This replaces the old standalone Developer Notes modal click handler.
+     */
     document.addEventListener(
-        'click',
+        'task-insights:developer-notes:open',
         (event) => {
-            const target = event.target;
+            const trigger = event.detail?.trigger;
 
-            if (!(target instanceof Element)) return;
+            if (!trigger) {
+                showError('Unable to identify the selected task.');
+                return;
+            }
 
-            const button = target.closest(
-                '[data-developer-notes-trigger]'
-            );
+            loadNotes(trigger);
+        }
+    );
 
-            if (!button) return;
+    // Ctrl + Enter submits the note only after text is entered in the editor.
+    noteEditor.root.addEventListener(
+        'keydown',
+        (event) => {
+            if (
+                event.key !== 'Enter' ||
+                !event.ctrlKey ||
+                event.altKey ||
+                event.metaKey ||
+                event.shiftKey ||
+                event.isComposing
+            ) {
+                return;
+            }
+
+            if (
+                !noteEditor.isEnabled() ||
+                isSubmitting ||
+                submitButton.disabled ||
+                submitButton.classList.contains('hidden')
+            ) {
+                return;
+            }
 
             event.preventDefault();
-            event.stopPropagation();
 
-            openModal();
-            loadNotes(button);
+            if (!getDeveloperNoteContent()) {
+                return;
+            }
+
+            form.requestSubmit();
         },
         true
     );
-
-    closeButton?.addEventListener('click', closeModal);
-    readOnlyCloseBtn?.addEventListener('click', closeModal);
-
-    modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            closeModal();
-        }
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (
-            event.key === 'Escape' &&
-            !modal.classList.contains('hidden')
-        ) {
-            closeModal();
-        }
-    });
 
     // Save or update the single developer note.
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        if (isSubmitting || !activeStoreUrl || noteInput.readOnly) {
+        if (isSubmitting || !activeStoreUrl || noteInput.readOnly || !noteEditor.isEnabled()) {
             return;
         }
 
         clearError();
 
-        const note = noteInput.value.trim();
+        const note = getDeveloperNoteContent();
 
+        noteInput.value = note;
+
+        // If an existing note is cleared, ask for confirmation before deleting.
         if (hasExistingNote && note === '') {
             try {
                 const result = await Alert.confirm({
@@ -413,11 +503,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     result === true || result?.isConfirmed === true;
 
                 if (!confirmed) {
-                    noteInput.focus();
+                    noteEditor.focus();
                     return;
                 }
 
                 await deleteDeveloperNote();
+
             } catch (error) {
                 console.error(
                     'Developer note removal confirmation error:',
@@ -432,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!note) {
             showError('Please enter a developer note.');
-            noteInput.focus();
+            noteEditor.focus();
             return;
         }
 
@@ -463,22 +554,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
             }
 
-            // Prefer the note returned by the server.
             const savedContent = data.note?.note ?? note;
 
-            noteInput.value = savedContent;
+            setDeveloperNoteContent(savedContent);
             hasExistingNote = true;
 
-            // Immediately refresh the Overview section and button.
+            // Update the Overview section and Kanban card.
             updateDeveloperNotesDisplay(savedContent);
             updateOverviewNotesButton(true);
-
-            // Keep Kanban completion checks synchronized.
             updateTaskCardDeveloperNoteState(true);
 
             submitButton.textContent = 'Update Note';
 
+            // Notify Kanban that the required Developer Note has been saved.
+            // If this task was being dragged to a completed column,
+            // Kanban will automatically resume that original drag.
+            document.dispatchEvent(
+                new CustomEvent('task-insights:developer-notes:saved', {
+                    detail: {
+                        taskId: String(activeTrigger?.dataset.taskId || ''),
+                    },
+                })
+            );
+
             Alert.success('Developer note saved successfully.');
+
+            // Close the shared Task Activity modal.
+            document.dispatchEvent(
+                new CustomEvent('task-insights:close')
+            );
+
         } catch (error) {
             showError(
                 error.message || 'Unable to save the developer note.'
@@ -495,6 +600,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    /**
+     * Delete the existing developer note.
+     */
     async function deleteDeveloperNote() {
         isSubmitting = true;
         submitButton.disabled = true;
@@ -523,10 +631,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
             }
 
-            noteInput.value = '';
+            setDeveloperNoteContent('');
             hasExistingNote = false;
 
-            // Immediately refresh Overview and Kanban.
+            // Update the Overview section and Kanban card.
             updateDeveloperNotesDisplay('');
             updateOverviewNotesButton(false);
             updateTaskCardDeveloperNoteState(false);
@@ -534,6 +642,12 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.textContent = 'Save Note';
 
             Alert.success('Developer note removed successfully.');
+
+            // Close the shared Task Activity modal.
+            document.dispatchEvent(
+                new CustomEvent('task-insights:close')
+            );
+
         } catch (error) {
             showError(
                 error.message || 'Unable to remove the developer note.'
@@ -548,5 +662,65 @@ document.addEventListener('DOMContentLoaded', () => {
                     : 'Save Note';
             }
         }
+    }
+
+    function createSafeNoteContent(html) {
+        const template = document.createElement('template');
+        template.innerHTML = html;
+
+        const allowedTags = new Set([
+            'P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U',
+            'OL', 'UL', 'LI', 'H1', 'H2', 'H3', 'A'
+        ]);
+
+        const cleanNode = (node) => {
+            Array.from(node.childNodes).forEach((child) => {
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    if (!allowedTags.has(child.tagName)) {
+                        child.replaceWith(
+                            document.createTextNode(child.textContent)
+                        );
+                        return;
+                    }
+
+                    Array.from(child.attributes).forEach((attribute) => {
+                        if (
+                            child.tagName !== 'A' ||
+                            !['href', 'target', 'rel'].includes(attribute.name)
+                        ) {
+                            child.removeAttribute(attribute.name);
+                        }
+                    });
+
+                    if (child.tagName === 'A') {
+                        const href = child.getAttribute('href') || '';
+
+                        if (!['http:', 'https:', 'mailto:'].includes(
+                            (() => {
+                                try {
+                                    return new URL(href, window.location.origin).protocol;
+                                } catch {
+                                    return '';
+                                }
+                            })()
+                        )) {
+                            child.removeAttribute('href');
+                        }
+
+                        child.setAttribute('rel', 'noopener noreferrer');
+                    }
+
+                    cleanNode(child);
+                } else if (
+                    child.nodeType !== Node.TEXT_NODE
+                ) {
+                    child.remove();
+                }
+            });
+        };
+
+        cleanNode(template.content);
+
+        return template.innerHTML;
     }
 });

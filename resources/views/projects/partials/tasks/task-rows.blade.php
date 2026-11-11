@@ -10,6 +10,7 @@
         'group' => $group,
         'task' => $task,
         'showTaskActionColumn' => $showTaskActionColumn,
+        'search' => $search ?? null,
     ])
 
     @include('projects.partials.tasks.subtask-rows', [
@@ -19,6 +20,7 @@
         'showTaskActionColumn' => $showTaskActionColumn,
         'parentTaskId' => $task->id,
         'depth' => 1,
+        'search' => $search ?? null,
     ])
 @empty
     @if ($showEmptyState)

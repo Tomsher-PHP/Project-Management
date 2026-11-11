@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Http\Requests\Concerns\ValidatesAgileTaskPlacement;
 use App\Models\HandoffRequest;
 use App\Models\Project;
+use App\Models\ProjectTimeline;
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -45,6 +46,23 @@ class TaskQuickStoreRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('projects', 'id'),
+            ],
+            'project_timeline_id' => [
+                Rule::excludeIf(
+                    fn () => $this->input('request_type') === Task::REQUEST_TYPE_SELF
+                        || ! $this->user()?->can('task.create')
+                ),
+                'nullable',
+                'integer',
+                Rule::exists('project_timelines', 'id')->where(
+                    fn ($query) => $query
+                        ->where('project_id', $projectId)
+                        ->whereNull('deleted_at')
+                        ->whereIn('status', [
+                            ProjectTimeline::STATUS_ACTIVE,
+                            ProjectTimeline::STATUS_COMPLETED,
+                        ])
+                ),
             ],
             'handoff_request_id' => [
                 'nullable',
@@ -141,6 +159,7 @@ class TaskQuickStoreRequest extends FormRequest
         return [
             'project_id.required' => 'Please choose a project.',
             'project_id.exists' => 'The selected project is invalid.',
+            'project_timeline_id.exists' => 'The selected project timeline is invalid.',
             'request_type.in' => 'The selected request type is invalid.',
             'name.required' => 'Please enter a task name.',
             'project_milestone_id.exists' => 'The selected milestone is invalid.',

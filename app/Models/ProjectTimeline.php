@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\LogsModelActivity;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -70,6 +71,40 @@ class ProjectTimeline extends Model
     public function notificationLogs()
     {
         return $this->morphMany(ProjectNotificationLog::class, 'link');
+    }
+
+    public function scopeChoosableForTasks(Builder $query): Builder
+    {
+        return $query->whereIn('status', [
+            self::STATUS_ACTIVE,
+            self::STATUS_COMPLETED,
+        ]);
+    }
+
+    public function scopeEligibleForTaskMove(Builder $query): Builder
+    {
+        return $query->choosableForTasks();
+    }
+
+    public function scopeEligibleForProjectReport(Builder $query): Builder
+    {
+        return $query->whereIn('project_timelines.status', [
+            self::STATUS_ACTIVE,
+            self::STATUS_COMPLETED,
+        ]);
+    }
+
+    public function scopeOrderForProjectReport(Builder $query): Builder
+    {
+        return $query
+            ->orderByRaw(
+                'CASE WHEN project_timelines.status = ? THEN 0 ELSE 1 END',
+                [self::STATUS_ACTIVE]
+            )
+            ->orderByDesc('project_timelines.end_date')
+            ->orderByDesc('project_timelines.start_date')
+            ->orderByDesc('project_timelines.sort_order')
+            ->orderByDesc('project_timelines.id');
     }
 
     /*----------------Activity Log Customization----------------*/

@@ -10,7 +10,7 @@
         $commentsModalUrl = $isDeletedProjectView ? route('projects.restore.comments.modal', ['id' => $project->id]) : route('projects.comments.modal', $project);
     @endphp
 
-    <section class="space-y-6" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-force-initial-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}">
+    <section class="space-y-6" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-force-initial-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}" @if (!$isDeletedProjectView && auth()->user()->can('task.create')) data-task-create-root data-task-create-success-mode="refresh-project-tasks" @endif>
 
         @if ($isDeletedProjectView)
             <div class="rounded-xl bg-[#FDF9E9] px-4 py-3 text-sm text-warning-300 dark:bg-darkblack-600 dark:text-warning-200">
@@ -150,6 +150,14 @@
                 <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
             </div>
         </div>
+
+        @if (!$isDeletedProjectView && auth()->user()->can('task.create'))
+            @include('tasks.partials.create-modal', ['taskCreateFixedProject' => $project])
+
+            <script id="task-create-dependencies" type="application/json">
+                @json($taskCreateDependencies)
+            </script>
+        @endif
     </section>
 
     @push('modals')

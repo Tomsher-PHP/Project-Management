@@ -164,6 +164,7 @@ class TaskServices
     {
         $task->loadMissing([
             'project:id,name,project_code,project_flow',
+            'projectTimeline:id,name',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'parentTask:id,name,code',
@@ -239,6 +240,10 @@ class TaskServices
                             'sprint' => $task->projectSprint->id,
                         ])
                         : null,
+                ],
+                [
+                    'label' => 'Project Timeline',
+                    'value' => $task->projectTimeline?->name ?? '--',
                 ],
                 [
                     'label' => 'Created',
@@ -689,7 +694,7 @@ class TaskServices
         $resolvedSprintId = $placement['project_sprint_id'];
 
         return [
-            'project_timeline_id' => $project->display_timeline?->id,
+            'project_timeline_id' => $this->resolveTaskCreateTimelineId($project, $validated),
             'project_milestone_id' => $placement['project_milestone_id'],
             'project_sprint_id' => $resolvedSprintId,
             'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
@@ -709,6 +714,30 @@ class TaskServices
             'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
             'sort_order' => Task::nextSortOrder($project->id, $resolvedSprintId),
         ];
+    }
+
+    protected function resolveTaskCreateTimelineId(Project $project, array $validated): ?int
+    {
+        $requestType = ($validated['request_type'] ?? Task::REQUEST_TYPE_ASSIGNED) === Task::REQUEST_TYPE_SELF
+            ? Task::REQUEST_TYPE_SELF
+            : Task::REQUEST_TYPE_ASSIGNED;
+
+        if (
+            $requestType === Task::REQUEST_TYPE_ASSIGNED
+            && auth()->user()?->can('task.create')
+            && ! empty($validated['project_timeline_id'])
+        ) {
+            $selectedTimelineId = $project->projectTimelines()
+                ->choosableForTasks()
+                ->whereKey((int) $validated['project_timeline_id'])
+                ->value('id');
+
+            if ($selectedTimelineId) {
+                return (int) $selectedTimelineId;
+            }
+        }
+
+        return $project->display_timeline?->id;
     }
 
     // Build payload used to update an existing task

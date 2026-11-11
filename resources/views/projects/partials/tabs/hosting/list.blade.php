@@ -231,7 +231,7 @@
                             <td class="px-5 py-4">
                                 <div class="text-sm text-bgray-900 dark:text-white">
                                     @if ($record->expiry_date)
-                                        <div>@appDate($record->expiry_date)</div>
+                                        <div>{{ $record->expiry_date->format($globalDateFormat) }}</div>
                                     @else
                                         <span class="text-bgray-500 dark:text-bgray-400">--</span>
                                     @endif
@@ -335,7 +335,7 @@
             </table>
         </div>
 
-        {{-- AJAX Pagination footer --}}
+        <!-- AJAX Pagination footer -->
         @if ($hostingRecords instanceof \Illuminate\Pagination\LengthAwarePaginator)
             @include('projects.partials.tabs.hosting.pagination', ['paginator' => $hostingRecords])
         @endif

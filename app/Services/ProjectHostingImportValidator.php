@@ -240,8 +240,8 @@ class ProjectHostingImportValidator
 
         return [
             'accessible_projects' => collect($accessibleProjects)->keyBy(fn ($p) => trim($p->project_code ?? '')),
-            'providers' => $this->indexByName(collect($providers)),
-            'services' => $this->indexByName(collect($services)),
+            'providers' => $this->indexByCode(collect($providers)),
+            'services' => $this->indexByCode(collect($services)),
             'statuses' => $this->indexByName($statusesCol),
             'default_status' => $resolvedDefault,
             'environments' => $this->indexByName(collect($environments)),
@@ -264,6 +264,36 @@ class ProjectHostingImportValidator
                 continue;
             }
             $normalized = mb_strtolower(trim($name));
+            if (!isset($indexed[$normalized])) {
+                $indexed[$normalized] = $item;
+            } else {
+                $indexed[$normalized] = 'AMBIGUOUS';
+            }
+        }
+
+        return $indexed;
+    }
+
+    /**
+     * Index a collection by lowercased, trimmed code, detecting ambiguous duplicates safely.
+     *
+     * @param  array|\Illuminate\Support\Collection  $items
+     * @return array<string, mixed>
+     */
+    public function indexByCode(array|Collection $items): array
+    {
+        $indexed = [];
+        foreach ($items as $item) {
+            $code = $item->code;
+            if ($code === null) {
+                continue;
+            }
+
+            $normalized = mb_strtolower(trim((string) $code));
+            if ($normalized === '') {
+                continue;
+            }
+
             if (!isset($indexed[$normalized])) {
                 $indexed[$normalized] = $item;
             } else {
@@ -363,11 +393,11 @@ class ProjectHostingImportValidator
         if ($rawProvider === null) {
             $errors[] = 'Provider: Provider is required.';
         } else {
-            $normalizedProvider = mb_strtolower($rawProvider);
+            $normalizedProvider = mb_strtolower(trim($rawProvider));
             if (!isset($master['providers'][$normalizedProvider])) {
-                $errors[] = "Provider: The selected provider '{$rawProvider}' is not available.";
+                $errors[] = "Provider code \"{$rawProvider}\" was not found.";
             } elseif ($master['providers'][$normalizedProvider] === 'AMBIGUOUS') {
-                $errors[] = "Provider: Multiple records matched the provider '{$rawProvider}'.";
+                $errors[] = "Provider: Multiple records matched provider code '{$rawProvider}'.";
             } else {
                 $data['hosting_provider_id'] = $master['providers'][$normalizedProvider]->id;
             }
@@ -377,11 +407,11 @@ class ProjectHostingImportValidator
         if ($rawServiceType === null) {
             $errors[] = 'Service Type: Service Type is required.';
         } else {
-            $normalizedService = mb_strtolower($rawServiceType);
+            $normalizedService = mb_strtolower(trim($rawServiceType));
             if (!isset($master['services'][$normalizedService])) {
-                $errors[] = "Service Type: The selected service type '{$rawServiceType}' is not available.";
+                $errors[] = "Service Type code \"{$rawServiceType}\" was not found.";
             } elseif ($master['services'][$normalizedService] === 'AMBIGUOUS') {
-                $errors[] = "Service Type: Multiple records matched the service type '{$rawServiceType}'.";
+                $errors[] = "Service Type: Multiple records matched service type code '{$rawServiceType}'.";
             } else {
                 $data['hosting_service_id'] = $master['services'][$normalizedService]->id;
             }
