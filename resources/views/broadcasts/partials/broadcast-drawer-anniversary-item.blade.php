@@ -18,16 +18,14 @@
     $designationName = $user->details?->designation?->name;
     $departmentName = $user->details?->department?->name;
     $badgeClass = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold';
-    $badgeStyle = $isSelf
-        ? 'background-color: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe;'
-        : 'background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a;';
+    $badgeStyle = $isSelf ? 'background-color: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe;' : 'background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a;';
 @endphp
 
 <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm transition hover:border-amber-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-500 dark:hover:border-amber-400/40" data-work-anniversary-card="{{ $user->id }}">
     <!-- Header Row: Indicator & Status Badge -->
     <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <div class="flex items-center gap-2 flex-wrap">
-            @if (! $isUpcoming)
+            @if (!$isUpcoming)
                 <span class="{{ $badgeClass }}" style="{{ $badgeStyle }}">
                     <span>🏆</span>
                     <span>{{ $ordinalYear }} Work Anniversary!</span>
@@ -35,7 +33,7 @@
             @else
                 <span class="{{ $badgeClass }}" style="{{ $badgeStyle }}">
                     <span>🏆</span>
-                    <span>{{ $isSelf ? "Your {$ordinalYear} Work Anniversary" : "Upcoming {$ordinalYear} Work Anniversary" }}</span>
+                    <span>{{ $isSelf ? "Your {$ordinalYear} Work Anniversary" : "{$ordinalYear} Work Anniversary" }}</span>
                 </span>
             @endif
         </div>
@@ -74,7 +72,7 @@
     </div>
 
     <!-- Greeting / Date Row -->
-    @if (! $isUpcoming)
+    @if (!$isUpcoming)
         <div class="mt-2 text-xs text-bgray-700 dark:text-bgray-300">
             @if ($isSelf)
                 Congratulations on completing {{ $yearLabel }} with us! Thank you for your dedication.
@@ -91,4 +89,3 @@
         </div>
     @endif
 </div>
-
