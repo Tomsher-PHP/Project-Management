@@ -84,6 +84,7 @@ class MeetingSettingsController extends Controller
     {
         if ($request->routeIs('settings.meeting-types.store')) {
             $data = app(\App\Http\Requests\MeetingTypeRequest::class)->validated();
+            $data['code'] = $data['code'] ?? MeetingType::generateUniqueCode();
             $data['is_default'] = $request->boolean('is_default');
             $data['sort_order'] = $data['sort_order'] ?? 1;
             $record = DB::transaction(function () use ($data) {
@@ -101,6 +102,7 @@ class MeetingSettingsController extends Controller
             ]);
         } elseif ($request->routeIs('settings.meeting-locations.store')) {
             $data = app(\App\Http\Requests\MeetingLocationRequest::class)->validated();
+            $data['code'] = $data['code'] ?? MeetingLocation::generateUniqueCode();
             $data['is_default'] = $request->boolean('is_default');
             $data['sort_order'] = $data['sort_order'] ?? 1;
             $record = DB::transaction(function () use ($data) {
@@ -118,6 +120,7 @@ class MeetingSettingsController extends Controller
             ]);
         } elseif ($request->routeIs('settings.meeting-tags.store')) {
             $data = app(\App\Http\Requests\MeetingTagRequest::class)->validated();
+            $data['code'] = $data['code'] ?? MeetingTag::generateUniqueCode();
             $data['is_default'] = false;
             $data['sort_order'] = $data['sort_order'] ?? 1;
             $record = MeetingTag::create($data);
@@ -139,6 +142,9 @@ class MeetingSettingsController extends Controller
             $data['is_default'] = $request->boolean('is_default');
 
             $record = MeetingType::findOrFail($id);
+            if (empty($record->code)) {
+                $data['code'] = MeetingType::generateUniqueCode();
+            }
             $record = DB::transaction(function () use ($record, $data) {
                 if ($data['is_default']) {
                     $this->clearExistingDefaults(MeetingType::class, $record->id);
@@ -159,6 +165,9 @@ class MeetingSettingsController extends Controller
             $data['is_default'] = $request->boolean('is_default');
 
             $record = MeetingLocation::findOrFail($id);
+            if (empty($record->code)) {
+                $data['code'] = MeetingLocation::generateUniqueCode();
+            }
             $record = DB::transaction(function () use ($record, $data) {
                 if ($data['is_default']) {
                     $this->clearExistingDefaults(MeetingLocation::class, $record->id);
@@ -179,6 +188,9 @@ class MeetingSettingsController extends Controller
             $data['is_default'] = false;
 
             $record = MeetingTag::findOrFail($id);
+            if (empty($record->code)) {
+                $data['code'] = MeetingTag::generateUniqueCode();
+            }
             $record->update($data);
 
             return response()->json([

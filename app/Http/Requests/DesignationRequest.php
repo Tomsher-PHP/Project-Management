@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Designation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,6 +16,13 @@ class DesignationRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->isMethod('post')) {
+            $this->merge(['code' => Designation::generateUniqueCode()]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -24,9 +32,15 @@ class DesignationRequest extends FormRequest
     {
         $id = $this->route('designation') ?? null;
 
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255', Rule::unique('designations', 'name')->ignore($id)],
             'sort_order' => ['required', 'numeric'],
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['code'] = ['required', 'digits:6', 'unique:designations,code'];
+        }
+
+        return $rules;
     }
 }

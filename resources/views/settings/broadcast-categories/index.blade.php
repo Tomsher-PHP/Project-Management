@@ -53,7 +53,7 @@
                                     <td class="px-6 py-5 xl:px-0">
                                         <div class="flex items-start space-x-2.5">
                                             <span class="mt-1.5 inline-flex h-3 w-3 shrink-0 rounded-full border border-bgray-200 dark:border-darkblack-400" style="background-color: {{ $broadcastCategory->color ?: '#E5E7EB' }}"></span>
-                                            <div>
+                                            <div class="flex flex-col gap-1">
                                                 <div class="flex flex-wrap items-center gap-2">
                                                     <p class="text-base font-semibold text-bgray-900 dark:text-white">
                                                         {{ $broadcastCategory->name }}
@@ -69,6 +69,7 @@
                                                         </span>
                                                     @endif
                                                 </div>
+                                                <span class="text-sm text-bgray-600 dark:text-bgray-300">{{ $broadcastCategory->code ?: '--' }}</span>
                                             </div>
                                         </div>
                                     </td>

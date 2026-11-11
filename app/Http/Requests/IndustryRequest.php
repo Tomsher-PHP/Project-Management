@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Industry;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,6 +16,13 @@ class IndustryRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->isMethod('post')) {
+            $this->merge(['code' => Industry::generateUniqueCode()]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -24,10 +32,16 @@ class IndustryRequest extends FormRequest
     {
         $id = $this->route('industry') ?? null;
 
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255', Rule::unique('industries', 'name')->ignore($id)],
             'parent_id' => ['nullable', 'exists:industries,id'],
             'sort_order' => ['required', 'numeric'],
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['code'] = ['required', 'digits:6', 'unique:industries,code'];
+        }
+
+        return $rules;
     }
 }
