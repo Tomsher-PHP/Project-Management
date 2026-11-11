@@ -9,13 +9,71 @@ use Illuminate\Http\JsonResponse;
 
 class FeatureUpdateUserStatusController extends Controller
 {
+    /**
+     * User clicked "Got it".
+     * The announcement is considered read.
+     */
     public function acknowledge(
         Request $request,
         FeatureUpdate $featureUpdate
     ): JsonResponse {
         $user = $request->user();
 
-        // Only acknowledge currently published and active features.
+        $this->validateFeatureUpdate($featureUpdate, $user);
+
+        FeatureUpdateUserStatus::updateOrCreate(
+            [
+                'feature_update_id' => $featureUpdate->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'acknowledged_at' => now(),
+                'skipped_at' => null,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Feature marked as read.',
+        ]);
+    }
+
+    /**
+     * User clicked "Skip for now" or closed the modal.
+     * The announcement is dismissed from the popup but remains unread.
+     */
+    public function skip(
+        Request $request,
+        FeatureUpdate $featureUpdate
+    ): JsonResponse {
+        $user = $request->user();
+
+        $this->validateFeatureUpdate($featureUpdate, $user);
+
+        FeatureUpdateUserStatus::updateOrCreate(
+            [
+                'feature_update_id' => $featureUpdate->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'skipped_at' => now(),
+                'acknowledged_at' => null,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Feature dismissed.',
+        ]);
+    }
+
+    /**
+     * Validate publication dates and user targeting.
+     */
+    private function validateFeatureUpdate(
+        FeatureUpdate $featureUpdate,
+        $user
+    ): void {
         abort_unless(
             $featureUpdate->status === 'published'
             && (!$featureUpdate->publish_at || $featureUpdate->publish_at->lte(now()))
@@ -23,17 +81,16 @@ class FeatureUpdateUserStatusController extends Controller
             404
         );
 
-        // Check whether this feature is intended for this user.
-        $isTargeted = $featureUpdate->target_type === 'all';
+        $isTargeted = false;
 
-        if ($featureUpdate->target_type === 'roles') {
+        if ($featureUpdate->target_type === 'all') {
+            $isTargeted = true;
+        } elseif ($featureUpdate->target_type === 'roles') {
             $isTargeted = !empty(array_intersect(
                 $user->getRoleNames()->toArray(),
                 $featureUpdate->target_roles ?? []
             ));
-        }
-
-        if ($featureUpdate->target_type === 'users') {
+        } elseif ($featureUpdate->target_type === 'users') {
             $isTargeted = in_array(
                 (int) $user->id,
                 array_map('intval', $featureUpdate->target_user_ids ?? []),
@@ -42,15 +99,5 @@ class FeatureUpdateUserStatusController extends Controller
         }
 
         abort_unless($isTargeted, 403);
-
-        FeatureUpdateUserStatus::firstOrCreate([
-            'feature_update_id' => $featureUpdate->id,
-            'user_id' => $user->id,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Feature acknowledged.',
-        ]);
     }
 }

@@ -883,7 +883,7 @@ Route::middleware([
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.edit')->only(['edit', 'update']);
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.delete')->only(['destroy']);
 
-    // Feature Settings authentication
+
     /*
     |--------------------------------------------------------------------------
     | Feature Settings
@@ -948,12 +948,16 @@ Route::middleware([
             });
         });
 
-
-
         Route::post(
             '/feature-updates/{featureUpdate}/acknowledge',
             [FeatureUpdateUserStatusController::class, 'acknowledge']
         )->name('feature-updates.acknowledge');
+
+        Route::post(
+            '/feature-updates/{featureUpdate}/skip',
+            [FeatureUpdateUserStatusController::class, 'skip']
+        )->name('feature-updates.skip');
+
 });
 
 Route::get('api-test', function () {

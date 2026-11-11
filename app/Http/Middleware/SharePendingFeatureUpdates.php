@@ -14,6 +14,36 @@ class SharePendingFeatureUpdates
         if ($request->user()) {
             $user = $request->user();
 
+
+        $unreadFeatureUpdatesCount = FeatureUpdate::query()
+            ->where('status', 'published')
+            ->where(function ($q) {
+                $q->whereNull('publish_at')
+                ->orWhere('publish_at', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                ->orWhere('expires_at', '>=', now());
+            })
+            ->whereDoesntHave('userStatuses', function ($statusQuery) use ($user) {
+                $statusQuery->where('user_id', $user->id)
+                    ->whereNotNull('acknowledged_at');
+            })
+            ->count();
+
+        View::share('unreadFeatureUpdatesCount', $unreadFeatureUpdatesCount);
+
+
+
+            // Keep the old variable available if any existing view uses it.
+            View::share(
+                'skippedFeatureUpdatesCount',
+                $unreadFeatureUpdatesCount
+            );
+
+            /*
+             * Popup announcements.
+             */
             $query = FeatureUpdate::query()
                 ->where('status', 'published')
                 ->where(function ($q) {
@@ -25,13 +55,13 @@ class SharePendingFeatureUpdates
                         ->orWhere('expires_at', '>=', now());
                 });
 
-            // Apply feature targeting.
+            // Apply existing feature targeting.
             $query->where(function ($q) use ($user) {
                 $q->where('target_type', 'all');
 
-                if ($user->relationLoaded('roles') || method_exists($user, 'roles')) {
-                    $roleNames = $user->getRoleNames()->toArray();
+                $roleNames = $user->getRoleNames()->toArray();
 
+                if (!empty($roleNames)) {
                     $q->orWhere(function ($roleQuery) use ($roleNames) {
                         $roleQuery->where('target_type', 'roles')
                             ->where(function ($targetQuery) use ($roleNames) {
@@ -54,10 +84,19 @@ class SharePendingFeatureUpdates
                 });
             });
 
-            // Exclude features already acknowledged by this user.
+            /*
+             * Exclude announcements already acknowledged or skipped
+             * by this user.
+             */
+
             $query->whereDoesntHave('userStatuses', function ($statusQuery) use ($user) {
-                $statusQuery->where('user_id', $user->id);
+                $statusQuery->where('user_id', $user->id)
+                    ->where(function ($q) {
+                        $q->whereNotNull('acknowledged_at')
+                        ->orWhereNotNull('skipped_at');
+                    });
             });
+
 
             $pendingFeatureUpdates = $query
                 ->orderByDesc('priority')

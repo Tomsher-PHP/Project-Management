@@ -106,6 +106,8 @@ npm install @fullcalendar/core @fullcalendar/daygrid @fullcalendar/interaction
 
 composer show maatwebsite/excel
 
+
+# Add new feature (Developer Only)
 PMS Feature Management
 URL: /feature-settings
 

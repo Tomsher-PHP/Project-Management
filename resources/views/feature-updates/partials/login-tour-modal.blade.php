@@ -4,10 +4,9 @@
     class="modal fixed inset-0 z-[70] items-center justify-center overflow-y-auto flex"
     data-feature-tour-modal
 >
-    {{-- Backdrop --}}
+    {{-- Backdrop - clicking outside should not close the modal --}}
     <div
         class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"
-        data-feature-tour-close
     ></div>
 
     <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
@@ -154,7 +153,7 @@
 
                     <button
                         type="button"
-                        class="mt-1 text-sm font-medium text-bgray-600 transition hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white"
+                        class="mt-1 text-sm font-medium rounded-lg border border-bgray-300 bg-white px-5 py-2 text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300"
                         data-feature-tour-skip
                     >
                         Skip for now
@@ -196,6 +195,7 @@
 </div>
 
 <script>
+
 document.addEventListener('DOMContentLoaded', function () {
 
     const modal = document.querySelector('[data-feature-tour-modal]');
@@ -209,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!slides.length) return;
 
     let currentIndex = 0;
+    let isSaving = false;
 
     const previousButton = modal.querySelector('[data-feature-tour-previous]');
     const nextButton = modal.querySelector('[data-feature-tour-next]');
@@ -237,66 +238,139 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.classList.remove('flex');
     }
 
-    nextButton.addEventListener('click', function () {
-        if (currentIndex < slides.length - 1) {
-            showSlide(currentIndex + 1);
-        }
-    });
+    /**
+     * Save the status of all features currently displayed in the modal.
+     *
+     * acknowledge = Got it
+     * skip = Skip for now / Close button
+     */
+    async function saveFeatureUpdates(action) {
 
-    previousButton.addEventListener('click', function () {
-        if (currentIndex > 0) {
-            showSlide(currentIndex - 1);
-        }
-    });
+        if (isSaving) return;
 
-    async function acknowledgeCurrentFeature() {
-
-        const featureId = slides[currentIndex].dataset.featureId;
+        isSaving = true;
 
         gotItButton.disabled = true;
+        skipButton.disabled = true;
+        previousButton.disabled = true;
+        nextButton.disabled = true;
+
+        closeButtons.forEach(button => {
+            button.disabled = true;
+        });
 
         try {
 
-            const response = await fetch(
-                `/feature-updates/${featureId}/acknowledge`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({})
-                }
-            );
+            const csrfToken = document.querySelector(
+                'meta[name="csrf-token"]'
+            )?.content;
 
-            if (!response.ok) {
-                throw new Error('Unable to acknowledge feature.');
+            if (!csrfToken) {
+                throw new Error('CSRF token not found.');
             }
 
+            // Save the status for every pending feature in this modal.
+            for (const slide of slides) {
+
+                const featureId = slide.dataset.featureId;
+
+                const response = await fetch(
+                    `/feature-updates/${featureId}/${action}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({})
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Unable to save feature ${featureId}.`
+                    );
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error('Unable to save feature status.');
+                }
+            }
+
+            // Close only after all feature statuses are saved.
             closeTour();
 
         } catch (error) {
-            alert('Unable to save your acknowledgement. Please try again.');
+
+            console.error('Feature update status error:', error);
+
+            alert(
+                'Unable to save the feature update status. Please try again.'
+            );
+
         } finally {
+
+            isSaving = false;
+
             gotItButton.disabled = false;
+            skipButton.disabled = false;
+            previousButton.disabled = false;
+            nextButton.disabled = false;
+
+            closeButtons.forEach(button => {
+                button.disabled = false;
+            });
         }
     }
 
-    gotItButton.addEventListener('click', acknowledgeCurrentFeature);
+    // Next feature
+    nextButton.addEventListener('click', function () {
 
-    skipButton.addEventListener('click', closeTour);
+        if (currentIndex < slides.length - 1) {
+            showSlide(currentIndex + 1);
+        }
 
-    closeButtons.forEach(button => {
-        button.addEventListener('click', closeTour);
     });
 
+    // Previous feature
+    previousButton.addEventListener('click', function () {
+
+        if (currentIndex > 0) {
+            showSlide(currentIndex - 1);
+        }
+
+    });
+
+    // Got it: mark all displayed features as read.
+    gotItButton.addEventListener('click', function () {
+        saveFeatureUpdates('acknowledge');
+    });
+
+    // Skip for now: dismiss all displayed features but keep them unread.
+    skipButton.addEventListener('click', function () {
+        saveFeatureUpdates('skip');
+    });
+
+    // Close button and backdrop: dismiss all displayed features but keep them unread.
+    closeButtons.forEach(button => {
+
+        button.addEventListener('click', function () {
+            saveFeatureUpdates('skip');
+        });
+
+    });
+
+    // Show the first feature.
     showSlide(0);
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 
 });
+
 </script>
 
 @endif
