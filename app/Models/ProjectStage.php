@@ -30,6 +30,27 @@ class ProjectStage extends Model
 
     protected $searchable = ['name', 'code'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (ProjectStage $stage) {
+            if (empty($stage->code) || static::withTrashed()->where('code', $stage->code)->exists()) {
+                $stage->code = static::generateUniqueCode();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique 6-digit numeric code (e.g. 123456).
+     */
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $code = (string) random_int(100000, 999999);
+        } while (static::withTrashed()->where('code', $code)->exists());
+
+        return $code;
+    }
+
     protected function casts(): array
     {
         return [

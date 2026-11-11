@@ -46,7 +46,7 @@
             'update_req' => 'Optional',
             'type' => 'Existing Status Code',
             'rules' => 'Exact existing PMS project status code (not display name). Defaults to system default on create; blank preserves existing on update.',
-            'example' => 'open',
+            'example' => '100001',
         ],
         [
             'name' => 'Project Stage Code',
@@ -54,7 +54,7 @@
             'update_req' => 'Optional',
             'type' => 'Existing Stage Code',
             'rules' => 'Exact existing PMS project stage code (not display name). Defaults to system default on create; blank preserves existing on update.',
-            'example' => 'planning',
+            'example' => '100001',
         ],
         [
             'name' => 'Service Type Codes',
