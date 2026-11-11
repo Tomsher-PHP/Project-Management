@@ -8,8 +8,8 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
-use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\BroadcastCategoryController;
+use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\CommonController;
@@ -17,6 +17,8 @@ use App\Http\Controllers\CompanyExpensesSettingsController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerRestoreController;
+use App\Http\Controllers\DailyWorkReportPreviewController;
+use App\Http\Controllers\DailyWorkReportSettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
@@ -84,9 +86,6 @@ use App\Http\Middleware\FeatureSettingsAuth;
 use App\Http\Middleware\SharePendingFeatureUpdates;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LeaveNotificationSettingController;
-use App\Http\Controllers\DailyWorkReportSettingsController;
-use App\Http\Controllers\DailyWorkReportPreviewController;
 
 
 Route::get('/', function () {

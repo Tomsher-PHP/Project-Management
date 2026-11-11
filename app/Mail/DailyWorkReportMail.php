@@ -31,8 +31,6 @@ class DailyWorkReportMail extends Mailable
         return $this
             ->subject(
                 'Daily Work Report - '
-                . $reportOwnerName
-                . ' - '
                 . $reportDate->format('d M Y')
             )
             ->view('emails.daily-work-report')

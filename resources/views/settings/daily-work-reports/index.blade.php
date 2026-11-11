@@ -395,7 +395,7 @@
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                                 <div>
-                                    <label for="recipient-scope" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label for="recipient-scope" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
                                         Recipient scope
                                     </label>
                                     <select
@@ -420,7 +420,7 @@
                                     <label
                                         id="recipient-scope-id-label"
                                         for="recipient-scope-id"
-                                        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
                                     >
                                         Select target
                                     </label>
@@ -456,7 +456,7 @@
                                 </div>
 
                                 <div>
-                                    <label for="recipient-name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label for="recipient-name" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
                                         Recipient name
                                     </label>
                                     <input
@@ -471,7 +471,7 @@
                                 </div>
 
                                 <div>
-                                    <label for="recipient-email" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label for="recipient-email" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
                                         Email address
                                     </label>
                                     <input
@@ -509,96 +509,85 @@
                         </form>
                     @endcan
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                                <tr>
-                                    <th class="px-4 py-3">Scope</th>
-                                    <th class="px-4 py-3">Target ID</th>
-                                    <th class="px-4 py-3">Email address</th>
-                                    <th class="px-4 py-3">Name</th>
-                                    <th class="px-4 py-3">Status</th>
-                                    @can($reportPermission)
-                                        <th class="px-4 py-3 text-right">Actions</th>
-                                    @endcan
-                                </tr>
-                            </thead>
+                    <div class="w-full rounded-lg border border-bgray-200 bg-white px-[24px] py-[20px] shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+                        <div class="flex flex-col space-y-5">
+                            <div class="table-content w-full overflow-x-auto">
+                                <table class="w-full">
+                                    <tbody>
+                                        <tr class="border-b border-bgray-300 dark:border-darkblack-400">
+                                            <th class="px-4 py-4 whitespace-nowrap min-w-[140px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Scope</span></th>
+                                            <th class="px-4 py-4 whitespace-nowrap min-w-[140px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Target ID</span></th>
+                                            <th class="px-4 py-4 whitespace-nowrap min-w-[140px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Email address</span></th>
+                                            <th class="px-4 py-4 whitespace-nowrap min-w-[140px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Name</span></th>
+                                            <th class="px-4 py-4 whitespace-nowrap min-w-[140px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span></th>
+                                            @can($reportPermission)
+                                                <th class="px-4 py-4 whitespace-nowrap min-w-[140px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span></th>
+                                            @endcan
+                                        </tr>
+                                        @forelse ($recipients as $recipient)
+                                            <tr class="border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-100 dark:hover:bg-darkblack-500">
+                                                <td class="px-6 py-5 xl:w-[165px] xl:px-0 text-center">
+                                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                                        {{ str_replace('_', ' ', $recipient->scope) }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-5 xl:w-[165px] xl:px-0 text-center">
+                                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                                        {{ $recipient->scope_id ?? 'All employees' }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-5 xl:w-[165px] xl:px-0 text-center">
+                                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                                        {{ $recipient->email }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-5 xl:w-[165px] xl:px-0 text-center">
+                                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                                        {{ $recipient->name ?: '—' }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-5 xl:w-[165px] xl:px-0 text-center">
+                                                    <x-status-toggle
+                                                        :model="$recipient"
+                                                        route="settings.daily-work-reports.recipients.toggle"
+                                                        :route-parameters="['recipient' => $recipient->id]"
+                                                        entity="daily-work-report-recipient"
+                                                    />
+                                                </td>
 
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                @forelse ($recipients as $recipient)
-                                    <tr>
-                                        <td class="px-4 py-3 capitalize">
-                                            {{ str_replace('_', ' ', $recipient->scope) }}
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            {{ $recipient->scope_id ?? 'All employees' }}
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            {{ $recipient->email }}
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            {{ $recipient->name ?: '—' }}
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <x-status-toggle
-                                                :model="$recipient"
-                                                route="settings.daily-work-reports.recipients.toggle"
-                                                :route-parameters="['recipient' => $recipient->id]"
-                                                entity="daily-work-report-recipient"
-                                            />
-                                        </td>
-
-                                        @can($reportPermission)
-                                            <td class="px-4 py-3">
-                                                <div class="flex justify-end gap-3">
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('settings.daily-work-reports.recipients.toggle', $recipient) }}"
-                                                    >
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <input type="hidden" name="report_key" value="{{ $reportKey }}">
-
-                                                        <button
-                                                            type="submit"
-                                                            class="text-blue-600 hover:underline dark:text-blue-400"
+                                                @can($reportPermission)
+                                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0 text-center">
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('settings.daily-work-reports.recipients.destroy', $recipient) }}"
+                                                            onsubmit="return confirm('Remove this recipient?')"
                                                         >
-                                                            {{ $recipient->is_active ? 'Deactivate' : 'Activate' }}
-                                                        </button>
-                                                    </form>
-
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('settings.daily-work-reports.recipients.destroy', $recipient) }}"
-                                                        onsubmit="return confirm('Remove this recipient?')"
-                                                    >
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <input type="hidden" name="report_key" value="{{ $reportKey }}">
-
-                                                        <button
-                                                            type="submit"
-                                                            class="text-red-600 hover:underline dark:text-red-400"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        @endcan
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td
-                                            colspan="@can($reportPermission) 6 @else 5 @endcan"
-                                            class="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
-                                        >
-                                            No additional recipients configured.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <input type="hidden" name="report_key" value="{{ $reportKey }}">
+                                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400 dark:hover:text-red-400 group">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                @endcan
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td
+                                                    colspan="@can($reportPermission) 6 @else 5 @endcan"
+                                                    class="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
+                                                >
+                                                    No additional recipients configured.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -717,13 +706,13 @@
                                         <td class="px-4 py-3 text-gray-900 dark:text-white">
                                             {{ $report->user?->name ?? 'Deleted employee' }}
                                         </td>
-                                        <td class="px-4 py-3">
+                                        <td class="px-4 py-3 text-gray-900 dark:text-white">
                                             {{ $report->report_date?->format('d M Y') ?? '—' }}
                                         </td>
-                                        <td class="px-4 py-3">
+                                        <td class="px-4 py-3 text-gray-900 dark:text-white">
                                             {{ ucfirst($report->status) }}
                                         </td>
-                                        <td class="px-4 py-3">
+                                        <td class="px-4 py-3 text-gray-900 dark:text-white">
                                             {{ $report->generated_at?->format('d M Y H:i') ?? '—' }}
                                         </td>
                                     </tr>

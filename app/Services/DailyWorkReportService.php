@@ -360,6 +360,11 @@ class DailyWorkReportService
             'id' => $task->id,
             'name' => $task->name,
             'code' => $task->code,
+            // Links
+            'url' => route('tasks.edit', $task->id),
+            'project_url' => $task->project_id
+                ? route('projects.edit', $task->project_id)
+                : null,
             'project' => $task->project?->name,
             'milestone' => $task->projectMilestone?->name,
             'sprints' => $task->projectSprint?->name ?? '-',

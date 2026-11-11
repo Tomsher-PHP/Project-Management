@@ -111,30 +111,53 @@
                 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:1100px; background-color:#ffffff; border-radius:10px; overflow:hidden;">
                     {{-- Main Header --}}
                     <tr>
-                        <td style="background-color:#252b3b; padding:28px 30px;">
-                            <h1 style="margin:0; color:#ffffff; font-size:23px; font-weight:700;">
-                                Daily Work Report
-                            </h1>
+                        <td style="background-color:#c8c8c8; padding:28px 30px;">
 
-                            <p style="margin:8px 0 0; color:#cbd5e1; font-size:13px;">
-                                Project Management System
-                            </p>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    {{-- Left Section --}}
+                                    <td width="50%" valign="middle" align="left" style="padding-right:15px;">
 
-                            <p style="margin:12px 0 0; color:#ffffff; font-size:13px;">
-                                Report For:
-                                <strong>{{ $reportOwnerName }}</strong>
-                            </p>
+                                        <h1 style="color:#242424; margin:0; font-size:20px; letter-spacing:0.5px;">
+                                            Daily Work Report
+                                        </h1>
 
-                            <p style="margin:5px 0 0; color:#cbd5e1; font-size:12px;">
-                                {{ $employeeCount }} Employees
-                            </p>
+                                        <p style="margin:8px 0 10px; color:#242424; font-size:13px; line-height:18px;">
+                                            {{ config('app.name') }}
+                                        </p>
 
-                            <p style="margin:5px 0 0; color:#cbd5e1; font-size:12px;">
-                                Reporting Period:
-                                {{ $formatDate($reportPeriodStart) }}
-                                –
-                                {{ $formatDate($reportPeriodEnd) }}
-                            </p>
+                                        <img
+                                            src="{{ url(config('assets.icons.logo')) }}"
+                                            alt="{{ config('app.name') }}"
+                                            height="40"
+                                            style="display:block; height:40px; width:auto; border:0;"
+                                        >
+
+                                    </td>
+
+                                    {{-- Right Section --}}
+                                    <td width="50%" valign="middle" align="right" style="padding-left:15px;">
+
+                                        <p style="margin:0; color:#242424; font-size:13px; line-height:20px;">
+                                            Report For:
+                                            <strong>{{ $reportOwnerName }}</strong>
+                                        </p>
+
+                                        <p style="margin:5px 0 0; color:#242424; font-size:12px; line-height:18px;">
+                                            {{ $employeeCount }} Employees
+                                        </p>
+
+                                        <p style="margin:5px 0 0; color:#242424; font-size:12px; line-height:18px;">
+                                            Reporting Period:<br>
+                                            {{ $formatDate($reportPeriodStart) }}
+                                            –
+                                            {{ $formatDate($reportPeriodEnd) }}
+                                        </p>
+
+                                    </td>
+                                </tr>
+                            </table>
+
                         </td>
                     </tr>
 
@@ -187,11 +210,11 @@
 
                         {{-- Team Heading --}}
                         <tr>
-                            <td style="padding:20px 30px 12px; background-color:#eef2f7; border-bottom:1px solid #e2e8f0;">
+                            <td style="padding:20px 30px 12px; background-color:#0058a2; border-bottom:1px solid #e2e8f0;">
                                 <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                     <tr>
                                         <td align="left">
-                                            <h2 style="margin:0; font-size:16px; color:#263244;">
+                                            <h2 style="margin:0; font-size:16px; color:#fff;">
                                                 {{ $teamName }}
                                             </h2>
                                         </td>
@@ -443,7 +466,7 @@
                                                     <td width="14.285%" valign="top" style="padding:3px;">
                                                         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
                                                             <tr>
-                                                                <td style="padding:11px 5px; text-align:center;">
+                                                                <td style="padding:5px; text-align:center;">
 
                                                                     @if ($isClickable)
                                                                         <a href="{{ $countUrl }}" target="_blank" style="display:block; text-decoration:none; color:inherit;">
@@ -513,7 +536,16 @@
 
                                                         {{-- Project, Milestone and Sprint --}}
                                                         <td style="padding:10px; border-bottom:1px solid #e5e7eb; font-size:12px; color:#334155;">
-                                                            {{ $task['project'] ?? 'N/A' }}
+
+                                                            @if (!empty($task['project_url']))
+                                                                <a href="{{ $task['project_url'] }}"
+                                                                target="_blank"
+                                                                style="font-weight:600; color:#2563eb; text-decoration:none;">
+                                                                    {{ $task['project'] ?? 'N/A' }}
+                                                                </a>
+                                                            @else
+                                                                {{ $task['project'] ?? 'N/A' }}
+                                                            @endif
 
                                                             @if (!empty($task['milestone']))
                                                                 <div style="font-size:11px; color:#6b7280; margin-top:3px;">
@@ -706,15 +738,41 @@
                                                                     {{ $task['name'] ?? 'Untitled Task' }}
                                                                 </a>
                                                             @else
-                                                                <strong>
-                                                                    {{ $task['name'] ?? 'Untitled Task' }}
-                                                                </strong>
+                                                                <strong>{{ $task['name'] ?? 'Untitled Task' }}</strong>
+                                                            @endif
+
+                                                            @if (!empty($task['code']))
+                                                                <div style="margin-top:4px; font-size:10px; color:#94a3b8;">
+                                                                    {{ $task['code'] }}
+                                                                </div>
                                                             @endif
                                                         </td>
 
-                                                        {{-- Project --}}
-                                                        <td style="padding:12px 9px; border-bottom:1px solid #e2e8f0; font-size:12px; color:#334155;">
-                                                            {{ $task['project'] ?? 'N/A' }}
+                                                        {{-- Project, Milestone and Sprint --}}
+                                                        <td style="padding:10px; border-bottom:1px solid #e5e7eb; font-size:12px; color:#334155;">
+
+                                                            @if (!empty($task['project_url']))
+                                                                <a href="{{ $task['project_url'] }}"
+                                                                target="_blank"
+                                                                style="font-weight:600; color:#2563eb; text-decoration:none;">
+                                                                    {{ $task['project'] ?? 'N/A' }}
+                                                                </a>
+                                                            @else
+                                                                {{ $task['project'] ?? 'N/A' }}
+                                                            @endif
+
+                                                            @if (!empty($task['milestone']))
+                                                                <div style="font-size:11px; color:#6b7280; margin-top:3px;">
+                                                                    Milestone: {{ $task['milestone'] }}
+                                                                </div>
+                                                            @endif
+
+                                                            @if (!empty($task['sprints']))
+                                                                <div style="font-size:11px; color:#6b7280; margin-top:3px;">
+                                                                    Sprint:
+                                                                    {{ is_array($task['sprints']) ? implode(', ', $task['sprints']) : $task['sprints'] }}
+                                                                </div>
+                                                            @endif
                                                         </td>
 
                                                         {{-- Due Date --}}
