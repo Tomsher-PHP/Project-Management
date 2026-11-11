@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProjectExport;
 use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectCommentRequest;
@@ -40,6 +41,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProjectController extends Controller
 {
@@ -110,6 +113,39 @@ class ProjectController extends Controller
             'projectCategories',
             'serviceTypes'
         ));
+    }
+
+    public function export(Request $request): BinaryFileResponse
+    {
+        $user = auth()->user();
+
+        if (! $user || ! $user->can('project.export')) {
+            abort(403);
+        }
+
+        $projects = Project::accessibleBy($user)
+            ->with([
+                'customer.profileGrade',
+                'technologies',
+                'parentProject',
+                'projectTimelines',
+                'serviceTypes',
+                'projectStatus',
+                'projectStage',
+                'salesPerson',
+            ])
+            ->filter($request->all())
+            ->sort($request->all())
+            ->orderBy('projects.id', 'desc')
+            ->get();
+
+        $timestamp = now((string) config('constants.timezone', config('app.timezone')))->format('Y-m-d_His');
+        $fileName = 'projects-export_' . $timestamp . '.xlsx';
+
+        return Excel::download(
+            new ProjectExport($projects, $request->all()),
+            $fileName
+        );
     }
 
     public function store(ProjectRequest $request, ProjectServices $service)

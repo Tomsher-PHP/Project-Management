@@ -21,7 +21,9 @@ use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
 use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
+use App\Models\User;
 use App\Providers\AppServiceProvider;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -54,84 +56,149 @@ class ProjectServices
         $this->filesystemDisk = env('FILESYSTEM_DISK', 'public');
     }
 
-    public function create(array $data)
+    public function create(array $data, ?User $actor = null)
     {
-        return DB::transaction(function () use ($data) {
-            $data['project_flow'] = $data['project_flow'] ?? 'agile';
-            $data['priority'] = $data['priority'] ?? 'medium';
+        $maxAttempts = 5;
+        $attempt = 0;
 
-            $startDate = $data['start_date'] ?? now(config('constants.timezone'))->toDateString();
+        while (true) {
+            $attempt++;
 
-            if (empty($data['end_date'])) {
-                $data['end_date'] = Carbon::parse($startDate)->addDays(30)->toDateString();
+            try {
+                return DB::transaction(function () use ($data, $actor) {
+                    $actor = $actor ?? auth()->user();
+                    $actorId = $actor?->id;
+
+                    $data['project_flow'] = $data['project_flow'] ?? 'agile';
+                    $data['priority'] = $data['priority'] ?? 'medium';
+
+                    $startDate = $data['start_date'] ?? now(config('constants.timezone'))->toDateString();
+
+                    if (empty($data['end_date'])) {
+                        $data['end_date'] = Carbon::parse($startDate)->addDays(30)->toDateString();
+                    }
+
+                    // Convert minutes -> seconds if provided as minutes
+                    if (! array_key_exists('estimated_time_seconds', $data) && array_key_exists('estimated_time_minutes', $data)) {
+                        $data['estimated_time_seconds'] = $data['estimated_time_minutes'] !== null
+                            ? (int) $data['estimated_time_minutes'] * 60
+                            : null;
+                    }
+                    if (! array_key_exists('customer_estimate_seconds', $data) && array_key_exists('customer_estimate_minutes', $data)) {
+                        $data['customer_estimate_seconds'] = $data['customer_estimate_minutes'] !== null
+                            ? (int) $data['customer_estimate_minutes'] * 60
+                            : null;
+                    }
+
+                    $statusId = $data['status_id'] ?? ProjectStatus::active()->where('is_default', true)->value('id');
+                    $projectStageId = array_key_exists('project_stage_id', $data) && $data['project_stage_id'] !== null
+                        ? $data['project_stage_id']
+                        : ProjectStage::active()->where('is_default', true)->value('id');
+
+                    $customer = ! empty($data['customer_id']) ? Customer::find($data['customer_id']) : null;
+
+                    $categoryIds = null;
+                    if (array_key_exists('project_category_ids', $data)) {
+                        $categoryIds = is_array($data['project_category_ids'])
+                            ? array_values(array_unique(array_filter(array_map('intval', $data['project_category_ids']))))
+                            : null;
+                    } elseif (array_key_exists('project_category_id', $data) && $data['project_category_id'] !== null && $data['project_category_id'] !== '') {
+                        $categoryIds = [(int) $data['project_category_id']];
+                    }
+
+                    // Lock latest project row to serialize project code generation under concurrency
+                    Project::withTrashed()->orderByDesc('id')->lockForUpdate()->first();
+                    $projectCode = Project::generateProjectCode();
+
+                    $salesPersonId = array_key_exists('sales_person_id', $data) && $data['sales_person_id'] !== null
+                        ? (int) $data['sales_person_id']
+                        : ($customer ? $customer->sales_person_id : null);
+
+                    $project = Project::create([
+                        'project_code' => $projectCode,
+                        'name' => $data['name'],
+                        'customer_id' => $customer?->id,
+                        'project_flow' => $data['project_flow'],
+                        'priority' => $data['priority'],
+                        'status_id' => $statusId,
+                        'project_stage_id' => $projectStageId,
+                        'start_date' => $startDate,
+                        'end_date' => $data['end_date'],
+                        'customer_end_date' => $data['customer_end_date'] ?? null,
+                        'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
+                        'customer_estimate_seconds' => $data['customer_estimate_seconds'] ?? null,
+                        'domain' => $data['domain'] ?? null,
+                        'sales_person_id' => $salesPersonId,
+                        'project_category_ids' => ! empty($categoryIds) ? $categoryIds : null,
+                        'default_billable' => $data['default_billable'] ?? 1,
+                        'added_by' => $actorId,
+                    ]);
+
+                    if (isset($data['project_technology_ids']) && is_array($data['project_technology_ids'])) {
+                        $technologyIds = array_values(array_unique(array_filter(array_map('intval', $data['project_technology_ids']))));
+                        if (! empty($technologyIds)) {
+                            $project->technologies()->sync($technologyIds);
+                        }
+                    }
+
+                    if (isset($data['service_type_ids']) && is_array($data['service_type_ids'])) {
+                        $serviceTypeIds = array_values(array_unique(array_filter(array_map('intval', $data['service_type_ids']))));
+                        if (! empty($serviceTypeIds)) {
+                            $project->serviceTypes()->sync($serviceTypeIds);
+                        }
+                    }
+
+                    //status history
+                    ProjectStatusHistory::create([
+                        'project_id' => $project->id,
+                        'status_id' => $project->status_id,
+                        'added_by' => $actorId,
+                    ]);
+
+                    //stage history
+                    ProjectStageHistory::create([
+                        'project_id' => $project->id,
+                        'stage_id' => $project->project_stage_id,
+                        'added_by' => $actorId,
+                    ]);
+
+                    // Generate Original Timeline for the new project
+                    $timelineName = isset($data['timeline_name']) && trim((string) $data['timeline_name']) !== ''
+                        ? trim((string) $data['timeline_name'])
+                        : 'Original Timeline';
+
+                    ProjectTimeline::create([
+                        'project_id' => $project->id,
+                        'name' => $timelineName,
+                        'type' => 'original',
+                        'status' => ProjectTimeline::STATUS_ACTIVE,
+                        'start_date' => $project->start_date,
+                        'end_date' => $project->end_date,
+                        'customer_end_date' => $project->customer_end_date,
+                        'estimated_time_seconds' => $project->estimated_time_seconds,
+                        'customer_estimate_seconds' => $project->customer_estimate_seconds,
+                        'sort_order' => 1,
+                        'created_by' => $actorId,
+                    ]);
+
+                    // Default Project Notification Preferences
+                    $this->getNotificationDefaultsForProject($project);
+
+                    return $project;
+                });
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= $maxAttempts) {
+                    throw $e;
+                }
             }
-
-            $defaultStatusId = ProjectStatus::active()->where('is_default', true)->value('id');
-            $defaultProjectStageId = ProjectStage::active()->where('is_default', true)->value('id');
-
-            $customer = Customer::find($data['customer_id']);
-
-            $categoryIds = null;
-            if (array_key_exists('project_category_ids', $data)) {
-                $categoryIds = is_array($data['project_category_ids'])
-                    ? array_values(array_unique(array_filter(array_map('intval', $data['project_category_ids']))))
-                    : null;
-            } elseif (array_key_exists('project_category_id', $data) && $data['project_category_id'] !== null && $data['project_category_id'] !== '') {
-                $categoryIds = [(int) $data['project_category_id']];
-            }
-
-            $project = Project::create([
-                'project_code' => Project::generateProjectCode(),
-                'name' => $data['name'],
-                'customer_id' => $customer?->id,
-                'project_flow' => $data['project_flow'],
-                'priority' => $data['priority'],
-                'status_id' => $defaultStatusId,
-                'project_stage_id' => $defaultProjectStageId,
-                'start_date' => $startDate,
-                'end_date' => $data['end_date'],
-                'sales_person_id' => $customer ? $customer->sales_person_id : null,
-                'project_category_ids' => ! empty($categoryIds) ? $categoryIds : null,
-                'default_billable' => $data['default_billable'] ?? 1,
-            ]);
-
-            //status history
-            ProjectStatusHistory::create([
-                'project_id' => $project->id,
-                'status_id' => $project->status_id,
-            ]);
-
-            //stage history
-            ProjectStageHistory::create([
-                'project_id' => $project->id,
-                'stage_id' => $project->project_stage_id,
-            ]);
-
-            // Generate Original Timeline for the new project
-            ProjectTimeline::create([
-                'project_id' => $project->id,
-                'name' => 'Original Timeline',
-                'type' => 'original',
-                'status' => ProjectTimeline::STATUS_ACTIVE,
-                'start_date' => $project->start_date,
-                'end_date' => $project->end_date,
-                'customer_end_date' => $project->customer_end_date,
-                'estimated_time_seconds' => $project->estimated_time_seconds,
-                'customer_estimate_seconds' => $project->customer_estimate_seconds,
-                'sort_order' => 1,
-                'created_by' => auth()->id(),
-            ]);
-
-            // Default Project Notification Preferences
-            $this->getNotificationDefaultsForProject($project);
-
-            return $project;
-        });
+        }
     }
 
-    public function update(Project $project, array $data)
+    public function update(Project $project, array $data, ?User $actor = null)
     {
-        return DB::transaction(function () use ($project, $data) {
+        return DB::transaction(function () use ($project, $data, $actor) {
+            $actor = $actor ?? auth()->user();
+
             // Convert minutes -> seconds
             if (array_key_exists('estimated_time_minutes', $data)) {
                 $data['estimated_time_seconds'] = $data['estimated_time_minutes'] !== null
@@ -165,6 +232,7 @@ class ProjectServices
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
                 'default_billable' => $data['default_billable'],
+                'updated_by' => $actor?->id,
             ];
 
             if (array_key_exists('start_date', $data)) {
@@ -222,11 +290,14 @@ class ProjectServices
             }
 
             // Sync original timeline
-            app(ProjectTimelineService::class)->syncOriginalTimelineFromProject($project);
+            $timelineName = array_key_exists('timeline_name', $data) && $data['timeline_name'] !== null
+                ? trim((string) $data['timeline_name'])
+                : null;
+            app(ProjectTimelineService::class)->syncOriginalTimelineFromProject($project, $timelineName);
 
             $updatedProject = $project->fresh();
 
-            if ($timelineChanges !== [] && ($actor = auth()->user())) {
+            if ($timelineChanges !== [] && $actor) {
                 $this->notificationService->notifyProjectTimelineChanged(
                     $updatedProject,
                     $actor,
@@ -235,6 +306,69 @@ class ProjectServices
             }
 
             return $updatedProject; // return updated model
+        });
+    }
+
+    /**
+     * Update an existing project from bulk import data, preserving unspecified fields
+     * and maintaining status/stage histories and Original Timeline synchronization.
+     */
+    public function updateFromImport(Project $project, array $data, ?User $actor = null): Project
+    {
+        return DB::transaction(function () use ($project, $data, $actor) {
+            $actor = $actor ?? auth()->user();
+
+            $mergedData = [
+                'parent_project_id' => $project->parent_project_id,
+                'name' => $data['name'] ?? $project->name,
+                'customer_id' => array_key_exists('customer_id', $data) ? $data['customer_id'] : $project->customer_id,
+                'priority' => $data['priority'] ?? $project->priority,
+                'domain' => array_key_exists('domain', $data) ? $data['domain'] : $project->domain,
+                'sales_person_id' => array_key_exists('sales_person_id', $data) ? $data['sales_person_id'] : $project->sales_person_id,
+                'default_billable' => array_key_exists('default_billable', $data) ? $data['default_billable'] : $project->default_billable,
+                'project_category_ids' => array_key_exists('project_category_ids', $data) ? $data['project_category_ids'] : ($project->project_category_ids ?? []),
+                'start_date' => array_key_exists('start_date', $data) ? $data['start_date'] : $project->start_date?->toDateString(),
+                'end_date' => array_key_exists('end_date', $data) ? $data['end_date'] : $project->end_date?->toDateString(),
+                'customer_end_date' => array_key_exists('customer_end_date', $data) ? $data['customer_end_date'] : $project->customer_end_date?->toDateString(),
+                'estimated_time_seconds' => array_key_exists('estimated_time_seconds', $data) ? $data['estimated_time_seconds'] : $project->estimated_time_seconds,
+                'customer_estimate_seconds' => array_key_exists('customer_estimate_seconds', $data) ? $data['customer_estimate_seconds'] : $project->customer_estimate_seconds,
+            ];
+
+            if (array_key_exists('project_technology_ids', $data)) {
+                $mergedData['project_technology_ids'] = $data['project_technology_ids'];
+            }
+
+            if (array_key_exists('service_type_ids', $data)) {
+                $mergedData['service_type_ids'] = $data['service_type_ids'];
+            }
+
+            if (array_key_exists('timeline_name', $data)) {
+                $mergedData['timeline_name'] = $data['timeline_name'];
+            }
+
+            $updatedProject = $this->update($project, $mergedData, $actor);
+
+            if (array_key_exists('status_id', $data) && $data['status_id'] !== null) {
+                $updatedProject = $this->updateStatus(
+                    $updatedProject,
+                    (int) $data['status_id'],
+                    null,
+                    'Updated via bulk project import',
+                    $actor
+                );
+            }
+
+            if (array_key_exists('project_stage_id', $data) && $data['project_stage_id'] !== null) {
+                $updatedProject = $this->updateStage(
+                    $updatedProject,
+                    (int) $data['project_stage_id'],
+                    null,
+                    'Updated via bulk project import',
+                    $actor
+                );
+            }
+
+            return $updatedProject;
         });
     }
 
@@ -262,9 +396,11 @@ class ProjectServices
         return AppServiceProvider::formatAppDate($value);
     }
 
-    public function updateStatus(Project $project, int $statusId, ?string $statusDate = null, ?string $remarks = null): Project
+    public function updateStatus(Project $project, int $statusId, ?string $statusDate = null, ?string $remarks = null, ?User $actor = null): Project
     {
-        return DB::transaction(function () use ($project, $statusId, $statusDate, $remarks) {
+        return DB::transaction(function () use ($project, $statusId, $statusDate, $remarks, $actor) {
+            $actor = $actor ?? auth()->user();
+
             if ((int) $project->status_id !== $statusId) {
                 $fromStatusId = $project->status_id;
                 $statusNames = ProjectStatus::withTrashed()
@@ -273,6 +409,7 @@ class ProjectServices
 
                 $project->update([
                     'status_id' => $statusId,
+                    'updated_by' => $actor?->id,
                 ]);
 
                 $historyAddedAt = $this->resolveHistoryAddedAt($statusDate);
@@ -281,11 +418,12 @@ class ProjectServices
                     'project_id' => $project->id,
                     'from_status_id' => $fromStatusId,
                     'status_id' => $statusId,
+                    'added_by' => $actor?->id,
                     'added_at' => $historyAddedAt,
                     'remarks' => blank($remarks) ? null : $remarks,
                 ]);
 
-                if ($actor = auth()->user()) {
+                if ($actor) {
                     $this->notificationService->notifyProjectStatusChanged(
                         $project->fresh(),
                         $actor,
@@ -299,9 +437,11 @@ class ProjectServices
         });
     }
 
-    public function updateStage(Project $project, ?int $projectStageId, ?string $changeDate = null, ?string $remarks = null): Project
+    public function updateStage(Project $project, ?int $projectStageId, ?string $changeDate = null, ?string $remarks = null, ?User $actor = null): Project
     {
-        return DB::transaction(function () use ($project, $projectStageId, $changeDate, $remarks) {
+        return DB::transaction(function () use ($project, $projectStageId, $changeDate, $remarks, $actor) {
+            $actor = $actor ?? auth()->user();
+
             if ((int) ($project->project_stage_id ?? 0) !== (int) ($projectStageId ?? 0)) {
                 $fromStageId = $project->project_stage_id;
                 $stageNames = ProjectStage::withTrashed()
@@ -310,6 +450,7 @@ class ProjectServices
 
                 $project->update([
                     'project_stage_id' => $projectStageId,
+                    'updated_by' => $actor?->id,
                 ]);
 
                 $historyAddedAt = $this->resolveHistoryAddedAt($changeDate);
@@ -318,11 +459,12 @@ class ProjectServices
                     'project_id' => $project->id,
                     'from_stage_id' => $fromStageId,
                     'stage_id' => $projectStageId,
+                    'added_by' => $actor?->id,
                     'added_at' => $historyAddedAt,
                     'remarks' => blank($remarks) ? null : $remarks,
                 ]);
 
-                if ($actor = auth()->user()) {
+                if ($actor) {
                     $this->notificationService->notifyProjectStageChanged(
                         $project->fresh(),
                         $actor,

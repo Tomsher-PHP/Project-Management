@@ -294,7 +294,7 @@
                     @endif
                     <span class="pill">{{ $priorityLabel ?? 'Important' }}</span>
                 </div>
-                <p class="intro">Hello {{ $recipient->name ?? '' }},<br>This broadcast has been published for you. Please review the information below.</p>
+                <p class="intro">Hello{{ !empty($recipient?->name) ? ' ' . $recipient->name : '' }},<br>This broadcast has been published for you. Please review the information below.</p>
                 <div class="separator"></div>
                 <div class="content">
                     @if (isset($contentHtml))

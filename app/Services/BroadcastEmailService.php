@@ -17,6 +17,11 @@ use Illuminate\Support\Str;
 class BroadcastEmailService
 {
     /**
+     * Default per-message recipient limit (To + CC + BCC) matching Gmail SMTP / RFC 5321 minimum.
+     */
+    public const DEFAULT_MAX_RECIPIENTS_PER_MESSAGE = 100;
+
+    /**
      * Initiate broadcast email queueing if publication conditions are satisfied.
      */
     public function queueBroadcastPublication(Broadcast $broadcast): void
@@ -35,7 +40,7 @@ class BroadcastEmailService
     }
 
     /**
-     * Resolve recipients and prepare delivery records for a broadcast.
+     * Resolve recipients, prepare delivery tracking, and queue one send job for the broadcast.
      */
     public function dispatchBroadcast(int $broadcastId): void
     {
@@ -46,20 +51,6 @@ class BroadcastEmailService
             return;
         }
 
-        // Check if delivery records were already prepared
-        $alreadyPrepared = BroadcastEmailDelivery::query()
-            ->where('broadcast_id', $broadcast->id)
-            ->whereIn('status', [
-                BroadcastEmailDelivery::STATUS_PROCESSING,
-                BroadcastEmailDelivery::STATUS_SENT,
-            ])
-            ->exists();
-
-        if ($alreadyPrepared) {
-            Log::info("Broadcast [{$broadcast->id}] email deliveries are already in progress or sent.");
-            return;
-        }
-
         $recipients = $this->resolveEligibleRecipients($broadcast);
 
         if ($recipients->isEmpty()) {
@@ -67,151 +58,316 @@ class BroadcastEmailService
             return;
         }
 
-        $now = now();
-        $pendingDeliveryIds = [];
+        $prepared = DB::transaction(function () use ($broadcast, $recipients): bool {
+            $lockedBroadcast = Broadcast::query()->whereKey($broadcast->id)->lockForUpdate()->first();
 
-        foreach ($recipients as $recipient) {
-            /** @var BroadcastEmailDelivery $delivery */
-            $delivery = BroadcastEmailDelivery::firstOrCreate(
-                [
-                    'broadcast_id' => $broadcast->id,
-                    'user_id' => $recipient->id,
-                ],
-                [
-                    'email' => $recipient->email,
-                    'status' => BroadcastEmailDelivery::STATUS_PENDING,
-                    'attempts' => 0,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]
-            );
-
-            if ($delivery->wasRecentlyCreated || (int) $delivery->status === BroadcastEmailDelivery::STATUS_PENDING) {
-                $pendingDeliveryIds[] = $delivery->id;
+            if (! $lockedBroadcast || (int) $lockedBroadcast->status !== Broadcast::STATUS_PUBLISHED) {
+                return false;
             }
+
+            if (BroadcastEmailDelivery::query()->where('broadcast_id', $broadcast->id)->exists()) {
+                return false;
+            }
+
+            $now = now();
+            $rows = $recipients->map(fn (User $recipient) => [
+                'broadcast_id' => $broadcast->id,
+                'user_id' => $recipient->id,
+                'email' => trim((string) $recipient->email),
+                'status' => BroadcastEmailDelivery::STATUS_PENDING,
+                'attempts' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all();
+
+            foreach (array_chunk($rows, 500) as $chunk) {
+                BroadcastEmailDelivery::insert($chunk);
+            }
+
+            return true;
+        });
+
+        if (! $prepared) {
+            Log::info("Broadcast [{$broadcast->id}] email deliveries are already prepared or broadcast is no longer published.");
+            return;
         }
 
-        // Queue individual recipient delivery jobs in chunks
-        foreach (array_chunk($pendingDeliveryIds, 100) as $chunk) {
-            foreach ($chunk as $deliveryId) {
-                SendBroadcastEmailJob::dispatch($deliveryId);
-            }
+        try {
+            SendBroadcastEmailJob::dispatch($broadcast->id);
+        } catch (\Throwable $e) {
+            // Roll back freshly created pending records so a job retry can re-prepare cleanly
+            BroadcastEmailDelivery::query()
+                ->where('broadcast_id', $broadcast->id)
+                ->where('status', BroadcastEmailDelivery::STATUS_PENDING)
+                ->delete();
+
+            throw $e;
         }
 
-        Log::info("Broadcast [{$broadcast->id}] queued " . count($pendingDeliveryIds) . " email deliveries.");
+        Log::info("Broadcast [{$broadcast->id}] prepared " . $recipients->count() . ' recipient(s) and queued 1 BCC email job.');
     }
 
     /**
-     * Resolve eligible recipients for a broadcast based on audience type.
+     * Resolve eligible recipients for a broadcast based on audience type, deduplicated by email.
      *
      * @return Collection<int, User>
      */
     public function resolveEligibleRecipients(Broadcast $broadcast): Collection
     {
-        if ($broadcast->audience_type === Broadcast::AUDIENCE_ALL) {
-            return User::query()
+        $query = $broadcast->audience_type === Broadcast::AUDIENCE_ALL
+            ? User::query()
                 ->active()
                 ->where('delete_status', false)
                 ->whereNull('deleted_at')
                 ->whereNotNull('email')
                 ->where('email', '!=', '')
                 ->select(['id', 'email', 'name'])
-                ->get()
-                ->filter(fn ($user) => filter_var($user->email, FILTER_VALIDATE_EMAIL))
-                ->unique('id')
-                ->values();
-        }
+            : User::query()
+                ->join('broadcast_users', 'broadcast_users.user_id', '=', 'users.id')
+                ->where('broadcast_users.broadcast_id', $broadcast->id)
+                ->active()
+                ->where('users.delete_status', false)
+                ->whereNull('users.deleted_at')
+                ->whereNotNull('users.email')
+                ->where('users.email', '!=', '')
+                ->select(['users.id', 'users.email', 'users.name']);
 
-        // Audience type: teams or users (both use stored broadcast_users allocations)
-        return User::query()
-            ->join('broadcast_users', 'broadcast_users.user_id', '=', 'users.id')
-            ->where('broadcast_users.broadcast_id', $broadcast->id)
-            ->active()
-            ->where('users.delete_status', false)
-            ->whereNull('users.deleted_at')
-            ->whereNotNull('users.email')
-            ->where('users.email', '!=', '')
-            ->select(['users.id', 'users.email', 'users.name'])
-            ->distinct()
-            ->get()
-            ->filter(fn ($user) => filter_var($user->email, FILTER_VALIDATE_EMAIL))
-            ->unique('id')
-            ->values();
+        $uniqueByEmail = [];
+        $column = $broadcast->audience_type === Broadcast::AUDIENCE_ALL ? 'id' : 'users.id';
+
+        $query->chunkById(500, function (Collection $users) use (&$uniqueByEmail): void {
+            foreach ($users as $user) {
+                $email = trim((string) $user->email);
+
+                if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    continue;
+                }
+
+                $normalized = strtolower($email);
+                if (! isset($uniqueByEmail[$normalized])) {
+                    $user->email = $email;
+                    $uniqueByEmail[$normalized] = $user;
+                }
+            }
+        }, $column, 'id');
+
+        return collect(array_values($uniqueByEmail));
     }
 
     /**
-     * Process an individual broadcast email delivery record.
+     * Send a single BCC email for all prepared eligible recipients of a broadcast.
      */
-    public function sendDelivery(int $deliveryId): void
+    public function sendBroadcast(int $broadcastId): void
     {
-        // Atomically claim the delivery record to prevent concurrent workers from sending duplicates
-        $claimed = BroadcastEmailDelivery::query()
-            ->where('id', $deliveryId)
-            ->whereIn('status', [
-                BroadcastEmailDelivery::STATUS_PENDING,
-                BroadcastEmailDelivery::STATUS_FAILED,
-            ])
-            ->update([
-                'status' => BroadcastEmailDelivery::STATUS_PROCESSING,
-                'last_attempt_at' => now(),
-                'attempts' => DB::raw('attempts + 1'),
-            ]);
-
-        if ($claimed === 0) {
-            // Already claimed or sent by another worker
+        if (! $this->claimBroadcastForSending($broadcastId)) {
             return;
         }
 
-        /** @var BroadcastEmailDelivery|null $delivery */
-        $delivery = BroadcastEmailDelivery::with(['broadcast.category', 'broadcast.attachments', 'user'])->find($deliveryId);
+        /** @var Broadcast|null $broadcast */
+        $broadcast = Broadcast::with(['category', 'attachments'])->find($broadcastId);
 
-        if (! $delivery) {
-            return;
-        }
-
-        $broadcast = $delivery->broadcast;
-        $recipient = $delivery->user;
-
-        // Skip if broadcast missing or was archived prior to delivery
         if (! $broadcast || (int) $broadcast->status !== Broadcast::STATUS_PUBLISHED) {
-            $delivery->update([
-                'status' => BroadcastEmailDelivery::STATUS_FAILED,
-                'error_message' => 'Skipped: Broadcast is not published or was archived prior to delivery.',
-            ]);
+            $this->markProcessingDeliveriesFailed(
+                $broadcastId,
+                'Skipped: Broadcast is not published or was archived prior to delivery.'
+            );
             return;
         }
 
-        // Verify recipient eligibility
-        if (
-            ! $recipient
-            || ! $recipient->is_active
-            || $recipient->delete_status
-            || $recipient->deleted_at
-            || ! filter_var($delivery->email, FILTER_VALIDATE_EMAIL)
-        ) {
-            $delivery->update([
-                'status' => BroadcastEmailDelivery::STATUS_FAILED,
-                'error_message' => 'Recipient account is inactive, deleted, or has an invalid email address.',
+        $senderEmail = trim((string) config('mail.from.address', ''));
+        if ($senderEmail === '' || ! filter_var($senderEmail, FILTER_VALIDATE_EMAIL)) {
+            $message = 'Skipped: MAIL_FROM_ADDRESS is not configured or invalid.';
+            Log::error("Broadcast [{$broadcastId}] email delivery aborted: {$message}");
+            $this->markProcessingDeliveriesFailed($broadcastId, $message);
+            return;
+        }
+
+        $deliveries = BroadcastEmailDelivery::query()
+            ->with('user')
+            ->where('broadcast_id', $broadcastId)
+            ->where('status', BroadcastEmailDelivery::STATUS_PROCESSING)
+            ->orderBy('id')
+            ->get();
+
+        [$eligibleIds, $ineligibleIds, $bccEmails] = $this->partitionRecipientsForSending($deliveries, $senderEmail);
+
+        if ($ineligibleIds !== []) {
+            BroadcastEmailDelivery::query()
+                ->whereIn('id', $ineligibleIds)
+                ->update([
+                    'status' => BroadcastEmailDelivery::STATUS_FAILED,
+                    'error_message' => 'Recipient account is inactive, deleted, duplicate, or has an invalid email address.',
+                ]);
+        }
+
+        if ($eligibleIds === []) {
+            Log::info("Broadcast [{$broadcastId}] has no eligible recipients remaining at send time.");
+            return;
+        }
+
+        $maxRecipients = $this->getMaxRecipientsPerMessage();
+        // Account for the configured To address (MAIL_FROM_ADDRESS) plus all BCC recipients.
+        $totalRecipients = 1 + count($bccEmails);
+
+        if ($totalRecipients > $maxRecipients) {
+            $message = "Recipient count ({$totalRecipients}, including To and " . count($bccEmails) . " BCC) exceeds the configured SMTP recipient limit of {$maxRecipients} per message.";
+            Log::error("Broadcast [{$broadcastId}] email delivery failed: {$message}", [
+                'broadcast_id' => $broadcastId,
+                'bcc_count' => count($bccEmails),
+                'total_recipients' => $totalRecipients,
+                'max_recipients' => $maxRecipients,
             ]);
+
+            BroadcastEmailDelivery::query()
+                ->whereIn('id', $eligibleIds)
+                ->update([
+                    'status' => BroadcastEmailDelivery::STATUS_FAILED,
+                    'error_message' => Str::limit($message, 1000),
+                ]);
+
             return;
         }
 
         try {
-            Mail::to($delivery->email)->send(new BroadcastPublishedMail($broadcast, $recipient));
+            $pendingMail = Mail::to($senderEmail);
+            if ($bccEmails !== []) {
+                $pendingMail->bcc($bccEmails);
+            }
+            $pendingMail->send(new BroadcastPublishedMail($broadcast));
 
-            $delivery->update([
-                'status' => BroadcastEmailDelivery::STATUS_SENT,
-                'sent_at' => now(),
-                'error_message' => null,
-            ]);
+            BroadcastEmailDelivery::query()
+                ->whereIn('id', $eligibleIds)
+                ->update([
+                    'status' => BroadcastEmailDelivery::STATUS_SENT,
+                    'sent_at' => now(),
+                    'error_message' => null,
+                ]);
+
+            Log::info("Broadcast [{$broadcastId}] sent 1 email (To: {$senderEmail}, BCC: " . count($bccEmails) . ' recipient(s)).');
         } catch (\Throwable $e) {
-            $delivery->update([
-                'status' => BroadcastEmailDelivery::STATUS_FAILED,
-                'error_message' => Str::limit($e->getMessage(), 1000),
-            ]);
+            BroadcastEmailDelivery::query()
+                ->whereIn('id', $eligibleIds)
+                ->update([
+                    'status' => BroadcastEmailDelivery::STATUS_FAILED,
+                    'error_message' => Str::limit($e->getMessage(), 1000),
+                ]);
 
             throw $e;
         }
     }
-}
 
+    /**
+     * Atomically claim pending or failed delivery records for a broadcast to prevent concurrent sends.
+     */
+    protected function claimBroadcastForSending(int $broadcastId): bool
+    {
+        return DB::transaction(function () use ($broadcastId): bool {
+            Broadcast::query()->whereKey($broadcastId)->lockForUpdate()->first();
+
+            $deliveries = BroadcastEmailDelivery::query()
+                ->where('broadcast_id', $broadcastId)
+                ->lockForUpdate()
+                ->get();
+
+            if ($deliveries->isEmpty()) {
+                return false;
+            }
+
+            $alreadyActiveOrSent = $deliveries->contains(function (BroadcastEmailDelivery $delivery): bool {
+                return in_array((int) $delivery->status, [
+                    BroadcastEmailDelivery::STATUS_PROCESSING,
+                    BroadcastEmailDelivery::STATUS_SENT,
+                ], true);
+            });
+
+            if ($alreadyActiveOrSent) {
+                return false;
+            }
+
+            $updated = BroadcastEmailDelivery::query()
+                ->where('broadcast_id', $broadcastId)
+                ->whereIn('status', [
+                    BroadcastEmailDelivery::STATUS_PENDING,
+                    BroadcastEmailDelivery::STATUS_FAILED,
+                ])
+                ->update([
+                    'status' => BroadcastEmailDelivery::STATUS_PROCESSING,
+                    'last_attempt_at' => now(),
+                    'attempts' => DB::raw('attempts + 1'),
+                ]);
+
+            return $updated > 0;
+        });
+    }
+
+    /**
+     * Re-validate delivery records at send time and extract unique BCC email addresses.
+     *
+     * @param  Collection<int, BroadcastEmailDelivery>  $deliveries
+     * @return array{0: array<int, int>, 1: array<int, int>, 2: array<int, string>}
+     */
+    protected function partitionRecipientsForSending(Collection $deliveries, string $senderEmail): array
+    {
+        $eligibleIds = [];
+        $ineligibleIds = [];
+        $bccEmails = [];
+        $seenEmails = [];
+
+        foreach ($deliveries as $delivery) {
+            $recipient = $delivery->user;
+            $email = trim((string) $delivery->email);
+            $normalizedEmail = strtolower($email);
+
+            $isUserEligible = $recipient
+                && $recipient->is_active
+                && ! $recipient->delete_status
+                && ! $recipient->deleted_at;
+
+            if (! $isUserEligible || $email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $ineligibleIds[] = $delivery->id;
+                continue;
+            }
+
+            if (isset($seenEmails[$normalizedEmail])) {
+                $ineligibleIds[] = $delivery->id;
+                continue;
+            }
+
+            $seenEmails[$normalizedEmail] = true;
+            $eligibleIds[] = $delivery->id;
+
+            // Avoid duplicating MAIL_FROM_ADDRESS in BCC since it is already in To.
+            if (strcasecmp($email, $senderEmail) !== 0) {
+                $bccEmails[] = $email;
+            }
+        }
+
+        return [$eligibleIds, $ineligibleIds, $bccEmails];
+    }
+
+    /**
+     * Mark all currently processing deliveries for a broadcast as failed.
+     */
+    protected function markProcessingDeliveriesFailed(int $broadcastId, string $message): void
+    {
+        BroadcastEmailDelivery::query()
+            ->where('broadcast_id', $broadcastId)
+            ->where('status', BroadcastEmailDelivery::STATUS_PROCESSING)
+            ->update([
+                'status' => BroadcastEmailDelivery::STATUS_FAILED,
+                'error_message' => Str::limit($message, 1000),
+            ]);
+    }
+
+    /**
+     * Resolve the configured per-message recipient limit.
+     */
+    public function getMaxRecipientsPerMessage(): int
+    {
+        $configured = config('mail.max_recipients');
+
+        return is_numeric($configured) && (int) $configured > 0
+            ? (int) $configured
+            : self::DEFAULT_MAX_RECIPIENTS_PER_MESSAGE;
+    }
+}
