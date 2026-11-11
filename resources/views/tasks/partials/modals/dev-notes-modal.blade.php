@@ -34,10 +34,6 @@
 
     <form id="developer-notes-form" class="hidden space-y-4">
         <div>
-            {{-- <label class="mb-2 block text-sm font-semibold text-bgray-700 dark:text-white">
-                Developer Note
-            </label> --}}
-
             <input type="hidden" id="developer-note-input" name="developer_note">
 
             <div class="custom-quill-wrapper overflow-hidden rounded-lg border border-bgray-300 dark:border-darkblack-400">
