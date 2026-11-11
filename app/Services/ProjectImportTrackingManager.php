@@ -77,6 +77,9 @@ class ProjectImportTrackingManager
             'total_rows' => 0,
             'processed_rows' => 0,
             'successful_rows' => 0,
+            'created_rows' => 0,
+            'updated_rows' => 0,
+            'unchanged_rows' => 0,
             'failed_rows' => 0,
             'error_message' => null,
             'row_results' => [],
@@ -179,17 +182,29 @@ class ProjectImportTrackingManager
         $totalRows = (int) ($meta['total_rows'] ?? 0);
         $processedRows = count($rowResults);
 
+        $schema = $this->resolveModuleSchema((string) ($meta['module_key'] ?? 'project_hosting'));
+        $resultColumns = $schema['result_columns'];
+
         // If total rows was determined and is greater than processed rows, fill remainder as unprocessed
         if ($totalRows > $processedRows) {
             for ($i = $processedRows + 1; $i <= $totalRows; $i++) {
-                $rowResults[] = [
+                $unprocessed = [
                     'excel_row' => $i + 1, // Excel row numbering
                     'project_code' => '-',
-                    'service_name' => '-',
                     'status' => 'unprocessed',
                     'message' => 'Processing was interrupted before this row could be processed.',
                     'raw_values' => [],
                 ];
+
+                if (! empty($resultColumns)) {
+                    foreach ($resultColumns as $fieldKey) {
+                        $unprocessed[$fieldKey] = '-';
+                    }
+                } else {
+                    $unprocessed['service_name'] = '-';
+                }
+
+                $rowResults[] = $unprocessed;
             }
         }
 
@@ -280,8 +295,44 @@ class ProjectImportTrackingManager
     }
 
     /**
+     * Resolve worksheet title, expected headers, and extra result columns for a module.
+     *
+     * @return array{worksheet_name: string, expected_headers: array<string, string>, result_columns: array<string, string>}
+     */
+    public function resolveModuleSchema(string $moduleKey): array
+    {
+        $moduleConfig = config("project_constants.project_import_modules.{$moduleKey}", []);
+        $validatorClass = $moduleConfig['validator_class'] ?? null;
+
+        if (! $validatorClass || ! class_exists($validatorClass)) {
+            $validatorClass = match ($moduleKey) {
+                'projects' => ProjectBulkImportValidator::class,
+                default => ProjectHostingImportValidator::class,
+            };
+        }
+
+        $worksheetName = defined("{$validatorClass}::WORKSHEET_NAME")
+            ? $validatorClass::WORKSHEET_NAME
+            : 'Import Data';
+
+        $expectedHeaders = defined("{$validatorClass}::EXPECTED_HEADERS")
+            ? $validatorClass::EXPECTED_HEADERS
+            : [];
+
+        $resultColumns = is_array($moduleConfig['result_columns'] ?? null)
+            ? $moduleConfig['result_columns']
+            : [];
+
+        return [
+            'worksheet_name' => $worksheetName,
+            'expected_headers' => $expectedHeaders,
+            'result_columns' => $resultColumns,
+        ];
+    }
+
+    /**
      * Generate the "Download Failed Rows" Excel workbook containing only failed rows.
-     * Preserves original 18 columns + Column S "Import Error" with sheet "Hosting Upload".
+     * Preserves all module template columns + trailing "Import Error" column and module worksheet name.
      *
      * @param  string  $importId
      * @return string|null Absolute path to generated file
@@ -307,35 +358,47 @@ class ProjectImportTrackingManager
             return null;
         }
 
+        $schema = $this->resolveModuleSchema((string) ($meta['module_key'] ?? 'project_hosting'));
+        $expectedHeaders = $schema['expected_headers'];
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle(ProjectHostingImportValidator::WORKSHEET_NAME);
+        $sheet->setTitle($schema['worksheet_name']);
 
-        // Header Row: Columns A through R
-        foreach (ProjectHostingImportValidator::EXPECTED_HEADERS as $col => $header) {
-            $sheet->setCellValueExplicit($col . '1', $header, DataType::TYPE_STRING);
+        // Header Row: module's expected columns
+        $colIndex = 1;
+        $headerColumnMap = [];
+        foreach ($expectedHeaders as $col => $header) {
+            $targetCol = is_string($col) && ctype_alpha($col)
+                ? $col
+                : \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+            $sheet->setCellValueExplicit($targetCol . '1', $header, DataType::TYPE_STRING);
+            $headerColumnMap[$header] = $targetCol;
+            $colIndex++;
         }
-        // Column S: Import Error
-        $sheet->setCellValueExplicit('S1', 'Import Error', DataType::TYPE_STRING);
+
+        // Trailing Import Error column
+        $errorCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($expectedHeaders) + 1);
+        $sheet->setCellValueExplicit($errorCol . '1', 'Import Error', DataType::TYPE_STRING);
 
         // Populate Data Rows
         $currentRow = 2;
         foreach ($failedRows as $failedItem) {
             $raw = $failedItem['raw_values'] ?? [];
 
-            foreach (ProjectHostingImportValidator::EXPECTED_HEADERS as $col => $header) {
+            foreach ($expectedHeaders as $header) {
+                $targetCol = $headerColumnMap[$header];
                 $val = $raw[$header] ?? '';
-                $sheet->setCellValueExplicit($col . $currentRow, (string) $val, DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit($targetCol . $currentRow, (string) $val, DataType::TYPE_STRING);
             }
 
-            // Column S
             $errorMessage = $failedItem['message'] ?? 'Validation or import error';
-            $sheet->setCellValueExplicit('S' . $currentRow, (string) $errorMessage, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($errorCol . $currentRow, (string) $errorMessage, DataType::TYPE_STRING);
 
             $currentRow++;
         }
 
-        $this->applyStandardSheetStyles($sheet, 'S', $currentRow - 1);
+        $this->applyStandardSheetStyles($sheet, $errorCol, $currentRow - 1);
 
         $writer = new Xlsx($spreadsheet);
         $writer->save($fullPath);
@@ -345,7 +408,7 @@ class ProjectImportTrackingManager
 
     /**
      * Generate the "Download All Results" Excel workbook containing all processed rows.
-     * Columns: Excel Row, Result, Details, followed by original 18 template columns.
+     * Columns: Excel Row, optional module result columns, Result, Details, followed by original template columns.
      *
      * @param  string  $importId
      * @return string|null Absolute path to generated file
@@ -365,35 +428,47 @@ class ProjectImportTrackingManager
         }
 
         $rowResults = $meta['row_results'] ?? [];
+        $schema = $this->resolveModuleSchema((string) ($meta['module_key'] ?? 'project_hosting'));
+        $expectedHeaders = $schema['expected_headers'];
+        $resultColumns = $schema['result_columns'];
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Import Results');
 
-        // Headers
-        $headers = [
-            'A' => 'Excel Row',
-            'B' => 'Result',
-            'C' => 'Details',
-        ];
+        // Build leading summary/identification headers dynamically
+        $headers = [];
+        $colPos = 1;
 
-        // Shift original 18 headers to columns D through U
-        $templateCols = array_keys(ProjectHostingImportValidator::EXPECTED_HEADERS);
-        $index = 3; // start from D (0=A, 1=B, 2=C, 3=D)
+        $excelRowCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colPos++);
+        $headers[$excelRowCol] = 'Excel Row';
 
+        $extraColMap = [];
+        foreach ($resultColumns as $label => $fieldKey) {
+            $letter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colPos++);
+            $headers[$letter] = $label;
+            $extraColMap[$fieldKey] = $letter;
+        }
+
+        $resultCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colPos++);
+        $headers[$resultCol] = 'Result';
+
+        $detailsCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colPos++);
+        $headers[$detailsCol] = 'Details';
+
+        // Append original template headers
         $colMapping = [];
-        foreach (ProjectHostingImportValidator::EXPECTED_HEADERS as $tCol => $headerName) {
-            $letter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+        foreach ($expectedHeaders as $headerName) {
+            $letter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colPos++);
             $headers[$letter] = $headerName;
             $colMapping[$headerName] = $letter;
-            $index++;
         }
 
         foreach ($headers as $col => $header) {
             $sheet->setCellValueExplicit($col . '1', $header, DataType::TYPE_STRING);
         }
 
-        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index);
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colPos - 1);
 
         $currentRow = 2;
         foreach ($rowResults as $resultItem) {
@@ -402,11 +477,16 @@ class ProjectImportTrackingManager
             $details = $resultItem['message'] ?? '';
             $raw = $resultItem['raw_values'] ?? [];
 
-            $sheet->setCellValueExplicit('A' . $currentRow, $excelRowLabel, DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit('B' . $currentRow, $statusLabel, DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit('C' . $currentRow, (string) $details, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($excelRowCol . $currentRow, $excelRowLabel, DataType::TYPE_STRING);
 
-            foreach (ProjectHostingImportValidator::EXPECTED_HEADERS as $tCol => $headerName) {
+            foreach ($extraColMap as $fieldKey => $letter) {
+                $sheet->setCellValueExplicit($letter . $currentRow, (string) ($resultItem[$fieldKey] ?? '-'), DataType::TYPE_STRING);
+            }
+
+            $sheet->setCellValueExplicit($resultCol . $currentRow, $statusLabel, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($detailsCol . $currentRow, (string) $details, DataType::TYPE_STRING);
+
+            foreach ($expectedHeaders as $headerName) {
                 $targetCol = $colMapping[$headerName];
                 $val = $raw[$headerName] ?? '';
                 $sheet->setCellValueExplicit($targetCol . $currentRow, (string) $val, DataType::TYPE_STRING);

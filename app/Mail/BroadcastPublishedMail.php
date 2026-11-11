@@ -7,6 +7,7 @@ use App\Models\Configuration;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -19,12 +20,12 @@ class BroadcastPublishedMail extends Mailable
     use Queueable, SerializesModels;
 
     public Broadcast $broadcast;
-    public User $recipient;
+    public ?User $recipient;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Broadcast $broadcast, User $recipient)
+    public function __construct(Broadcast $broadcast, ?User $recipient = null)
     {
         $this->broadcast = $broadcast;
         $this->recipient = $recipient;
@@ -39,7 +40,13 @@ class BroadcastPublishedMail extends Mailable
             ? "[Urgent] {$this->broadcast->title}"
             : "Broadcast: {$this->broadcast->title}";
 
+        $fromAddress = trim((string) config('mail.from.address', ''));
+        $fromName = config('mail.from.name');
+
         return new Envelope(
+            from: $fromAddress !== ''
+                ? new Address($fromAddress, is_string($fromName) ? $fromName : null)
+                : null,
             subject: $subject,
         );
     }

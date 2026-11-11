@@ -29,6 +29,48 @@ class ProjectImportService
     }
 
     /**
+     * Check whether the user is authorized for the given module definition.
+     * Supports a single permission string, pipe-delimited string, or an array of permissions (OR logic).
+     *
+     * @param  \App\Models\User|null  $user
+     * @param  array<string, mixed>  $module
+     * @return bool
+     */
+    public function userHasModulePermission(?User $user, array $module): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $permission = $module['permission'] ?? null;
+        if (empty($permission)) {
+            return true;
+        }
+
+        $permissions = is_array($permission)
+            ? $permission
+            : explode('|', (string) $permission);
+
+        $permissions = array_values(array_filter(array_map('trim', $permissions)));
+
+        if (empty($permissions)) {
+            return true;
+        }
+
+        if (!empty($user->is_super_admin)) {
+            return true;
+        }
+
+        foreach ($permissions as $perm) {
+            if ($user->can($perm)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Retrieve enabled import modules that the user is authorized to access.
      *
      * @param  \App\Models\User|null  $user
@@ -44,11 +86,7 @@ class ProjectImportService
         }
 
         return array_filter($enabled, function (array $module) use ($user) {
-            if (empty($module['permission'])) {
-                return true;
-            }
-
-            return $user->can($module['permission']);
+            return $this->userHasModulePermission($user, $module);
         });
     }
 

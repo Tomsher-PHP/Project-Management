@@ -15,7 +15,7 @@ class SendBroadcastEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $deliveryId;
+    public int $broadcastId;
 
     public int $tries = 3;
     public int $timeout = 60;
@@ -24,9 +24,9 @@ class SendBroadcastEmailJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(int $deliveryId)
+    public function __construct(int $broadcastId)
     {
-        $this->deliveryId = $deliveryId;
+        $this->broadcastId = $broadcastId;
     }
 
     /**
@@ -34,7 +34,7 @@ class SendBroadcastEmailJob implements ShouldQueue
      */
     public function handle(BroadcastEmailService $broadcastEmailService): void
     {
-        $broadcastEmailService->sendDelivery($this->deliveryId);
+        $broadcastEmailService->sendBroadcast($this->broadcastId);
     }
 
     /**
@@ -42,12 +42,16 @@ class SendBroadcastEmailJob implements ShouldQueue
      */
     public function failed(?\Throwable $exception): void
     {
-        if ($delivery = BroadcastEmailDelivery::find($this->deliveryId)) {
-            $delivery->update([
+        BroadcastEmailDelivery::query()
+            ->where('broadcast_id', $this->broadcastId)
+            ->whereIn('status', [
+                BroadcastEmailDelivery::STATUS_PENDING,
+                BroadcastEmailDelivery::STATUS_PROCESSING,
+            ])
+            ->update([
                 'status' => BroadcastEmailDelivery::STATUS_FAILED,
                 'error_message' => Str::limit($exception?->getMessage() ?? 'Job failed after exhausting retries.', 1000),
             ]);
-        }
     }
 }
 
