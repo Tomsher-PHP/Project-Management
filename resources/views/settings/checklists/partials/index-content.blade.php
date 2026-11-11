@@ -34,7 +34,7 @@
                                     <div class="flex flex-wrap items-center gap-2">
                                         <p class="text-base font-semibold text-bgray-900 dark:text-white">{{ $checklist->name }}</p>
                                         @if ($checklist->is_system)
-                                            <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                            <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
                                                 System
                                             </span>
                                         @endif
@@ -71,19 +71,7 @@
                                 <div class="flex items-center gap-3">
                                     @can('checklist_template.edit')
                                         {{-- <x-edit-button action="javascript:void(0)" type="button" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.checklists.update', $checklist->id) }}" data-name="{{ $checklist->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-method="PUT" data-module="Checklist Template" aria-label="Edit checklist template" title="Edit checklist template" /> --}}
-                                            <x-edit-button
-                                            action="javascript:void(0)"
-                                            type="button"
-                                            class="edit-record"
-                                            data-modal="multi-step-modal"
-                                            data-url="{{ route('settings.checklists.update', $checklist->id) }}"
-                                            data-name="{{ $checklist->name }}"
-                                            data-questions="{{ json_encode($questionList->values()->all(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}"
-                                            data-method="PUT"
-                                            data-module="Checklist Template"
-                                            aria-label="Edit checklist template"
-                                            title="Edit checklist template"
-                                        />
+                                        <x-edit-button action="javascript:void(0)" type="button" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.checklists.update', $checklist->id) }}" data-name="{{ $checklist->name }}" data-questions="{{ json_encode($questionList->values()->all(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}" data-method="PUT" data-module="Checklist Template" aria-label="Edit checklist template" title="Edit checklist template" />
                                     @endcan
 
                                     @can('checklist_template.delete')

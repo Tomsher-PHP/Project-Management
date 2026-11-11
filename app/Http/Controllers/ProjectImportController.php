@@ -110,10 +110,8 @@ class ProjectImportController extends Controller
         $moduleConfig = $allModules[$moduleKey];
 
         // Enforce module-specific permission
-        if (!empty($moduleConfig['permission'])) {
-            if (!$user || !$user->can($moduleConfig['permission'])) {
-                abort(403, 'Unauthorized to download template for this module.');
-            }
+        if (!$this->importService->userHasModulePermission($user, $moduleConfig)) {
+            abort(403, 'Unauthorized to download template for this module.');
         }
 
         // Resolve template file path securely
@@ -151,10 +149,8 @@ class ProjectImportController extends Controller
         $moduleConfig = $allModules[$moduleKey];
 
         // Enforce module-specific permission
-        if (!empty($moduleConfig['permission'])) {
-            if (!$user || !$user->can($moduleConfig['permission'])) {
-                abort(403, 'Unauthorized to import records for this module.');
-            }
+        if (!$this->importService->userHasModulePermission($user, $moduleConfig)) {
+            abort(403, 'Unauthorized to import records for this module.');
         }
 
         $request->validate([
@@ -231,13 +227,11 @@ class ProjectImportController extends Controller
         }
 
         $moduleConfig = $allModules[$module];
-        if (!empty($moduleConfig['permission'])) {
-            if (!$user || !$user->can($moduleConfig['permission'])) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Unauthorized to view import status for this module.',
-                ], Response::HTTP_FORBIDDEN);
-            }
+        if (!$this->importService->userHasModulePermission($user, $moduleConfig)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized to view import status for this module.',
+            ], Response::HTTP_FORBIDDEN);
         }
 
         // 1. Look up non-database tracking
@@ -275,6 +269,9 @@ class ProjectImportController extends Controller
                     'total_rows' => $tracking['total_rows'],
                     'processed_rows' => $tracking['processed_rows'],
                     'successful_rows' => $tracking['successful_rows'],
+                    'created_rows' => $tracking['created_rows'] ?? 0,
+                    'updated_rows' => $tracking['updated_rows'] ?? 0,
+                    'unchanged_rows' => $tracking['unchanged_rows'] ?? 0,
                     'failed_rows' => $tracking['failed_rows'],
                     'error_message' => $tracking['error_message'],
                     'row_results' => $tracking['row_results'],
@@ -348,10 +345,8 @@ class ProjectImportController extends Controller
         }
 
         $moduleConfig = $allModules[$module];
-        if (!empty($moduleConfig['permission'])) {
-            if (!$user || !$user->can($moduleConfig['permission'])) {
-                abort(403, 'Unauthorized to download import results for this module.');
-            }
+        if (!$this->importService->userHasModulePermission($user, $moduleConfig)) {
+            abort(403, 'Unauthorized to download import results for this module.');
         }
 
         $tracking = $this->trackingManager->getTracking($import);
@@ -392,10 +387,8 @@ class ProjectImportController extends Controller
         }
 
         $moduleConfig = $allModules[$module];
-        if (!empty($moduleConfig['permission'])) {
-            if (!$user || !$user->can($moduleConfig['permission'])) {
-                abort(403, 'Unauthorized to download import results for this module.');
-            }
+        if (!$this->importService->userHasModulePermission($user, $moduleConfig)) {
+            abort(403, 'Unauthorized to download import results for this module.');
         }
 
         $tracking = $this->trackingManager->getTracking($import);
@@ -439,10 +432,8 @@ class ProjectImportController extends Controller
 
         $moduleConfig = $allModules[$moduleKey];
 
-        if (!empty($moduleConfig['permission'])) {
-            if (!$user || !$user->can($moduleConfig['permission'])) {
-                abort(403, 'Unauthorized to upload and validate for this module.');
-            }
+        if (!$this->importService->userHasModulePermission($user, $moduleConfig)) {
+            abort(403, 'Unauthorized to upload and validate for this module.');
         }
 
         $request->validate([

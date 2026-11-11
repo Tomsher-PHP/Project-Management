@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     let isKanbanLoading = false;
     let isDragInProgress = false;
+    let pendingCompletionDrag = null;
 
     let currentFlow = localStorage.getItem('kanban_flow') || initialFlowType || 'agile';
     let currentSort = sortDropdown?.dataset.selectedSort || new URLSearchParams(window.location.search).get('sort') || '';
@@ -214,6 +215,63 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     };
 
+    /**
+     * Resume the original Kanban drag after the Developer Note is saved.
+     */
+    document.addEventListener(
+        'task-insights:developer-notes:saved',
+        (event) => {
+            const pending = pendingCompletionDrag;
+
+            if (!pending) {
+                return;
+            }
+
+            const savedTaskId = String(event.detail?.taskId || '');
+
+            if (savedTaskId !== pending.taskId) {
+                return;
+            }
+
+            pendingCompletionDrag = null;
+
+            const {
+                item,
+                fromColumn,
+                toColumn,
+                oldIndex,
+                newIndex,
+            } = pending;
+
+            // Make sure the original task and destination column still exist.
+            if (
+                !document.body.contains(item) ||
+                !document.body.contains(fromColumn) ||
+                !document.body.contains(toColumn)
+            ) {
+                return;
+            }
+
+            // Place the card in the exact destination position selected originally.
+            const destinationElement = toColumn.children[newIndex] || null;
+
+            toColumn.insertBefore(item, destinationElement);
+
+            // Resume the existing transition logic.
+            handleDrop({
+                item,
+                from: fromColumn,
+                to: toColumn,
+                oldIndex,
+                newIndex,
+            });
+        }
+    );
+
+    // If the user closes the modal without saving, discard the pending drag.
+    document.addEventListener('task-insights:close', () => {
+        pendingCompletionDrag = null;
+    });
     const loadKanban = (flow) => {
         if (!container) {
             return Promise.resolve(false);
@@ -595,11 +653,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Incomplete -> completed requires a developer note.
 
+            // if (
+            //     !wasCompleted &&
+            //     willBeCompleted &&
+            //     task.dataset.hasDeveloperNote !== '1'
+            // ) {
+            //     rollback(evt);
+            //     setDragState(false);
+
+            //     Alert.error(
+            //         'Please add a developer note before moving this task to a completed status.'
+            //     );
+
+            //     // Open the existing Developer Notes modal for this task.
+            //     const notesTrigger = task.querySelector(
+            //         '[data-developer-notes-trigger]'
+            //     );
+
+            //     if (notesTrigger) {
+            //         setTimeout(() => {
+            //             notesTrigger.click();
+            //         }, 300);
+            //     } else {
+            //         console.error(
+            //             'Developer Notes trigger not found for task:',
+            //             task.dataset.taskId
+            //         );
+            //     }
+
+            //     return;
+            // }
+
+            // Incomplete -> completed requires a developer note.
             if (
                 !wasCompleted &&
                 willBeCompleted &&
                 task.dataset.hasDeveloperNote !== '1'
             ) {
+                // Preserve the original drag details before rolling back.
+                pendingCompletionDrag = {
+                    taskId: String(task.dataset.taskId),
+                    item: task,
+                    fromColumn,
+                    toColumn,
+                    oldIndex: evt.oldIndex,
+                    newIndex: evt.newIndex,
+                };
+
+                // Return the card to its original position while the note is being added.
                 rollback(evt);
                 setDragState(false);
 
@@ -607,18 +708,20 @@ document.addEventListener("DOMContentLoaded", () => {
                     'Please add a developer note before moving this task to a completed status.'
                 );
 
-                // Open the existing Developer Notes modal for this task.
-                const notesTrigger = task.querySelector(
-                    '[data-developer-notes-trigger]'
+                // Open the shared Task Activity modal with Developer Notes selected.
+                const activityTrigger = task.querySelector(
+                    '[data-task-activity-trigger]'
                 );
 
-                if (notesTrigger) {
+                if (activityTrigger) {
                     setTimeout(() => {
-                        notesTrigger.click();
+                        activityTrigger.click();
                     }, 300);
                 } else {
+                    pendingCompletionDrag = null;
+
                     console.error(
-                        'Developer Notes trigger not found for task:',
+                        'Task Activity trigger not found for task:',
                         task.dataset.taskId
                     );
                 }
@@ -773,6 +876,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const error = document.getElementById('reopen-task-remark-error');
         const confirmButton = document.getElementById('confirm-reopen-task');
         const cancelButton = document.getElementById('cancel-reopen-task');
+        const closeButton = document.getElementById('close-reopen-task');
 
         return new Promise((resolve) => {
             input.value = '';
@@ -787,6 +891,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 confirmButton.removeEventListener('click', onConfirm);
                 cancelButton.removeEventListener('click', onCancel);
+                closeButton.removeEventListener('click', onCancel);
             };
 
             const onConfirm = () => {
@@ -809,6 +914,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             confirmButton.addEventListener('click', onConfirm);
             cancelButton.addEventListener('click', onCancel);
+            closeButton.addEventListener('click', onCancel);
         });
     };
 

@@ -21,13 +21,17 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEvents, WithHeadings
 {
     protected const MIN_COLUMN_WIDTH_INCHES = 1.45;
+
     protected const MAX_COLUMN_WIDTH_INCHES = 3.06;
 
-    protected Collection $projects;
+    protected Collection $rows;
+
     protected array $columns;
+
     protected array $filters;
+
     protected array $filterSummary;
-    protected array $projectMetricCache = [];
+
     protected Carbon $generatedAt;
 
     public function __construct(
@@ -36,7 +40,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         array $filters = [],
         ?Carbon $generatedAt = null
     ) {
-        $this->projects = $projects;
+        $this->rows = $this->buildRows($projects);
         $this->columns = $columns;
         $this->filters = $filters;
         $this->generatedAt = $generatedAt?->copy()
@@ -46,10 +50,14 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
 
     public function collection()
     {
-        return $this->projects->values()->map(function ($project) {
+        return $this->rows->values()->map(function (array $row) {
             return collect($this->columns)
-                ->mapWithKeys(function ($label, $key) use ($project) {
-                    return [$label => $this->resolveColumnValue($project, $key)];
+                ->mapWithKeys(function ($label, $key) use ($row) {
+                    return [$label => $this->resolveColumnValue(
+                        $row['project'],
+                        $row['timeline'],
+                        $key
+                    )];
                 })
                 ->all();
         });
@@ -62,7 +70,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
 
     public function startCell(): string
     {
-        return 'A' . $this->tableStartRow();
+        return 'A'.$this->tableStartRow();
     }
 
     public function registerEvents(): array
@@ -72,7 +80,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
                 $sheet = $event->sheet->getDelegate();
                 $lastColumn = $this->lastColumnLetter();
                 $headerRow = $this->tableStartRow();
-                $lastDataRow = $headerRow + $this->projects->count();
+                $lastDataRow = $headerRow + $this->rows->count();
 
                 $this->writeHeaderSection($sheet, $lastColumn);
                 $this->styleTable($sheet, $lastColumn, $headerRow, $lastDataRow);
@@ -82,29 +90,30 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         ];
     }
 
-    protected function resolveColumnValue($project, string $column): string
+    protected function resolveColumnValue($project, $timeline, string $column): string
     {
-        $metrics = $this->resolveProjectMetrics($project);
+        $metrics = $this->resolveTimelineMetrics($timeline);
         $progressPercentage = $this->calculateProgressPercentage(
             $metrics['estimated_seconds'],
             $metrics['actual_seconds']
         );
-        $timeline = $project->display_timeline;
 
         return match ($column) {
             'project_name' => $project->name ?? '-',
             'customer' => $project->customer?->name ?? '-',
             'sales_person' => $project->salesPerson?->name ?? '-',
+            'timeline' => $timeline?->name ?? '-',
+            'timeline_status' => $timeline?->report_status_label ?? '-',
             'start_date' => AppServiceProvider::formatAppDate($timeline?->start_date, '-'),
             'end_date' => AppServiceProvider::formatAppDate($timeline?->end_date, '-'),
-            'estimated_hours' => formatSecondsToHoursMinutes($metrics['estimated_seconds']),
-            'actual_hours' => formatSecondsToHoursMinutes($metrics['actual_seconds']),
-            'progress' => $progressPercentage . '%',
+            'estimated_hours' => $timeline ? formatSecondsToHoursMinutes($metrics['estimated_seconds']) : '-',
+            'actual_hours' => $timeline ? formatSecondsToHoursMinutes($metrics['actual_seconds']) : '-',
+            'progress' => $timeline ? $progressPercentage.'%' : '-',
             'priority' => $this->resolvePriorityLabel($project->priority),
             'milestone_status' => sprintf(
                 '%d / %d',
-                $metrics['completed_milestones'],
-                $metrics['total_milestones']
+                (int) ($project->completed_milestones ?? 0),
+                (int) ($project->total_milestones ?? 0)
             ),
             'status' => $project->projectStatus?->name ?? '-',
             'stage' => $project->projectStage?->name ?? '-',
@@ -145,9 +154,9 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
 
         foreach ($this->filterSummary as $label => $value) {
             if ($lastColumn === 'A') {
-                $sheet->setCellValue("A{$row}", $label . ': ' . $value);
+                $sheet->setCellValue("A{$row}", $label.': '.$value);
             } else {
-                $sheet->setCellValue("A{$row}", $label . ':');
+                $sheet->setCellValue("A{$row}", $label.':');
                 $sheet->setCellValue("B{$row}", $value);
                 $sheet->mergeCells("B{$row}:{$lastColumn}{$row}");
             }
@@ -168,7 +177,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         }
 
         if ($lastColumn === 'A') {
-            $sheet->setCellValue("A{$row}", 'Generated At: ' . $this->generatedAtLabel());
+            $sheet->setCellValue("A{$row}", 'Generated At: '.$this->generatedAtLabel());
         } else {
             $sheet->setCellValue("A{$row}", 'Generated At:');
             $sheet->setCellValue("B{$row}", $this->generatedAtLabel());
@@ -223,7 +232,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         $sheet->getRowDimension($headerRow)->setRowHeight(24);
 
         if ($lastDataRow > $headerRow) {
-            $bodyRange = 'A' . ($headerRow + 1) . ":{$lastColumn}{$lastDataRow}";
+            $bodyRange = 'A'.($headerRow + 1).":{$lastColumn}{$lastDataRow}";
 
             $sheet->getStyle($bodyRange)->applyFromArray([
                 'font' => [
@@ -253,13 +262,13 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             }
         }
 
-        $sheet->freezePane('A' . ($headerRow + 1));
+        $sheet->freezePane('A'.($headerRow + 1));
 
         $columnKeys = array_keys($this->columns);
 
         foreach ($columnKeys as $index => $columnKey) {
             $columnLetter = Coordinate::stringFromColumnIndex($index + 1);
-            $range = "{$columnLetter}{$headerRow}:{$columnLetter}" . max($lastDataRow, $headerRow);
+            $range = "{$columnLetter}{$headerRow}:{$columnLetter}".max($lastDataRow, $headerRow);
 
             $sheet->getStyle($range)->getAlignment()->setHorizontal(
                 in_array($columnKey, ['start_date', 'end_date', 'estimated_hours', 'actual_hours', 'progress', 'milestone_status'], true)
@@ -273,7 +282,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
     {
         $minWidth = $this->convertInchesToColumnWidth(self::MIN_COLUMN_WIDTH_INCHES);
         $maxWidth = $this->convertInchesToColumnWidth(self::MAX_COLUMN_WIDTH_INCHES);
-        $wrapColumns = ['project_name', 'customer', 'sales_person', 'status', 'stage'];
+        $wrapColumns = ['project_name', 'customer', 'sales_person', 'timeline', 'timeline_status', 'status', 'stage'];
 
         foreach (array_keys($this->columns) as $index => $columnKey) {
             $columnLetter = Coordinate::stringFromColumnIndex($index + 1);
@@ -283,7 +292,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             $sheet->getColumnDimension($columnLetter)->setWidth($width);
 
             if (in_array($columnKey, $wrapColumns, true)) {
-                $sheet->getStyle("{$columnLetter}{$headerRow}:{$columnLetter}" . max($headerRow, $lastDataRow))
+                $sheet->getStyle("{$columnLetter}{$headerRow}:{$columnLetter}".max($headerRow, $lastDataRow))
                     ->getAlignment()
                     ->setWrapText(true);
             }
@@ -294,11 +303,13 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
     {
         $columnIndexes = array_flip(array_keys($this->columns));
 
-        $this->projects->values()->each(function ($project, $index) use ($sheet, $headerRow, $columnIndexes) {
+        $this->rows->values()->each(function (array $exportRow, $index) use ($sheet, $headerRow, $columnIndexes) {
+            $project = $exportRow['project'];
+            $timeline = $exportRow['timeline'];
             $rowNumber = $headerRow + $index + 1;
-            $metrics = $this->resolveProjectMetrics($project);
+            $metrics = $this->resolveTimelineMetrics($timeline);
 
-            if (isset($columnIndexes['actual_hours'])) {
+            if ($timeline && isset($columnIndexes['actual_hours'])) {
                 $actualHoursColumn = Coordinate::stringFromColumnIndex($columnIndexes['actual_hours'] + 1);
                 $actualHoursColor = $metrics['actual_seconds'] <= $metrics['estimated_seconds'] ? '16A34A' : 'DC2626';
 
@@ -310,7 +321,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
                 ]);
             }
 
-            if (isset($columnIndexes['progress'])) {
+            if ($timeline && isset($columnIndexes['progress'])) {
                 $progressColumn = Coordinate::stringFromColumnIndex($columnIndexes['progress'] + 1);
                 $progressPalette = $this->resolveProgressPalette(
                     $metrics['estimated_seconds'],
@@ -336,6 +347,22 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
                     "{$statusColumn}{$rowNumber}",
                     $project->projectStatus?->color
                 );
+            }
+
+            if ($timeline && isset($columnIndexes['timeline_status'])) {
+                $timelineStatusColumn = Coordinate::stringFromColumnIndex($columnIndexes['timeline_status'] + 1);
+                $isActive = (int) ($timeline?->status ?? 0) === \App\Models\ProjectTimeline::STATUS_ACTIVE;
+
+                $sheet->getStyle("{$timelineStatusColumn}{$rowNumber}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $isActive ? '166534' : '475569'],
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => $isActive ? 'DCFCE7' : 'F1F5F9'],
+                    ],
+                ]);
             }
 
             if (isset($columnIndexes['stage'])) {
@@ -410,7 +437,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             }
 
             return AppServiceProvider::formatAppDate($startDate->toDateString())
-                . ' - ' .
+                .' - '.
                 AppServiceProvider::formatAppDate($endDate->toDateString());
         }
 
@@ -425,7 +452,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
     {
         $selectedFlows = collect($this->filters['project_flow'] ?? [])
             ->flatten()
-            ->map(fn($value) => trim((string) $value))
+            ->map(fn ($value) => trim((string) $value))
             ->filter()
             ->values();
 
@@ -436,8 +463,8 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         $flowLabels = collect(config('project_constants.project_flows', []));
 
         return $selectedFlows
-            ->map(fn(string $flow) => $flowLabels->get($flow))
-            ->filter(fn($label) => filled($label))
+            ->map(fn (string $flow) => $flowLabels->get($flow))
+            ->filter(fn ($label) => filled($label))
             ->unique()
             ->values()
             ->all();
@@ -447,7 +474,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
     {
         $selectedPriorities = collect($this->filters['priority'] ?? [])
             ->flatten()
-            ->map(fn($value) => trim((string) $value))
+            ->map(fn ($value) => trim((string) $value))
             ->filter()
             ->values();
 
@@ -456,8 +483,8 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         }
 
         return $selectedPriorities
-            ->map(fn(string $priority) => $this->resolvePriorityLabel($priority))
-            ->filter(fn(string $label) => $label !== '-')
+            ->map(fn (string $priority) => $this->resolvePriorityLabel($priority))
+            ->filter(fn (string $label) => $label !== '-')
             ->unique()
             ->values()
             ->all();
@@ -467,9 +494,9 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
     {
         $selectedIds = collect($this->filters[$requestKey] ?? [])
             ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
+            ->filter(fn ($value) => filled($value))
+            ->map(fn ($value) => (int) $value)
+            ->filter(fn (int $value) => $value > 0)
             ->values();
 
         if ($selectedIds->isEmpty()) {
@@ -481,8 +508,8 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             ->pluck('name', 'id');
 
         return $selectedIds
-            ->map(fn(int $id) => $namesById->get($id))
-            ->filter(fn($name) => filled($name))
+            ->map(fn (int $id) => $namesById->get($id))
+            ->filter(fn ($name) => filled($name))
             ->unique()
             ->values()
             ->all();
@@ -494,7 +521,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             return '-';
         }
 
-        return config('project_constants.project_priorities.' . $priority . '.label')
+        return config('project_constants.project_priorities.'.$priority.'.label')
             ?? ucfirst(str_replace('_', ' ', $priority));
     }
 
@@ -579,7 +606,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
             return null;
         }
 
-        $configuredColor = (string) config('project_constants.project_priorities.' . $priority . '.color', '');
+        $configuredColor = (string) config('project_constants.project_priorities.'.$priority.'.color', '');
 
         return match ($configuredColor) {
             'red' => ['fill' => 'DC2626', 'text' => 'FFFFFF'],
@@ -616,7 +643,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
 
         if (preg_match('/^[0-9a-fA-F]{3}$/', $normalized) === 1) {
             return strtoupper(implode('', array_map(
-                fn(string $char) => $char . $char,
+                fn (string $char) => $char.$char,
                 str_split($normalized)
             )));
         }
@@ -637,37 +664,52 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         return $brightness >= 160 ? '0F172A' : 'FFFFFF';
     }
 
-    protected function resolveProjectMetrics($project): array
+    protected function resolveTimelineMetrics($timeline): array
     {
-        $cacheKey = (string) ($project->id ?? spl_object_id($project));
-
-        if (isset($this->projectMetricCache[$cacheKey])) {
-            return $this->projectMetricCache[$cacheKey];
-        }
-
-        $timeline = $project->display_timeline;
-
-        return $this->projectMetricCache[$cacheKey] = [
-            'estimated_seconds' => (int) ($timeline?->estimated_time_seconds ?? 0),
-            'actual_seconds' => (int) ($project->tasks_sum_actual_time_seconds ?? $project->tasks()->sum('actual_time_seconds') ?? 0),
-            'completed_milestones' => (int) ($project->completed_milestones ?? 0),
-            'total_milestones' => (int) ($project->total_milestones ?? 0),
+        return [
+            'estimated_seconds' => max(0, (int) ($timeline?->report_estimated_seconds ?? $timeline?->estimated_time_seconds ?? 0)),
+            'actual_seconds' => max(0, (int) ($timeline?->report_actual_seconds ?? $timeline?->actual_time_seconds ?? 0)),
         ];
     }
 
     protected function resolveColumnWidth(string $columnKey, float $minWidth, float $maxWidth): float
     {
-        $values = $this->projects->map(fn($project) => $this->resolveColumnValue($project, $columnKey))
+        $values = $this->rows->map(fn (array $row) => $this->resolveColumnValue(
+            $row['project'],
+            $row['timeline'],
+            $columnKey
+        ))
             ->push($this->columns[$columnKey] ?? '')
-            ->filter(fn($value) => is_string($value));
+            ->filter(fn ($value) => is_string($value));
 
         $longestLength = $values
-            ->map(fn(string $value) => mb_strlen(preg_replace('/\s+/', ' ', trim($value))))
+            ->map(fn (string $value) => mb_strlen(preg_replace('/\s+/', ' ', trim($value))))
             ->max() ?? 0;
 
         $calculatedWidth = $longestLength + 2;
 
         return max($minWidth, min($maxWidth, (float) $calculatedWidth));
+    }
+
+    protected function buildRows(Collection $projects): Collection
+    {
+        return $projects->values()->flatMap(function ($project) {
+            $timelines = $project->relationLoaded('reportTimelines')
+                ? $project->reportTimelines
+                : collect();
+
+            if ($timelines->isEmpty()) {
+                return [[
+                    'project' => $project,
+                    'timeline' => null,
+                ]];
+            }
+
+            return $timelines->map(fn ($timeline) => [
+                'project' => $project,
+                'timeline' => $timeline,
+            ]);
+        });
     }
 
     protected function convertInchesToColumnWidth(float $inches): float

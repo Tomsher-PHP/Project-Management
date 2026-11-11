@@ -133,6 +133,21 @@ return [
     ],
 
     'project_import_modules' => [
+        'projects' => [
+            'label' => 'Projects',
+            'description' => 'Bulk create or update projects using an Excel file.',
+            'permission' => ['project.create', 'project.edit'],
+            'view_partial' => 'projects.import.modules.projects',
+            'template_path' => 'assets/templates/projects_import/bulk-projects-import-template-final.xlsx',
+            'template_filename' => 'bulk-projects-import-template-final.xlsx',
+            'handler_class' => \App\Services\ProjectBulkImportService::class,
+            'validator_class' => \App\Services\ProjectBulkImportValidator::class,
+            'result_columns' => [
+                'Project Code' => 'project_code',
+                'Project Name' => 'project_name',
+            ],
+            'enabled' => true,
+        ],
         'project_hosting' => [
             'label' => 'Project Hosting Records',
             'description' => 'Import hosting records associated with multiple projects.',
@@ -141,6 +156,8 @@ return [
             'template_path' => 'assets/templates/project_hosting/project-hosting-records-import-template.xlsx',
             'template_filename' => 'project-hosting-records-import-template.xlsx',
             'handler_class' => \App\Services\ProjectHostingImportService::class,
+            'validator_class' => \App\Services\ProjectHostingImportValidator::class,
+            'result_columns' => [],
             'enabled' => true,
         ],
         // 'project_timeline' => [

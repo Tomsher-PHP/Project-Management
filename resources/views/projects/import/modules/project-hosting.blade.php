@@ -49,13 +49,15 @@
             </div>
         </div>
 
+        @include('projects.import.partials.project-hosting-instructions')
+
         <form id="import-form" action="{{ route('projects.import.process', $module['key']) }}" method="POST" enctype="multipart/form-data" class="mt-6">
             @csrf
 
             <!-- Upload Box (Drag and Drop) -->
             <div id="file-upload-box" class="border-2 border-dashed border-bgray-300 rounded-xl p-6 text-center cursor-pointer hover:border-success-300 transition dark:border-darkblack-400">
                 <p id="file-upload-prompt" class="text-bgray-700 dark:text-bgray-300">
-                    Attach your Excel file <span class="text-success-300 font-semibold">click to upload</span>
+                    Drag and drop your Excel file here, or <span class="text-success-300 font-semibold">browse file</span>
                 </p>
                 <div id="file-chosen-container" class="hidden items-center justify-center gap-2">
                     <svg class="h-5 w-5 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -262,7 +264,7 @@
                                         $rowStatus = strtolower($outcome['status'] ?? 'unknown');
                                     @endphp
                                     <tr class="result-row hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/50" data-row-status="{{ $rowStatus }}">
-                                        <td class="py-2.5 px-4 font-mono font-bold text-bgray-800 dark:text-bgray-200">
+                                        <td class="py-2.5 px-4 font-mono font-bold text-bgray-800 dark:text-bgray-300">
                                             Row {{ $outcome['excel_row'] ?? '-' }}
                                         </td>
                                         <td class="py-2.5 px-4 font-mono text-bgray-900 dark:text-white">

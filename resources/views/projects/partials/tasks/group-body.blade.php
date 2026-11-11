@@ -35,6 +35,7 @@
                             'tasks' => $tasks,
                             'showEmptyState' => true,
                             'showTaskActionColumn' => $showTaskActionColumn,
+                            'search' => $search ?? null,
                         ])
                     </tbody>
                 </table>

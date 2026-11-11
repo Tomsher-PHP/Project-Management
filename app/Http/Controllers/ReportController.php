@@ -53,7 +53,8 @@ class ReportController extends Controller
 
         $flows = $request->project_flow;
 
-        $projects = Project::query();
+        $projects = Project::query()
+            ->accessibleBy(auth()->user());
 
         if (!empty($flows)) {
             $projects->whereIn('project_flow', $flows);
@@ -78,7 +79,10 @@ class ReportController extends Controller
 
         $selectedFlows = (array) $request->input('project_flow', []);
 
-        $perPage = $request->input('per_page', config('constants.per_page_count'));
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
+        $perPage = in_array($perPage, [5, 10, 15, 20, 30, 50, 100, 250, 500], true)
+            ? $perPage
+            : (int) config('constants.per_page_count');
 
         $projects = $this->projectReportService->getProjects($request, $perPage);
 
@@ -90,57 +94,17 @@ class ReportController extends Controller
 
         // Project dropdown filter
         $projectsFilter = Project::select('id', 'name')
+            ->accessibleBy(auth()->user())
             ->when(!empty($selectedFlows), function ($query) use ($selectedFlows) {
                 $query->whereIn('project_flow', $selectedFlows);
             })
             ->orderBy('name')
             ->get();
 
-        $columns = [
-            'project_name' => 'Project Name',
-            'customer' => 'Customer',
-            'sales_person' => 'Sales Person',
-            'start_date' => 'Start Date',
-            'end_date' => 'End Date',
-            'estimated_hours' => 'Estimated Hours',
-            'actual_hours' => 'Actual Hours',
-            'progress' => 'Progress',
-            'priority' => 'Priority',
-            'milestone_status' => 'Milestone Status',
-            'status' => 'Status',
-            'stage' => 'Stage',
-            'actions' => 'Actions',
-        ];
+        $columns = $this->projectReportService->getColumnLabels();
+        $columns['actions'] = 'Actions';
 
-        /*
-        |--------------------------------------------------------------------------
-        | FILTERED STATS
-        |--------------------------------------------------------------------------
-        */
-
-        $filteredQuery = Project::query()
-            ->accessibleBy(auth()->user())
-            ->filter($request->all());
-
-        $projectStats = [
-            'total' => (clone $filteredQuery)->count(),
-
-            'completed' => (clone $filteredQuery)
-                ->completed()
-                ->count(),
-
-            'in_progress' => (clone $filteredQuery)
-                ->inProgress()
-                ->count(),
-
-            'open' => (clone $filteredQuery)
-                ->open()
-                ->count(),
-
-            'archieved' => (clone $filteredQuery)
-                ->archived()
-                ->count(),
-        ];
+        $projectStats = $this->projectReportService->getStats($request);
 
         return view('reports.project', compact(
             'projects',

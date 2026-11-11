@@ -108,23 +108,14 @@
                                 @if ($selectedStatus === 'pending')
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($changeRequest->isPending() && !$changeRequest->is_self_requested)
-                                            <input type="checkbox"
-                                                value="{{ $changeRequest->id }}"
-                                                class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500"
-                                                data-time-log-change-request-bulk-checkbox
-                                            >
+                                            <input type="checkbox" value="{{ $changeRequest->id }}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-time-log-change-request-bulk-checkbox>
                                         @endif
                                     </td>
                                 @endif
 
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <div class="flex min-w-[220px] items-center gap-3">
-                                        <x-user-avatar
-                                            :user="$requestUser"
-                                            :image="$requestUser?->profile_image_url"
-                                            :name="$requestUser?->name ?? 'Unknown User'"
-                                            size="md"
-                                        />
+                                        <x-user-avatar :user="$requestUser" :image="$requestUser?->profile_image_url" :name="$requestUser?->name ?? 'Unknown User'" size="md" />
 
                                         <div>
                                             <p class="font-semibold text-bgray-900 dark:text-white">
@@ -132,7 +123,6 @@
                                             </p>
 
                                             <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
-                                                Requested:
                                                 <span class="font-medium text-bgray-700 dark:text-bgray-300">
                                                     @appDateTime($changeRequest->created_at)
                                                 </span>
@@ -144,10 +134,7 @@
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <div class="min-w-[220px]">
                                         @if ($task)
-                                            <a
-                                                href="{{ route('tasks.edit', $task) }}"
-                                                class="font-semibold text-bgray-900 transition hover:text-success-300 dark:text-white dark:hover:text-success-300"
-                                            >
+                                            <a href="{{ route('tasks.edit', $task) }}" class="font-semibold text-bgray-900 transition hover:text-success-300 dark:text-white dark:hover:text-success-300">
                                                 {{ $task->name }}
                                             </a>
                                         @else
@@ -226,13 +213,7 @@
                                                 </span> --}}
 
                                                 @can('task_time_log_change_request.cancel')
-                                                    <button
-                                                        type="button"
-                                                        class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400"
-                                                        data-time-log-change-request-cancel-open
-                                                        data-action="{{ route('tasks.time-log-change-requests.cancel', $changeRequest) }}"
-                                                        data-task-name="{{ $task?->name ?? 'Unknown Task' }}"
-                                                    >
+                                                    <button type="button" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400" data-time-log-change-request-cancel-open data-action="{{ route('tasks.time-log-change-requests.cancel', $changeRequest) }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}">
                                                         Cancel
                                                     </button>
                                                 @endcan
@@ -240,36 +221,16 @@
                                         @else
                                             {{-- Approver can approve/reject requests from other users --}}
                                             <div class="flex min-w-[190px] flex-wrap items-center gap-2">
-                                                <button
-                                                    type="button"
-                                                    class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400"
-                                                    data-time-log-change-request-approve-open
-                                                    data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}"
-                                                    data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}"
-                                                    data-task-name="{{ $task?->name ?? 'Unknown Task' }}"
-                                                    data-project-name="{{ $project?->name ?? 'Unknown Project' }}"
-                                                    data-reason="{{ $changeRequest->reason ?? '--' }}"
-                                                    data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}"
-                                                    data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}"
-                                                    data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}"
-                                                    data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}"
-                                                >
+                                                <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-time-log-change-request-approve-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-project-name="{{ $project?->name ?? 'Unknown Project' }}" data-reason="{{ $changeRequest->reason ?? '--' }}"
+                                                    data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}" data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}">
                                                     Approve
                                                 </button>
 
-                                                <button
-                                                    type="button"
-                                                    class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400"
-                                                    data-time-log-change-request-reject-open
-                                                    data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'reject']) }}"
-                                                    data-task-name="{{ $task?->name ?? 'Unknown Task' }}"
-                                                    data-request-user-name="{{ $requestUser?->name ?? 'Unknown User' }}"
-                                                >
+                                                <button type="button" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400" data-time-log-change-request-reject-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'reject']) }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-request-user-name="{{ $requestUser?->name ?? 'Unknown User' }}">
                                                     Reject
                                                 </button>
                                             </div>
                                         @endif
-
                                     @elseif ($changeRequest->isRejected())
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                             <p class="font-semibold text-bgray-700 dark:text-white">
@@ -284,7 +245,6 @@
                                                 {{ \Illuminate\Support\Str::limit($changeRequest->rejection_reason ?? '--', 45) }}
                                             </p>
                                         </div>
-
                                     @elseif ($changeRequest->isCancelled())
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                             <p class="font-semibold text-bgray-700 dark:text-white">
@@ -295,14 +255,10 @@
                                                 {{ $changeRequest->cancelled_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}
                                             </p>
 
-                                            <p
-                                                class="mt-1"
-                                                title="{{ $changeRequest->cancellation_reason }}"
-                                            >
+                                            <p class="mt-1" title="{{ $changeRequest->cancellation_reason }}">
                                                 {{ \Illuminate\Support\Str::limit($changeRequest->cancellation_reason ?? '--', 60) }}
                                             </p>
                                         </div>
-
                                     @else
                                         <div class="min-w-[200px] text-xs text-bgray-700 dark:text-bgray-300">
                                             <p class="font-semibold text-bgray-700 dark:text-white">
@@ -317,11 +273,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <x-table-no-data
-                                :col-span="$selectedStatus === 'pending' ? 8 : 7"
-                                message="No {{ strtolower($tabs[$selectedStatus]) }} time log change requests found."
-                                sub-message="There are no requests available for your access level."
-                            />
+                            <x-table-no-data :col-span="$selectedStatus === 'pending' ? 8 : 7" message="No {{ strtolower($tabs[$selectedStatus]) }} time log change requests found." sub-message="There are no requests available for your access level." />
                         @endforelse
                     </tbody>
                 </table>
@@ -334,100 +286,68 @@
     <x-filters.drawer>
         <input type="hidden" name="request_status" value="{{ $selectedStatus }}">
 
-        <x-filters.multi-select
-            name="user_id"
-            label="Users"
-            :options="$users"
-        />
+        <x-filters.multi-select name="user_id" label="Users" :options="$users" />
     </x-filters.drawer>
 
     {{-- Approve Modal --}}
-    <div
-        class="modal fixed inset-0 z-[80] hidden overflow-y-auto"
-        data-time-log-change-request-approve-modal
-        aria-hidden="true"
-    >
-        <div
-            class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"
-            data-time-log-change-request-approve-close
-        ></div>
+    <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-time-log-change-request-approve-modal aria-hidden="true">
+        <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-time-log-change-request-approve-close></div>
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="relative z-10 w-full max-w-2xl rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
                         Approve Task Time Log Change Request
                     </h3>
 
-                    <button
-                        type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300"
-                        data-time-log-change-request-approve-close
-                    >
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-time-log-change-request-approve-close>
                         ✕
                     </button>
                 </div>
 
-                <form
-                    method="POST"
-                    action="#"
-                    class="space-y-5 px-5 py-1"
-                    data-time-log-change-request-approve-form
-                >
+                <form method="POST" action="#" class="space-y-4 px-5 py-5" data-time-log-change-request-approve-form>
                     @csrf
 
-                    <div class="grid gap-4 rounded-lg bg-bgray-50 p-4 text-sm dark:bg-darkblack-500 sm:grid-cols-2">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
-                                User
-                            </span>
-
-                            <span
-                                class="font-semibold text-bgray-900 dark:text-white"
-                                data-time-log-change-request-approve-user-name
-                            >
-                                --
-                            </span>
-                        </div>
-
-                        <div class="break-word">
-                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
-                                Task
-                            </span>
-
-                            <span
-                                class="font-semibold text-bgray-900 dark:text-white"
-                                data-time-log-change-request-approve-task-name
-                            >
-                                --
-                            </span>
-                        </div>
-
-                        <div class="break-word">
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">
                                 Project
                             </span>
 
-                            <span
-                                class="font-semibold text-bgray-900 dark:text-white"
-                                data-time-log-change-request-approve-project-name
-                            >
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-project-name>
                                 --
                             </span>
                         </div>
 
-                        <div class="break-word">
+                        <div>
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">
-                                Reason
+                                Task
                             </span>
 
-                            <p
-                                class="whitespace-pre-wrap text-bgray-900 dark:text-white"
-                                data-time-log-change-request-approve-reason
-                            >
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-task-name>
                                 --
-                            </p>
+                            </span>
                         </div>
+
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">
+                                Requested By
+                            </span>
+
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-approve-user-name>
+                                --
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                        <span class="block text-sm font-medium text-bgray-600 dark:text-bgray-300">
+                            Reason
+                        </span>
+
+                        <p class="mt-1 max-h-48 overflow-y-auto break-words whitespace-pre-wrap rounded-lg bg-bgray-50 p-3 text-sm text-bgray-900 dark:bg-darkblack-500 dark:text-white" data-time-log-change-request-approve-reason>
+                            --
+                        </p>
                     </div>
 
                     <div>
@@ -441,10 +361,7 @@
                                     Current Start Time
                                 </span>
 
-                                <span
-                                    class="font-semibold text-bgray-900 dark:text-white"
-                                    data-time-log-change-request-current-start
-                                >
+                                <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-current-start>
                                     --
                                 </span>
                             </div>
@@ -454,10 +371,7 @@
                                     Current End Time
                                 </span>
 
-                                <span
-                                    class="font-semibold text-bgray-900 dark:text-white"
-                                    data-time-log-change-request-current-end
-                                >
+                                <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-current-end>
                                     --
                                 </span>
                             </div>
@@ -471,77 +385,33 @@
 
                         <div class="grid gap-5 md:grid-cols-2">
                             <div>
-                                <label
-                                    for="time-log-change-request-approve-started-at"
-                                    class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50"
-                                >
+                                <label for="time-log-change-request-approve-started-at" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                     Requested Start Time <x-red-star />
                                 </label>
 
-                                <input
-                                    id="time-log-change-request-approve-started-at"
-                                    type="text"
-                                    name="new_started_at"
-                                    class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
-                                    data-enable-time="true"
-                                    data-enable-seconds="true"
-                                    data-time-24hr="true"
-                                    data-format="Y-m-d H:i:S"
-                                    placeholder="Select start date and time"
-                                    autocomplete="off"
-                                    required
-                                >
+                                <input id="time-log-change-request-approve-started-at" type="text" name="new_started_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-enable-seconds="true" data-time-24hr="true" data-format="Y-m-d H:i:S" placeholder="Select start date and time" autocomplete="off" required>
 
-                                <p
-                                    class="mt-1 hidden text-sm text-error-300"
-                                    data-time-log-change-request-approve-error="new_started_at"
-                                ></p>
+                                <p class="mt-1 hidden text-sm text-error-300" data-time-log-change-request-approve-error="new_started_at"></p>
                             </div>
 
                             <div>
-                                <label
-                                    for="time-log-change-request-approve-ended-at"
-                                    class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50"
-                                >
+                                <label for="time-log-change-request-approve-ended-at" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                     Requested End Time <x-red-star />
                                 </label>
 
-                                <input
-                                    id="time-log-change-request-approve-ended-at"
-                                    type="text"
-                                    name="new_ended_at"
-                                    class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
-                                    data-enable-time="true"
-                                    data-enable-seconds="true"
-                                    data-time-24hr="true"
-                                    data-format="Y-m-d H:i:S"
-                                    placeholder="Select end date and time"
-                                    autocomplete="off"
-                                    required
-                                >
+                                <input id="time-log-change-request-approve-ended-at" type="text" name="new_ended_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-enable-seconds="true" data-time-24hr="true" data-format="Y-m-d H:i:S" placeholder="Select end date and time" autocomplete="off" required>
 
-                                <p
-                                    class="mt-1 hidden text-sm text-error-300"
-                                    data-time-log-change-request-approve-error="new_ended_at"
-                                ></p>
+                                <p class="mt-1 hidden text-sm text-error-300" data-time-log-change-request-approve-error="new_ended_at"></p>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex justify-end gap-3 border-t border-bgray-100 pt-4 dark:border-darkblack-400">
-                        <button
-                            type="button"
-                            class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300"
-                            data-time-log-change-request-approve-close
-                        >
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-time-log-change-request-approve-close>
                             Cancel
                         </button>
 
-                        <button
-                            type="submit"
-                            class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60"
-                            data-time-log-change-request-approve-submit
-                        >
+                        <button type="submit" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-time-log-change-request-approve-submit>
                             Approve
                         </button>
                     </div>
@@ -551,14 +421,8 @@
     </div>
 
     {{-- Reject Modal --}}
-    <div
-        class="modal fixed inset-0 z-[80] hidden overflow-y-auto"
-        data-time-log-change-request-reject-modal
-    >
-        <div
-            class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"
-            data-time-log-change-request-reject-close
-        ></div>
+    <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-time-log-change-request-reject-modal>
+        <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-time-log-change-request-reject-close></div>
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
             <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
@@ -568,62 +432,33 @@
                             Reject Time Log Change Request
                         </h3>
 
-                        <p
-                            class="mt-1 text-sm text-bgray-700 dark:text-bgray-300"
-                            data-time-log-change-request-reject-task-name
-                        ></p>
+                        <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300" data-time-log-change-request-reject-task-name></p>
                     </div>
 
-                    <button
-                        type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300"
-                        data-time-log-change-request-reject-close
-                    >
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-time-log-change-request-reject-close>
                         ✕
                     </button>
                 </div>
 
-                <form
-                    method="POST"
-                    action="#"
-                    class="space-y-4 px-5 py-5"
-                    data-time-log-change-request-reject-form
-                >
+                <form method="POST" action="#" class="space-y-4 px-5 py-5" data-time-log-change-request-reject-form>
                     @csrf
 
                     <div data-time-log-change-request-reject-hidden-inputs></div>
 
                     <div>
-                        <label
-                            for="time-log-change-request-rejection-reason"
-                            class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300"
-                        >
+                        <label for="time-log-change-request-rejection-reason" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                             Description <x-red-star />
                         </label>
 
-                        <textarea
-                            id="time-log-change-request-rejection-reason"
-                            name="reason"
-                            rows="4"
-                            required
-                            class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
-                            placeholder="Add rejection description"
-                        ></textarea>
+                        <textarea id="time-log-change-request-rejection-reason" name="reason" rows="4" required class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add rejection description"></textarea>
                     </div>
 
                     <div class="flex justify-end gap-3 border-t border-bgray-100 pt-4 dark:border-darkblack-400">
-                        <button
-                            type="button"
-                            class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300"
-                            data-time-log-change-request-reject-close
-                        >
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-time-log-change-request-reject-close>
                             Cancel
                         </button>
 
-                        <button
-                            type="submit"
-                            class="rounded-lg bg-error-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-error-400"
-                        >
+                        <button type="submit" class="rounded-lg bg-error-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-error-400">
                             Reject
                         </button>
                     </div>
@@ -633,15 +468,8 @@
     </div>
 
     {{-- Cancel Modal --}}
-    <div
-        class="modal fixed inset-0 z-[80] hidden overflow-y-auto"
-        data-time-log-change-request-cancel-modal
-        aria-hidden="true"
-    >
-        <div
-            class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"
-            data-time-log-change-request-cancel-close
-        ></div>
+    <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-time-log-change-request-cancel-modal aria-hidden="true">
+        <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-time-log-change-request-cancel-close></div>
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
             <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
@@ -656,21 +484,12 @@
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300"
-                        data-time-log-change-request-cancel-close
-                    >
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-time-log-change-request-cancel-close>
                         ✕
                     </button>
                 </div>
 
-                <form
-                    method="POST"
-                    action="#"
-                    class="space-y-4 px-5 py-5"
-                    data-time-log-change-request-cancel-form
-                >
+                <form method="POST" action="#" class="space-y-4 px-5 py-5" data-time-log-change-request-cancel-form>
                     @csrf
 
                     <div class="rounded-lg bg-bgray-50 p-4 text-sm dark:bg-darkblack-500">
@@ -678,46 +497,25 @@
                             Task
                         </span>
 
-                        <span
-                            class="font-semibold text-bgray-900 dark:text-white"
-                            data-time-log-change-request-cancel-task-name
-                        >
+                        <span class="font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-cancel-task-name>
                             --
                         </span>
                     </div>
 
                     <div>
-                        <label
-                            for="time-log-change-request-cancellation-reason"
-                            class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300"
-                        >
+                        <label for="time-log-change-request-cancellation-reason" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                             Cancellation Reason <x-red-star />
                         </label>
 
-                        <textarea
-                            id="time-log-change-request-cancellation-reason"
-                            name="cancellation_reason"
-                            rows="4"
-                            required
-                            maxlength="1000"
-                            class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
-                            placeholder="Enter the reason for cancelling this request"
-                        ></textarea>
+                        <textarea id="time-log-change-request-cancellation-reason" name="cancellation_reason" rows="4" required maxlength="1000" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter the reason for cancelling this request"></textarea>
                     </div>
 
                     <div class="flex justify-end gap-3 border-t border-bgray-100 pt-4 dark:border-darkblack-400">
-                        <button
-                            type="button"
-                            class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300"
-                            data-time-log-change-request-cancel-close
-                        >
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-time-log-change-request-cancel-close>
                             Keep Request
                         </button>
 
-                        <button
-                            type="submit"
-                            class="rounded-lg bg-error-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-error-400 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
+                        <button type="submit" class="rounded-lg bg-error-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-error-400 disabled:cursor-not-allowed disabled:opacity-60">
                             Cancel Request
                         </button>
                     </div>
@@ -728,78 +526,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/modules/tasks/time-log-change-request.js')
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.querySelector(
-                '[data-time-log-change-request-cancel-modal]'
-            );
-
-            if (!modal) {
-                return;
-            }
-
-            const form = modal.querySelector(
-                '[data-time-log-change-request-cancel-form]'
-            );
-
-            const taskName = modal.querySelector(
-                '[data-time-log-change-request-cancel-task-name]'
-            );
-
-            const reason = modal.querySelector(
-                '#time-log-change-request-cancellation-reason'
-            );
-
-            const openButtons = document.querySelectorAll(
-                '[data-time-log-change-request-cancel-open]'
-            );
-
-            const closeButtons = document.querySelectorAll(
-                '[data-time-log-change-request-cancel-close]'
-            );
-
-            const openModal = function (button) {
-                form.action = button.dataset.action || '#';
-                taskName.textContent = button.dataset.taskName || '--';
-
-                reason.value = '';
-
-                modal.classList.remove('hidden');
-                modal.setAttribute('aria-hidden', 'false');
-
-                setTimeout(() => {
-                    reason.focus();
-                }, 50);
-            };
-
-            const closeModal = function () {
-                modal.classList.add('hidden');
-                modal.setAttribute('aria-hidden', 'true');
-
-                form.action = '#';
-                reason.value = '';
-            };
-
-            openButtons.forEach((button) => {
-                button.addEventListener('click', function () {
-                    openModal(button);
-                });
-            });
-
-            closeButtons.forEach((button) => {
-                button.addEventListener('click', closeModal);
-            });
-
-            document.addEventListener('keydown', function (event) {
-                if (
-                    event.key === 'Escape' &&
-                    !modal.classList.contains('hidden')
-                ) {
-                    closeModal();
-                }
-            });
-        });
-    </script>
+    @vite('resources/js/modules/requests/task-time-requests.js')
 @endpush

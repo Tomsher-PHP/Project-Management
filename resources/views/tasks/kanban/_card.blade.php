@@ -40,21 +40,15 @@
     $commentsCount = $task->comments_count ?? ($task->relationLoaded('comments') ? $task->comments->count() : 0);
     $taskNotesCount = (int) ($task->task_notes_count ?? ($task->relationLoaded('taskNotes') ? $task->taskNotes->count() : 0));
 
-    $prjLimit = $milestoneName ? 16 : 40;
+    $prjLimit = 40;
+    $isAgile = ($project?->project_flow ?? null) === 'agile';
+    $projectTooltip = ($isAgile && $milestoneName) ? ($projectName . ' - ' . $milestoneName) : $projectName;
 @endphp
 
 
-<div
-    class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600"
-    data-task-id="{{ $task->id }}"
-    data-is-completed="{{ $isCompleted ? '1' : '0' }}"
-    data-has-developer-note="{{ ($task->developerNotes?->isNotEmpty() ?? false) ? '1' : '0' }}"
->
+<div class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600" data-task-id="{{ $task->id }}" data-is-completed="{{ $isCompleted ? '1' : '0' }}" data-has-developer-note="{{ $task->developerNotes?->isNotEmpty() ?? false ? '1' : '0' }}">
     <div class="space-y-3 p-4">
-        <div class="{{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}" @if ($canOpenTask) data-project-task-detail-open
-                data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}"
-                data-project-task-group-key=""
-                title="Open task" @endif>
+        <div class="{{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}" @if ($canOpenTask) data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}" data-project-task-group-key="" title="Open task" @endif>
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1 text-[11px] font-medium text-bgray-900 dark:text-bgray-300">
@@ -62,16 +56,7 @@
                             @if ($customer)
                                 <x-profile-grade-badge :grade="$customer->profileGrade" size="sm" class="mt-0.5" />
                             @endif
-                            <span class="truncate" title="{{ $projectName }}">{{ limitStringChar($projectName, $prjLimit) }}</span>
-                        @endif
-
-                        @if (($project?->project_flow ?? null) === 'agile' && $milestoneName)
-                            <span class="shrink-0 text-bgray-900 dark:text-bgray-300">
-                                <svg width="8" height="8" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
-                                </svg>
-                            </span>
-                            <span class="truncate" title="{{ $milestoneName }}">{{ limitStringChar($milestoneName, 16) }}</span>
+                            <span class="truncate" title="{{ $projectTooltip }}">{{ limitStringChar($projectName, $prjLimit) }}</span>
                         @endif
                     </div>
                 </div>
@@ -86,37 +71,6 @@
             <div class="mt-3" title="{{ $taskName }}">
                 <x-task-name-status :name="$taskName" :request-type="$task->request_type" :request-status="$task->request_status" :limit="40" text-class="text-sm font-semibold leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : '' }}" name-class="block" class="max-w-full" />
 
-                <button
-                    type="button"
-                    class="inline-flex items-center justify-center rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-700 dark:hover:text-white {{ $task->developerNotes()->exists()
-                        ? '!text-blue-600 dark:!text-blue-400'
-                        : 'dark:text-bgray-300' }}"
-                    title="Developer Notes"
-                    aria-label="View developer notes"
-                    data-no-task-detail-open
-                    data-developer-notes-trigger
-                    data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}"
-                    data-store-url="{{ route('tasks.developer-notes.store', $task) }}"
-                    data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <path d="M14 2v6h6"/>
-                        <path d="M8 13h8"/>
-                        <path d="M8 17h8"/>
-                    </svg>
-                </button>
             </div>
 
             <div class="mt-3 flex items-center justify-between gap-3 text-[11px]">
@@ -158,13 +112,22 @@
                     @endif
                 </div>
 
-                <button type="button" class="group inline-flex items-center gap-1 px-2 py-0.5 font-semibold text-bgray-600 transition-all duration-150 dark:text-bgray-300 hover:text-bgray-900 dark:hover:text-bgray-200 transition-colors" title="View Comments" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}">
-                    <span class="inline-flex shrink-0 text-bgray-500 group-hover:text-bgray-700 dark:text-bgray-300 dark:group-hover:text-bgray-200 transition-colors">
+                @php
+                    $developerNotesCount = $task->developerNotes()->count();
+                    $activityTotalCount = $commentsCount + $developerNotesCount;
+                @endphp
+
+                <button type="button" class="group inline-flex items-center gap-1 rounded-md px-2 py-1 text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white {{ $developerNotesCount > 0 ? '!text-blue-600 dark:!text-blue-400' : '' }}" title="Completion Notes: {{ $developerNotesCount }} | Comments: {{ $commentsCount }}" aria-label="Task Activity: {{ $developerNotesCount }} developer notes and {{ $commentsCount }} comments" data-task-activity-trigger data-no-task-detail-open data-task-id="{{ $task->id }}" data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" data-developer-notes-url="{{ route('tasks.developer-notes.modal', $task) }}" data-store-url="{{ route('tasks.developer-notes.store', $task) }}" data-delete-url="{{ route('tasks.developer-notes.delete', $task) }}" data-has-developer-note="{{ $developerNotesCount > 0 ? '1' : '0' }}" data-comments-count="{{ $commentsCount }}" data-developer-notes-count="{{ $developerNotesCount }}" data-task-name="{{ $task->name }}">
+
+                    <span class="inline-flex shrink-0">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
                         </svg>
                     </span>
-                    <span class="font-medium text-[11px]">{{ $commentsCount }}</span>
+                    <span class="font-medium text-[11px]" data-task-activity-count>
+                        {{ $activityTotalCount }}
+                    </span>
+
                 </button>
 
 
