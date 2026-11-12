@@ -308,25 +308,6 @@ Route::middleware([
         Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.edit')->only(['update']);
         Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.delete')->only(['destroy']);
 
-        // Bug settings routes
-        Route::patch('/bug-statuses/toggle-status', [BugSettingsController::class, 'toggleStatusBugStatus'])->middleware('permission.type:bug_settings.edit')->name('bug_status.toggleStatus');
-        Route::resource('bug-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.view')->only(['index']);
-        Route::resource('bug-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.create')->only(['store']);
-        Route::resource('bug-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.edit')->only(['update']);
-        Route::resource('bug-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.delete')->only(['destroy']);
-
-        Route::patch('/developer-statuses/toggle-status', [BugSettingsController::class, 'toggleStatusDeveloperStatus'])->middleware('permission.type:bug_settings.edit')->name('developer_status.toggleStatus');
-        Route::resource('developer-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.view')->only(['index']);
-        Route::resource('developer-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.create')->only(['store']);
-        Route::resource('developer-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.edit')->only(['update']);
-        Route::resource('developer-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.delete')->only(['destroy']);
-
-        Route::patch('/qa-statuses/toggle-status', [BugSettingsController::class, 'toggleStatusQaStatus'])->middleware('permission.type:bug_settings.edit')->name('qa_status.toggleStatus');
-        Route::resource('qa-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.view')->only(['index']);
-        Route::resource('qa-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.create')->only(['store']);
-        Route::resource('qa-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.edit')->only(['update']);
-        Route::resource('qa-statuses', BugSettingsController::class)->middleware('permission.type:bug_settings.delete')->only(['destroy']);
-
         // Configuration Routes
         Route::get('configurations', [ConfigurationController::class, 'edit'])->middleware('permission.type:configuration.view')->name('configurations.edit');
         Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
