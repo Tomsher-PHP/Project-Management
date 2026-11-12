@@ -39,10 +39,10 @@ class DailyWorkReportSetting extends Model
             [
                 'setting_key' => $reportKey,
                 'enabled' => false,
-                'frequency' => 'weekdays',
-                'delivery_time' => '18:30:00',
+                'frequency' => 'daily',
+                'delivery_time' => '00:00:00',
                 'timezone' => 'Asia/Dubai',
-                'reporting_period' => 'current_day',
+                'reporting_period' => 'previous_day',
                 'send_zero_activity' => false,
                 'include_inactive_users' => false,
                 'report_sections' => [

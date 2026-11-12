@@ -228,14 +228,17 @@
                                 </select>
                             </div> --}}
 
-                            <div>
+                            <div
+                                id="weekly-day-wrapper"
+                                class="{{ old('frequency', $settings->frequency) === 'weekly' ? '' : 'hidden' }}"
+                            >
                                 <label for="weekly-day" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
                                     Weekly delivery day
                                 </label>
+
                                 <select
                                     id="weekly-day"
                                     name="weekly_day"
-                                    required
                                     class="w-full rounded-lg border border-bgray-200 bg-white p-3 text-sm text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
                                 >
                                     @foreach ([1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'] as $day => $label)
@@ -855,6 +858,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         updateRecipientScope();
+    }
+
+    // Weekly delivery day visibility
+    const frequencySelect = document.getElementById('report-frequency');
+    const weeklyDayWrapper = document.getElementById('weekly-day-wrapper');
+
+    function updateWeeklyDayVisibility() {
+        if (!frequencySelect || !weeklyDayWrapper) {
+            return;
+        }
+
+        weeklyDayWrapper.classList.toggle(
+            'hidden',
+            frequencySelect.value !== 'weekly'
+        );
+    }
+
+    if (frequencySelect) {
+        frequencySelect.addEventListener('change', updateWeeklyDayVisibility);
+        updateWeeklyDayVisibility();
     }
 });
 </script>

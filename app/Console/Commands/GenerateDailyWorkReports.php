@@ -510,7 +510,8 @@ class GenerateDailyWorkReports extends Command
             5
         );
 
-        return $now->format('H:i') === $deliveryTime;
+        // Run at the configured time or any time after it.
+        return $now->format('H:i') >= $deliveryTime;
     }
 
     /*

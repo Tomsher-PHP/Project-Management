@@ -117,7 +117,7 @@ class DailyWorkReportSettingsController extends Controller
             ],
             'send_zero_activity' => ['sometimes', 'boolean'],
             'include_inactive_users' => ['sometimes', 'boolean'],
-            'weekly_day' => ['required', 'integer', 'between:1,7'],
+            'weekly_day' => ['required_if:frequency,weekly', 'nullable', 'integer', 'between:1,7',],
             'report_sections' => ['nullable', 'array'],
         ]);
 

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->string('setting_key')->unique()->default('default');
+            $table->string('report_key')->index();
 
             // Reports are disabled until an administrator enables them.
             $table->boolean('enabled')->default(false);
@@ -22,7 +23,7 @@ return new class extends Migration
             // daily, weekdays, weekly
             $table->string('frequency', 20)->default('daily');
 
-            $table->time('delivery_time')->default('18:30:00');
+            $table->time('delivery_time')->default('00:00:00');
             $table->string('timezone', 100)->default('Asia/Dubai');
 
             // current_day, previous_working_day
