@@ -291,12 +291,55 @@ class UserController extends Controller
         ]);
 
         // Existing generic user settings.
-        if (in_array($request->field, $userSettingKeys, true)) {
+        // Daily Work Report setting: update both tables.
+        if ($request->field === 'daily_work_report_mail') {
 
-            if (! auth()->user()->can('user.edit')) {
+            if (!auth()->user()->can('user.edit')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized to update user settings.'
+                    'message' => 'You are not authorized to update this setting.',
+                ], 403);
+            }
+
+            $request->validate([
+                'value' => ['required', 'boolean'],
+            ]);
+
+            $isEnabled = $request->boolean('value');
+
+
+            DB::transaction(function () use ($request, $isEnabled) {
+
+                // Update User Report Preference.
+                UserReportPreference::updateOrCreate(
+                    [
+                        'user_id' => $request->user_id,
+                        'report_key' => 'daily_work',
+                    ],
+                    [
+                        'is_enabled' => $isEnabled,
+                        'updated_by' => auth()->id(),
+                    ]
+                );
+
+                // Update User General Settings.
+                UserGeneralSetting::updateOrCreate(
+                    [
+                        'user_id' => $request->user_id,
+                    ],
+                    [
+                        'send_daily_work_report' => $isEnabled,
+                    ]
+                );
+            });
+
+        // Existing generic user settings.
+        } elseif (in_array($request->field, $userSettingKeys, true)) {
+
+            if (!auth()->user()->can('user.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to update user settings.',
                 ], Response::HTTP_FORBIDDEN);
             }
 
@@ -314,29 +357,6 @@ class UserController extends Controller
                         $request->value,
                         FILTER_VALIDATE_BOOLEAN
                     ),
-                ]
-            );
-
-        } elseif ($request->field === 'send_daily_work_report') {
-            if (! auth()->user()->can('user.edit')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You are not authorized to update this setting.',
-                ], 403);
-            }
-
-            $request->validate([
-                'value' => ['required', 'boolean'],
-            ]);
-
-            UserReportPreference::updateOrCreate(
-                [
-                    'user_id' => $request->user_id,
-                    'report_key' => 'daily_work',
-                ],
-                [
-                    'is_enabled' => $request->boolean('value'),
-                    'updated_by' => auth()->id(),
                 ]
             );
 

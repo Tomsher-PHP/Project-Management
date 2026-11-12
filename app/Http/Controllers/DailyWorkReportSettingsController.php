@@ -8,11 +8,13 @@ use App\Models\DailyWorkReportRecipient;
 use App\Models\DailyWorkReportSetting;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\UserReportPreference;
+use App\Models\UserSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use App\Models\UserReportPreference;
 
 class DailyWorkReportSettingsController extends Controller
 {
@@ -247,21 +249,27 @@ class DailyWorkReportSettingsController extends Controller
             'is_enabled' => ['sometimes', 'required', 'boolean'],
         ]);
 
-        $preference = UserReportPreference::firstOrNew([
-            'user_id' => $validated['user_id'],
-            'report_key' => $validated['report_key'],
-        ]);
+        DB::transaction(function () use ($request, $validated, &$newStatus) {
+            $preference = UserReportPreference::firstOrNew([
+                'user_id' => $validated['user_id'],
+                'report_key' => $validated['report_key'],
+            ]);
 
-        // If is_enabled is supplied, use that value.
-        // Otherwise, toggle the existing preference.
-        // Missing preference means enabled by default.
-        $newStatus = array_key_exists('is_enabled', $validated)
-            ? (bool) $validated['is_enabled']
-            : !($preference->exists ? (bool) $preference->is_enabled : true);
+            // Missing preference means enabled by default.
+            $newStatus = array_key_exists('is_enabled', $validated)
+                ? (bool) $validated['is_enabled']
+                : !($preference->exists ? (bool) $preference->is_enabled : true);
 
-        $preference->is_enabled = $newStatus;
-        $preference->updated_by = $request->user()->id;
-        $preference->save();
+            $preference->is_enabled = $newStatus;
+            $preference->updated_by = $request->user()->id;
+            $preference->save();
+
+            $this->syncDailyWorkReportSetting(
+                (int) $validated['user_id'],
+                $validated['report_key'],
+                $newStatus
+            );
+        });
 
         if ($request->ajax()) {
             return response()->json([
@@ -271,10 +279,7 @@ class DailyWorkReportSettingsController extends Controller
             ]);
         }
 
-        return back()->with(
-            'success',
-            'User report preference updated.'
-        );
+        return back()->with('success', 'User report preference updated.');
     }
 
     public function bulkUpdateUserPreferences(Request $request): RedirectResponse
@@ -293,29 +298,65 @@ class DailyWorkReportSettingsController extends Controller
             'is_enabled' => ['required', 'boolean'],
         ]);
 
-        $now = now();
-        $updatedBy = $request->user()->id;
+        DB::transaction(function () use ($request, $validated) {
+            $now = now();
+            $updatedBy = $request->user()->id;
+            $isEnabled = (bool) $validated['is_enabled'];
 
-        $rows = collect($validated['user_ids'])
-            ->map(fn ($userId) => [
-                'user_id' => $userId,
-                'report_key' => $validated['report_key'],
-                'is_enabled' => $validated['is_enabled'],
-                'updated_by' => $updatedBy,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ])
-            ->all();
+            $rows = collect($validated['user_ids'])
+                ->map(fn ($userId) => [
+                    'user_id' => $userId,
+                    'report_key' => $validated['report_key'],
+                    'is_enabled' => $isEnabled,
+                    'updated_by' => $updatedBy,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ])
+                ->all();
 
-        UserReportPreference::upsert(
-            $rows,
-            ['user_id', 'report_key'],
-            ['is_enabled', 'updated_by', 'updated_at']
-        );
+            UserReportPreference::upsert(
+                $rows,
+                ['user_id', 'report_key'],
+                ['is_enabled', 'updated_by', 'updated_at']
+            );
+
+            if ($validated['report_key'] === 'daily_work') {
+                foreach ($validated['user_ids'] as $userId) {
+                    $this->syncDailyWorkReportSetting(
+                        (int) $userId,
+                        $validated['report_key'],
+                        $isEnabled
+                    );
+                }
+            }
+        });
 
         return back()->with(
             'success',
             'Selected users updated successfully.'
+        );
+    }
+
+    /**
+     * Synchronize Daily Work Report preference with User Settings.
+     */
+    private function syncDailyWorkReportSetting(
+        int $userId,
+        string $reportKey,
+        bool $isEnabled
+    ): void {
+        if ($reportKey !== 'daily_work') {
+            return;
+        }
+
+        UserSetting::updateOrCreate(
+            [
+                'user_id' => $userId,
+                'key' => 'daily_work_report_mail',
+            ],
+            [
+                'value' => $isEnabled ? 1 : 0,
+            ]
         );
     }
 }
