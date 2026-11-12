@@ -97,4 +97,12 @@ return [
 
     // Meeting reminder notification time in minutes 
     'meeting_reminder_notification_min' => 10,
+
+    // Supported Data Sync API settings modules
+    'data_sync_modules' => [
+        'technologies'       => 'technologies',
+        'industries'         => 'industries',
+        'project_categories' => 'project_categories',
+        'project_statuses'   => 'project_statuses',
+    ],
 ];
