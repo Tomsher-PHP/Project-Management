@@ -512,6 +512,7 @@ Route::middleware([
 
         // Project Hosting routes
         Route::get('hosting', [ProjectHostingController::class, 'index'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.index');
+        Route::get('hosting/export', [ProjectHostingController::class, 'export'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.export');
         Route::post('hosting', [ProjectHostingController::class, 'store'])->middleware(['permission.type:project_hosting.create', 'can:update,project'])->name('projects.hosting.store');
         Route::get('hosting/{hostingRecord}', [ProjectHostingController::class, 'show'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.show');
         Route::put('hosting/{hostingRecord}', [ProjectHostingController::class, 'update'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.update');
