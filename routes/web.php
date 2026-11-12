@@ -531,6 +531,7 @@ Route::middleware([
 
         // Project Hosting routes
         Route::get('hosting', [ProjectHostingController::class, 'index'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.index');
+        Route::get('hosting/export', [ProjectHostingController::class, 'export'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.export');
         Route::post('hosting', [ProjectHostingController::class, 'store'])->middleware(['permission.type:project_hosting.create', 'can:update,project'])->name('projects.hosting.store');
         Route::get('hosting/{hostingRecord}', [ProjectHostingController::class, 'show'])->middleware('permission.type:project_hosting.view')->name('projects.hosting.show');
         Route::put('hosting/{hostingRecord}', [ProjectHostingController::class, 'update'])->middleware(['permission.type:project_hosting.edit', 'can:update,project'])->name('projects.hosting.update');
@@ -917,81 +918,34 @@ Route::middleware([
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.edit')->only(['edit', 'update']);
     Route::resource('reimbursements', ReimbursementController::class)->middleware('permission.type:reimbursement.delete')->only(['destroy']);
 
-
     /*
     |--------------------------------------------------------------------------
     | Feature Settings
     |--------------------------------------------------------------------------
     */
 
-    Route::prefix('feature-settings')
-        ->name('feature-settings.')
-        ->group(function () {
+    Route::prefix('feature-settings')->name('feature-settings.')->group(function () {
 
-            // Password screen
-            Route::get('/login', [
-                FeatureSettingsAuthController::class,
-                'showLogin'
-            ])->name('login');
+        // Password screen
+        Route::get('/login', [FeatureSettingsAuthController::class, 'showLogin'])->name('login');
 
-            // Verify management password
-            Route::post('/authenticate', [
-                FeatureSettingsAuthController::class,
-                'authenticate'
-            ])
-                ->middleware('throttle:5,1')
-                ->name('authenticate');
+        // Verify management password
+        Route::post('/authenticate', [FeatureSettingsAuthController::class, 'authenticate'])->middleware('throttle:5,1')->name('authenticate');
 
-            // Protected management area
-            Route::middleware(FeatureSettingsAuth::class)->group(function () {
-
-                Route::get('/', [
-                    FeatureUpdateController::class,
-                    'index'
-                ])->name('index');
-
-                Route::get('/create', [
-                    FeatureUpdateController::class,
-                    'create'
-                ])->name('create');
-
-                Route::post('/', [
-                    FeatureUpdateController::class,
-                    'store'
-                ])->name('store');
-
-                Route::get('/{featureUpdate}/edit', [
-                    FeatureUpdateController::class,
-                    'edit'
-                ])->name('edit');
-
-                Route::put('/{featureUpdate}', [
-                    FeatureUpdateController::class,
-                    'update'
-                ])->name('update');
-
-                Route::delete('/{featureUpdate}', [
-                    FeatureUpdateController::class,
-                    'destroy'
-                ])->name('destroy');
-
-                Route::post('/logout', [
-                    FeatureSettingsAuthController::class,
-                    'logout'
-                ])->name('logout');
-            });
+        // Protected management area
+        Route::middleware(FeatureSettingsAuth::class)->group(function () {
+            Route::get('/', [FeatureUpdateController::class, 'index'])->name('index');
+            Route::get('/create', [FeatureUpdateController::class, 'create'])->name('create');
+            Route::post('/', [FeatureUpdateController::class, 'store'])->name('store');
+            Route::get('/{featureUpdate}/edit', [FeatureUpdateController::class, 'edit'])->name('edit');
+            Route::put('/{featureUpdate}', [FeatureUpdateController::class, 'update'])->name('update');
+            Route::delete('/{featureUpdate}', [FeatureUpdateController::class, 'destroy'])->name('destroy');
+            Route::post('/logout', [FeatureSettingsAuthController::class, 'logout'])->name('logout');
         });
+    });
 
-        Route::post(
-            '/feature-updates/{featureUpdate}/acknowledge',
-            [FeatureUpdateUserStatusController::class, 'acknowledge']
-        )->name('feature-updates.acknowledge');
-
-        Route::post(
-            '/feature-updates/{featureUpdate}/skip',
-            [FeatureUpdateUserStatusController::class, 'skip']
-        )->name('feature-updates.skip');
-
+    Route::post('/feature-updates/{featureUpdate}/acknowledge', [FeatureUpdateUserStatusController::class, 'acknowledge'])->name('feature-updates.acknowledge');
+    Route::post('/feature-updates/{featureUpdate}/skip', [FeatureUpdateUserStatusController::class, 'skip'])->name('feature-updates.skip');
 });
 
 Route::get('api-test', function () {

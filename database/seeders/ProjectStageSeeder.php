@@ -19,18 +19,18 @@ class ProjectStageSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $stages = [
-            ['name' => 'Planning', 'code' => 'planning', 'color' => '#000000'],
-            ['name' => 'Design', 'code' => 'design', 'color' => '#9B59B6'],
-            ['name' => 'Development', 'code' => 'development', 'color' => '#3498DB'],
-            ['name' => 'Testing', 'code' => 'testing', 'color' => '#F1C40F'],
-            ['name' => 'Deployment', 'code' => 'deployment', 'color' => '#E67E22'],
-            ['name' => 'Maintenance', 'code' => 'maintenance', 'color' => '#2ECC71'],
+            ['name' => 'Planning', 'color' => '#000000'],
+            ['name' => 'Design', 'color' => '#9B59B6'],
+            ['name' => 'Development', 'color' => '#3498DB'],
+            ['name' => 'Testing', 'color' => '#F1C40F'],
+            ['name' => 'Deployment', 'color' => '#E67E22'],
+            ['name' => 'Maintenance', 'color' => '#2ECC71'],
         ];
 
         foreach ($stages as $key => $stage) {
             ProjectStage::create([
                 'name' => $stage['name'],
-                'code' => $stage['code'],
+                'code' => ProjectStage::generateUniqueCode(),
                 'color' => $stage['color'],
                 'sort_order' => $key + 1,
                 'is_default' => $key === 0,

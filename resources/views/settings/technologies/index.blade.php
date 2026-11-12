@@ -56,15 +56,18 @@
                                     </td>
                                     <td class="px-6 py-5 xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <div class="flex flex-wrap items-center gap-2">
-                                                <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                    {{ $technology->name }}
-                                                </p>
-                                                @if ($technology->is_system)
-                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
-                                                        System
-                                                    </span>
-                                                @endif
+                                            <div class="flex flex-col gap-1">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <p class="text-base font-semibold text-bgray-900 dark:text-white">
+                                                        {{ $technology->name }}
+                                                    </p>
+                                                    @if ($technology->is_system)
+                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
+                                                            System
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <span class="text-sm text-bgray-600 dark:text-bgray-300">{{ $technology->code ?: '--' }}</span>
                                             </div>
                                         </div>
                                     </td>

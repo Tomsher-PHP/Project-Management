@@ -29,7 +29,10 @@ class DesignationController extends Controller
 
     public function store(DesignationRequest $request)
     {
-        $designation = Designation::create($request->validated());
+        $data = $request->validated();
+        $data['code'] = $data['code'] ?? Designation::generateUniqueCode();
+
+        $designation = Designation::create($data);
 
         return response()->json([
             'status' => true,
@@ -40,7 +43,12 @@ class DesignationController extends Controller
 
     public function update(DesignationRequest $request, Designation $designation)
     {
-        $designation->update($request->validated());
+        $data = $request->validated();
+        if (empty($designation->code)) {
+            $data['code'] = Designation::generateUniqueCode();
+        }
+
+        $designation->update($data);
 
         return response()->json([
             'status' => true,

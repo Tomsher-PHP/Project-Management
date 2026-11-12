@@ -29,15 +29,25 @@ class IndustrySeeder extends Seeder
         ];
 
         foreach ($array as $key => $name) {
-            Industry::firstOrCreate(
-                ['name' => $name],
-                [
-                    'parent_id' => null,
-                    'sort_order' => $key + 1,
-                    'is_system' => 1,
-                    'is_active' => 1,
-                ]
-            );
+            $industry = Industry::withTrashed()->where('name', $name)->first();
+
+            if ($industry) {
+                if (empty($industry->code)) {
+                    $industry->code = Industry::generateUniqueCode();
+                    $industry->save();
+                }
+
+                continue;
+            }
+
+            Industry::create([
+                'name' => $name,
+                'code' => Industry::generateUniqueCode(),
+                'parent_id' => null,
+                'sort_order' => $key + 1,
+                'is_system' => 1,
+                'is_active' => 1,
+            ]);
         }
     }
 }

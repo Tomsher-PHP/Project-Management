@@ -434,18 +434,6 @@
                                     </li>
                                 @endif
 
-                                @if ($canViewExpenses)
-                                    <li class="item px-[43px] py-[11px] {{ $isExpensesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                        <a href="{{ $expensesRoute }}">
-                                            <span class="item-ico">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                                                </svg>
-                                            </span>
-                                        </a>
-                                        <span class="sidebar-tooltip">Expenses</span>
-                                    </li>
-                                @endif
                                 @if ($canViewAppraisal)
                                     <li class="item px-[43px] py-[11px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                         <a href="{{ route('appraisal.index') }}">
@@ -472,6 +460,19 @@
                                         <span class="sidebar-tooltip">Broadcasts</span>
                                     </li>
                                 @endif
+
+                                {{-- @if ($canViewExpenses)
+                                    <li class="item px-[43px] py-[11px] {{ $isExpensesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                        <a href="{{ $expensesRoute }}">
+                                            <span class="item-ico">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                                                </svg>
+                                            </span>
+                                        </a>
+                                        <span class="sidebar-tooltip">Expenses</span>
+                                    </li>
+                                @endif --}}
 
                             </ul>
                         </div>
