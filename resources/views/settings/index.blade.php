@@ -182,6 +182,28 @@
                 </a>
             @endcan
 
+            @can('bug_settings.view')
+                <a href="{{ route('settings.bug-statuses.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6h10M10 12h10M10 18h3" />
+                                    <rect stroke-linecap="round" stroke-linejoin="round" x="3" y="4" width="4" height="4" rx="1" />
+                                    <rect stroke-linecap="round" stroke-linejoin="round" x="3" y="10" width="4" height="4" rx="1" />
+                                    <rect stroke-linecap="round" stroke-linejoin="round" x="3" y="16" width="4" height="4" rx="1" />
+                                    <circle stroke-linecap="round" stroke-linejoin="round" cx="18" cy="18" r="3" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 13.5v1.5M18 21v1.5M13.5 18h1.5M21 18h1.5M14.8 14.8l1 1M21.2 21.2l-1-1M21.2 14.8l-1 1M14.8 21.2l1-1" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Bug Settings
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
+
             @can('kpi.view')
                 <a href="{{ route('settings.kpis.index') }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
