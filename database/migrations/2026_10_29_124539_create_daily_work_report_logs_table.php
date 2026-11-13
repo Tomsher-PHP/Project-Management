@@ -26,6 +26,9 @@ return new class extends Migration
 
             $table->string('report_type', 30)->default('daily');
 
+            // Identifies the report type, e.g. daily_work.
+            $table->string('report_key', 50)->default('daily_work');
+
             // pending, queued, sent, partial, failed, skipped
             $table->string('status', 20)->default('pending');
 
@@ -45,8 +48,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(
-                ['user_id', 'report_date', 'report_type'],
-                'dwr_logs_user_date_type_unique'
+                ['user_id', 'report_date', 'report_type', 'report_key'],
+                'dwr_logs_user_date_type_key_unique'
             );
 
             $table->index(
@@ -56,6 +59,9 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('daily_work_report_logs');

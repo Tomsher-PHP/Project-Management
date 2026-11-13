@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('daily_work_report_recipients', function (Blueprint $table) {
             $table->id();
 
+            // Identifies the report type, e.g. daily_work.
+            $table->string('report_key', 100)
+                ->default('daily_work');
+
             // global, team, user
             $table->string('scope', 20);
 
@@ -40,14 +44,22 @@ return new class extends Migration
             );
 
             $table->index('email');
-            // $table->index(['effective_from', 'effective_until']);
+
             $table->index(
                 ['effective_from', 'effective_until'],
                 'dwr_recipients_effective_dates_idx'
             );
+
+            $table->index(
+                ['report_key', 'scope', 'scope_id', 'is_active'],
+                'dwr_recipient_report_scope_idx'
+            );
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('daily_work_report_recipients');

@@ -15,7 +15,11 @@ return new class extends Migration
             $table->id();
 
             $table->string('setting_key')->unique()->default('default');
-            $table->string('report_key')->index();
+
+            // Identifies the report type, e.g. daily_work.
+            $table->string('report_key', 100)
+                ->default('daily_work')
+                ->unique();
 
             // Reports are disabled until an administrator enables them.
             $table->boolean('enabled')->default(false);
@@ -46,6 +50,9 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('daily_work_report_settings');
