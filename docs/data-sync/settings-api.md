@@ -1,5 +1,8 @@
 # Data Sync – Settings Masters API Documentation
 
+## Create a API Client
+php artisan api-client:create --name="Internal CRM" --scope=meetings.read --scope=settings.read --scope=settings.write
+
 ## Overview
 
 The **Data Sync Settings API** allows external applications (CRM, ERP, and custom business software) to read, create, update, and soft-delete PMS Settings Masters using a unified REST interface and unique 6-digit `code` identifiers.
