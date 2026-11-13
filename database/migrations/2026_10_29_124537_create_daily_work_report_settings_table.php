@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
 
             $table->string('setting_key')->unique()->default('default');
-            $table->string('report_key')->index();
 
             // Reports are disabled until an administrator enables them.
             $table->boolean('enabled')->default(false);
