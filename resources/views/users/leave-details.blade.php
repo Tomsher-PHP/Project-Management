@@ -188,27 +188,27 @@
                                         @endif
                                     </td>
                                     <td class="px-5 py-4 text-right text-sm text-bgray-900 dark:text-white">
-                                        {{ number_format($balance->yearly_entitlement, 2) }}
+                                        {{ rtrim(rtrim(number_format($balance->yearly_entitlement, 2, '.', ''), '0'), '.') }}
                                     </td>
                                     <td class="px-5 py-4 text-right text-sm text-bgray-900 dark:text-white">
-                                        {{ number_format($balance->monthly_entitlement, 2) }}
+                                        {{ rtrim(rtrim(number_format($balance->monthly_entitlement, 2, '.', ''), '0'), '.') }}
                                     </td>
                                     <td class="px-5 py-4 text-right text-sm text-bgray-900 dark:text-white">
-                                        {{ number_format($balance->opening_balance, 2) }}
+                                        {{ rtrim(rtrim(number_format($balance->opening_balance, 2, '.', ''), '0'), '.') }}
                                     </td>
                                     <td class="px-5 py-4 text-right text-sm text-bgray-900 dark:text-white">
-                                        {{ number_format($balance->used_balance, 2) }}
+                                        {{ rtrim(rtrim(number_format($balance->used_balance, 2, '.', ''), '0'), '.') }}
                                     </td>
                                     <td class="px-5 py-4 text-right">
                                         <span class="font-semibold text-success-400">
-                                            {{ number_format($balance->current_balance, 2) }}
+                                            {{ rtrim(rtrim(number_format($balance->current_balance, 2, '.', ''), '0'), '.') }}
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 text-right text-sm text-green-600">
-                                        {{ number_format($balance->paid_days_used, 2) }}
+                                        {{ rtrim(rtrim(number_format($balance->paid_days_used, 2, '.', ''), '0'), '.') }}
                                     </td>
                                     <td class="px-5 py-4 text-right text-sm text-red-500">
-                                        {{ number_format($balance->unpaid_days_used, 2) }}
+                                        {{ rtrim(rtrim(number_format($balance->unpaid_days_used, 2, '.', ''), '0'), '.') }}
                                     </td>
                                 </tr>
                             @endforeach

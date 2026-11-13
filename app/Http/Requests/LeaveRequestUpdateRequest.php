@@ -4,12 +4,16 @@ namespace App\Http\Requests;
 
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class LeaveRequestUpdateRequest extends FormRequest
 {
+    /**
+     * Authorize the request.
+     */
     public function authorize(): bool
     {
         return auth()->check();
@@ -48,9 +52,7 @@ class LeaveRequestUpdateRequest extends FormRequest
          * If only the ID was supplied, load the model.
          */
         if ($leaveRequest) {
-            return LeaveRequest::find(
-                $leaveRequest
-            );
+            return LeaveRequest::find($leaveRequest);
         }
 
         return null;
@@ -58,8 +60,6 @@ class LeaveRequestUpdateRequest extends FormRequest
 
     /**
      * Determine whether this request is approval/rejection mode.
-     *
-     * approved_mode has been renamed to approved_mode.
      */
     protected function isApprovalMode(): bool
     {
@@ -160,12 +160,11 @@ class LeaveRequestUpdateRequest extends FormRequest
      * - request is pending or approved
      * - full edit is not allowed
      *
-     * Only:
+     * Editable fields:
      *
      * - reason
      * - attachment
-     *
-     * may be changed.
+     * - return_to_work_date
      */
     protected function isRestrictedEdit(
         ?LeaveRequest $leaveRequest
@@ -209,9 +208,7 @@ class LeaveRequestUpdateRequest extends FormRequest
         /*
          * If full edit is available, this is not restricted mode.
          */
-        return !$this->isFullEdit(
-            $leaveRequest
-        );
+        return !$this->isFullEdit($leaveRequest);
     }
 
     /**
@@ -219,48 +216,37 @@ class LeaveRequestUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $leaveRequest =
-            $this->getLeaveRequest();
+        $leaveRequest = $this->getLeaveRequest();
 
-        $action =
-            $this->input('action');
+        $action = $this->input('action');
 
-        $approvalMode =
-            $this->isApprovalMode();
+        $approvalMode = $this->isApprovalMode();
 
-        $fullEdit =
-            $this->isFullEdit(
-                $leaveRequest
-            );
+        $fullEdit = $this->isFullEdit(
+            $leaveRequest
+        );
 
-        $restrictedEdit =
-            $this->isRestrictedEdit(
-                $leaveRequest
-            );
+        $restrictedEdit = $this->isRestrictedEdit(
+            $leaveRequest
+        );
 
         /*
          * ==========================================================
          * RESTRICTED EMPLOYEE EDIT
          * ==========================================================
          *
-         * This is the important section for your current error.
-         *
          * When an employee edits:
          *
          * - approved leave
          * - pending leave added by manager/reporter/Super Admin
          *
-         * the Blade does NOT need to submit:
+         * The employee can update:
          *
-         * - leave_type_id
-         * - type
-         * - half_day_type
-         * - requested_from_date
-         * - requested_to_date
+         * - reason
+         * - attachment
+         * - return_to_work_date
          *
-         * Therefore those fields are completely optional here.
-         *
-         * The controller preserves their existing DB values.
+         * The original leave dates and leave details remain unchanged.
          */
         if ($restrictedEdit) {
 
@@ -298,12 +284,26 @@ class LeaveRequestUpdateRequest extends FormRequest
                 ],
 
                 /*
+                 * Expected Return-to-Work Date
+                 *
+                 * Employees can update or clear this field.
+                 *
+                 * The comparison against the applicable leave end date
+                 * is handled in withValidator().
+                 */
+                'return_to_work_date' => [
+                    'sometimes',
+                    'nullable',
+                    'date',
+                ],
+
+                /*
                  * These fields are intentionally NOT required.
                  *
                  * If the Blade does not send them, validation
                  * will still succeed.
                  *
-                 * The controller does not update these fields.
+                 * The controller must not update these fields.
                  */
                 'leave_type_id' => [
                     'sometimes',
@@ -422,6 +422,14 @@ class LeaveRequestUpdateRequest extends FormRequest
                 ],
 
                 /*
+                 * Expected Return-to-Work Date
+                 */
+                'return_to_work_date' => [
+                    'nullable',
+                    'date',
+                ],
+
+                /*
                  * Employee cannot submit approved dates.
                  */
                 'approved_from_date' => [
@@ -473,15 +481,14 @@ class LeaveRequestUpdateRequest extends FormRequest
          */
         if ($approvalMode) {
 
-            $requiresApprovedDates =
-                in_array(
-                    $action,
-                    [
-                        'approve',
-                        'update_and_approve',
-                    ],
-                    true
-                );
+            $requiresApprovedDates = in_array(
+                $action,
+                [
+                    'approve',
+                    'update_and_approve',
+                ],
+                true
+            );
 
             return [
 
@@ -565,6 +572,18 @@ class LeaveRequestUpdateRequest extends FormRequest
                     'date',
 
                     'after_or_equal:approved_from_date',
+                ],
+
+                /*
+                 * Expected Return-to-Work Date
+                 *
+                 * Compared against:
+                 * - requested_to_date for action=update
+                 * - approved_to_date for approve/update_and_approve
+                 */
+                'return_to_work_date' => [
+                    'nullable',
+                    'date',
                 ],
 
                 /*
@@ -657,6 +676,11 @@ class LeaveRequestUpdateRequest extends FormRequest
                 'after_or_equal:approved_from_date',
             ],
 
+            'return_to_work_date' => [
+                'nullable',
+                'date',
+            ],
+
             'reason' => [
                 'required',
                 'string',
@@ -684,49 +708,33 @@ class LeaveRequestUpdateRequest extends FormRequest
         Validator $validator
     ): void {
         $validator->after(
-            function (Validator $validator) {
+            function (Validator $validator): void {
 
-                $leaveRequest =
-                    $this->getLeaveRequest();
+                $leaveRequest = $this->getLeaveRequest();
 
                 if (!$leaveRequest) {
                     return;
                 }
 
-                $approvalMode =
-                    $this->isApprovalMode();
+                $approvalMode = $this->isApprovalMode();
 
-                $fullEdit =
-                    $this->isFullEdit(
-                        $leaveRequest
-                    );
+                $fullEdit = $this->isFullEdit(
+                    $leaveRequest
+                );
 
-                $restrictedEdit =
-                    $this->isRestrictedEdit(
-                        $leaveRequest
-                    );
-
-                $action =
-                    $this->input('action');
+                $restrictedEdit = $this->isRestrictedEdit(
+                    $leaveRequest
+                );
 
                 /*
                  * ==================================================
                  * RESTRICTED EMPLOYEE EDIT
                  * ==================================================
-                 *
-                 * IMPORTANT:
-                 *
-                 * Missing leave_type_id/type/date fields are VALID.
-                 *
-                 * We only reject them if someone tries to change
-                 * their values.
                  */
                 if ($restrictedEdit) {
 
                     /*
-                     * ------------------------------------------------
                      * Leave type
-                     * ------------------------------------------------
                      */
                     if (
                         $this->has('leave_type_id')
@@ -741,15 +749,12 @@ class LeaveRequestUpdateRequest extends FormRequest
                     }
 
                     /*
-                     * ------------------------------------------------
                      * Type
-                     * ------------------------------------------------
                      */
                     if (
                         $this->has('type')
                         && $this->input('type') !== null
-                        && $this->input('type')
-                            !== $leaveRequest->type
+                        && $this->input('type') !== $leaveRequest->type
                     ) {
                         $validator->errors()->add(
                             'type',
@@ -758,9 +763,7 @@ class LeaveRequestUpdateRequest extends FormRequest
                     }
 
                     /*
-                     * ------------------------------------------------
                      * Half-day type
-                     * ------------------------------------------------
                      */
                     if (
                         $this->has('half_day_type')
@@ -775,43 +778,19 @@ class LeaveRequestUpdateRequest extends FormRequest
                     }
 
                     /*
-                     * ------------------------------------------------
                      * Requested From Date
-                     * ------------------------------------------------
                      */
-                    if (
-                        $this->filled(
+                    if ($this->filled('requested_from_date')) {
+
+                        $submittedFromDate = $this->input(
                             'requested_from_date'
-                        )
-                    ) {
+                        );
 
-                        $submittedFromDate =
-                            $this->input(
-                                'requested_from_date'
-                            );
+                        $existingFromDate = $this->formatDate(
+                            $leaveRequest->requested_from_date
+                        );
 
-                        $existingFromDate =
-                            $leaveRequest
-                                ->requested_from_date;
-
-                        if (
-                            $existingFromDate instanceof \Carbon\Carbon
-                            || $existingFromDate instanceof \Carbon\CarbonImmutable
-                        ) {
-                            $existingFromDate =
-                                $existingFromDate
-                                    ->format('Y-m-d');
-                        } elseif ($existingFromDate) {
-                            $existingFromDate =
-                                \Carbon\Carbon::parse(
-                                    $existingFromDate
-                                )->format('Y-m-d');
-                        }
-
-                        if (
-                            $submittedFromDate
-                            !== $existingFromDate
-                        ) {
+                        if ($submittedFromDate !== $existingFromDate) {
                             $validator->errors()->add(
                                 'requested_from_date',
                                 'The requested From Date cannot be changed for this request.'
@@ -820,43 +799,19 @@ class LeaveRequestUpdateRequest extends FormRequest
                     }
 
                     /*
-                     * ------------------------------------------------
                      * Requested To Date
-                     * ------------------------------------------------
                      */
-                    if (
-                        $this->filled(
+                    if ($this->filled('requested_to_date')) {
+
+                        $submittedToDate = $this->input(
                             'requested_to_date'
-                        )
-                    ) {
+                        );
 
-                        $submittedToDate =
-                            $this->input(
-                                'requested_to_date'
-                            );
+                        $existingToDate = $this->formatDate(
+                            $leaveRequest->requested_to_date
+                        );
 
-                        $existingToDate =
-                            $leaveRequest
-                                ->requested_to_date;
-
-                        if (
-                            $existingToDate instanceof \Carbon\Carbon
-                            || $existingToDate instanceof \Carbon\CarbonImmutable
-                        ) {
-                            $existingToDate =
-                                $existingToDate
-                                    ->format('Y-m-d');
-                        } elseif ($existingToDate) {
-                            $existingToDate =
-                                \Carbon\Carbon::parse(
-                                    $existingToDate
-                                )->format('Y-m-d');
-                        }
-
-                        if (
-                            $submittedToDate
-                            !== $existingToDate
-                        ) {
+                        if ($submittedToDate !== $existingToDate) {
                             $validator->errors()->add(
                                 'requested_to_date',
                                 'The requested To Date cannot be changed for this request.'
@@ -865,26 +820,16 @@ class LeaveRequestUpdateRequest extends FormRequest
                     }
 
                     /*
-                     * ------------------------------------------------
                      * Approved dates
-                     * ------------------------------------------------
                      */
-                    if (
-                        $this->filled(
-                            'approved_from_date'
-                        )
-                    ) {
+                    if ($this->filled('approved_from_date')) {
                         $validator->errors()->add(
                             'approved_from_date',
                             'Approved dates cannot be changed in employee edit mode.'
                         );
                     }
 
-                    if (
-                        $this->filled(
-                            'approved_to_date'
-                        )
-                    ) {
+                    if ($this->filled('approved_to_date')) {
                         $validator->errors()->add(
                             'approved_to_date',
                             'Approved dates cannot be changed in employee edit mode.'
@@ -892,13 +837,9 @@ class LeaveRequestUpdateRequest extends FormRequest
                     }
 
                     /*
-                     * ------------------------------------------------
                      * Approver comment
-                     * ------------------------------------------------
                      */
-                    if (
-                        $this->has('approver_comment')
-                    ) {
+                    if ($this->has('approver_comment')) {
                         $validator->errors()->add(
                             'approver_comment',
                             'Approver comments cannot be changed by the employee.'
@@ -906,12 +847,24 @@ class LeaveRequestUpdateRequest extends FormRequest
                     }
 
                     /*
-                     * ------------------------------------------------
-                     * Attachment requirement
-                     * ------------------------------------------------
+                     * Expected Return-to-Work Date
                      *
-                     * Use the existing leave type because
-                     * leave_type_id normally isn't submitted.
+                     * For approved leave, compare against the approved
+                     * end date. Otherwise, use the requested end date.
+                     */
+                    $effectiveEndDate =
+                        $leaveRequest->status === 'approved'
+                        && $leaveRequest->approved_to_date
+                            ? $leaveRequest->approved_to_date
+                            : $leaveRequest->requested_to_date;
+
+                    $this->validateReturnToWorkDate(
+                        $validator,
+                        $effectiveEndDate
+                    );
+
+                    /*
+                     * Attachment requirement
                      */
                     $this->validateAttachmentRequirement(
                         $validator,
@@ -936,6 +889,11 @@ class LeaveRequestUpdateRequest extends FormRequest
                      *
                      * We intentionally allow multi-day half-day leave.
                      */
+                    $this->validateReturnToWorkDate(
+                        $validator,
+                        $this->input('requested_to_date')
+                    );
+
                     $this->validateAttachmentRequirement(
                         $validator,
                         $leaveRequest
@@ -951,8 +909,45 @@ class LeaveRequestUpdateRequest extends FormRequest
                  */
                 if ($approvalMode) {
 
+                    $action = $this->input('action');
+
                     /*
-                     * Attachment requirement.
+                     * Determine the correct end date for validation.
+                     *
+                     * update:
+                     *     Existing requested end date.
+                     *
+                     * approve / update_and_approve:
+                     *     Submitted approved end date.
+                     *
+                     * reject:
+                     *     Existing requested end date.
+                     */
+                    if (
+                        in_array(
+                            $action,
+                            [
+                                'approve',
+                                'update_and_approve',
+                            ],
+                            true
+                        )
+                    ) {
+                        $effectiveEndDate = $this->input(
+                            'approved_to_date'
+                        );
+                    } else {
+                        $effectiveEndDate =
+                            $leaveRequest->requested_to_date;
+                    }
+
+                    $this->validateReturnToWorkDate(
+                        $validator,
+                        $effectiveEndDate
+                    );
+
+                    /*
+                     * Attachment requirement
                      */
                     $this->validateAttachmentRequirement(
                         $validator,
@@ -960,8 +955,6 @@ class LeaveRequestUpdateRequest extends FormRequest
                     );
 
                     /*
-                     * No additional date restriction here.
-                     *
                      * Multi-day half-day leave is allowed.
                      */
                     return;
@@ -972,12 +965,87 @@ class LeaveRequestUpdateRequest extends FormRequest
                  * FALLBACK
                  * ==================================================
                  */
+                $this->validateReturnToWorkDate(
+                    $validator,
+                    $this->input('requested_to_date')
+                );
+
                 $this->validateAttachmentRequirement(
                     $validator,
                     $leaveRequest
                 );
             }
         );
+    }
+
+    /**
+     * Validate the expected return-to-work date against
+     * the applicable leave end date.
+     *
+     * A blank value is allowed.
+     */
+    protected function validateReturnToWorkDate(
+        Validator $validator,
+        mixed $leaveEndDate
+    ): void {
+        /*
+         * Skip when the field is absent or intentionally cleared.
+         */
+        if (!$this->filled('return_to_work_date')) {
+            return;
+        }
+
+        /*
+         * Skip comparison if the return date itself failed
+         * the basic date validation rule.
+         */
+        if (
+            $validator->errors()->has('return_to_work_date')
+        ) {
+            return;
+        }
+
+        if (!$leaveEndDate) {
+            return;
+        }
+
+        try {
+            $returnDate = Carbon::parse(
+                $this->input('return_to_work_date')
+            )->startOfDay();
+
+            $leaveEndDate = Carbon::parse(
+                $leaveEndDate
+            )->startOfDay();
+        } catch (\Throwable $exception) {
+            return;
+        }
+
+        if ($returnDate->lt($leaveEndDate)) {
+            $validator->errors()->add(
+                'return_to_work_date',
+                'The expected return-to-work date must be on or after the leave end date.'
+            );
+        }
+    }
+
+    /**
+     * Format a date value as Y-m-d.
+     */
+    protected function formatDate(mixed $date): ?string
+    {
+        if (!$date) {
+            return null;
+        }
+
+        if (
+            $date instanceof Carbon
+            || $date instanceof \Carbon\CarbonImmutable
+        ) {
+            return $date->format('Y-m-d');
+        }
+
+        return Carbon::parse($date)->format('Y-m-d');
     }
 
     /**
@@ -991,10 +1059,10 @@ class LeaveRequestUpdateRequest extends FormRequest
         ?LeaveRequest $leaveRequest
     ): void {
         /*
-        * If leave_type_id is submitted, use it.
-        *
-        * Otherwise use the existing leave request's leave type.
-        */
+         * If leave_type_id is submitted, use it.
+         *
+         * Otherwise use the existing leave request's leave type.
+         */
         $leaveTypeId = $this->input('leave_type_id');
 
         if (!$leaveTypeId && $leaveRequest) {
@@ -1012,15 +1080,15 @@ class LeaveRequestUpdateRequest extends FormRequest
         }
 
         /*
-        * This leave type does not require an attachment.
-        */
+         * This leave type does not require an attachment.
+         */
         if (!$leaveType->is_file_upload_required) {
             return;
         }
 
         /*
-        * A new uploaded attachment satisfies the requirement.
-        */
+         * A new uploaded attachment satisfies the requirement.
+         */
         if (
             $this->hasFile('attachment')
             && $this->file('attachment')->isValid()
@@ -1029,12 +1097,12 @@ class LeaveRequestUpdateRequest extends FormRequest
         }
 
         /*
-        * An existing attachment satisfies the requirement.
-        *
-        * LeaveRequest uses a polymorphic attachments relationship.
-        *
-        * Only active attachments are considered.
-        */
+         * An existing attachment satisfies the requirement.
+         *
+         * LeaveRequest uses a polymorphic attachments relationship.
+         *
+         * Only active attachments are considered.
+         */
         if (
             $leaveRequest
             && $leaveRequest->attachments()
@@ -1045,8 +1113,8 @@ class LeaveRequestUpdateRequest extends FormRequest
         }
 
         /*
-        * Otherwise attachment is required.
-        */
+         * Otherwise attachment is required.
+         */
         $validator->errors()->add(
             'attachment',
             'A supporting document is required for this leave type.'
