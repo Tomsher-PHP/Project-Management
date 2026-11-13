@@ -16,6 +16,13 @@ class BroadcastCategoryRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->isMethod('post')) {
+            $this->merge(['code' => BroadcastCategory::generateUniqueCode()]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -26,7 +33,7 @@ class BroadcastCategoryRequest extends FormRequest
         $category = $this->route('broadcast_category');
         $id = $category instanceof BroadcastCategory ? $category->id : $category;
 
-        return [
+        $rules = [
             'name' => [
                 'required',
                 'string',
@@ -44,6 +51,12 @@ class BroadcastCategoryRequest extends FormRequest
                 'boolean',
             ],
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['code'] = ['required', 'digits:6', 'unique:broadcast_categories,code'];
+        }
+
+        return $rules;
     }
 
     /**

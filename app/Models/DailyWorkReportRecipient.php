@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DailyWorkReportRecipient extends Model
 {
     protected $fillable = [
+        'report_key',
         'scope',
         'scope_id',
         'name',

@@ -7,6 +7,7 @@ use App\Models\DailyWorkReportDelivery;
 use App\Models\DailyWorkReportLog;
 use App\Models\DailyWorkReportSetting;
 use App\Models\User;
+use App\Models\UserReportPreference;
 use App\Services\DailyWorkReportRecipientService;
 use App\Services\DailyWorkReportService;
 use Carbon\Carbon;
@@ -54,6 +55,12 @@ class GenerateDailyWorkReports extends Command
 
         $sections = $settings->report_sections ?? [];
 
+        /*
+        |--------------------------------------------------------------------------
+        | Eligible Employees
+        |--------------------------------------------------------------------------
+        */
+
         $employeesQuery = User::query()
             ->whereNotNull('email')
             ->where('email', '!=', '');
@@ -64,68 +71,217 @@ class GenerateDailyWorkReports extends Command
 
         $employees = $employeesQuery->get();
 
-        $this->info("Processing {$employees->count()} employees.");
+        $this->info("Found {$employees->count()} employees.");
+
+        $reportKey = 'daily_work';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Employee Report Preferences
+        |--------------------------------------------------------------------------
+        |
+        | No preference row means the report is enabled.
+        |
+        */
+
+        $dailyReportPreferences = UserReportPreference::query()
+            ->where('report_key', $reportKey)
+            ->whereIn('user_id', $employees->pluck('id'))
+            ->pluck('is_enabled', 'user_id');
+
+        $eligibleEmployees = $employees
+            ->filter(fn ($employee) => (bool) $dailyReportPreferences->get(
+                $employee->id,
+                true
+            ))
+            ->values();
+
+        $eligibleEmployeeIds = $eligibleEmployees
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $this->info(
+            "Processing {$eligibleEmployees->count()} eligible employees for consolidated reports."
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Processing Counters
+        |--------------------------------------------------------------------------
+        */
 
         $generated = 0;
         $skipped = 0;
         $failed = 0;
 
-        foreach ($employees as $employee) {
-            try {
-                // Avoid creating the same report more than once.
-                $existing = DailyWorkReportLog::query()
-                    ->where('user_id', $employee->id)
-                    ->whereDate('report_date', $reportDate)
-                    ->where('report_type', $reportType)
-                    ->exists();
+        /*
+        |--------------------------------------------------------------------------
+        | Generate Consolidated Reports
+        |--------------------------------------------------------------------------
+        |
+        | Each employee is considered as a potential report owner.
+        |
+        | Employees with subordinates receive one consolidated report
+        | containing all their direct and indirect subordinates.
+        |
+        */
 
-                if ($existing) {
+        foreach ($eligibleEmployees as $reportOwner) {
+            try {
+                /*
+                |--------------------------------------------------------------------------
+                | Get All Subordinates
+                |--------------------------------------------------------------------------
+                */
+
+                $subordinateIds = $this->getAllSubordinateUserIds(
+                    $reportOwner->id,
+                    $eligibleEmployeeIds
+                );
+
+                // Employees without subordinates do not receive
+                // a separate hierarchy report.
+                if (empty($subordinateIds)) {
+                    $this->line(
+                        "Skipped {$reportOwner->name}: no subordinates."
+                    );
+
                     $skipped++;
+
                     continue;
                 }
 
-                $report = $reportService->generate(
-                    $employee,
+                $subordinates = $eligibleEmployees
+                    ->whereIn('id', $subordinateIds)
+                    ->unique('id')
+                    ->values();
+
+                if ($subordinates->isEmpty()) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Prevent Duplicate Reports
+                |--------------------------------------------------------------------------
+                */
+
+                $existing = DailyWorkReportLog::query()
+                    ->where('user_id', $reportOwner->id)
+                    ->whereDate('report_date', $reportDate)
+                    ->where('report_type', $reportType)
+                    ->where('report_key', $reportKey)
+                    ->exists();
+
+                if ($existing) {
+                    $this->line(
+                        "Skipped {$reportOwner->name}: report already exists."
+                    );
+
+                    $skipped++;
+
+                    continue;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Generate Consolidated Report
+                |--------------------------------------------------------------------------
+                */
+
+                $report = $reportService->generateConsolidated(
+                    $reportOwner,
+                    $subordinates,
                     $start,
                     $end
                 );
 
-                $report = $this->applySections($report, $sections);
+                /*
+                |--------------------------------------------------------------------------
+                | Apply Selected Report Sections
+                |--------------------------------------------------------------------------
+                |
+                | Apply the same General Report Settings to every employee
+                | included in the consolidated report.
+                |
+                */
+
+                $report['employees'] = collect($report['employees'] ?? [])
+                    ->map(function ($employeeReport) use ($sections) {
+                        return $this->applySections(
+                            $employeeReport,
+                            $sections
+                        );
+                    })
+                    ->values()
+                    ->all();
+
+                /*
+                |--------------------------------------------------------------------------
+                | Check Activity
+                |--------------------------------------------------------------------------
+                */
 
                 if (
                     ! $settings->send_zero_activity
-                    && ! $this->hasActivity($report)
+                    && ! $this->hasConsolidatedActivity($report)
                 ) {
-                    $this->line("Skipped {$employee->name}: no activity.");
+                    $this->line(
+                        "Skipped {$reportOwner->name}: no subordinate activity."
+                    );
 
                     $skipped++;
+
                     continue;
                 }
 
-                $recipients = $recipientService->resolve(
-                    $employee,
-                    $reportDate
+                /*
+                |--------------------------------------------------------------------------
+                | Resolve Recipients
+                |--------------------------------------------------------------------------
+                |
+                | The report owner receives one consolidated report.
+                | User-specific and team-specific recipients are included.
+                |
+                | Global recipients are intentionally handled separately.
+                |
+                */
+
+                $recipients = $recipientService->resolveForHierarchy(
+                    $reportOwner,
+                    $subordinates,
+                    $reportDate,
+                    $reportKey
                 );
 
                 $recipientSnapshot = $recipients->values()->all();
 
+                /*
+                |--------------------------------------------------------------------------
+                | Create Report Log and Delivery Records
+                |--------------------------------------------------------------------------
+                */
+
                 $log = DB::transaction(function () use (
-                    $employee,
+                    $reportOwner,
                     $reportDate,
                     $start,
                     $end,
                     $reportType,
+                    $reportKey,
                     $report,
                     $recipientSnapshot,
                     $recipients
                 ) {
-                    // firstOrCreate also protects against a duplicate
-                    // created by another scheduler process.
                     $log = DailyWorkReportLog::firstOrCreate(
                         [
-                            'user_id' => $employee->id,
+                            'user_id' => $reportOwner->id,
                             'report_date' => $reportDate,
                             'report_type' => $reportType,
+                            'report_key' => $reportKey,
                         ],
                         [
                             'period_start' => $start,
@@ -142,6 +298,8 @@ class GenerateDailyWorkReports extends Command
                         ]
                     );
 
+                    // Another scheduler process may have created
+                    // this report already.
                     if (! $log->wasRecentlyCreated) {
                         return null;
                     }
@@ -162,20 +320,30 @@ class GenerateDailyWorkReports extends Command
 
                 if (! $log) {
                     $skipped++;
+
                     continue;
                 }
 
                 if ($recipients->isEmpty()) {
                     $this->warn(
-                        "No recipients found for {$employee->name}."
+                        "No recipients found for {$reportOwner->name}."
                     );
 
                     $skipped++;
+
                     continue;
                 }
 
-                // Set the report status before dispatching jobs.
-                // This is important when QUEUE_CONNECTION=sync.
+                /*
+                |--------------------------------------------------------------------------
+                | Dispatch Delivery Jobs
+                |--------------------------------------------------------------------------
+                |
+                | Set the report status before dispatching jobs.
+                | This also supports QUEUE_CONNECTION=sync.
+                |
+                */
+
                 $log->update([
                     'status' => 'queued',
                     'attempt_count' => 0,
@@ -190,7 +358,9 @@ class GenerateDailyWorkReports extends Command
                             'last_error' => null,
                         ]);
 
-                        SendDailyWorkReportDelivery::dispatch($delivery->id);
+                        SendDailyWorkReportDelivery::dispatch(
+                            $delivery->id
+                        );
 
                     } catch (Throwable $exception) {
                         $delivery->update([
@@ -206,12 +376,19 @@ class GenerateDailyWorkReports extends Command
                     }
                 }
 
-                // Recalculate after dispatch, including synchronous deliveries.
-                $this->refreshLogStatus($log);
+                /*
+                |--------------------------------------------------------------------------
+                | Refresh Report Status
+                |--------------------------------------------------------------------------
+                */
+
+                $this->refreshLogStatus($log->fresh());
 
                 $generated++;
 
-                $this->info("Generated report for {$employee->name}.");
+                $this->info(
+                    "Generated consolidated report for {$reportOwner->name} ({$subordinates->count()} employees)."
+                );
 
             } catch (Throwable $exception) {
                 $failed++;
@@ -219,13 +396,21 @@ class GenerateDailyWorkReports extends Command
                 report($exception);
 
                 $this->error(
-                    "Failed for {$employee->name}: {$exception->getMessage()}"
+                    "Failed for {$reportOwner->name}: {$exception->getMessage()}"
                 );
             }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Processing Summary
+        |--------------------------------------------------------------------------
+        */
+
         $this->newLine();
+
         $this->info('Daily work report processing completed.');
+
         $this->table(
             ['Result', 'Count'],
             [
@@ -235,8 +420,73 @@ class GenerateDailyWorkReports extends Command
             ]
         );
 
-        return $failed > 0 ? self::FAILURE : self::SUCCESS;
+        return $failed > 0
+            ? self::FAILURE
+            : self::SUCCESS;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Get All Direct and Indirect Subordinates
+    |--------------------------------------------------------------------------
+    |
+    | Traverse both Reporting To and Manager relationships.
+    |
+    | reporter_id and manager_id are both considered hierarchy links.
+    | Duplicate employees and circular relationships are prevented.
+    |
+    */
+
+    private function getAllSubordinateUserIds(
+        int $userId,
+        array $eligibleEmployeeIds
+    ): array {
+        $subordinateIds = [];
+
+        // Prevent the report owner from being included in their own report.
+        $visitedIds = [$userId];
+
+        $currentLevelIds = [$userId];
+
+        while (! empty($currentLevelIds)) {
+            $nextLevelIds = User::query()
+                ->whereIn('id', $eligibleEmployeeIds)
+                ->whereHas('details', function ($query) use ($currentLevelIds) {
+                    $query->whereIn('reporter_id', $currentLevelIds)
+                        ->orWhereIn('manager_id', $currentLevelIds);
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->reject(fn ($id) => in_array($id, $visitedIds, true))
+                ->values()
+                ->all();
+
+            if (empty($nextLevelIds)) {
+                break;
+            }
+
+            $subordinateIds = array_merge(
+                $subordinateIds,
+                $nextLevelIds
+            );
+
+            $visitedIds = array_merge(
+                $visitedIds,
+                $nextLevelIds
+            );
+
+            $currentLevelIds = $nextLevelIds;
+        }
+
+        return array_values(array_unique($subordinateIds));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Delivery Schedule
+    |--------------------------------------------------------------------------
+    */
 
     private function isDeliveryDue($settings, Carbon $now): bool
     {
@@ -260,8 +510,15 @@ class GenerateDailyWorkReports extends Command
             5
         );
 
-        return $now->format('H:i') === $deliveryTime;
+        // Run at the configured time or any time after it.
+        return $now->format('H:i') >= $deliveryTime;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reporting Period
+    |--------------------------------------------------------------------------
+    */
 
     private function getReportingPeriod(
         string $reportingPeriod,
@@ -296,8 +553,16 @@ class GenerateDailyWorkReports extends Command
         ];
     }
 
-    private function applySections(array $report, array $sections): array
-    {
+    /*
+    |--------------------------------------------------------------------------
+    | Apply Selected Report Sections
+    |--------------------------------------------------------------------------
+    */
+
+    private function applySections(
+        array $report,
+        array $sections
+    ): array {
         // Calculate deadlines before removing the current workload section.
         if (in_array('deadlines', $sections, true)) {
             $tasks = $report['current_workload']['tasks'] ?? [];
@@ -305,7 +570,9 @@ class GenerateDailyWorkReports extends Command
             $report['deadlines'] = collect($tasks)
                 ->filter(fn ($task) => ! empty($task['due_date']))
                 ->filter(fn ($task) => empty($task['completed_at']))
-                ->filter(fn ($task) => Carbon::parse($task['due_date'])->isPast())
+                ->filter(fn ($task) => Carbon::parse(
+                    $task['due_date']
+                )->isPast())
                 ->values()
                 ->all();
         }
@@ -331,6 +598,12 @@ class GenerateDailyWorkReports extends Command
         return $report;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Check Individual Report Activity
+    |--------------------------------------------------------------------------
+    */
+
     private function hasActivity(array $report): bool
     {
         return ! empty($report['daily_activity']['status_changes'])
@@ -340,31 +613,60 @@ class GenerateDailyWorkReports extends Command
             || ! empty($report['developer_notes']);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Check Consolidated Report Activity
+    |--------------------------------------------------------------------------
+    */
+
+    private function hasConsolidatedActivity(array $report): bool
+    {
+        foreach ($report['employees'] ?? [] as $employeeReport) {
+            if ($this->hasActivity($employeeReport)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Refresh Report Log Status
+    |--------------------------------------------------------------------------
+    |
+    | Do not mark the report as failed while deliveries are still queued.
+    |
+    */
+
     private function refreshLogStatus(DailyWorkReportLog $log): void
     {
         $deliveries = $log->deliveries()->get();
 
         $total = $deliveries->count();
+
         $sent = $deliveries->where('status', 'sent')->count();
+
         $failed = $deliveries->where('status', 'failed')->count();
 
         $status = 'queued';
+        $completedAt = null;
 
         if ($total > 0 && $sent === $total) {
             $status = 'sent';
-        } elseif ($failed > 0 && $sent > 0) {
-            $status = 'partial';
-        } elseif ($failed > 0 && $sent === 0) {
-            $status = 'failed';
+            $completedAt = now();
+
+        } elseif ($total > 0 && ($sent + $failed) === $total) {
+            $status = $sent > 0
+                ? 'partial'
+                : 'failed';
+
+            $completedAt = now();
         }
 
         $log->update([
             'status' => $status,
-            'completed_at' => in_array(
-                $status,
-                ['sent', 'partial', 'failed'],
-                true
-            ) ? now() : null,
+            'completed_at' => $completedAt,
         ]);
     }
 }

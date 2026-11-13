@@ -38,6 +38,8 @@ class SendDailyWorkReportDelivery implements ShouldQueue
         try {
             $reportLog = $delivery->reportLog;
 
+            // The report log contains the complete report data.
+            // This can be an individual or consolidated report.
             Mail::to($delivery->recipient_email)
                 ->send(new DailyWorkReportMail($reportLog));
 
@@ -48,7 +50,9 @@ class SendDailyWorkReportDelivery implements ShouldQueue
             ]);
 
             $this->refreshReportStatus($reportLog->fresh());
+
         } catch (Throwable $exception) {
+
             $delivery->update([
                 'status' => 'failed',
                 'last_error' => mb_substr(
@@ -58,35 +62,46 @@ class SendDailyWorkReportDelivery implements ShouldQueue
                 ),
             ]);
 
-            $this->refreshReportStatus($delivery->reportLog->fresh());
+            $this->refreshReportStatus(
+                $delivery->reportLog->fresh()
+            );
 
             throw $exception;
         }
     }
 
+    /**
+     * Update the overall report status based on all deliveries.
+     */
     private function refreshReportStatus($reportLog): void
     {
         $deliveries = $reportLog->deliveries()->get();
 
-        $sent = $deliveries->where('status', 'sent')->count();
-        $failed = $deliveries->where('status', 'failed')->count();
         $total = $deliveries->count();
 
+        $sent = $deliveries->where('status', 'sent')->count();
+
+        $failed = $deliveries->where('status', 'failed')->count();
+
+        // Anything not sent or failed is still pending/queued.
+        $pending = $total - $sent - $failed;
+
         $status = 'queued';
+        $completedAt = null;
 
         if ($total > 0 && $sent === $total) {
             $status = 'sent';
-        } elseif ($failed > 0 && $sent > 0) {
-            $status = 'partial';
-        } elseif ($failed > 0 && $sent === 0) {
-            $status = 'failed';
+            $completedAt = now();
+
+        } elseif ($total > 0 && $sent + $failed === $total) {
+
+            $status = $sent > 0 ? 'partial' : 'failed';
+            $completedAt = now();
         }
 
         $reportLog->update([
             'status' => $status,
-            'completed_at' => in_array($status, ['sent', 'partial', 'failed'], true)
-                ? now()
-                : null,
+            'completed_at' => $completedAt,
         ]);
     }
 }

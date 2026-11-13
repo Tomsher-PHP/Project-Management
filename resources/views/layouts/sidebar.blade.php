@@ -597,7 +597,7 @@
                             </li>
                         @endif
 
-                        @if ($canViewExpenses)
+                        {{-- @if ($canViewExpenses)
                             <!-- Company Expenses -->
                             <li class="item py-[8px] {{ $isExpensesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ $expensesRoute }}">
@@ -613,7 +613,7 @@
                                     </div>
                                 </a>
                             </li>
-                        @endif
+                        @endif --}}
                     </ul>
                 </div>
             @endif
