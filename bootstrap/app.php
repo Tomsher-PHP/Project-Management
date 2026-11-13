@@ -8,7 +8,9 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -31,6 +33,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission.type' => PermissionByType::class,
             'api.key' => AuthenticateApiKey::class,
         ]);
+
+        $middleware->prependToPriorityList(
+            ThrottleRequests::class,
+            AuthenticateApiKey::class
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Log unexpected application errors (skip expected auth and session failures)
@@ -38,7 +45,8 @@ return Application::configure(basePath: dirname(__DIR__))
             if (
                 $e instanceof AuthenticationException ||
                 $e instanceof TokenMismatchException ||
-                ($e instanceof HttpException && in_array($e->getStatusCode(), [401, 419]))
+                $e instanceof HttpResponseException ||
+                ($e instanceof HttpException && in_array($e->getStatusCode(), [401, 419, 429]))
             ) {
                 return false;
             }
@@ -54,10 +62,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Handle rendering globally (like global try-catch)
         $exceptions->render(function (Throwable $e, Request $request) {
 
-            // Let Laravel handle validation and authentication redirects
+            // Let Laravel handle validation, authentication, and explicit HTTP response exceptions
             if (
                 $e instanceof ValidationException ||
-                $e instanceof AuthenticationException
+                $e instanceof AuthenticationException ||
+                $e instanceof HttpResponseException
             ) {
                 return null;
             }
