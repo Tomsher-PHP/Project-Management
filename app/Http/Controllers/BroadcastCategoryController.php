@@ -43,6 +43,7 @@ class BroadcastCategoryController extends Controller
     public function store(BroadcastCategoryRequest $request): JsonResponse
     {
         $data = $request->validated();
+        $data['code'] = $data['code'] ?? BroadcastCategory::generateUniqueCode();
         $data['is_default'] = $request->boolean('is_default');
         $data['sort_order'] = ((int) BroadcastCategory::max('sort_order')) + 1;
 
@@ -67,6 +68,9 @@ class BroadcastCategoryController extends Controller
     public function update(BroadcastCategoryRequest $request, BroadcastCategory $broadcastCategory): JsonResponse
     {
         $data = $request->validated();
+        if (empty($broadcastCategory->code)) {
+            $data['code'] = BroadcastCategory::generateUniqueCode();
+        }
         $data['is_default'] = $request->boolean('is_default');
 
         $broadcastCategory = DB::transaction(function () use ($broadcastCategory, $data) {

@@ -56,10 +56,18 @@ class BroadcastCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            BroadcastCategory::firstOrCreate(
-                ['name' => $category['name']],
-                $category
-            );
+            $record = BroadcastCategory::withTrashed()->where('name', $category['name'])->first();
+
+            if ($record) {
+                if (empty($record->code)) {
+                    $record->code = BroadcastCategory::generateUniqueCode();
+                    $record->save();
+                }
+
+                continue;
+            }
+
+            BroadcastCategory::create($category + ['code' => BroadcastCategory::generateUniqueCode()]);
         }
     }
 }

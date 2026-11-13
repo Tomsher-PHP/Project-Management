@@ -20,6 +20,7 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                    <x-button.export-button :action="route('projects.hosting.export', $project)" :params="request()->only(['search', 'hosting_provider_id', 'hosting_service_id', 'hosting_service_status_id', 'ownership_type', 'expiry_status'])" label="Export" aria-label="Export project hosting records" data-project-hosting-export-form button-class="inline-flex items-center gap-2 rounded-lg border border-success-300 bg-white px-3 py-1.5 text-xs font-semibold text-success-400 shadow-sm transition duration-200 hover:bg-success-300 hover:text-white dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-success-300 dark:hover:text-white" />
                     @can('project_hosting.create')
                         <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400" data-project-hosting-modal-open>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

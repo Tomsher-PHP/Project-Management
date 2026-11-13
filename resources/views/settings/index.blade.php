@@ -278,7 +278,7 @@
                 </a>
             @endcan
 
-            @can('company_expenses.view')
+            {{-- @can('company_expenses.view')
                 <a href="{{ route('settings.expense-payment-modes.index') }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                         <div class="flex flex-col items-center justify-center text-center h-full">
@@ -293,7 +293,7 @@
                         </div>
                     </div>
                 </a>
-            @endcan
+            @endcan --}}
 
             @can('broadcast_settings.view')
                 <a href="{{ route('settings.broadcast-categories.index') }}" class="block group transition duration-300">

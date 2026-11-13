@@ -15,6 +15,7 @@ class MeetingLocation extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'sort_order',
         'is_default',
         'is_active',
@@ -25,17 +26,20 @@ class MeetingLocation extends Model
 
     protected $sortable = [
         'name',
+        'code',
         'sort_order',
         'is_active',
     ];
 
     protected $searchable = [
         'name',
+        'code',
     ];
 
     protected function casts(): array
     {
         return [
+            'code' => 'string',
             'sort_order' => 'integer',
             'is_default' => 'boolean',
             'is_active' => 'boolean',
@@ -48,6 +52,10 @@ class MeetingLocation extends Model
     protected static function booted(): void
     {
         static::creating(function (MeetingLocation $model) {
+            if (empty($model->code) || static::withTrashed()->where('code', $model->code)->exists()) {
+                $model->code = static::generateUniqueCode();
+            }
+
             if (Auth::check() && blank($model->added_by)) {
                 $model->added_by = Auth::id();
             }
@@ -58,6 +66,18 @@ class MeetingLocation extends Model
                 $model->updated_by = Auth::id();
             }
         });
+    }
+
+    /**
+     * Generate a unique 6-digit numeric code (e.g. 123456).
+     */
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $code = (string) random_int(100000, 999999);
+        } while (static::withTrashed()->where('code', $code)->exists());
+
+        return $code;
     }
 
     public function scopeActive($query)

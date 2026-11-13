@@ -1481,8 +1481,43 @@ async function handleStatusUpdate(updateUrl, statusId, statusOptionBtn) {
     }
 }
 
+function syncHostingExportParams() {
+    const exportForm = document.querySelector('[data-project-hosting-export-form]');
+    if (!exportForm) return;
+
+    const filterKeys = [
+        'search',
+        'hosting_provider_id',
+        'hosting_service_id',
+        'hosting_service_status_id',
+        'ownership_type',
+        'expiry_status',
+    ];
+
+    filterKeys.forEach((key) => {
+        const value = projectHostingState.activeFilters[key] ?? '';
+        let input = exportForm.querySelector(`input[type="hidden"][name="${key}"]`);
+
+        if (value === '' || value === null || value === undefined) {
+            if (input) input.remove();
+            return;
+        }
+
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            exportForm.appendChild(input);
+        }
+
+        input.value = String(value);
+    });
+}
+
 async function fetchHostingList() {
     if (projectHostingState.isRequestPending) return;
+
+    syncHostingExportParams();
 
     const container = document.querySelector('[data-project-hosting-container]');
     const indexUrl = container?.dataset.indexUrl;

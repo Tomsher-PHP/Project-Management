@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\MeetingTag;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,11 +13,18 @@ class MeetingTagRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->isMethod('post')) {
+            $this->merge(['code' => MeetingTag::generateUniqueCode()]);
+        }
+    }
+
     public function rules(): array
     {
         $id = (int) $this->route('meeting_tag') ?: null;
 
-        return [
+        $rules = [
             'name' => [
                 'required',
                 'string',
@@ -28,5 +36,11 @@ class MeetingTagRequest extends FormRequest
             'is_default' => ['nullable', 'boolean'],
             'is_active' => ['boolean'],
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['code'] = ['required', 'digits:6', 'unique:meeting_tags,code'];
+        }
+
+        return $rules;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProjectHostingExport;
 use App\Http\Requests\ProjectHostingRecordRequest;
 use App\Http\Requests\ProjectHostingRenewalRequest;
 use App\Models\Country;
@@ -16,6 +17,9 @@ use App\Services\ProjectHostingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProjectHostingController extends Controller
 {
@@ -70,6 +74,27 @@ class ProjectHostingController extends Controller
             'count' => $hostingRecords->total(),
             'summary' => $summaryMetrics,
         ]);
+    }
+
+    /**
+     * Export project hosting records to Excel.
+     */
+    public function export(Request $request, Project $project): BinaryFileResponse
+    {
+        abort_unless(auth()->user()?->can('project_hosting.view'), Response::HTTP_FORBIDDEN);
+
+        $records = $this->hostingService
+            ->getHostingRecordsQuery($project, $request->all())
+            ->get();
+
+        $timestamp = now((string) config('constants.timezone', config('app.timezone')))->format('Y-m-d_His');
+        $projectSlug = Str::slug($project->project_code ?: $project->name ?: 'project-' . $project->id);
+        $fileName = "project-hosting-{$projectSlug}_{$timestamp}.xlsx";
+
+        return Excel::download(
+            new ProjectHostingExport($project, $records),
+            $fileName
+        );
     }
 
     /**

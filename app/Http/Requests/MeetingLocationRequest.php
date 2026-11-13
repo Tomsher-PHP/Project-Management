@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\MeetingLocation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,11 +13,18 @@ class MeetingLocationRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->isMethod('post')) {
+            $this->merge(['code' => MeetingLocation::generateUniqueCode()]);
+        }
+    }
+
     public function rules(): array
     {
         $id = (int) $this->route('meeting_location') ?: null;
 
-        return [
+        $rules = [
             'name' => [
                 'required',
                 'string',
@@ -27,5 +35,11 @@ class MeetingLocationRequest extends FormRequest
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['code'] = ['required', 'digits:6', 'unique:meeting_locations,code'];
+        }
+
+        return $rules;
     }
 }
