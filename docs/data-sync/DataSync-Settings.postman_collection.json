@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "d8f1b5c2-4a7e-4c9a-9f31-100000000001",
-    "name": "Data Sync – Settings Masters",
-    "description": "PMS Data Sync Settings Masters API (Technologies, Industries, Project Categories, Project Statuses).\n\nNote: POST, PUT, and DELETE requests modify data in the target PMS environment. Replace {{api_key}} with a valid Bearer token having settings.read / settings.write scopes.",
+    "name": "PMS Data Sync APIs",
+    "description": "PMS Data Sync API Collection covering Settings Masters, Customer Management, and Project Synchronization.\n\nAuthenticate using a valid Bearer token having settings.read, settings.write, and projects.write scopes.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -35,370 +35,816 @@
       "key": "code",
       "value": "845621",
       "type": "string"
+    },
+    {
+      "key": "customer_code",
+      "value": "CUS00001",
+      "type": "string"
+    },
+    {
+      "key": "project_code",
+      "value": "PRJ00001",
+      "type": "string"
+    },
+    {
+      "key": "external_customer_code",
+      "value": "CRM-CUS-1025",
+      "type": "string"
+    },
+    {
+      "key": "external_project_code",
+      "value": "CRM-PRJ-1001",
+      "type": "string"
+    },
+    {
+      "key": "industry_code",
+      "value": "743813",
+      "type": "string"
+    },
+    {
+      "key": "status_code",
+      "value": "100001",
+      "type": "string"
+    },
+    {
+      "key": "stage_code",
+      "value": "200001",
+      "type": "string"
+    },
+    {
+      "key": "technology_code",
+      "value": "500001",
+      "type": "string"
+    },
+    {
+      "key": "category_code",
+      "value": "600001",
+      "type": "string"
+    },
+    {
+      "key": "service_type_code",
+      "value": "700001",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "Technologies",
+      "name": "Settings",
       "item": [
         {
-          "name": "List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/technologies?is_active=1&page=1&per_page=50",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "technologies"],
-              "query": [
-                { "key": "is_active", "value": "1" },
-                { "key": "page", "value": "1" },
-                { "key": "per_page", "value": "50" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "technologies", "{{code}}"]
-            }
-          }
-        },
-        {
-          "name": "Create",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "sample-tech-create-001", "disabled": true }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Sample Technology\",\n  \"code\": \"845621\",\n  \"sort_order\": 20,\n  \"is_active\": true\n}"
+          "name": "Technologies",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies?is_active=1&page=1&per_page=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies"
+                  ],
+                  "query": [
+                    {
+                      "key": "is_active",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
             },
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/technologies",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "technologies"]
-            }
-          }
-        },
-        {
-          "name": "Update",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Sample Technology Updated\",\n  \"sort_order\": 21,\n  \"is_active\": true\n}"
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies",
+                    "{{code}}"
+                  ]
+                }
+              }
             },
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "technologies", "{{code}}"]
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "sample-tech-create-001",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sample Technology\",\n  \"code\": \"845621\",\n  \"sort_order\": 20,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sample Technology Updated\",\n  \"sort_order\": 21,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies",
+                    "{{code}}"
+                  ]
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "technologies", "{{code}}"]
+          "name": "Industries",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries?is_active=1&page=1&per_page=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries"
+                  ],
+                  "query": [
+                    {
+                      "key": "is_active",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Automotive\",\n  \"code\": \"845622\",\n  \"parent_code\": null,\n  \"sort_order\": 15,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Automotive Industry\",\n  \"sort_order\": 16,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries",
+                    "{{code}}"
+                  ]
+                }
+              }
             }
-          }
+          ]
+        },
+        {
+          "name": "Project Categories",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories?is_active=1&page=1&per_page=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories"
+                  ],
+                  "query": [
+                    {
+                      "key": "is_active",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"AI Integration\",\n  \"code\": \"556677\",\n  \"sort_order\": 10,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"AI & ML Integration\",\n  \"sort_order\": 11,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories",
+                    "{{code}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Project Statuses",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses?is_active=1&page=1&per_page=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses"
+                  ],
+                  "query": [
+                    {
+                      "key": "is_active",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"In Review\",\n  \"code\": \"900001\",\n  \"color\": \"#0d6efd\",\n  \"type\": \"in_progress\",\n  \"sort_order\": 6,\n  \"is_default\": false,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Final Review\",\n  \"color\": \"#198754\",\n  \"type\": \"completed\",\n  \"is_default\": false,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses",
+                    "{{code}}"
+                  ]
+                }
+              }
+            }
+          ]
         }
-      ]
+      ],
+      "description": "PMS Data Sync Settings Masters APIs (Technologies, Industries, Project Categories, Project Statuses)."
     },
     {
-      "name": "Industries",
+      "name": "Customers",
       "item": [
         {
-          "name": "List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/industries?is_active=1&page=1&per_page=50",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "industries"],
-              "query": [
-                { "key": "is_active", "value": "1" },
-                { "key": "page", "value": "1" },
-                { "key": "per_page", "value": "50" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "industries", "{{code}}"]
-            }
-          }
-        },
-        {
-          "name": "Create",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Automotive\",\n  \"code\": \"845622\",\n  \"parent_code\": null,\n  \"sort_order\": 15,\n  \"is_active\": true\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/industries",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "industries"]
-            }
-          }
-        },
-        {
-          "name": "Update",
+          "name": "Update Customer",
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Automotive Industry\",\n  \"sort_order\": 16,\n  \"is_active\": true\n}"
+              "raw": "{\n  \"name\": \"ABC Technologies International LLC\",\n  \"email\": \"contact@abctech.ae\",\n  \"industry_code\": \"{{industry_code}}\",\n  \"country_code\": \"AE\",\n  \"emirate\": \"Dubai\",\n  \"website\": \"https://abctech.ae\",\n  \"company_address\": \"Office 402, Business Bay, Dubai\",\n  \"sales_person_email\": \"sales@abctech.ae\",\n  \"is_active\": true,\n  \"contacts\": [\n    {\n      \"id\": 1,\n      \"name\": \"Ahmed Mohammed\",\n      \"designation\": \"Managing Director\",\n      \"mobile\": \"+971501234567\",\n      \"is_primary\": true\n    },\n    {\n      \"name\": \"Fatima Al-Zahra\",\n      \"email\": \"fatima@abctech.ae\",\n      \"mobile\": \"+971509988776\",\n      \"designation\": \"Operations Lead\",\n      \"is_primary\": false\n    }\n  ]\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "industries", "{{code}}"]
-            }
-          }
-        },
-        {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "industries", "{{code}}"]
-            }
+              "raw": "{{base_url}}/api/integrations/customers/{{customer_code}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "integrations",
+                "customers",
+                "{{customer_code}}"
+              ]
+            },
+            "description": "Update an existing customer organization and its customer contacts in PMS by PMS customer code."
           }
         }
-      ]
+      ],
+      "description": "Inbound customer synchronization and contact management endpoints."
     },
     {
-      "name": "Project Categories",
+      "name": "Projects",
       "item": [
         {
-          "name": "List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_categories?is_active=1&page=1&per_page=50",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_categories"],
-              "query": [
-                { "key": "is_active", "value": "1" },
-                { "key": "page", "value": "1" },
-                { "key": "per_page", "value": "50" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_categories", "{{code}}"]
-            }
-          }
-        },
-        {
-          "name": "Create",
+          "name": "Create Customer & Projects",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "crm-sync-req-001",
+                "disabled": true
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"AI Integration\",\n  \"code\": \"556677\",\n  \"sort_order\": 10,\n  \"is_active\": true\n}"
+              "raw": "{\n  \"customer\": {\n    \"external_code\": \"{{external_customer_code}}\",\n    \"external_id\": \"9021\",\n    \"name\": \"ABC Technologies LLC\",\n    \"email\": \"info@abctech.ae\",\n    \"industry_code\": \"{{industry_code}}\",\n    \"website\": \"https://abctech.ae\",\n    \"country_code\": \"AE\",\n    \"emirate\": \"Dubai\",\n    \"company_address\": \"Level 14, Al Saada Tower, Dubai\",\n    \"sales_person_email\": \"sales@abctech.ae\",\n    \"contacts\": [\n      {\n        \"name\": \"Ahmed Mohammed\",\n        \"email\": \"ahmed@abctech.ae\",\n        \"mobile\": \"+971501234567\",\n        \"designation\": \"Director\",\n        \"is_primary\": true\n      },\n      {\n        \"name\": \"Sarah Jenkins\",\n        \"email\": \"sarah@abctech.ae\",\n        \"mobile\": \"+971507654321\",\n        \"designation\": \"Technical Lead\",\n        \"is_primary\": false\n      }\n    ]\n  },\n  \"projects\": [\n    {\n      \"external_code\": \"{{external_project_code}}\",\n      \"external_id\": \"PRJ-901\",\n      \"name\": \"Corporate Portal Redesign\",\n      \"project_flow\": \"agile\",\n      \"priority\": \"high\",\n      \"status_code\": \"{{status_code}}\",\n      \"stage_code\": \"{{stage_code}}\",\n      \"start_date\": \"2026-12-01\",\n      \"end_date\": \"2027-02-28\",\n      \"customer_end_date\": \"2027-03-15\",\n      \"estimated_time_minutes\": 12000,\n      \"customer_estimate_minutes\": 10800,\n      \"default_task_estimate_seconds\": 3600,\n      \"domain\": \"portal.abctech.ae\",\n      \"sales_person_email\": \"sales@abctech.ae\",\n      \"technology_codes\": [\n        \"{{technology_code}}\"\n      ],\n      \"category_codes\": [\n        \"{{category_code}}\"\n      ],\n      \"service_type_codes\": [\n        \"{{service_type_code}}\"\n      ],\n      \"default_billable\": true,\n      \"is_active\": true\n    },\n    {\n      \"external_code\": \"CRM-PRJ-1002\",\n      \"external_id\": \"PRJ-902\",\n      \"name\": \"Mobile Companion Application\",\n      \"project_flow\": \"agile\",\n      \"priority\": \"medium\",\n      \"status_code\": \"{{status_code}}\",\n      \"stage_code\": \"{{stage_code}}\",\n      \"start_date\": \"2027-01-15\",\n      \"end_date\": \"2027-04-30\",\n      \"estimated_time_minutes\": 9000,\n      \"sales_person_email\": \"sales@abctech.ae\",\n      \"technology_codes\": [\n        \"{{technology_code}}\"\n      ],\n      \"category_codes\": [\n        \"{{category_code}}\"\n      ],\n      \"default_billable\": true,\n      \"is_active\": true\n    }\n  ]\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_categories",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_categories"]
-            }
-          }
-        },
-        {
-          "name": "Update",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"AI & ML Integration\",\n  \"sort_order\": 11,\n  \"is_active\": true\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_categories", "{{code}}"]
-            }
-          }
-        },
-        {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_categories", "{{code}}"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Project Statuses",
-      "item": [
-        {
-          "name": "List",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_statuses?is_active=1&page=1&per_page=50",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_statuses"],
-              "query": [
-                { "key": "is_active", "value": "1" },
-                { "key": "page", "value": "1" },
-                { "key": "per_page", "value": "50" }
+              "raw": "{{base_url}}/api/data-sync/projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "projects"
               ]
-            }
-          }
-        },
-        {
-          "name": "Get",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_statuses", "{{code}}"]
-            }
-          }
-        },
-        {
-          "name": "Create",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"In Review\",\n  \"code\": \"900001\",\n  \"color\": \"#0d6efd\",\n  \"type\": \"in_progress\",\n  \"sort_order\": 6,\n  \"is_default\": false,\n  \"is_active\": true\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_statuses",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_statuses"]
-            }
+            "description": "Synchronize customer, contacts, and one or more projects atomically from external CRM with permanent entity mapping."
           }
         },
         {
-          "name": "Update",
+          "name": "Update Project",
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Final Review\",\n  \"color\": \"#198754\",\n  \"type\": \"completed\",\n  \"is_default\": false,\n  \"is_active\": true\n}"
+              "raw": "{\n  \"name\": \"Corporate Portal Redesign - Phase 2\",\n  \"priority\": \"urgent\",\n  \"status_code\": \"{{status_code}}\",\n  \"stage_code\": \"{{stage_code}}\",\n  \"end_date\": \"2027-03-31\",\n  \"estimated_time_minutes\": 15000,\n  \"technology_codes\": [\n    \"{{technology_code}}\"\n  ],\n  \"category_codes\": [\n    \"{{category_code}}\"\n  ],\n  \"service_type_codes\": [\n    \"{{service_type_code}}\"\n  ]\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_statuses", "{{code}}"]
-            }
-          }
-        },
-        {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Accept", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "data-sync", "settings", "project_statuses", "{{code}}"]
-            }
+              "raw": "{{base_url}}/api/integrations/projects/{{project_code}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "integrations",
+                "projects",
+                "{{project_code}}"
+              ]
+            },
+            "description": "Partially update an existing project by PMS project code, resolving codes, synchronizing relationships, and logging status/stage history."
           }
         }
-      ]
+      ],
+      "description": "Inbound project creation, synchronization, and update endpoints."
     }
   ]
 }
-
