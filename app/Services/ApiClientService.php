@@ -13,6 +13,8 @@ class ApiClientService
      */
     public const SUPPORTED_SCOPES = [
         ApiClient::SCOPE_MEETINGS_READ,
+        ApiClient::SCOPE_SETTINGS_READ,
+        ApiClient::SCOPE_SETTINGS_WRITE,
     ];
 
     /**
@@ -103,6 +105,31 @@ class ApiClientService
             'client' => $client,
             'plain_text_key' => $newPlainTextKey,
         ];
+    }
+
+    /**
+     * Grant additional supported scopes to an existing ApiClient without rotating its key.
+     *
+     * @param  array<int, string>  $scopes
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function grantScopes(string $keyId, array $scopes): ApiClient
+    {
+        $client = ApiClient::where('key_id', trim($keyId))->first();
+
+        if (! $client) {
+            throw new \InvalidArgumentException("API client with Key ID [{$keyId}] was not found.");
+        }
+
+        $validatedScopes = $this->validateScopes($scopes);
+        $existingScopes = is_array($client->scopes) ? $client->scopes : [];
+
+        $client->update([
+            'scopes' => array_values(array_unique(array_merge($existingScopes, $validatedScopes))),
+        ]);
+
+        return $client->refresh();
     }
 
     /**

@@ -12,6 +12,8 @@ class ApiClient extends Model
     use HasFactory, SoftDeletes;
 
     public const SCOPE_MEETINGS_READ = 'meetings.read';
+    public const SCOPE_SETTINGS_READ = 'settings.read';
+    public const SCOPE_SETTINGS_WRITE = 'settings.write';
 
     /**
      * The attributes that are mass assignable.
