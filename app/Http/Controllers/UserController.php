@@ -8,10 +8,13 @@ use App\Http\Requests\UserRequest;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Kpi;
+use App\Models\LeaveType;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserGeneralSetting;
+use App\Models\UserLeaveBalance;
 use App\Models\UserNotificationSetting;
+use App\Models\UserReportPreference;
 use App\Models\UserSetting;
 use App\Services\ScheduleShiftService;
 use App\Services\UserService;
@@ -21,8 +24,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
-use App\Models\UserLeaveBalance;
-use App\Models\LeaveType;
+
 
 class UserController extends Controller
 {
@@ -274,18 +276,70 @@ class UserController extends Controller
 
     public function updateGeneralSettings(Request $request)
     {
-        $userSettingKeys = array_keys(config('constants.user_settings', []));
+        $userSettingKeys = array_keys(
+            config('constants.user_settings', [])
+        );
+
+        $allowedFields = array_merge(
+            ['kanban_view', 'theme', 'send_daily_work_report'],
+            $userSettingKeys
+        );
 
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'field' => 'required|in:kanban_view,theme,' . implode(',', $userSettingKeys),
+            'field' => 'required|in:' . implode(',', $allowedFields),
         ]);
 
-        if (in_array($request->field, $userSettingKeys, true)) {
+        // Existing generic user settings.
+        // Daily Work Report setting: update both tables.
+        if ($request->field === 'daily_work_report_mail') {
+
             if (!auth()->user()->can('user.edit')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized to update user settings.'
+                    'message' => 'You are not authorized to update this setting.',
+                ], 403);
+            }
+
+            $request->validate([
+                'value' => ['required', 'boolean'],
+            ]);
+
+            $isEnabled = $request->boolean('value');
+
+
+            DB::transaction(function () use ($request, $isEnabled) {
+
+                // Update User Report Preference.
+                UserReportPreference::updateOrCreate(
+                    [
+                        'user_id' => $request->user_id,
+                        'report_key' => 'daily_work',
+                    ],
+                    [
+                        'is_enabled' => $isEnabled,
+                        'updated_by' => auth()->id(),
+                    ]
+                );
+
+                // Update User General Settings.
+                UserGeneralSetting::updateOrCreate(
+                    [
+                        'user_id' => $request->user_id,
+                    ],
+                    [
+                        'send_daily_work_report' => $isEnabled,
+                    ]
+                );
+            });
+
+        // Existing generic user settings.
+        } elseif (in_array($request->field, $userSettingKeys, true)) {
+
+            if (!auth()->user()->can('user.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to update user settings.',
                 ], Response::HTTP_FORBIDDEN);
             }
 
@@ -299,18 +353,26 @@ class UserController extends Controller
                     'key' => $request->field,
                 ],
                 [
-                    'value' => filter_var($request->value, FILTER_VALIDATE_BOOLEAN),
+                    'value' => filter_var(
+                        $request->value,
+                        FILTER_VALIDATE_BOOLEAN
+                    ),
                 ]
             );
+
         } else {
+
+            // Existing Kanban View and Theme settings.
             $request->validate([
                 'value' => 'required|string',
             ]);
 
             UserGeneralSetting::updateOrCreate(
-                ['user_id' => $request->user_id],
                 [
-                    $request->field => $request->value
+                    'user_id' => $request->user_id,
+                ],
+                [
+                    $request->field => $request->value,
                 ]
             );
         }

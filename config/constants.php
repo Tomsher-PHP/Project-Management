@@ -16,7 +16,7 @@ return [
     // Date format
     'date_format' => 'Y-m-d',
 
-    // Time format    
+    // Time format
     'time_format' => 'H:i',
 
     // Timezone
@@ -93,8 +93,9 @@ return [
     // User settings keys
     'user_settings' => [
         'daily_work_hours_warning_mail' => 'Daily Work Hours Warning Email',
+        'daily_work_report_mail'=> 'Daily Work Report Email',
     ],
 
-    // Meeting reminder notification time in minutes 
+    // Meeting reminder notification time in minutes
     'meeting_reminder_notification_min' => 10,
 ];

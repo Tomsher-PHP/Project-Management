@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Models\TaskStatusHistory;
+use App\Models\TaskTimeLog;
 
 class TaskReportService
 {
@@ -447,6 +449,84 @@ class TaskReportService
 
         if (filled($filters['end_date'] ?? null)) {
             $query->whereDate('tasks.created_at', '<=', $filters['end_date']);
+        }
+
+        if (filled($filters['due_date_start'] ?? null)) {
+            $query->whereDate(
+                'tasks.due_date_time',
+                '>=',
+                $filters['due_date_start']
+            );
+        }
+
+        if (filled($filters['due_date_end'] ?? null)) {
+            $query->whereDate(
+                'tasks.due_date_time',
+                '<=',
+                $filters['due_date_end']
+            );
+        }
+
+        /**
+         * Added for redirection from daily report
+         *
+         * Exclude Completed Tasks
+         */
+        if (!empty($filters['exclude_completed'])) {
+            $query->whereDoesntHave('status', function (Builder $statusQuery) {
+                $statusQuery->where('is_completed', true);
+            });
+        }
+
+        // Time Logged By Employee During Reporting Date
+        if (
+            filled($filters['worked_on'] ?? null)
+            && filled($filters['worked_by'] ?? null)
+        ) {
+            $workedOn = $filters['worked_on'];
+            $workedBy = (int) $filters['worked_by'];
+
+            $query->whereExists(function ($subQuery) use ($workedOn, $workedBy) {
+                $subQuery->selectRaw(1)
+                    ->from('task_time_logs')
+                    ->whereColumn('task_time_logs.task_id', 'tasks.id')
+                    ->where('task_time_logs.user_id', $workedBy)
+                    ->whereDate('task_time_logs.started_at', $workedOn);
+            });
+        }
+
+        // Completed During Reporting Date
+        if (filled($filters['completed_on'] ?? null)) {
+            $completedOn = $filters['completed_on'];
+
+            $query->whereExists(function ($subQuery) use ($completedOn) {
+                $subQuery->selectRaw(1)
+                    ->from('task_status_histories')
+                    ->join(
+                        'task_statuses',
+                        'task_statuses.id',
+                        '=',
+                        'task_status_histories.status_id'
+                    )
+                    ->whereColumn('task_status_histories.task_id', 'tasks.id')
+                    ->where('task_statuses.is_completed', true)
+                    ->whereDate('task_status_histories.added_at', $completedOn);
+            });
+        }
+
+        /**
+         * Upcoming Tasks
+         *
+         * Include tasks with no due date or a due date after the reference date.
+         */
+        if (!empty($filters['due_date_upcoming']) && filled($filters['reference_date'] ?? null)) {
+            $referenceDate = $filters['reference_date'];
+
+            $query->where(function (Builder $dueDateQuery) use ($referenceDate) {
+                $dueDateQuery
+                    ->whereNull('tasks.due_date_time')
+                    ->orWhereDate('tasks.due_date_time', '>', $referenceDate);
+            });
         }
     }
 
