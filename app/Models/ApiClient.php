@@ -14,6 +14,7 @@ class ApiClient extends Model
     public const SCOPE_MEETINGS_READ = 'meetings.read';
     public const SCOPE_SETTINGS_READ = 'settings.read';
     public const SCOPE_SETTINGS_WRITE = 'settings.write';
+    public const SCOPE_PROJECTS_WRITE = 'projects.write';
 
     /**
      * The attributes that are mass assignable.

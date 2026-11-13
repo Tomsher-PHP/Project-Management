@@ -15,6 +15,7 @@ class ApiClientService
         ApiClient::SCOPE_MEETINGS_READ,
         ApiClient::SCOPE_SETTINGS_READ,
         ApiClient::SCOPE_SETTINGS_WRITE,
+        ApiClient::SCOPE_PROJECTS_WRITE,
     ];
 
     /**
