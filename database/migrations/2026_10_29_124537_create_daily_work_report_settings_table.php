@@ -32,7 +32,7 @@ return new class extends Migration
 
             // current_day, previous_working_day
             $table->string('reporting_period', 30)
-                ->default('current_day');
+                ->default('previous_working_day');
 
             $table->boolean('send_zero_activity')->default(false);
             $table->boolean('include_inactive_users')->default(false);
