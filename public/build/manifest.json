@@ -184,7 +184,7 @@
     "isEntry": true
   },
   "resources/js/modules/analytics/project-analytics-dashboard.js": {
-    "file": "assets/project-analytics-dashboard-ClOiXQWL.js",
+    "file": "assets/project-analytics-dashboard-BPfSGjBK.js",
     "name": "project-analytics-dashboard",
     "src": "resources/js/modules/analytics/project-analytics-dashboard.js",
     "isEntry": true,
@@ -366,7 +366,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-BkNrjWRZ.js",
+    "file": "assets/project-detail-Bc1NSIcI.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -518,7 +518,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-DDUufdfo.js",
+    "file": "assets/task-list-create-wSrNVa95.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
