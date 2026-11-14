@@ -175,6 +175,19 @@
                         </p>
                     </div>
 
+                    {{-- Return to Work Date --}}
+                    <div>
+                        <p class="text-xs font-medium uppercase text-bgray-500">
+                            Return to Work Date
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">
+                            {{ $leaveRequest->return_to_work_date
+                                ? \Carbon\Carbon::parse($leaveRequest->return_to_work_date)->format('d M Y')
+                                : '-' }}
+                        </p>
+                    </div>
+
 
                     {{-- Requested Duration --}}
                     <div>

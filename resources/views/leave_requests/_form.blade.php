@@ -197,7 +197,7 @@
             {{-- Return to Work Date --}}
             <div>
                 <label for="return_to_work_date" class="{{ $labelClass }}">
-                    Return Date
+                    Return to Work Date
                 </label>
 
                 @if ($restrictedEdit && !$approvalMode && !$isCreate)

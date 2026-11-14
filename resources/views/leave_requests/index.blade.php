@@ -171,6 +171,13 @@
                                         </div>
                                     </th>
 
+                                    <!-- Return To Work Date -->
+                                    <th class="px-6 py-5 xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
+                                            <x-sorting.sortable-column column="return_to_work_date" label="Return To Work Date" />
+                                        </div>
+                                    </th>
+
                                     <!-- Days -->
                                     <th class="px-6 py-5 xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
@@ -289,6 +296,7 @@
                                         $fromDate = $leaveRequest->requested_from_date ? \Carbon\Carbon::parse($leaveRequest->requested_from_date)->format('d M Y') : '-';
 
                                         $toDate = $leaveRequest->requested_to_date ? \Carbon\Carbon::parse($leaveRequest->requested_to_date)->format('d M Y') : '-';
+                                        $returnToWorkDate = $leaveRequest->return_to_work_date ? \Carbon\Carbon::parse($leaveRequest->return_to_work_date)->format('d M Y') : '-';
 
                                         // DURATION
                                         $duration = $leaveRequest->duration !== null
@@ -366,6 +374,15 @@
                                             <div class="flex w-full items-center">
                                                 <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
                                                     {{ $toDate }}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Return to Work Date -->
+                                        <td class="px-6 py-5 xl:px-0">
+                                            <div class="flex w-full items-center">
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
+                                                    {{ $returnToWorkDate }}
                                                 </span>
                                             </div>
                                         </td>
