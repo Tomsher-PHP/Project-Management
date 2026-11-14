@@ -859,3 +859,16 @@ PMS provides two layers of duplicate protection:
 ## 15. Future Module Organization
 
 As additional PMS modules are integrated into the Data Sync suite (such as Users, Meetings, Leaves, and Broadcasts), their documentation and Postman requests must be appended directly into this centralized document and collection under matching top-level sections. No separate documentation files or collections should be created.
+
+---
+
+## 16. Generate API key
+
+Get the permission for settings.read, settings.write, projects.write 
+
+php artisan api-client:create \
+  --name="PMS Data Sync" \
+  --scope="settings.read" \
+  --scope="settings.write" \
+  --scope="projects.write" \
+  --expires-at="never"
