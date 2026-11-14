@@ -8,8 +8,8 @@ use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
-use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\BroadcastCategoryController;
+use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\CommonController;
@@ -17,6 +17,8 @@ use App\Http\Controllers\CompanyExpensesSettingsController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerRestoreController;
+use App\Http\Controllers\DailyWorkReportPreviewController;
+use App\Http\Controllers\DailyWorkReportSettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
@@ -396,7 +398,24 @@ Route::middleware([
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.create')->only(['store']);
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
+
+
+        // General Report Settings
+        Route::prefix('daily-work-reports')
+            ->name('daily-work-reports.')
+            ->controller(DailyWorkReportSettingsController::class)
+            ->group(function () {
+                Route::get('/', 'index')->middleware('permission.type:daily_work_report.view')->name('index');
+                Route::post('/settings', 'update')->middleware('permission.type:daily_work_report.edit')->name('settings.update');
+                Route::post('/recipients', 'storeRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.store');
+                Route::patch('/recipients/{recipient}/toggle', 'toggleRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.toggle');
+                Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.destroy');
+                Route::patch('/users/preference', 'updateUserPreference')->middleware('permission.type:daily_work_report.edit')->name('users.preference');
+                Route::patch('/users/preferences/bulk', 'bulkUpdateUserPreferences')->middleware('permission.type:daily_work_report.edit')->name('users.preferences.bulk');
+            });
     });
+
+    Route::get('/daily-work-report/preview', DailyWorkReportPreviewController::class)->middleware(['auth'])->name('daily-work-report.preview');
 
     // Team management Routes
     Route::patch('/teams/toggle-status', [TeamController::class, 'toggleStatus'])->name('teams.toggleStatus')->middleware('permission.type:user.edit');
@@ -834,16 +853,29 @@ Route::middleware([
         Route::patch('/{quickNote}/archive', [QuickNoteController::class, 'toggleArchive'])->name('archive');
     });
 
-    // Leave routes
-    Route::prefix('leave-change-requests')->as('leave-change-requests.')->group(function () {
-        Route::get('/', [LeaveChangeRequestController::class, 'index'])->name('index');
-        Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])->name('create');
-        Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])->name('store');
-        Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])->name('show');
-        Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])->name('approve');
-        Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])->name('reject');
-        Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])->name('cancel');
-    });
+    Route::prefix('leave-change-requests')
+        ->name('leave-change-requests.')
+        ->group(function () {
+            Route::get('/', [LeaveChangeRequestController::class, 'index'])->name('index');
+            Route::get('/create/{leaveRequest}', [LeaveChangeRequestController::class, 'create'])->name('create');
+            Route::post('/{leaveRequest}', [LeaveChangeRequestController::class, 'store'])->name('store');
+            Route::get('/{leaveChangeRequest}', [LeaveChangeRequestController::class, 'show'])->name('show');
+            Route::post('/{leaveChangeRequest}/approve', [LeaveChangeRequestController::class, 'approve'])->name('approve');
+            Route::post('/{leaveChangeRequest}/reject', [LeaveChangeRequestController::class, 'reject'])->name('reject');
+            Route::post('/{leaveChangeRequest}/cancel', [LeaveChangeRequestController::class, 'cancel'])->name('cancel');
+        });
+
+    Route::prefix('leave-cancellation-requests')
+        ->name('leave-cancellation-requests.')
+        ->controller(LeaveCancellationRequestController::class)
+        ->group(function () {
+            Route::post('/{leaveRequest}', 'store')->name('store');
+            Route::get('/', 'index')->name('index');
+            Route::get('/{cancellationRequest}/details', 'show')->name('show');
+            Route::post('/{cancellationRequest}/approve', 'approve')->name('approve');
+            Route::post('/{cancellationRequest}/reject', 'reject')->name('reject');
+            Route::post('/{cancellationRequest}/cancel', 'cancel')->name('cancel');
+        });
 
     // leave cancelation
     Route::prefix('leave-cancellation-requests')->as('leave-cancellation-requests.')->group(function () {

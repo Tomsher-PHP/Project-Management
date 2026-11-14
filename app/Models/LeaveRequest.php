@@ -37,6 +37,7 @@ class LeaveRequest extends Model
         'requested_from_date',
         'requested_to_date',
         'duration',
+        'return_to_work_date',
 
         'reason',
 
@@ -124,6 +125,8 @@ class LeaveRequest extends Model
          */
         'duration' => 'decimal:2',
         'approved_duration' => 'decimal:2',
+
+        'return_to_work_date' => 'date',
 
         /*
          * Paid / unpaid leave allocation.

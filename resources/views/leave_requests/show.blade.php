@@ -175,6 +175,19 @@
                         </p>
                     </div>
 
+                    {{-- Return to Work Date --}}
+                    <div>
+                        <p class="text-xs font-medium uppercase text-bgray-500">
+                            Return to Work Date
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">
+                            {{ $leaveRequest->return_to_work_date
+                                ? \Carbon\Carbon::parse($leaveRequest->return_to_work_date)->format('d M Y')
+                                : '-' }}
+                        </p>
+                    </div>
+
 
                     {{-- Requested Duration --}}
                     <div>
@@ -183,7 +196,7 @@
                         </p>
 
                         <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">
-                            {{ number_format($leaveRequest->duration, 2) }} day(s)
+                            {{ rtrim(rtrim(number_format((float) $leaveRequest->duration, 2, '.', ''), '0'), '.') }} day(s)
                         </p>
                     </div>
 
@@ -247,7 +260,7 @@
                         </p>
 
                         <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">
-                            {{ $leaveRequest->approved_duration !== null ? number_format($leaveRequest->approved_duration, 2) . ' day(s)' : '-' }}
+                            {{ $leaveRequest->approved_duration !== null ? rtrim(rtrim(number_format((float) $leaveRequest->approved_duration, 2, '.', ''), '0'), '.') . ' day(s)' : '-' }}
                         </p>
                     </div>
 
@@ -270,14 +283,14 @@
                             Approved Date
                         </p>
 
-                        <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
+                        <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">
                             {{ $leaveRequest->approved_at ? $leaveRequest->approved_at->format('d M Y h:i A') : '-' }}
                         </p>
                     </div>
 
                     {{-- Approver Comments --}}
                     <div>
-                        <label for="approver_comment">
+                        <label for="approver_comment"  class="text-xs font-medium uppercase text-bgray-500">
                             Approver Comments
                         </label>
                         <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">

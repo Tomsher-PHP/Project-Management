@@ -445,4 +445,47 @@ class User extends Authenticatable
             ->withPivot(['is_external', 'name', 'email', 'phone', 'send_email'])
             ->withTimestamps();
     }
+
+    public function reportPreferences()
+    {
+        return $this->hasMany(UserReportPreference::class);
+    }
+
+    /**
+     * Get all direct and indirect subordinates through both:
+     * - Reporting To (reporter_id)
+     * - Manager (manager_id)
+     *
+     * Returns unique user IDs and excludes the starting user.
+     */
+    public static function getAllSubordinateUserIds(int $userId): array
+    {
+        $subordinateIds = [];
+        $visitedIds = [$userId];
+        $currentLevelIds = [$userId];
+
+        while (!empty($currentLevelIds)) {
+            $nextLevelIds = UserDetail::query()
+                ->where(function ($query) use ($currentLevelIds) {
+                    $query->whereIn('reporter_id', $currentLevelIds)
+                        ->orWhereIn('manager_id', $currentLevelIds);
+                })
+                ->pluck('user_id')
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->reject(fn ($id) => in_array($id, $visitedIds, true))
+                ->values()
+                ->all();
+
+            if (empty($nextLevelIds)) {
+                break;
+            }
+
+            $subordinateIds = array_merge($subordinateIds, $nextLevelIds);
+            $visitedIds = array_merge($visitedIds, $nextLevelIds);
+            $currentLevelIds = $nextLevelIds;
+        }
+
+        return array_values(array_unique($subordinateIds));
+    }
 }

@@ -1,5 +1,5 @@
 @php
-    $url = route($route);
+    $url = route($route, $routeParameters ?? []);
     $permission = $permission ?? null;
 @endphp
 
