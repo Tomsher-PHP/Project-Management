@@ -27,7 +27,7 @@ class DataSyncEntityMapping extends Model
 
     public function apiClient(): BelongsTo
     {
-        return $this->belongsTo(ApiClient::class, 'api_client_id');
+        return $this->belongsTo(ApiClient::class, 'api_client_id')->withTrashed();
     }
 }
 

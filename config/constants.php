@@ -84,6 +84,7 @@ return [
         'leave_types.view',
         'company_expenses.view',
         'broadcast_settings.view',
+        'data_sync_settings.view',
         'configuration.view',
     ],
 
@@ -93,7 +94,7 @@ return [
     // User settings keys
     'user_settings' => [
         'daily_work_hours_warning_mail' => 'Daily Work Hours Warning Email',
-        'daily_work_report_mail'=> 'Daily Work Report Email',
+        'daily_work_report_mail' => 'Daily Work Report Email',
     ],
 
     // Meeting reminder notification time in minutes
