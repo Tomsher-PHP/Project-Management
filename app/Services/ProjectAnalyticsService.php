@@ -300,11 +300,13 @@ class ProjectAnalyticsService
             $estimatedData[] = [
                 'x' => 0,
                 'y' => $originLabel,
+                'total_seconds' => 0,
             ];
 
             $actualData[] = [
                 'x' => 0,
                 'y' => $originLabel,
+                'total_seconds' => 0,
             ];
         }
 
@@ -318,11 +320,13 @@ class ProjectAnalyticsService
             $estimatedData[] = [
                 'x' => round($estimatedTotalSeconds / 3600, 2),
                 'y' => $milestone->name,
+                'total_seconds' => $estimatedTotalSeconds,
             ];
 
             $actualData[] = [
                 'x' => round($actualTotalSeconds / 3600, 2),
                 'y' => $milestone->name,
+                'total_seconds' => $actualTotalSeconds,
             ];
         }
 
