@@ -963,6 +963,13 @@ export async function loadSingleProjectTaskStatusChart(filters = getActiveFilter
     }
 }
 
+function formatDuration(seconds) {
+    const totalSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+}
+
 function formatHourValue(value) {
     const numericValue = Number(value);
     if (!Number.isFinite(numericValue)) return '0h';
@@ -1018,7 +1025,12 @@ export function renderMilestoneBurnupChart(card, burnupData) {
     const estimatedHoursByMilestone = new Map(
         (Array.isArray(estimatedDataset.data) ? estimatedDataset.data : [])
             .filter((p) => p && typeof p === 'object' && p.y !== originLabel)
-            .map((p) => [p.y, formatHourValue(p.x)])
+            .map((p) => {
+                const totalSeconds = p.total_seconds !== undefined
+                    ? p.total_seconds
+                    : (Number(p.x || 0) * 3600);
+                return [p.y, formatDuration(totalSeconds)];
+            })
     );
 
     const burnupPointLabels = {
@@ -1039,7 +1051,10 @@ export function renderMilestoneBurnupChart(card, burnupData) {
                     const point = dataset.data?.[pointIndex];
                     if (!point || point.y === originLabel) return;
 
-                    const text = formatHourValue(point.x);
+                    const totalSeconds = point.total_seconds !== undefined
+                        ? point.total_seconds
+                        : (Number(point.x || 0) * 3600);
+                    const text = formatDuration(totalSeconds);
                     const textWidth = ctx.measureText(text).width;
                     const pointPosition = element.tooltipPosition();
                     const isNearRightEdge = pointPosition.x + textWidth + 10 > chartArea.right;
@@ -1128,8 +1143,10 @@ export function renderMilestoneBurnupChart(card, burnupData) {
                     filter(context) { return !isOriginPoint(context); },
                     callbacks: {
                         label(context) {
-                            const rawX = Number(context.raw?.x ?? context.parsed?.x ?? 0);
-                            return `${context.dataset.label}: ${rawX}h`;
+                            const totalSeconds = context.raw?.total_seconds !== undefined
+                                ? context.raw.total_seconds
+                                : (Number(context.raw?.x ?? context.parsed?.x ?? 0) * 3600);
+                            return `${context.dataset.label}: ${formatDuration(totalSeconds)}`;
                         }
                     }
                 },

@@ -109,7 +109,7 @@ class DailyWorkReportRecipientService
      * The supervisor receives one report containing all employees
      * passed in the $employees collection.
      *
-     * Global recipients are intentionally excluded here.
+     * Global recipients receive every consolidated report.
      */
     public function resolveForHierarchy(
         User $reportOwner,
@@ -126,6 +126,22 @@ class DailyWorkReportRecipientService
             $reportOwner->name,
             'report_owner'
         );
+
+        // Global additional recipients receive every consolidated report.
+        $globalRecipients = DailyWorkReportRecipient::query()
+            ->effective($reportDate)
+            ->where('report_key', $reportKey)
+            ->where('scope', 'global')
+            ->get();
+
+        foreach ($globalRecipients as $recipient) {
+            $this->addRecipient(
+                $recipients,
+                $recipient->email,
+                $recipient->name,
+                'global'
+            );
+        }
 
         $employees = $employees
             ->filter(fn ($employee) => $employee instanceof User)
@@ -184,6 +200,7 @@ class DailyWorkReportRecipientService
 
         return $recipients->values();
     }
+
 
     /**
      * Resolve global additional recipients separately.

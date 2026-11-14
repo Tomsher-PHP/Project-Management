@@ -15,12 +15,6 @@
                 </span>
             </h4>
         </div>
-        {{-- <div>
-            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-success-400">Tasks</p>
-            <h3 class="mt-0.5 text-[15px] font-bold text-bgray-900 dark:text-white">
-                {{ $isLinearFlow ? 'Project task board' : 'Sprint task board' }}
-            </h3>
-        </div> --}}
 
         <div class="flex flex-wrap items-center gap-2">
             <div class="w-full sm:w-auto" data-project-tasks-search-wrapper>

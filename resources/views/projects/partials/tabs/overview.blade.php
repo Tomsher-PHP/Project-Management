@@ -162,7 +162,7 @@
                             Milestone Journey
                         </h3>
                         <p class="text-sm text-bgray-700 dark:text-bgray-300">
-                            {{ __('label.project.estimated') }} vs {{ __('label.project.spent') }} cumulative hours by milestone
+                            {{ __('label.project.estimated') }} vs {{ __('label.project.spent') }} cumulative hours by planned milestones only.
                         </p>
                     </div>
 
