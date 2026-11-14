@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BQeHqUoI.css",
+    "file": "assets/app-BgDyUuQA.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -223,7 +223,7 @@
     ]
   },
   "resources/js/modules/attendance/attendance.js": {
-    "file": "assets/attendance-BnXJBICJ.js",
+    "file": "assets/attendance-DhJcO0GV.js",
     "name": "attendance",
     "src": "resources/js/modules/attendance/attendance.js",
     "isEntry": true,
