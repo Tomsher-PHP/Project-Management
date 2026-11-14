@@ -189,6 +189,10 @@
                             <x-sorting.sortable-column column="current_assignee_id" label="Assignee" />
                         </th>
 
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[150px] col-estimated">
+                            Completion Notes
+                        </th>
+
                         <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px] col-due_date">
                             <x-sorting.sortable-column column="due_date_time" label="Due Date" />
                         </th>
@@ -255,42 +259,6 @@
                                 <a href="{{ route('tasks.edit', $task) }}" class="transition hover:text-success-300 dark:hover:text-success-300">
                                     {{ $task->name ?? '-' }}
                                 </a>
-
-                                @php
-                                    $developerNote = $task->developerNotes->first();
-                                    $developerNoteText = $developerNote?->note
-                                        ?? $developerNote?->content
-                                        ?? '';
-                                @endphp
-
-                                @if (filled($developerNoteText))
-                                    <button
-                                        type="button"
-                                        class="inline-flex shrink-0 items-center justify-center rounded-md p-1
-                                            text-blue-500 transition hover:bg-blue-50 hover:text-blue-700
-                                            dark:hover:bg-darkblack-500"
-                                        data-report-developer-note
-                                        data-task-name="{{ $task->name }}"
-                                        data-note="{{ $developerNoteText }}"
-                                        title="View Developer Notes"
-                                        aria-label="View developer notes for {{ $task->name }}"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            width="17"
-                                            height="17"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.8"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                            <path d="M14 2v6h6"/>
-                                            <path d="M8 13h8"/>
-                                            <path d="M8 17h8"/>
-                                        </svg>
-                                    </button>
-                                @endif
                             </td>
 
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-parent_task">
@@ -341,6 +309,37 @@
 
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-assignee">
                                 {{ $task->currentAssignee?->name ?? '-' }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-developer_notes">
+                                @php
+                                    $developerNote = $task->developerNotes->first();
+
+                                    $developerNoteText = $developerNote?->note
+                                        ?? $developerNote?->content
+                                        ?? '';
+
+                                    $developerNotePreview = trim(strip_tags($developerNoteText));
+                                @endphp
+
+                                @if (filled($developerNotePreview))
+                                    <button
+                                        type="button"
+                                        class="group flex w-full min-w-0 items-start gap-2 text-left rounded-md
+                                            transition hover:bg-bgray-50 dark:hover:bg-darkblack-500"
+                                        data-report-developer-note
+                                        data-task-name="{{ $task->name }}"
+                                        data-note="{{ $developerNoteText }}"
+                                        title="View Full Developer Notes"
+                                        aria-label="View full developer notes for {{ $task->name }}"
+                                    >
+                                        <span class="min-w-0 flex-1 break-words group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                                            {{ limitStringChar($developerNotePreview, 30) }}
+                                        </span>
+                                    </button>
+                                @else
+                                    <span class="text-bgray-400 dark:text-bgray-500">-</span>
+                                @endif
                             </td>
 
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-due_date {{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task) }}">
@@ -432,6 +431,7 @@
         <x-filters.multi-select name="task_type_id" label="Task Type" :options="$taskTypeOptions" />
         <x-filters.multi-select name="task_mode_id" label="Task Mode" :options="$taskModeOptions" />
         <x-filters.date-range label="Created Date Range" startName="start_date" endName="end_date" />
+        <x-filters.date-range label="Due Date Range" startName="due_date_start" endName="due_date_end" />
     </x-filters.drawer>
 
     <script id="task-report-filter-dependencies" type="application/json">

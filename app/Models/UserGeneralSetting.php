@@ -9,7 +9,12 @@ class UserGeneralSetting extends Model
     protected $fillable = [
         'user_id',
         'kanban_view',
-        'theme'
+        'theme',
+        'send_daily_work_report',
+    ];
+
+    protected $casts = [
+        'send_daily_work_report' => 'boolean',
     ];
 
     public function user()

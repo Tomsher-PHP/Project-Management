@@ -26,13 +26,30 @@ $(document).on('click', '.status-toggle', function () {
             return;
         }
 
+        // Common request data for all status toggles
+        let requestData = {
+            _token: $('meta[name="csrf-token"]').attr('content'),
+            id: id
+        };
+
+
+        // Additional data for report-related toggles
+        if (
+            entity === 'daily-work-report-recipient' ||
+            entity === 'user-report-preference'
+        ) {
+            requestData.report_key =
+                new URLSearchParams(window.location.search).get('report_key') || 'daily_work';
+        }
+
+        if (entity === 'user-report-preference') {
+            requestData.user_id = id;
+        }
+
         $.ajax({
             url: url,
             type: 'PATCH',
-            data: {
-                _token: $('meta[name="csrf-token"]').attr('content'),
-                id: id
-            },
+            data: requestData,
 
             success: function (response) {
 
@@ -60,8 +77,8 @@ $(document).on('click', '.status-toggle', function () {
                 }
             },
 
-            error: function () {
-                Alert.error('Something went wrong.');
+            error: function (xhr) {
+                Alert.error(xhr.responseJSON?.message || 'Something went wrong.');
             },
 
             complete: function () {

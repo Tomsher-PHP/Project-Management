@@ -89,6 +89,15 @@ const destroyOverviewChart = (projectId, chartKey) => {
     }
 };
 
+const formatDuration = (seconds) => {
+    const totalSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+};
+
 const formatHourValue = (value) => {
     const numericValue = Number(value);
 
@@ -305,7 +314,12 @@ const renderBurnupChart = (overviewRoot) => {
     const estimatedHoursByMilestone = new Map(
         (Array.isArray(estimatedDataset.data) ? estimatedDataset.data : [])
             .filter((point) => point && typeof point === 'object' && point.y !== originLabel)
-            .map((point) => [point.y, formatHourValue(point.x)]),
+            .map((point) => {
+                const totalSeconds = point.total_seconds !== undefined
+                    ? point.total_seconds
+                    : (Number(point.x || 0) * 3600);
+                return [point.y, formatDuration(totalSeconds)];
+            }),
     );
 
     const burnupAxisLabelTooltip = {
@@ -405,7 +419,10 @@ const renderBurnupChart = (overviewRoot) => {
                         return;
                     }
 
-                    const text = formatHourValue(point.x);
+                    const totalSeconds = point.total_seconds !== undefined
+                        ? point.total_seconds
+                        : (Number(point.x || 0) * 3600);
+                    const text = formatDuration(totalSeconds);
                     const textWidth = ctx.measureText(text).width;
                     const pointPosition = element.tooltipPosition();
                     const isNearRightEdge = pointPosition.x + textWidth + 10 > chartArea.right;
@@ -528,8 +545,10 @@ const renderBurnupChart = (overviewRoot) => {
                     },
                     callbacks: {
                         label(context) {
-                            const rawX = Number(context.raw?.x ?? context.parsed?.x ?? 0);
-                            return `${context.dataset.label}: ${rawX}h`;
+                            const totalSeconds = context.raw?.total_seconds !== undefined
+                                ? context.raw.total_seconds
+                                : (Number(context.raw?.x ?? context.parsed?.x ?? 0) * 3600);
+                            return `${context.dataset.label}: ${formatDuration(totalSeconds)}`;
                         },
                     },
                 },
