@@ -298,7 +298,8 @@ class LeaveRequestController extends Controller
             $confirmationResponse = $this->unpaidLeaveConfirmationResponse(
                 $request,
                 $leaveUser,
-                'This leave may include unpaid days based on the employee\'s available leave balance. Do you want to proceed?'
+                'This leave may include unpaid days based on the employee\'s available leave balance. Do you want to proceed?',
+                route('users.leave-details', $leaveUser->id)
             );
 
             if ($confirmationResponse) {
@@ -1477,7 +1478,8 @@ class LeaveRequestController extends Controller
         $confirmationResponse = $this->unpaidLeaveConfirmationResponse(
             $request,
             $leaveUser,
-            'This leave may include unpaid days based on the employee\'s available leave balance. Do you want to proceed?'
+            'This leave may include unpaid days based on the employee\'s available leave balance. Do you want to proceed?',
+            route('users.leave-details', $leaveUser->id)
         );
 
         if ($confirmationResponse) {

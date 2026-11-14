@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('leave_requests', function (Blueprint $table) {
-            $table->date('return_to_work_date')->nullable();
+            $table->date('return_to_work_date')->nullable()->after('requested_to_date');;
         });
     }
 

@@ -11,6 +11,7 @@
 
         $fullEdit = $fullEdit ?? false;
         $restrictedEdit = $restrictedEdit ?? false;
+        $dateFormat = $globalDateFormat ?? config('constants.date_format', 'd M Y');
     @endphp
 
     <div>
@@ -61,7 +62,7 @@
 
                 {{-- Main Form --}}
                 <div class="lg:col-span-2">
-                    <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                    <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 dark:bg-darkblack-600 dark:ring-darkblack-400">
 
                         @include('leave_requests._form', [
                             'isCreate' => false,
@@ -72,12 +73,12 @@
                         ])
 
                         {{-- Form Buttons --}}
-                        <div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-gray-200 pt-5">
+                        <div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-gray-200 pt-5 dark:border-darkblack-400">
 
                             {{-- Cancel --}}
                             <a
                                 href="{{ route('leave-requests.index') }}"
-                                class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                                class="rounded-lg border border-bgray-200 px-5 py-2.5 text-sm font-medium text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:text-white">
                                 Cancel
                             </a>
 
@@ -138,8 +139,8 @@
                 <div class="space-y-6">
 
                     {{-- Request Information --}}
-                    <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                        <h2 class="mb-4 text-base font-semibold text-gray-900">
+                    <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 dark:bg-darkblack-600 dark:ring-darkblack-400">
+                        <h2 class="mb-5 text-lg font-semibold text-bgray-900 dark:text-white">
                             Request Information
                         </h2>
 
@@ -150,7 +151,7 @@
                                 <span class="block text-xs font-medium uppercase text-gray-500">
                                     Employee
                                 </span>
-                                <span class="mt-1 block text-sm font-semibold text-gray-900">
+                                <span class="mt-1 block text-sm font-medium text-gray-700 dark:text-bgray-50">
                                     {{ $leaveRequest->user->name ?? '-' }}
                                 </span>
                             </div>
@@ -180,8 +181,17 @@
                                 <span class="block text-xs font-medium uppercase text-gray-500">
                                     Submitted Date
                                 </span>
-                                <span class="mt-1 block text-sm text-gray-900">
-                                    {{ $leaveRequest->submitted_at ? $leaveRequest->submitted_at->format('d/m/Y H:i') : ($leaveRequest->created_at ? $leaveRequest->created_at->format('d/m/Y H:i') : '-') }}
+
+                                @php
+                                    $submittedDate = $leaveRequest->submitted_at ?? $leaveRequest->created_at;
+                                @endphp
+
+                                <span class="mt-1 block text-sm font-medium text-gray-700 dark:text-bgray-50">
+                                    @if ($submittedDate)
+                                        @appDateTime($submittedDate)
+                                    @else
+                                        -
+                                    @endif
                                 </span>
                             </div>
 
@@ -210,8 +220,8 @@
                     </div>
 
                     {{-- Leave Balance --}}
-                    <div id="leave-balance-info" class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                        <h2 class="mb-4 text-base font-semibold text-gray-900">
+                    <div id="leave-balance-info" class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 dark:bg-darkblack-600 dark:ring-darkblack-400">
+                        <h2 class="mb-5 text-lg font-semibold text-bgray-900 dark:text-white">
                             Leave Balance
                         </h2>
 
@@ -224,8 +234,8 @@
 
                     {{-- Leave History --}}
                     @if (isset($leaveRequest->histories) && $leaveRequest->histories->count())
-                        <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                            <h2 class="mb-4 text-base font-semibold text-gray-900">
+                        <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 dark:bg-darkblack-600 dark:ring-darkblack-400">
+                            <h2 class="mb-5 text-lg font-semibold text-bgray-900 dark:text-white">
                                 Leave History
                             </h2>
 
@@ -234,7 +244,7 @@
                                     <div class="border-l-2 border-gray-200 pl-4">
                                         <div class="flex items-start justify-between gap-3">
                                             <div>
-                                                <p class="text-sm font-semibold text-gray-900">
+                                                <p class="text-sm font-medium text-gray-700 dark:text-bgray-50">
                                                     {{ ucwords(str_replace('_', ' ', $history->action)) }}
                                                 </p>
 
@@ -246,7 +256,7 @@
                                             </div>
 
                                             <span class="whitespace-nowrap text-xs text-gray-400">
-                                                {{ $history->created_at ? $history->created_at->format('d/m/Y H:i') : '-' }}
+                                                {{ $history->created_at ? $history->created_at->format($dateFormat) : '-' }}
                                             </span>
                                         </div>
 
@@ -255,18 +265,18 @@
                                                 @if ($history->old_from_date || $history->old_to_date)
                                                     <div>
                                                         <span class="font-medium">Previous:</span>
-                                                        {{ $history->old_from_date ? $history->old_from_date->format('d/m/Y') : '-' }}
+                                                        {{ $history->old_from_date ? $history->old_from_date->format($dateFormat) : '-' }}
                                                         -
-                                                        {{ $history->old_to_date ? $history->old_to_date->format('d/m/Y') : '-' }}
+                                                        {{ $history->old_to_date ? $history->old_to_date->format($dateFormat) : '-' }}
                                                     </div>
                                                 @endif
 
                                                 @if ($history->new_from_date || $history->new_to_date)
                                                     <div class="mt-1">
                                                         <span class="font-medium">New:</span>
-                                                        {{ $history->new_from_date ? $history->new_from_date->format('d/m/Y') : '-' }}
+                                                        {{ $history->new_from_date ? $history->new_from_date->format($dateFormat) : '-' }}
                                                         -
-                                                        {{ $history->new_to_date ? $history->new_to_date->format('d/m/Y') : '-' }}
+                                                        {{ $history->new_to_date ? $history->new_to_date->format($dateFormat) : '-' }}
                                                     </div>
                                                 @endif
                                             </div>

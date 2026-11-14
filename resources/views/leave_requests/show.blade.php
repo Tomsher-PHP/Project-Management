@@ -277,7 +277,7 @@
 
                     {{-- Approver Comments --}}
                     <div>
-                        <label for="approver_comment">
+                        <label for="approver_comment"  class="text-xs font-medium uppercase text-bgray-500">
                             Approver Comments
                         </label>
                         <p class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">

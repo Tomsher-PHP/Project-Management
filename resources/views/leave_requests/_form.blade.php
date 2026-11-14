@@ -27,10 +27,15 @@
 
     $returnToWorkDate = old('return_to_work_date', $leaveRequest?->return_to_work_date ? \Carbon\Carbon::parse($leaveRequest->return_to_work_date)->format('Y-m-d') : '');
 
-    $createInputClass = 'w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white';
-    $editInputClass = 'block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500';
-    $inputClass = $isCreate ? $createInputClass : $editInputClass;
-    $labelClass = $isCreate ? 'mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50' : 'mb-2 block text-sm font-medium text-gray-700';
+    $inputClass = 'block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white';
+
+    $selectClass = 'tom-select w-full border-gray-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white';
+
+    $labelClass = 'mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50';
+
+    $readonlyClass = 'block w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
+
+    $attachmentInputClass = 'block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 file:mr-4 file:rounded-md file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:file:bg-gray-100 dark:file:text-gray-700';
 
     $canEditFields = $isCreate || $fullEdit || $approvalMode;
 @endphp
@@ -39,7 +44,7 @@
 
     {{-- Leave Type --}}
     <div class="{{ $isCreate ? 'flex flex-col gap-2' : 'mb-5' }}">
-        <label for="leave_type_id" class="{{ $isCreate ? 'text-base font-medium text-bgray-600 dark:text-bgray-50' : $labelClass }}">
+        <label for="leave_type_id" class="{{ $labelClass }}">
             Leave Type
             @if ($canEditFields)
                 <x-red-star />
@@ -47,11 +52,11 @@
         </label>
 
         @if ($restrictedEdit && !$approvalMode && !$isCreate)
-            <div class="block w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700">
+            <div class="{{ $readonlyClass }}">
                 {{ $selectedLeaveType?->name ?? '-' }}
             </div>
         @else
-            <select id="leave_type_id" name="leave_type_id" class="{{ $isCreate ? 'tom-select w-full' : $inputClass }}" {{ $canEditFields ? 'required' : '' }}>
+            <select id="leave_type_id" name="leave_type_id" class="{{ $selectClass }}" {{ $canEditFields ? 'required' : '' }}>
                 <option value="">Select Leave Type</option>
                 @foreach ($leaveTypes as $leaveType)
                     <option value="{{ $leaveType->id }}" data-file-required="{{ $leaveType->is_file_upload_required ? '1' : '0' }}" {{ (string) $selectedLeaveTypeId === (string) $leaveType->id ? 'selected' : '' }}>
@@ -68,7 +73,7 @@
 
     {{-- Leave Type: Full Day / Half Day --}}
     <div class="{{ $isCreate ? 'flex flex-col gap-2' : 'mb-5' }}">
-        <label for="type" class="{{ $isCreate ? 'text-base font-medium text-bgray-600 dark:text-bgray-50' : $labelClass }}">
+        <label for="type" class="{{ $labelClass }}">
             Type
             @if ($canEditFields)
                 <x-red-star />
@@ -76,11 +81,11 @@
         </label>
 
         @if ($restrictedEdit && !$approvalMode && !$isCreate)
-            <div class="block w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700">
+            <div class="{{ $readonlyClass }}">
                 {{ $leaveRequest->type === 'half_day' ? 'Half Day' : 'Full Day' }}
             </div>
         @else
-            <select id="type" name="type" class="{{ $isCreate ? 'tom-select-no-search w-full' : $inputClass }}" {{ $canEditFields ? 'required' : '' }}>
+            <select id="type" name="type" class="{{ $selectClass }} tom-select-no-search" {{ $canEditFields ? 'required' : '' }}>
                 <option value="">Select Type</option>
                 <option value="full_day" {{ old('type', $leaveRequest?->type ?? 'full_day') === 'full_day' ? 'selected' : '' }}>
                     Full Day
@@ -107,7 +112,7 @@
         </label>
 
         @if ($restrictedEdit && !$approvalMode && !$isCreate)
-            <div class="block w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700">
+            <div class="{{ $readonlyClass }}">
                 @if ($leaveRequest->half_day_type === 'first_half')
                     First Half
                 @elseif ($leaveRequest->half_day_type === 'second_half')
@@ -117,7 +122,7 @@
                 @endif
             </div>
         @else
-            <select id="half_day_type" name="half_day_type" class="{{ $isCreate ? 'tom-select-no-search w-full text-left' : $inputClass }}">
+            <select id="half_day_type" name="half_day_type" class="{{ $selectClass }} tom-select-no-search">
                 <option value="">Select Period</option>
                 <option value="first_half" {{ old('half_day_type', $leaveRequest?->half_day_type) === 'first_half' ? 'selected' : '' }}>
                     First Half
@@ -132,7 +137,6 @@
             <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
         @enderror
     </div>
-
 
     {{-- Date and Duration Fields --}}
     <div class="{{ $isCreate ? 'md:col-span-2' : '' }}">
@@ -158,7 +162,7 @@
                     @enderror
                 @else
                     <label class="{{ $labelClass }}">From Date</label>
-                    <div class="rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700">
+                    <div class="{{ $readonlyClass }}">
                         {{ $requestedFromDate ? \Carbon\Carbon::parse($requestedFromDate)->format('d/m/Y') : '-' }}
                     </div>
                 @endif
@@ -184,7 +188,7 @@
                     @enderror
                 @else
                     <label class="{{ $labelClass }}">To Date</label>
-                    <div class="rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700">
+                    <div class="{{ $readonlyClass }}">
                         {{ $requestedToDate ? \Carbon\Carbon::parse($requestedToDate)->format('d/m/Y') : '-' }}
                     </div>
                 @endif
@@ -197,7 +201,7 @@
                 </label>
 
                 @if ($restrictedEdit && !$approvalMode && !$isCreate)
-                    <div class="rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700">
+                    <div class="{{ $readonlyClass }}">
                         {{ $returnToWorkDate ? \Carbon\Carbon::parse($returnToWorkDate)->format('d/m/Y') : '-' }}
                     </div>
                 @else
@@ -215,9 +219,9 @@
                     Number of Days
                 </label>
 
-                <input type="text" id="{{ $isCreate ? 'duration_display' : 'duration' }}" @if (!$isCreate) name="duration" @endif value="{{ old('duration', $displayDuration) }}" readonly class="{{ $isCreate ? 'w-full rounded-lg border border-gray-300 bg-bgray-50 p-2.5 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'block w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-900' }}">
+                <input type="text" id="{{ $isCreate ? 'duration_display' : 'duration' }}" @if (!$isCreate) name="duration" @endif value="{{ old('duration', $displayDuration) }}" readonly class="{{ $readonlyClass }}">
 
-                <p class="mt-1 text-xs text-gray-500">
+                <p class="mt-1 text-xs text-gray-500 dark:text-bgray-300">
                     Automatically calculated.
                 </p>
             </div>
@@ -225,7 +229,7 @@
         </div>
 
         @if ($approvalMode)
-            <div class="mt-3 rounded-lg bg-gray-50 p-3 text-xs text-gray-500">
+            <div class="mt-3 rounded-lg bg-gray-50 p-3 text-xs text-gray-600 dark:bg-darkblack-500 dark:text-bgray-300">
                 <strong>Requested Dates:</strong>
                 {{ $requestedFromDate ? \Carbon\Carbon::parse($requestedFromDate)->format('d/m/Y') : '-' }}
                 -
@@ -234,20 +238,19 @@
         @endif
 
         @if ($restrictedEdit && !$approvalMode && !$isCreate)
-            <p class="mt-2 text-xs text-gray-500">
+            <p class="mt-2 text-xs text-gray-500 dark:text-bgray-300">
                 Number of Days cannot be changed for this request.
             </p>
         @elseif ($approvalMode)
-            <p class="mt-2 text-xs text-gray-500">
+            <p class="mt-2 text-xs text-gray-500 dark:text-bgray-300">
                 Number of Days is calculated from the approved dates. The final paid and unpaid days are calculated by the server when the leave is approved.
             </p>
         @endif
 
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-gray-500 dark:text-bgray-300">
             Half-day leave counts as 0.50 day per date.
         </p>
     </div>
-
 
     {{-- Create Leave Balance Information --}}
     @if ($isCreate)
@@ -290,7 +293,7 @@
     {{-- Approver Comments --}}
     @if ($approvalMode)
         <div class="mb-5 md:col-span-2">
-            <label for="approver_comment" class="mb-2 block text-sm font-medium text-gray-700">
+            <label for="approver_comment" class="{{ $labelClass }}">
                 Approver Comments
             </label>
             <textarea id="approver_comment" name="approver_comment" rows="4" class="{{ $inputClass }}" placeholder="Enter your comments...">{{ old('approver_comment', $leaveRequest?->approver_comment) }}</textarea>
@@ -307,9 +310,9 @@
             <span id="attachment-required" class="{{ $attachmentRequired && !$existingAttachment ? '' : 'hidden' }} text-red-500">*</span>
         </label>
 
-        <input type="file" id="attachment" name="attachment" class="{{ $isCreate ? 'w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'block w-full rounded-lg border border-gray-300 bg-white text-sm text-gray-900 file:mr-4 file:border-0 file:bg-gray-100 file:px-4 file:py-2.5 file:text-sm file:font-medium' }}" @if ($attachmentRequired && !$existingAttachment) required @endif>
+        <input type="file" id="attachment" name="attachment" class="{{ $attachmentInputClass }}" @if ($attachmentRequired && !$existingAttachment) required @endif>
 
-        <p id="attachment-help" class="mt-2 text-xs text-bgray-500">
+        <p id="attachment-help" class="mt-2 text-xs text-bgray-500 dark:text-bgray-300">
             @if ($attachmentRequired && !$existingAttachment)
                 A supporting document is required for this leave type.
             @else
@@ -318,15 +321,15 @@
         </p>
 
         @if ($existingAttachment)
-            <div class="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <div class="text-sm font-medium text-gray-700">Current attachment</div>
+            <div class="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-darkblack-400 dark:bg-darkblack-500">
+                <div class="text-sm font-medium text-gray-700 dark:text-white">Current attachment</div>
                 <div class="mt-2 flex items-center justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="truncate text-sm text-gray-600">
+                        <p class="truncate text-sm text-gray-600 dark:text-bgray-300">
                             {{ $existingAttachment->original_name ?? ($existingAttachment->file_name ?? 'Attachment') }}
                         </p>
                     </div>
-                    <a href="{{ asset('storage/' . ltrim($existingAttachment->file_path, '/')) }}" target="_blank" rel="noopener noreferrer" class="shrink-0 font-medium text-primary-600 hover:underline">
+                    <a href="{{ asset('storage/' . ltrim($existingAttachment->file_path, '/')) }}" target="_blank" rel="noopener noreferrer" class="{{ $labelClass }}">
                         View Attachment
                     </a>
                 </div>
@@ -356,6 +359,59 @@
             #half_day_type+.ts-wrapper .ts-control .placeholder,
             #half_day_type+.ts-wrapper .ts-control .item {
                 text-align: left !important;
+            }
+
+            #leave_type_id+.ts-wrapper .ts-control,
+            #type+.ts-wrapper .ts-control,
+            #half_day_type+.ts-wrapper .ts-control {
+                background-color: #fff;
+                border-color: #d1d5db;
+                color: #111827;
+                border-radius: 0.5rem;
+                padding: 0.625rem 0.75rem;
+                min-height: 42px;
+                box-shadow: none;
+            }
+
+            .dark #leave_type_id+.ts-wrapper .ts-control,
+            .dark #type+.ts-wrapper .ts-control,
+            .dark #half_day_type+.ts-wrapper .ts-control {
+                background-color: #242631;
+                border-color: #3b3d4a;
+                color: #fff;
+            }
+
+            .dark #leave_type_id+.ts-wrapper .ts-control input,
+            .dark #type+.ts-wrapper .ts-control input,
+            .dark #half_day_type+.ts-wrapper .ts-control input {
+                color: #fff;
+            }
+
+            .dark #leave_type_id+.ts-wrapper .ts-control .placeholder,
+            .dark #type+.ts-wrapper .ts-control .placeholder,
+            .dark #half_day_type+.ts-wrapper .ts-control .placeholder {
+                color: #a3a3b0;
+            }
+
+            .dark #leave_type_id+.ts-wrapper .ts-dropdown,
+            .dark #type+.ts-wrapper .ts-dropdown,
+            .dark #half_day_type+.ts-wrapper .ts-dropdown {
+                background-color: #242631;
+                border-color: #3b3d4a;
+                color: #fff;
+            }
+
+            .dark #leave_type_id+.ts-wrapper .ts-dropdown .option,
+            .dark #type+.ts-wrapper .ts-dropdown .option,
+            .dark #half_day_type+.ts-wrapper .ts-dropdown .option {
+                color: #fff;
+            }
+
+            .dark #leave_type_id+.ts-wrapper .ts-dropdown .active,
+            .dark #type+.ts-wrapper .ts-dropdown .active,
+            .dark #half_day_type+.ts-wrapper .ts-dropdown .active {
+                background-color: #3b3d4a;
+                color: #fff;
             }
         </style>
 
@@ -749,9 +805,6 @@
                         });
                     }
                 });
-
-
-
             });
         </script>
     @endpush
