@@ -560,6 +560,13 @@
 
                     <input
                         type="hidden"
+                        name="confirm_unpaid_leave"
+                        id="confirm_unpaid_leave"
+                        value="0"
+                    >
+
+                    <input
+                        type="hidden"
                         name="created_from_attendance"
                         value="1"
                     >
@@ -573,7 +580,7 @@
 
                                 <label
                                     for="attendance_user_id"
-                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50"
                                 >
                                     User
                                     <span class="text-red-500">*</span>
@@ -605,7 +612,7 @@
 
                                 <label
                                     for="attendance_leave_type_id"
-                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50"
                                 >
                                     Leave Type
                                     <span class="text-red-500">*</span>
@@ -640,7 +647,7 @@
 
                                 <label
                                     for="attendance_type"
-                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50"
                                 >
                                     Type
                                     <span class="text-red-500">*</span>
@@ -673,7 +680,7 @@
 
                                 <label
                                     for="attendance_half_day_type"
-                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50"
                                 >
                                     Leave Period
                                     <span class="text-red-500">*</span>
@@ -706,7 +713,7 @@
 
                                 <label
                                     for="attendance_from_date"
-                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50"
                                 >
                                     From Date
                                     <span class="text-red-500">*</span>
@@ -727,7 +734,7 @@
 
                                 <label
                                     for="attendance_to_date"
-                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50"
                                 >
                                     To Date
                                     <span class="text-red-500">*</span>
@@ -743,10 +750,32 @@
 
                             </div>
 
+                            {{-- Return to Work Date --}}
+                            <div>
+                                <label
+                                    for="attendance_return_to_work_date"
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50"
+                                >
+                                    Return to Work Date
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="return_to_work_date"
+                                    id="attendance_return_to_work_date"
+                                    class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
+                                >
+
+                                <p class="mt-1 text-xs text-bgray-500">
+                                    Select the date the employee is expected to return to work.
+                                </p>
+                            </div>
+
+
                             {{-- Duration --}}
                             <div>
 
-                                <label class="mb-2 block text-sm font-medium text-gray dark:text-white">
+                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50">
                                     Duration
                                 </label>
 
@@ -806,7 +835,7 @@
 
                                 <label
                                     for="attendance_reason"
-                                    class="mb-2 block text-sm font-medium text-gray dark:text-white"
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-bgray-50"
                                 >
                                     Reason
                                     <span class="text-red-500">*</span>
@@ -1331,6 +1360,91 @@
 
             toggleAttendanceLeavePeriod();
 
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const forms = document.querySelectorAll(
+                '[data-unpaid-leave-confirm]'
+            );
+
+            forms.forEach(function (form) {
+
+                let confirmed = false;
+
+                form.addEventListener('submit', async function (e) {
+
+                    if (confirmed) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    try {
+
+                        const formData = new FormData(form);
+
+                        const response = await fetch(form.action, {
+                            method: form.method || 'POST',
+                            body: formData,
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                            return;
+                        }
+
+                        const result = await response.json();
+
+                        if (result.requires_confirmation) {
+
+                            Alert.confirm({
+                                title: 'No Leave Balance Found',
+                                text: result.message,
+                                confirmButtonText: 'Yes, Proceed',
+                                cancelButtonText: 'Cancel',
+                            }).then(function (accepted) {
+
+                                if (!accepted) {
+                                    return;
+                                }
+
+                                confirmed = true;
+
+                                form.querySelector(
+                                    '[name="confirm_unpaid_leave"]'
+                                ).value = '1';
+
+                                form.requestSubmit();
+                            });
+
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.message || 'Unable to process leave request.'
+                            );
+                        }
+
+                        if (result.redirect) {
+                            window.location.href = result.redirect;
+                        }
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert(
+                            error.message || 'Something went wrong.'
+                        );
+                    }
+                });
+            });
         });
     </script>
 

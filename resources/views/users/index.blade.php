@@ -25,17 +25,13 @@
                     <span>Restore Users</span>
                 </a>
             @endcan
-            @can('user_leave_balance.import')
-                <a href="{{ route('user-leave-balances.import') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v6h6" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 17V11" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 13.5L12 11l2.5 2.5" />
-                    </svg>
-                    <span>Import Leave Balances</span>
-                </a>
-            @endcan
+            @if (auth()->user()->can('user_leave_balance.import'))
+                <x-button.link-button
+                    :href="route('user-leave-balances.import')"
+                    icon="import"
+                    label="Import Leave Balances"
+                />
+            @endif
         </div>
     </div>
     @php

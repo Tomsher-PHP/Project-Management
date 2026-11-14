@@ -19,7 +19,6 @@ class UserLeaveBalanceImportController extends Controller
     {
         return view('user_leave_balances.import', [
             'pageTitle' => 'Import Leave Balances',
-            'subTitle' => 'Bulk import user leave balance details.',
         ]);
     }
 

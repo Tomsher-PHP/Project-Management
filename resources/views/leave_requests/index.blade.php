@@ -14,9 +14,7 @@
         </div>
     </div>
     @php
-        /*
-         * Employee filter
-         */
+        // Employee filter
         $employeeFilterOptions = collect($employees ?? [])->map(function ($employee) {
             return (object) [
                 'id' => (string) $employee->id,
@@ -24,9 +22,7 @@
             ];
         });
 
-        /*
-         * Leave Type filter
-         */
+        // Leave Type filter
         $leaveTypeFilterOptions = collect($leaveTypes ?? [])->map(function ($leaveType) {
             return (object) [
                 'id' => (string) $leaveType->id,
@@ -34,9 +30,7 @@
             ];
         });
 
-        /*
-         * Added By filter
-         */
+        // Added By filter
         $addedByFilterOptions = collect($users ?? [])->map(function ($user) {
             return (object) [
                 'id' => (string) $user->id,
@@ -44,17 +38,13 @@
             ];
         });
 
-        /*
-         * Day Type filter
-         */
+        // Day Type filter
         $dayTypeFilterOptions = [
             'full_day' => 'Full Day',
             'half_day' => 'Half Day',
         ];
 
-        /*
-         * Status filter
-         */
+        // Status filter
         $statusFilterOptions = collect([
             (object) [
                 'id' => 'pending',
@@ -77,21 +67,13 @@
 
     <!-- Filter drawer -->
     <x-filters.drawer>
-
         <x-filters.multi-select name="user_id" label="Employee" :options="$employeeFilterOptions" />
-
         <x-filters.multi-select name="leave_type_id" label="Leave Type" :options="$leaveTypeFilterOptions" />
-
         <x-filters.multi-select name="added_by" label="Added By" :options="$addedByFilterOptions" />
-
         <x-filters.select name="type" label="Day Type" :options="$dayTypeFilterOptions" />
-
         <x-filters.multi-select name="status" label="Status" :options="$statusFilterOptions" />
-
         <x-filters.input-search name="requested_from_date" label="From Date" />
-
         <x-filters.input-search name="requested_to_date" label="To Date" />
-
     </x-filters.drawer>
     <!-- Filter drawer end -->
 
@@ -128,7 +110,6 @@
                         <table class="w-full min-w-[1200px]">
                             <thead>
                                 <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                    <!-- # -->
                                     <th class="px-6 py-5 text-left xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                             #
@@ -190,6 +171,13 @@
                                         </div>
                                     </th>
 
+                                    <!-- Return To Work Date -->
+                                    <th class="px-6 py-5 xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
+                                            <x-sorting.sortable-column column="return_to_work_date" label="Return To Work Date" />
+                                        </div>
+                                    </th>
+
                                     <!-- Days -->
                                     <th class="px-6 py-5 xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
@@ -221,25 +209,13 @@
 
                                 @forelse ($leaveRequests as $leaveRequest)
                                     @php
-                                        /*
-                                         * ============================================
-                                         * CURRENT USER
-                                         * ============================================
-                                         */
-
+                                        // CURRENT USER
                                         $authUserId = (int) auth()->id();
 
-                                        /*
-                                         * Super Admin
-                                         */
+                                        // Super Admin
                                         $isSuperAdmin = (bool) auth()->user()?->is_super_admin;
 
-                                        /*
-                                         * ============================================
-                                         * REQUESTER
-                                         * ============================================
-                                         */
-
+                                        // REQUESTER
                                         $isOwnRequest = (int) $leaveRequest->user_id === $authUserId;
 
                                         $assignedTo = $leaveRequest->assigned_to ?? [];
@@ -252,9 +228,7 @@
                                             $assignedTo = [];
                                         }
 
-                                        /*
-                                         * Extract assigned user IDs.
-                                         */
+                                        // Extract assigned user IDs.
                                         $assignedUserIds = collect($assignedTo)
                                             ->map(function ($assignedUser) {
                                                 if (is_array($assignedUser)) {
@@ -268,9 +242,7 @@
                                             ->values()
                                             ->all();
 
-                                        /*
-                                         * Is current user assigned to this leave?
-                                         */
+                                        // Is current user assigned to this leave?
                                         $isAssignedToMe = in_array($authUserId, $assignedUserIds, true);
 
                                         /*
@@ -298,68 +270,41 @@
                                          * Super Admin: Can approve/reject everything.
                                          *
                                          * Assigned user: Can approve/reject another employee's leave.
- *
- * Requester: Cannot approve/reject their own leave.
- */
+                                         *
+                                         * Requester: Cannot approve/reject their own leave.
+                                         */
 
-$canApproveReject = $isSuperAdmin || ($isAssignedToMe && !$isOwnRequest);
+                                        $canApproveReject = $isSuperAdmin || ($isAssignedToMe && !$isOwnRequest);
 
-/*
- * ============================================
- * STATUS
- * ============================================
- */
+                                        //STATUS
+                                        $status = strtolower($leaveRequest->status ?? '');
 
-$status = strtolower($leaveRequest->status ?? '');
+                                        $statusClasses = match ($status) {
+                                            'approved' => 'text-green-700',
+                                            'rejected' => 'text-red-700',
+                                            'cancelled' => 'text-gray-700',
+                                            default => 'text-red-700',
+                                        };
 
-$statusClasses = match ($status) {
-    'approved' => 'text-green-700',
-    'rejected' => 'text-red-700',
-    'cancelled' => 'text-gray-700',
-    default => 'text-red-700',
-};
+                                        // DAY TYPE
+                                        $dayType = $leaveRequest->type === 'half_day' ? 'Half Day' : 'Full Day';
 
-/*
- * ============================================
- * DAY TYPE
- * ============================================
- */
+                                        // HALF DAY TYPE
+                                        $halfDayType = $leaveRequest->type === 'half_day' ? ($leaveRequest->half_day_type ? ucfirst(str_replace('_', ' ', $leaveRequest->half_day_type)) : '-') : '-';
 
-$dayType = $leaveRequest->type === 'half_day' ? 'Half Day' : 'Full Day';
+                                        // DATES
+                                        $fromDate = $leaveRequest->requested_from_date ? \Carbon\Carbon::parse($leaveRequest->requested_from_date)->format('d M Y') : '-';
 
-/*
- * ============================================
- * HALF DAY TYPE
- * ============================================
- */
+                                        $toDate = $leaveRequest->requested_to_date ? \Carbon\Carbon::parse($leaveRequest->requested_to_date)->format('d M Y') : '-';
+                                        $returnToWorkDate = $leaveRequest->return_to_work_date ? \Carbon\Carbon::parse($leaveRequest->return_to_work_date)->format('d M Y') : '-';
 
-$halfDayType = $leaveRequest->type === 'half_day' ? ($leaveRequest->half_day_type ? ucfirst(str_replace('_', ' ', $leaveRequest->half_day_type)) : '-') : '-';
+                                        // DURATION
+                                        $duration = $leaveRequest->duration !== null
+                                            ? rtrim(rtrim(number_format((float) $leaveRequest->duration, 2, '.', ''), '0'), '.')
+                                            : '-';
 
-/*
- * ============================================
- * DATES
- * ============================================
- */
-
-$fromDate = $leaveRequest->requested_from_date ? \Carbon\Carbon::parse($leaveRequest->requested_from_date)->format('d M Y') : '-';
-
-$toDate = $leaveRequest->requested_to_date ? \Carbon\Carbon::parse($leaveRequest->requested_to_date)->format('d M Y') : '-';
-
-/*
- * ============================================
- * DURATION
- * ============================================
- */
-
-$duration = $leaveRequest->duration ?? '-';
-
-/*
- * ============================================
- * DISPLAY STATUS
- * ============================================
- */
-
-$displayStatus = $status ? ucfirst($status) : '-';
+                                        // DISPLAY STATUS
+                                        $displayStatus = $status ? ucfirst($status) : '-';
                                     @endphp
 
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
@@ -429,6 +374,15 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                             <div class="flex w-full items-center">
                                                 <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
                                                     {{ $toDate }}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Return to Work Date -->
+                                        <td class="px-6 py-5 xl:px-0">
+                                            <div class="flex w-full items-center">
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
+                                                    {{ $returnToWorkDate }}
                                                 </span>
                                             </div>
                                         </td>
@@ -541,7 +495,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
                                                     @if ($isOwnRequest)
                                                         @can('leave_cancellation_request.create')
                                                             @php
-                                                                // $hasPendingCancellation = LeaveCancellationRequest::where('leave_request_id', $leaveRequest->id)->where('status', 'pending')->exists();
                                                                 $hasPendingCancellation = $leaveRequest->cancellationRequests()->where('status', 'pending')->exists();
                                                             @endphp
 
@@ -811,10 +764,7 @@ $displayStatus = $status ? ucfirst($status) : '-';
     </div>
 
 
-
-
     <!-- Cancel Modal JavaScript -->
-
     <script>
         function openCancelModalFromButton(button) {
 
@@ -861,7 +811,6 @@ $displayStatus = $status ? ucfirst($status) : '-';
 
 
         function closeCancelModal() {
-
             document
                 .getElementById('cancelLeaveModal')
                 .classList
@@ -874,18 +823,14 @@ $displayStatus = $status ? ucfirst($status) : '-';
             document.body.classList.remove('overflow-hidden');
         }
 
-
         document.addEventListener('keydown', function(event) {
-
             if (event.key === 'Escape') {
                 closeCancelModal();
             }
-
         });
 
 
         // Leave cancel request script
-
         function openLeaveCancellationRequestModal(button) {
             const id = button.dataset.cancelId;
 
@@ -929,5 +874,4 @@ $displayStatus = $status ? ucfirst($status) : '-';
             }
         });
     </script>
-
 @endsection
