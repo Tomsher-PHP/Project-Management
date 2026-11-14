@@ -16,6 +16,9 @@ const ADVANCED_TASK_FIELDS = new Set([
 const taskCreateEditors = new WeakMap();
 const taskCreateNoteEditors = new WeakMap();
 const taskCreateFilesMap = new WeakMap();
+const taskCreateProjectRequests = new WeakMap();
+const taskCreateParentRequests = new WeakMap();
+const taskCreatePreparationIds = new WeakMap();
 
 const renderTaskCreateFiles = (root) => {
     const container = root.querySelector('#task_create_selected_files');
@@ -560,16 +563,12 @@ const setProjectLoadingState = (form) => {
     });
 };
 
-const fetchProjectDependencies = async (dependencies, projectId) => {
+const fetchProjectDependencies = async (dependencies, projectId, { signal } = {}) => {
     if (!projectId) {
         return null;
     }
 
     const key = String(projectId);
-
-    if (dependencies.projects && dependencies.projects[key]) {
-        return dependencies.projects[key];
-    }
 
     if (!dependencies.projects) {
         dependencies.projects = {};
@@ -579,6 +578,8 @@ const fetchProjectDependencies = async (dependencies, projectId) => {
     const requestUrl = urlTemplate.replace(':id', encodeURIComponent(key));
 
     const response = await fetch(requestUrl, {
+        cache: 'no-store',
+        signal,
         headers: {
             Accept: 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
@@ -606,25 +607,52 @@ const applyProjectDefaults = async (form, dependencies) => {
     const billableField = form.querySelector('input[type="checkbox"][name="is_billable"]');
 
     const projectId = projectField?.value || '';
+    const previousProjectRequest = taskCreateProjectRequests.get(form);
+
+    previousProjectRequest?.abort();
+    taskCreateParentRequests.get(form)?.abort();
 
     if (!projectId) {
+        taskCreateProjectRequests.delete(form);
+        taskCreateParentRequests.delete(form);
         setEmptyProjectState(form, dependencies);
-        return;
+        return null;
     }
 
+    const projectRequest = new AbortController();
+    taskCreateProjectRequests.set(form, projectRequest);
     setProjectLoadingState(form);
 
     let projectMeta = null;
     try {
-        projectMeta = await fetchProjectDependencies(dependencies, projectId);
+        projectMeta = await fetchProjectDependencies(dependencies, projectId, {
+            signal: projectRequest.signal,
+        });
     } catch (error) {
+        if (error.name === 'AbortError' || taskCreateProjectRequests.get(form) !== projectRequest) {
+            return null;
+        }
+
+        taskCreateProjectRequests.delete(form);
         setEmptyProjectState(form, dependencies);
         throw error;
     }
 
+    if (
+        taskCreateProjectRequests.get(form) !== projectRequest
+        || String(projectField?.value || '') !== String(projectId)
+    ) {
+        if (taskCreateProjectRequests.get(form) === projectRequest) {
+            taskCreateProjectRequests.delete(form);
+        }
+
+        return null;
+    }
+
     if (!projectMeta) {
+        taskCreateProjectRequests.delete(form);
         setEmptyProjectState(form, dependencies);
-        return;
+        return null;
     }
 
     const isAgile = projectMeta.flow === 'agile';
@@ -671,7 +699,29 @@ const applyProjectDefaults = async (form, dependencies) => {
     setEstimatedTimeValue(form, projectMeta.default_task_estimate_minutes ?? 0);
     setCheckboxValue(billableField, projectMeta.default_billable);
 
-    await loadParentTaskOptions(form, dependencies);
+    try {
+        await loadParentTaskOptions(form, dependencies);
+    } catch (error) {
+        if (taskCreateProjectRequests.get(form) === projectRequest) {
+            taskCreateProjectRequests.delete(form);
+        }
+
+        throw error;
+    }
+
+    if (
+        taskCreateProjectRequests.get(form) !== projectRequest
+        || String(projectField?.value || '') !== String(projectId)
+    ) {
+        if (taskCreateProjectRequests.get(form) === projectRequest) {
+            taskCreateProjectRequests.delete(form);
+        }
+
+        return null;
+    }
+
+    taskCreateProjectRequests.delete(form);
+    return projectMeta;
 };
 
 const loadParentTaskOptions = async (form, dependencies) => {
@@ -680,6 +730,10 @@ const loadParentTaskOptions = async (form, dependencies) => {
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
     const sprintField = form.querySelector('[name="project_sprint_id"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
+    const previousParentRequest = taskCreateParentRequests.get(form);
+
+    previousParentRequest?.abort();
+    taskCreateParentRequests.delete(form);
 
     if (!parentField) {
         return;
@@ -725,15 +779,49 @@ const loadParentTaskOptions = async (form, dependencies) => {
         requestUrl.searchParams.set('project_sprint_id', String(sprintField.value));
     }
 
-    const response = await fetch(requestUrl.toString(), {
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    });
-    const result = await response.json();
+    const requestContext = {
+        projectId: String(projectField?.value || ''),
+        milestoneId: String(milestoneField?.value || ''),
+        sprintId: String(sprintField?.value || ''),
+    };
+    const parentRequest = new AbortController();
+    taskCreateParentRequests.set(form, parentRequest);
+
+    let response;
+    let result;
+    try {
+        response = await fetch(requestUrl.toString(), {
+            signal: parentRequest.signal,
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        result = await response.json();
+    } catch (error) {
+        if (error.name === 'AbortError' || taskCreateParentRequests.get(form) !== parentRequest) {
+            return null;
+        }
+
+        taskCreateParentRequests.delete(form);
+        throw error;
+    }
+
+    if (
+        taskCreateParentRequests.get(form) !== parentRequest
+        || String(projectField?.value || '') !== requestContext.projectId
+        || String(milestoneField?.value || '') !== requestContext.milestoneId
+        || String(sprintField?.value || '') !== requestContext.sprintId
+    ) {
+        if (taskCreateParentRequests.get(form) === parentRequest) {
+            taskCreateParentRequests.delete(form);
+        }
+
+        return null;
+    }
 
     if (!response.ok || !result.status) {
+        taskCreateParentRequests.delete(form);
         throw new Error(result.message || 'Unable to load parent tasks.');
     }
 
@@ -741,6 +829,9 @@ const loadParentTaskOptions = async (form, dependencies) => {
         placeholder: (result.options || []).length ? 'Select parent task' : 'No parent tasks available',
         disabled: false,
     });
+
+    taskCreateParentRequests.delete(form);
+    return result.options || [];
 };
 
 const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
@@ -749,6 +840,9 @@ const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
     if (!form) {
         return;
     }
+
+    const preparationId = (taskCreatePreparationIds.get(root) || 0) + 1;
+    taskCreatePreparationIds.set(root, preparationId);
 
     initTomSelect(root);
     initializeEstimatedTimeInputs(form);
@@ -813,9 +907,17 @@ const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
     }
 
     if (projectField?.value) {
-        await applyProjectDefaults(form, dependencies);
+        const selectedProjectId = String(projectField.value);
+        const projectMeta = await applyProjectDefaults(form, dependencies);
 
-        const projectMeta = getProjectMeta(dependencies, projectField.value);
+        if (
+            taskCreatePreparationIds.get(root) !== preparationId
+            || !projectMeta
+            || String(projectField.value || '') !== selectedProjectId
+        ) {
+            return;
+        }
+
         const sprintId = String(prefill.sprintId || '');
         const selectedSprint = (projectMeta?.sprints || []).find((option) => option.value === sprintId);
         const milestoneId = String(prefill.milestoneId || selectedSprint?.project_milestone_id || '');
@@ -828,6 +930,14 @@ const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
             selectedSprintId: sprintId,
         });
         await loadParentTaskOptions(form, dependencies);
+
+        if (
+            taskCreatePreparationIds.get(root) !== preparationId
+            || String(projectField.value || '') !== selectedProjectId
+        ) {
+            return;
+        }
+
         setSelectValue(form.querySelector('[name="parent_task_id"]'), parentTaskId);
     }
 };
