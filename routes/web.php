@@ -402,18 +402,15 @@ Route::middleware([
 
 
         // General Report Settings
-        Route::prefix('daily-work-reports')
-            ->name('daily-work-reports.')
-            ->controller(DailyWorkReportSettingsController::class)
-            ->group(function () {
-                Route::get('/', 'index')->middleware('permission.type:daily_work_report.view')->name('index');
-                Route::post('/settings', 'update')->middleware('permission.type:daily_work_report.edit')->name('settings.update');
-                Route::post('/recipients', 'storeRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.store');
-                Route::patch('/recipients/{recipient}/toggle', 'toggleRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.toggle');
-                Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.destroy');
-                Route::patch('/users/preference', 'updateUserPreference')->middleware('permission.type:daily_work_report.edit')->name('users.preference');
-                Route::patch('/users/preferences/bulk', 'bulkUpdateUserPreferences')->middleware('permission.type:daily_work_report.edit')->name('users.preferences.bulk');
-            });
+        Route::prefix('daily-work-reports')->name('daily-work-reports.')->controller(DailyWorkReportSettingsController::class)->group(function () {
+            Route::get('/', 'index')->middleware('permission.type:daily_work_report.view')->name('index');
+            Route::post('/settings', 'update')->middleware('permission.type:daily_work_report.edit')->name('settings.update');
+            Route::post('/recipients', 'storeRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.store');
+            Route::patch('/recipients/{recipient}/toggle', 'toggleRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.toggle');
+            Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.destroy');
+            Route::patch('/users/preference', 'updateUserPreference')->middleware('permission.type:daily_work_report.edit')->name('users.preference');
+            Route::patch('/users/preferences/bulk', 'bulkUpdateUserPreferences')->middleware('permission.type:daily_work_report.edit')->name('users.preferences.bulk');
+        });
 
         // Data Sync Settings Routes
         Route::prefix('data-sync')->name('data-sync.')->group(function () {
@@ -428,25 +425,11 @@ Route::middleware([
                 });
 
                 // Client Management Mutation routes
-                Route::post('/clients', 'storeClient')
-                    ->middleware('permission.type:data_sync_settings.create')
-                    ->name('clients.store');
-
-                Route::match(['put', 'patch'], '/clients/{client}', 'updateClient')
-                    ->middleware('permission.type:data_sync_settings.edit')
-                    ->name('clients.update');
-
-                Route::patch('/clients/{client}/toggle-status', 'toggleStatus')
-                    ->middleware('permission.type:data_sync_settings.edit')
-                    ->name('clients.toggle-status');
-
-                Route::post('/clients/{client}/rotate', 'rotateKey')
-                    ->middleware('permission.type:data_sync_settings.edit')
-                    ->name('clients.rotate');
-
-                Route::post('/clients/{client}/revoke', 'revokeClient')
-                    ->middleware('permission.type:data_sync_settings.delete')
-                    ->name('clients.revoke');
+                Route::post('/clients', 'storeClient')->middleware('permission.type:data_sync_settings.create')->name('clients.store');
+                Route::match(['put', 'patch'], '/clients/{client}', 'updateClient')->middleware('permission.type:data_sync_settings.edit')->name('clients.update');
+                Route::patch('/clients/{client}/toggle-status', 'toggleStatus')->middleware('permission.type:data_sync_settings.edit')->name('clients.toggle-status');
+                Route::post('/clients/{client}/rotate', 'rotateKey')->middleware('permission.type:data_sync_settings.edit')->name('clients.rotate');
+                Route::post('/clients/{client}/revoke', 'revokeClient')->middleware('permission.type:data_sync_settings.delete')->name('clients.revoke');
             });
         });
     });
