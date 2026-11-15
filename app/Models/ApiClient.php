@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ApiClient extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Sortable;
 
     public const SCOPE_MEETINGS_READ = 'meetings.read';
     public const SCOPE_SETTINGS_READ = 'settings.read';
@@ -38,6 +39,15 @@ class ApiClient extends Model
      */
     protected $hidden = [
         'secret_hash',
+    ];
+
+    /**
+     * The attributes available for table sorting.
+     *
+     * @var list<string>
+     */
+    protected $sortable = [
+        'name',
     ];
 
     /**

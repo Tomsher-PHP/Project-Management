@@ -13,7 +13,7 @@
                 </td>
                 <td class="px-6 py-5 whitespace-nowrap">
                     <div class="flex w-full items-center space-x-2.5">
-                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Application Name</span>
+                        <x-sorting.sortable-column column="name" label="Application Name" />
                     </div>
                 </td>
                 <td class="px-6 py-5 whitespace-nowrap">

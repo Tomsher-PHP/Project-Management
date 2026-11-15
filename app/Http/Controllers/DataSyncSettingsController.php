@@ -65,7 +65,7 @@ class DataSyncSettingsController extends Controller
                 ->where('expires_at', '<=', now());
         }
 
-        $clients = $query->latest('id')->paginate($perPage)->withQueryString();
+        $clients = $query->sort($request->all())->paginate($perPage)->withQueryString();
 
         return view('settings.data-sync.index', [
             'currentTab' => 'clients',
