@@ -98,9 +98,9 @@ class ProjectRestoreService
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
             'notes' => $this->renderNotesTab($project, $request),
-            'meetings' => app(ProjectController::class)->renderMeetingsTab($project),
+            'meetings' => $this->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
-            'hosting' => app(ProjectHostingController::class)->renderHostingTab($project, $request),
+            'hosting' => $this->renderHostingTab($project, $request),
             'timelines' => app(ProjectController::class)->renderTimelinesTab($project),
             'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
@@ -349,15 +349,8 @@ class ProjectRestoreService
             })
             ->values();
 
-        // Project Tracking
-        $projectTrackings = $project->trackings()
-            ->with([
-                'attachments',
-                'attachments.addedBy:id,name',
-            ])
-            ->latest('date')
-            ->latest('id')
-            ->get();
+        // Project Tracking is not fetched for deleted projects
+        $projectTrackings = collect();
 
         $currentStatus = [
             'label' => $project->projectStatus?->name ?? 'No Status',
@@ -410,6 +403,53 @@ class ProjectRestoreService
             ->keyBy('notification_type');
 
         return view('projects.partials.tabs.settings', compact('project', 'notificationTypes', 'preferences'))->render();
+    }
+
+    private function renderMeetingsTab(Project $project): string
+    {
+        return view('projects.partials.tabs.meetings', [
+            'project' => $project,
+            'upcomingMeetings' => [],
+            'upcomingPagination' => [
+                'page' => 1,
+                'next_page' => null,
+                'has_more_pages' => false,
+                'total' => 0,
+            ],
+            'pastMeetings' => [],
+            'pastPagination' => [
+                'page' => 1,
+                'next_page' => null,
+                'has_more_pages' => false,
+                'total' => 0,
+            ],
+        ])->render();
+    }
+
+    private function renderHostingTab(Project $project, ?Request $request = null): string
+    {
+        abort_unless(auth()->user()?->can('project_hosting.view'), \Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
+
+        $summaryMetrics = app(ProjectHostingService::class)->calculateSummaryMetrics($project);
+        $hostingRecords = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+        $formOptions = [
+            'providers' => collect(),
+            'services' => collect(),
+            'statuses' => collect(),
+        ];
+        $filterOptions = [
+            'providers' => collect(),
+            'services' => collect(),
+            'statuses' => collect(),
+        ];
+
+        return view('projects.partials.tabs.hosting', compact(
+            'project',
+            'hostingRecords',
+            'summaryMetrics',
+            'formOptions',
+            'filterOptions'
+        ))->render();
     }
 
     private function getPaginatedProjectNotes(Project $project, int $page)

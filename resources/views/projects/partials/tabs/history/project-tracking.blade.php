@@ -20,12 +20,14 @@
                     @endcan
                 @endif
 
-                @can('project_tracking.export')
-                    <button type="button" id="bulk-export-project-trackings" data-url="{{ route('projects.trackings.bulk-export', $project) }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50" disabled>
-                        <i class="fa-solid fa-file-export"></i>
-                        <span>Export</span>
-                    </button>
-                @endcan
+                @if (!$project->trashed())
+                    @can('project_tracking.export')
+                        <button type="button" id="bulk-export-project-trackings" data-url="{{ route('projects.trackings.bulk-export', $project) }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50" disabled>
+                            <i class="fa-solid fa-file-export"></i>
+                            <span>Export</span>
+                        </button>
+                    @endcan
+                @endif
             </div>
         </div>
 

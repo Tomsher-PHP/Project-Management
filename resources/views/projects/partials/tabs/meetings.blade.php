@@ -4,6 +4,18 @@
     $pastLoadUrl = $isDeletedProjectView ? route('projects.restore.meetings.groups.show', ['id' => $project->id, 'group' => 'past']) : route('projects.meetings.groups.show', ['project' => $project, 'group' => 'past']);
 @endphp
 
+@if ($isDeletedProjectView)
+    <div class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white p-8 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <div class="mx-auto max-w-md rounded-[8px] border border-dashed border-bgray-300 bg-bgray-50 px-6 py-8 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
+            <p class="text-base font-semibold text-error-300">
+                No meetings available.
+            </p>
+            <p class="mt-2 text-sm text-error-300">
+                Meetings are not available for deleted projects.
+            </p>
+        </div>
+    </div>
+@else
 <div class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-project-meetings-root>
     <div class="max-h-[38rem] overflow-y-auto" data-project-meetings-scroll>
         <div class="overflow-x-auto">
@@ -98,3 +110,4 @@
         </div>
     </div>
 </div>
+@endif

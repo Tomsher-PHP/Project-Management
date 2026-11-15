@@ -1,5 +1,16 @@
 <div id="project-tracking-history" class="overflow-x-auto">
-    @if ($projectTrackings->isEmpty())
+    @if ($project->trashed())
+        <div class="px-6 py-10 text-center">
+            <div class="mx-auto max-w-md rounded-[8px] border border-dashed border-bgray-300 bg-bgray-50 px-6 py-8 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
+                <p class="text-base font-semibold text-error-300">
+                    No project tracking records.
+                </p>
+                <p class="mt-2 text-sm text-error-300">
+                    Project tracking records are not available for deleted projects.
+                </p>
+            </div>
+        </div>
+    @elseif ($projectTrackings->isEmpty())
 
         <div class="p-5">
             <div class="rounded-xl border border-dashed border-bgray-300 px-4 py-8 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
