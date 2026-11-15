@@ -1,14 +1,4 @@
 <div id="api-explorer-root" class="flex flex-col space-y-5">
-    <!-- Subtitle Description -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 -mt-2">
-        <p class="text-xs text-bgray-600 dark:text-bgray-300">
-            Browse available Data Sync modules, endpoints, and request examples. View required permission scopes, request payloads, and copyable cURL commands.
-        </p>
-        <span class="inline-flex items-center gap-1.5 text-xs text-bgray-600 dark:text-bgray-300">
-            <span class="h-2 w-2 rounded-full bg-success-300"></span>
-            <span>API v1.0 • Read & Write Sync</span>
-        </span>
-    </div>
 
     <!-- Explorer Two-Column Layout -->
     <div class="flex flex-col lg:flex-row gap-6 items-start w-full">

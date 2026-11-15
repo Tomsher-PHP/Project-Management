@@ -1,8 +1,4 @@
 <div class="flex flex-col space-y-5">
-    <!-- Subtitle Description -->
-    <p class="text-xs text-bgray-600 dark:text-bgray-400 -mt-2">
-        View relationships between external system records and PMS customers or projects.
-    </p>
 
     <!-- Table Content -->
     <div class="table-content w-full overflow-x-auto">
@@ -56,15 +52,15 @@
                     </td>
                     <td class="px-6 py-5 whitespace-nowrap">
                         @if($mapping->entity_type === 'customer')
-                            <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                            <span class="inline-flex items-center text-[12px] font-semibold text-blue-700 dark:text-blue-500">
                                 Customer
                             </span>
                         @elseif($mapping->entity_type === 'project')
-                            <span class="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-[11px] font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                            <span class="inline-flex items-center text-[12px] font-semibold text-purple-700 dark:text-purple-500">
                                 Project
                             </span>
                         @else
-                            <span class="inline-flex items-center rounded-full bg-bgray-100 px-2.5 py-0.5 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-400 dark:text-bgray-200">
+                            <span class="inline-flex items-center text-[12px] font-semibold text-bgray-800 dark:text-bgray-300">
                                 {{ ucfirst($mapping->entity_type) }}
                             </span>
                         @endif
@@ -106,7 +102,7 @@
                         @endif
                     </td>
                     <td class="pl-6 py-5 whitespace-nowrap text-right font-mono text-xs text-bgray-600 dark:text-bgray-300">
-                        {{ $mapping->created_at?->format('M d, Y H:i:s') ?? '-' }}
+                        @appDateTime($mapping->created_at)
                     </td>
                 </tr>
             @empty
