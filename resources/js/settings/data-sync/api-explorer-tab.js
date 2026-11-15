@@ -210,7 +210,7 @@ function initializeApiExplorer() {
 
         const label = document.createElement('span');
         label.className = required
-            ? 'rounded border border-error-200 px-1.5 py-0.5 text-[10px] font-bold text-error-400 dark:border-error-900/50'
+            ? 'rounded border border-error-200 px-1.5 py-0.5 text-[10px] font-bold text-error-300 dark:border-error-900/50'
             : 'rounded border border-bgray-200 px-1.5 py-0.5 text-[10px] font-bold text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300';
         label.textContent = required ? 'Required' : 'Optional';
         cell.appendChild(label);
@@ -267,11 +267,11 @@ function initializeApiExplorer() {
     function methodBadgeClasses(method) {
         const base = 'shrink-0 rounded border px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wider';
         const styles = {
-            GET: 'border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-            POST: 'border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-            PUT: 'border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-            PATCH: 'border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-            DELETE: 'border-rose-200 bg-rose-100 text-rose-700 dark:border-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+            GET: 'border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-300',
+            POST: 'border-success-300 text-success-300 dark:border-success-300 dark:text-success-300',
+            PUT: 'border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-300',
+            PATCH: 'border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-300',
+            DELETE: 'border-rose-200 text-rose-700 dark:border-rose-800 dark:text-rose-300',
         };
 
         return `${base} ${styles[method] || 'border-bgray-200 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300'}`;
@@ -547,7 +547,7 @@ function initializeApiExplorer() {
             const success = button.dataset.statusCode.startsWith('2');
             button.setAttribute('aria-pressed', String(active));
             button.className = active
-                ? `status-code-pill rounded border px-2 py-1 font-mono text-xs font-bold focus:outline-none focus:ring-2 focus:ring-success-300 ${success ? 'border-success-300 text-success-400' : 'border-error-300 text-error-400'}`
+                ? `status-code-pill rounded border px-2 py-1 font-mono text-xs font-bold focus:outline-none focus:ring-2 focus:ring-success-300 ${success ? 'border-success-300 text-success-400' : 'border-error-300 text-error-300'}`
                 : 'status-code-pill rounded border border-bgray-200 px-2 py-1 font-mono text-xs font-medium text-bgray-600 transition hover:text-bgray-900 focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-darkblack-400 dark:text-bgray-300';
         });
 
