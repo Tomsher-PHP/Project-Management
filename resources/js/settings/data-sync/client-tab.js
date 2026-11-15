@@ -1,4 +1,4 @@
-import Alert from '../alert';
+import Alert from '../../alert';
 
 $(document).ready(function () {
     // Only run if we are on the Data Sync Settings page
@@ -177,19 +177,6 @@ $(document).ready(function () {
                 btn.html(originalHtml).removeClass('bg-success-400');
             }, 2000);
         });
-    });
-
-    // Done button, Close button, or Outside click on One-Time modal
-    function closeOneTimeKeyModal() {
-        // Security requirement: completely clear plaintext from DOM
-        $('#one-time-key-value').val('');
-        $('#one-time-key-modal').addClass('hidden');
-        window.location.reload();
-    }
-
-    $(document).on('click', '#one-time-key-done-btn, #one-time-key-modal .modal-close', function (e) {
-        e.preventDefault();
-        closeOneTimeKeyModal();
     });
 
     // -------------------------------------------------------------------------
@@ -384,44 +371,5 @@ $(document).ready(function () {
         });
     });
 
-    // -------------------------------------------------------------------------
-    // 7. Modal Dismissal Handlers (Outside Click, Cancel, Close Button, Escape)
-    // -------------------------------------------------------------------------
-    // Generic Modal Close Handler (Cancel / ✕ buttons)
-    $(document).on('click', '.modal-close', function (e) {
-        e.preventDefault();
-        const modal = $(this).closest('.modal');
-        if (modal.attr('id') === 'one-time-key-modal') {
-            closeOneTimeKeyModal();
-        } else {
-            modal.addClass('hidden');
-        }
-    });
-
-    // Close on Outside Click (Clicking outside .modal-content)
-    $(document).on('click', '#create-client-modal, #edit-client-modal', function (e) {
-        if ($(e.target).closest('.modal-content').length === 0) {
-            $(this).addClass('hidden');
-        }
-    });
-
-    $(document).on('click', '#one-time-key-modal', function (e) {
-        if ($(e.target).closest('.modal-content').length === 0) {
-            closeOneTimeKeyModal();
-        }
-    });
-
-    // Close on Escape Key
-    $(document).on('keydown', function (e) {
-        if (e.key === 'Escape' || e.keyCode === 27) {
-            if ($('#one-time-key-modal').is(':visible')) {
-                closeOneTimeKeyModal();
-            } else if ($('#create-client-modal').is(':visible')) {
-                $('#create-client-modal').addClass('hidden');
-            } else if ($('#edit-client-modal').is(':visible')) {
-                $('#edit-client-modal').addClass('hidden');
-            }
-        }
-    });
 });
 

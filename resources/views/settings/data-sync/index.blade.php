@@ -24,7 +24,7 @@
 @endphp
 
 @section('page-content')
-    <div class="mb-6 flex flex-wrap items-center gap-3">
+    <div class="mb-6 flex flex-wrap items-center gap-3" data-data-sync-settings>
         <x-back-button :url="route('settings.index')" label="Back" />
 
         @if ($currentTab === 'clients')
@@ -93,86 +93,11 @@
 @endsection
 
 @push('scripts')
-<script>
-    (function () {
-        function closeOneTimeKeyModal() {
-            var input = document.getElementById('one-time-key-value');
-            if (input) input.value = '';
-            var modal = document.getElementById('one-time-key-modal');
-            if (modal) modal.classList.add('hidden');
-            window.location.reload();
-        }
+    @vite('resources/js/settings/data-sync/data-sync-settings.js')
 
-        // Close on Outside Click
-        document.addEventListener('click', function (e) {
-            var target = e.target;
-
-            // One-Time Key Modal Outside Click
-            var oneTimeModal = document.getElementById('one-time-key-modal');
-            if (oneTimeModal && !oneTimeModal.classList.contains('hidden')) {
-                if (!target.closest('.modal-content') && (target.closest('#one-time-key-modal') || target.classList.contains('modal-overlay'))) {
-                    closeOneTimeKeyModal();
-                    return;
-                }
-            }
-
-            // Create Client Modal Outside Click
-            var createModal = document.getElementById('create-client-modal');
-            if (createModal && !createModal.classList.contains('hidden')) {
-                if (!target.closest('.modal-content') && (target.closest('#create-client-modal') || target.classList.contains('modal-overlay'))) {
-                    createModal.classList.add('hidden');
-                    return;
-                }
-            }
-
-            // Edit Client Modal Outside Click
-            var editModal = document.getElementById('edit-client-modal');
-            if (editModal && !editModal.classList.contains('hidden')) {
-                if (!target.closest('.modal-content') && (target.closest('#edit-client-modal') || target.classList.contains('modal-overlay'))) {
-                    editModal.classList.add('hidden');
-                    return;
-                }
-            }
-
-            // Modal Close Buttons (Cancel / ✕ buttons)
-            var closeBtn = target.closest('.modal-close');
-            if (closeBtn) {
-                var parentModal = closeBtn.closest('.modal');
-                if (parentModal) {
-                    if (parentModal.id === 'one-time-key-modal') {
-                        closeOneTimeKeyModal();
-                    } else {
-                        parentModal.classList.add('hidden');
-                    }
-                }
-                return;
-            }
-
-            // Done Button on One-Time Key Modal
-            if (target.closest('#one-time-key-done-btn')) {
-                closeOneTimeKeyModal();
-            }
-        });
-
-        // Close on Escape Key
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' || e.keyCode === 27) {
-                var oneTimeModal = document.getElementById('one-time-key-modal');
-                if (oneTimeModal && !oneTimeModal.classList.contains('hidden')) {
-                    closeOneTimeKeyModal();
-                    return;
-                }
-                var createModal = document.getElementById('create-client-modal');
-                if (createModal && !createModal.classList.contains('hidden')) {
-                    createModal.classList.add('hidden');
-                    return;
-                }
-                var editModal = document.getElementById('edit-client-modal');
-                if (editModal && !editModal.classList.contains('hidden')) {
-                    editModal.classList.add('hidden');
-                }
-            }
-        });
-    })();
-</script>
+    @if ($currentTab === 'clients')
+        @vite('resources/js/settings/data-sync/client-tab.js')
+    @elseif ($currentTab === 'explorer')
+        @vite('resources/js/settings/data-sync/api-explorer-tab.js')
+    @endif
 @endpush

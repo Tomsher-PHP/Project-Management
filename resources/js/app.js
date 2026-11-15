@@ -26,7 +26,6 @@ import './modules/reimbursements/reimbursements';
 import './modules/tasks/developer-notes';
 import './modules/task-insights-modal';
 import './components/calendar';
-import './modules/data-sync-settings';
 
 import "tom-select/dist/css/tom-select.css";
 import 'quill/dist/quill.core.css';
