@@ -5,7 +5,7 @@
         <div class="modal-content relative z-10 w-full max-w-xl">
             <div class="overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-darkblack-600">
                 <!-- Modal Header -->
-                <div class="border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
+                <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                     <div class="flex items-center gap-2.5">
                         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-success-50 text-success-300 dark:bg-success-900/30">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -21,6 +21,10 @@
                             </p>
                         </div>
                     </div>
+
+                    <button type="button" class="modal-close inline-flex h-9 w-9 items-center justify-center rounded-lg bg-bgray-100 text-bgray-700 transition hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">
+                        ✕
+                    </button>
                 </div>
 
                 <!-- Modal Body -->
@@ -43,10 +47,10 @@
 
                     <!-- Permissions Summary -->
                     <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-400 mb-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 mb-2">
                             Assigned Permissions
                         </h4>
-                        <div id="one-time-key-scopes" class="flex flex-wrap gap-1.5">
+                        <div id="one-time-key-scopes" class="flex flex-wrap gap-1.5 text-bgray-700 dark:text-bgray-300">
                             <!-- Populated dynamically via JS -->
                         </div>
                     </div>
@@ -58,7 +62,7 @@
                     </div>
 
                     <!-- Critical Notice Box -->
-                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-warning dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
                         <div class="flex items-start gap-2">
                             <svg class="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -81,4 +85,3 @@
         </div>
     </div>
 </div>
-

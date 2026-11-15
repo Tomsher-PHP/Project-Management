@@ -453,5 +453,25 @@ class DataSyncSettingsApiClientTest extends TestCase
         $this->assertStringNotContainsString('supersecretstring', $response->getContent());
         $this->assertStringNotContainsString(hash('sha256', 'supersecretstring'), $response->getContent());
     }
+
+    public function test_27_revoke_endpoint_supports_delete_method_and_renders_delete_form(): void
+    {
+        $clientService = app(ApiClientService::class);
+        $res = $clientService->createClient('Delete Form App', ['settings.read']);
+        $client = $res['client'];
+
+        // 1. Verify view renders the delete form component
+        $pageResponse = $this->actingAs($this->deleteUser)->get(route('settings.data-sync.clients'));
+        $pageResponse->assertStatus(200);
+        $pageResponse->assertSee(route('settings.data-sync.clients.revoke', $client->id));
+        $pageResponse->assertSee('delete-form');
+        $pageResponse->assertSee('Revoke API Client?');
+
+        // 2. Submit DELETE request (as sent by delete-form component)
+        $deleteRes = $this->actingAs($this->deleteUser)->deleteJson(route('settings.data-sync.clients.revoke', $client->id));
+        $deleteRes->assertStatus(200);
+
+        $this->assertFalse($client->fresh()->is_active);
+    }
 }
 

@@ -61,7 +61,7 @@
                             <div class="space-y-3 rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/50">
                                 <!-- Settings Group -->
                                 <div>
-                                    <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-400 mb-2">
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 mb-2">
                                         Settings Masters
                                     </h4>
                                     <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -69,7 +69,7 @@
                                             <input type="checkbox" name="scopes[]" value="settings.read" class="edit-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
                                             <div class="text-xs">
                                                 <span class="font-semibold text-bgray-900 dark:text-white">settings.read</span>
-                                                <p class="text-bgray-500 dark:text-bgray-400">Read Technologies, Industries, Categories, Statuses</p>
+                                                <p class="text-bgray-700 dark:text-bgray-300">Read Technologies, Industries, Categories, Statuses</p>
                                             </div>
                                         </label>
 
@@ -148,4 +148,3 @@
         </div>
     </div>
 </div>
-

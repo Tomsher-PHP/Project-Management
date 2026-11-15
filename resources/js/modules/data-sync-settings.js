@@ -155,7 +155,7 @@ $(document).ready(function () {
         scopesContainer.empty();
         (data.scopes || []).forEach(scope => {
             scopesContainer.append(`
-                <span class="inline-flex items-center rounded border border-bgray-300 bg-bgray-100 px-2.5 py-0.5 text-xs font-mono font-medium text-bgray-800 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200">
+                <span class="inline-flex items-center rounded border border-bgray-300 bg-bgray-100 px-2.5 py-0.5 text-xs font-mono font-medium text-bgray-800 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                     ${scope}
                 </span>
             `);
@@ -179,12 +179,17 @@ $(document).ready(function () {
         });
     });
 
-    // Done button or Close button on One-Time modal
-    $('#one-time-key-done-btn, #one-time-key-modal .modal-close').on('click', function () {
+    // Done button, Close button, or Outside click on One-Time modal
+    function closeOneTimeKeyModal() {
         // Security requirement: completely clear plaintext from DOM
         $('#one-time-key-value').val('');
         $('#one-time-key-modal').addClass('hidden');
         window.location.reload();
+    }
+
+    $(document).on('click', '#one-time-key-done-btn, #one-time-key-modal .modal-close', function (e) {
+        e.preventDefault();
+        closeOneTimeKeyModal();
     });
 
     // -------------------------------------------------------------------------
@@ -379,9 +384,44 @@ $(document).ready(function () {
         });
     });
 
-    // Generic Modal Close Handler for Data Sync Modals
-    $(document).on('click', '.modal-close', function () {
-        $(this).closest('.modal').addClass('hidden');
+    // -------------------------------------------------------------------------
+    // 7. Modal Dismissal Handlers (Outside Click, Cancel, Close Button, Escape)
+    // -------------------------------------------------------------------------
+    // Generic Modal Close Handler (Cancel / ✕ buttons)
+    $(document).on('click', '.modal-close', function (e) {
+        e.preventDefault();
+        const modal = $(this).closest('.modal');
+        if (modal.attr('id') === 'one-time-key-modal') {
+            closeOneTimeKeyModal();
+        } else {
+            modal.addClass('hidden');
+        }
+    });
+
+    // Close on Outside Click (Clicking outside .modal-content)
+    $(document).on('click', '#create-client-modal, #edit-client-modal', function (e) {
+        if ($(e.target).closest('.modal-content').length === 0) {
+            $(this).addClass('hidden');
+        }
+    });
+
+    $(document).on('click', '#one-time-key-modal', function (e) {
+        if ($(e.target).closest('.modal-content').length === 0) {
+            closeOneTimeKeyModal();
+        }
+    });
+
+    // Close on Escape Key
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            if ($('#one-time-key-modal').is(':visible')) {
+                closeOneTimeKeyModal();
+            } else if ($('#create-client-modal').is(':visible')) {
+                $('#create-client-modal').addClass('hidden');
+            } else if ($('#edit-client-modal').is(':visible')) {
+                $('#edit-client-modal').addClass('hidden');
+            }
+        }
     });
 });
 

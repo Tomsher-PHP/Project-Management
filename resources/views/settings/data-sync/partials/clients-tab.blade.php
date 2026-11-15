@@ -55,7 +55,7 @@
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs text-bgray-500 dark:text-bgray-400">Created: {{ $client->created_at->format('M d, Y') }}</span>
+                            <span class="text-xs text-bgray-600 dark:text-bgray-400">Created: {{ $client->created_at->format($globalDateFormat) }}</span>
                         </div>
                     </td>
                     <td class="px-6 py-5 whitespace-nowrap">
@@ -71,7 +71,7 @@
                     <td class="px-6 py-5 whitespace-nowrap">
                         <div class="flex flex-wrap gap-1 max-w-xs">
                             @forelse($client->scopes ?? [] as $scope)
-                                <span class="inline-flex items-center rounded bg-bgray-100 px-2 py-0.5 font-mono text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
+                                <span class="inline-flex items-center rounded bg-bgray-100 px-2 py-0.5 font-mono text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                     {{ $scope }}
                                 </span>
                             @empty
@@ -80,24 +80,21 @@
                         </div>
                     </td>
                     <td class="px-6 py-5 whitespace-nowrap">
-                        @if($client->expires_at)
+                        @if ($client->expires_at)
                             <span class="text-sm {{ $isExpired ? 'text-error-400 font-semibold' : 'text-bgray-600 dark:text-bgray-300' }}">
-                                {{ $client->expires_at->format('M d, Y') }}
+                                {{ $client->expires_at->format($globalDateFormat) }}
                             </span>
                         @else
-                            <span class="text-sm text-bgray-500 dark:text-bgray-400">Never</span>
+                            <span class="text-sm text-bgray-600 dark:text-bgray-300">Never</span>
                         @endif
                     </td>
                     <td class="px-6 py-5 whitespace-nowrap">
-                        <div class="flex items-center gap-2">
+                        <div class="flex w-full items-center">
                             <x-status-toggle :model="$client" route="settings.data-sync.clients.toggle-status" :route-parameters="['client' => $client->id]" entity="API Client" permission="data_sync_settings.edit" />
-                            <span class="text-xs font-semibold {{ $client->is_active ? 'text-success-300' : 'text-bgray-500' }}">
-                                {{ $client->is_active ? 'Active' : 'Inactive' }}
-                            </span>
                         </div>
                     </td>
                     <td class="pl-6 py-5 whitespace-nowrap text-right">
-                        <div class="flex items-center justify-end space-x-3">
+                        <div class="flex items-center justify-end gap-2">
                             @can('data_sync_settings.edit')
                                 <x-edit-button action="javascript:void(0)" class="edit-client-btn" data-client-id="{{ $client->id }}" title="Edit API Client" />
 
@@ -109,12 +106,13 @@
                             @endcan
 
                             @can('data_sync_settings.delete')
-                                @if($client->is_active)
-                                    <button type="button" class="revoke-client-btn inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400 dark:hover:text-red-400 group" data-client-id="{{ $client->id }}" data-client-name="{{ $client->name }}" data-url="{{ route('settings.data-sync.clients.revoke', $client->id) }}" title="Revoke API Client">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                @if ($client->is_active)
+                                    <x-delete-form
+                                        :action="route('settings.data-sync.clients.revoke', $client->id)"
+                                        confirm-title="Revoke API Client?"
+                                        confirm-message="Revoking this API key will immediately disable authentication for &quot;{{ $client->name }}&quot;. Existing record mappings will be preserved. Are you sure you want to revoke this client?"
+                                        title="Revoke API Client"
+                                    />
                                 @endif
                             @endcan
                         </div>

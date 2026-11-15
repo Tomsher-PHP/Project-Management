@@ -39,10 +39,10 @@
                                 Integration Direction
                             </label>
                             <div class="flex items-center gap-2.5 rounded-lg border border-bgray-200 bg-bgray-50 px-3.5 py-2.5 text-sm text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
-                                <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold text-success-300 dark:text-success-400">
                                     Inbound
                                 </span>
-                                <span>External Application &rarr; PMS API endpoints</span>
+                                <span class="text-sm font-bold text-bgray-700 dark:text-bgray-300">External Application &rarr; PMS API endpoints</span>
                             </div>
                         </div>
 
@@ -69,7 +69,7 @@
                                             <input type="checkbox" name="scopes[]" value="settings.read" class="create-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
                                             <div class="text-xs">
                                                 <span class="font-semibold text-bgray-900 dark:text-white">settings.read</span>
-                                                <p class="text-bgray-500 dark:text-bgray-400">Read Technologies, Industries, Categories, Statuses</p>
+                                                <p class="text-bgray-700 dark:text-bgray-300">Read Technologies, Industries, Categories, Statuses</p>
                                             </div>
                                         </label>
 
@@ -77,7 +77,7 @@
                                             <input type="checkbox" name="scopes[]" value="settings.write" class="create-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
                                             <div class="text-xs">
                                                 <span class="font-semibold text-bgray-900 dark:text-white">settings.write</span>
-                                                <p class="text-bgray-500 dark:text-bgray-400">Create, update, toggle and delete Settings masters</p>
+                                                <p class="text-bgray-700 dark:text-bgray-300">Create, update, toggle and delete Settings masters</p>
                                             </div>
                                         </label>
                                     </div>
@@ -92,7 +92,7 @@
                                             <input type="checkbox" name="scopes[]" value="projects.write" class="create-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
                                             <div class="text-xs">
                                                 <span class="font-semibold text-bgray-900 dark:text-white">projects.write</span>
-                                                <p class="text-bgray-500 dark:text-bgray-400">Create & update Customers and Projects</p>
+                                                <p class="text-bgray-700 dark:text-bgray-300">Create & update Customers and Projects</p>
                                             </div>
                                         </label>
 
@@ -100,7 +100,7 @@
                                             <input type="checkbox" name="scopes[]" value="meetings.read" class="create-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
                                             <div class="text-xs">
                                                 <span class="font-semibold text-bgray-900 dark:text-white">meetings.read</span>
-                                                <p class="text-bgray-500 dark:text-bgray-400">Read scheduled active meetings</p>
+                                                <p class="text-bgray-700 dark:text-bgray-300">Read scheduled active meetings</p>
                                             </div>
                                         </label>
                                     </div>
@@ -148,4 +148,3 @@
         </div>
     </div>
 </div>
-

@@ -429,7 +429,7 @@ Route::middleware([
                 Route::match(['put', 'patch'], '/clients/{client}', 'updateClient')->middleware('permission.type:data_sync_settings.edit')->name('clients.update');
                 Route::patch('/clients/{client}/toggle-status', 'toggleStatus')->middleware('permission.type:data_sync_settings.edit')->name('clients.toggle-status');
                 Route::post('/clients/{client}/rotate', 'rotateKey')->middleware('permission.type:data_sync_settings.edit')->name('clients.rotate');
-                Route::post('/clients/{client}/revoke', 'revokeClient')->middleware('permission.type:data_sync_settings.delete')->name('clients.revoke');
+                Route::match(['post', 'delete'], '/clients/{client}/revoke', 'revokeClient')->middleware('permission.type:data_sync_settings.delete')->name('clients.revoke');
             });
         });
     });
