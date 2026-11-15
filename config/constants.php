@@ -107,4 +107,22 @@ return [
         'project_categories' => 'project_categories',
         'project_statuses'   => 'project_statuses',
     ],
+
+    // Data Sync API permissions displayed when creating or editing API clients
+    'data_sync_api_permissions' => [
+        'settings_masters' => [
+            'label' => 'Settings Masters',
+            'permissions' => [
+                'settings.read' => 'Read Technologies, Industries, Categories, Statuses',
+                'settings.write' => 'Create, update, toggle and delete Settings masters',
+            ],
+        ],
+        'operations' => [
+            'label' => 'Operations',
+            'permissions' => [
+                'projects.write' => 'Create & update Customers and Projects',
+                'meetings.read' => 'Read scheduled active meetings',
+            ],
+        ],
+    ],
 ];

@@ -59,52 +59,26 @@
                             </div>
 
                             <div class="space-y-3 rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/50">
-                                <!-- Settings Group -->
-                                <div>
-                                    <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 mb-2">
-                                        Settings Masters
-                                    </h4>
-                                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                                        <label class="flex items-start gap-2.5 p-2 rounded-md hover:bg-bgray-50 dark:hover:bg-darkblack-500 cursor-pointer">
-                                            <input type="checkbox" name="scopes[]" value="settings.read" class="edit-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
-                                            <div class="text-xs">
-                                                <span class="font-semibold text-bgray-900 dark:text-white">settings.read</span>
-                                                <p class="text-bgray-700 dark:text-bgray-300">Read Technologies, Industries, Categories, Statuses</p>
-                                            </div>
-                                        </label>
-
-                                        <label class="flex items-start gap-2.5 p-2 rounded-md hover:bg-bgray-50 dark:hover:bg-darkblack-500 cursor-pointer">
-                                            <input type="checkbox" name="scopes[]" value="settings.write" class="edit-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
-                                            <div class="text-xs">
-                                                <span class="font-semibold text-bgray-900 dark:text-white">settings.write</span>
-                                                <p class="text-bgray-500 dark:text-bgray-400">Create, update, toggle and delete Settings masters</p>
-                                            </div>
-                                        </label>
+                                @foreach (config('constants.data_sync_api_permissions', []) as $permissionGroup)
+                                    <div @class([
+                                        'border-t border-bgray-200 pt-3 dark:border-darkblack-400' => !$loop->first,
+                                    ])>
+                                        <h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
+                                            {{ $permissionGroup['label'] }}
+                                        </h4>
+                                        <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                            @foreach ($permissionGroup['permissions'] as $scope => $description)
+                                                <label class="flex cursor-pointer items-start gap-2.5 rounded-md p-2 hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                                                    <input type="checkbox" name="scopes[]" value="{{ $scope }}" class="edit-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
+                                                    <div class="text-xs">
+                                                        <span class="font-semibold text-bgray-900 dark:text-white">{{ $scope }}</span>
+                                                        <p class="text-bgray-700 dark:text-bgray-300">{{ $description }}</p>
+                                                    </div>
+                                                </label>
+                                            @endforeach
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div class="border-t border-bgray-200 dark:border-darkblack-400 pt-3">
-                                    <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-400 mb-2">
-                                        Operations
-                                    </h4>
-                                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                                        <label class="flex items-start gap-2.5 p-2 rounded-md hover:bg-bgray-50 dark:hover:bg-darkblack-500 cursor-pointer">
-                                            <input type="checkbox" name="scopes[]" value="projects.write" class="edit-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
-                                            <div class="text-xs">
-                                                <span class="font-semibold text-bgray-900 dark:text-white">projects.write</span>
-                                                <p class="text-bgray-500 dark:text-bgray-400">Create & update Customers and Projects</p>
-                                            </div>
-                                        </label>
-
-                                        <label class="flex items-start gap-2.5 p-2 rounded-md hover:bg-bgray-50 dark:hover:bg-darkblack-500 cursor-pointer">
-                                            <input type="checkbox" name="scopes[]" value="meetings.read" class="edit-scope-checkbox mt-0.5 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
-                                            <div class="text-xs">
-                                                <span class="font-semibold text-bgray-900 dark:text-white">meetings.read</span>
-                                                <p class="text-bgray-500 dark:text-bgray-400">Read scheduled active meetings</p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
+                                @endforeach
                             </div>
                             <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="scopes"></span>
                         </div>

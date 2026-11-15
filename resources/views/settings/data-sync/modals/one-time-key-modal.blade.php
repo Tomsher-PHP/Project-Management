@@ -7,7 +7,7 @@
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                     <div class="flex items-center gap-2.5">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-success-50 text-success-300 dark:bg-success-900/30">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full text-success-300">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
@@ -62,9 +62,9 @@
                     </div>
 
                     <!-- Critical Notice Box -->
-                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-warning dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+                    <div class="rounded-lg border border-amber-200 p-4 text-xs dark:border-amber-900 dark:text-amber-600">
                         <div class="flex items-start gap-2">
-                            <svg class="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <svg class="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-600 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <div>
