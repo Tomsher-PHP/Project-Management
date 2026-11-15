@@ -117,12 +117,12 @@
                             <div class="flex flex-col sm:flex-row gap-4">
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="radio" name="expiration_type" value="never" checked class="create-expiration-radio text-success-300 focus:ring-success-300 dark:bg-darkblack-500">
-                                    <span class="text-sm text-bgray-800 dark:text-bgray-200">Never Expires</span>
+                                    <span class="text-sm text-bgray-800 dark:text-bgray-300">Never Expires</span>
                                 </label>
 
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="radio" name="expiration_type" value="custom" class="create-expiration-radio text-success-300 focus:ring-success-300 dark:bg-darkblack-500">
-                                    <span class="text-sm text-bgray-800 dark:text-bgray-200">Set Expiration Date</span>
+                                    <span class="text-sm text-bgray-800 dark:text-bgray-300">Set Expiration Date</span>
                                 </label>
                             </div>
 

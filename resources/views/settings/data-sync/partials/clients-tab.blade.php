@@ -107,12 +107,7 @@
 
                             @can('data_sync_settings.delete')
                                 @if ($client->is_active)
-                                    <x-delete-form
-                                        :action="route('settings.data-sync.clients.revoke', $client->id)"
-                                        confirm-title="Revoke API Client?"
-                                        confirm-message="Revoking this API key will immediately disable authentication for &quot;{{ $client->name }}&quot;. Existing record mappings will be preserved. Are you sure you want to revoke this client?"
-                                        title="Revoke API Client"
-                                    />
+                                    <x-delete-form :action="route('settings.data-sync.clients.revoke', $client->id)" confirm-title="Revoke API Client?" confirm-message="Revoking this API key will immediately disable authentication for “{{ $client->name }}”. Existing record mappings will be preserved. Are you sure you want to revoke this client?" title="Revoke API Client" />
                                 @endif
                             @endcan
                         </div>
