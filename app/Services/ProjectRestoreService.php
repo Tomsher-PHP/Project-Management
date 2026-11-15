@@ -13,6 +13,7 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Models\SprintGroup;
 use App\Traits\ProjectHeaderTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -229,7 +230,10 @@ class ProjectRestoreService
             ->get();
 
         $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
-        $agileSprints = AgileSprint::active()->orderBy('sort_order', 'asc')->get();
+        $agileSprints = AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get();
+        $agileSprintGroups = SprintGroup::active()->with(['agileSprints' => function ($q) {
+            $q->active()->orderBy('sort_order', 'asc');
+        }])->orderBy('sort_order', 'asc')->get();
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
@@ -249,6 +253,7 @@ class ProjectRestoreService
             'projectMilestones' => $projectMilestones,
             'agileMilestones' => $agileMilestones,
             'agileSprints' => $agileSprints,
+            'agileSprintGroups' => $agileSprintGroups,
             'agileMilestoneStatuses' => $agileMilestoneStatuses,
             'assignableUsers' => $assignableUsers,
             'trashedProjectMilestones' => $trashedProjectMilestones,
