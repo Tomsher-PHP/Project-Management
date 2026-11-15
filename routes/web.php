@@ -588,7 +588,8 @@ Route::middleware([
         Route::get('milestones/{projectMilestone}/sprints', [ProjectRestoreController::class, 'milestoneSprints'])->name('projects.restore.milestones.sprints.index');
         Route::get('tasks/groups', [ProjectRestoreController::class, 'taskGroupsPage'])->name('projects.restore.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectRestoreController::class, 'taskGroup'])->name('projects.restore.tasks.groups.show');
-        Route::get('meetings/groups/{group}', [ProjectController::class, 'meetingGroup'])->name('projects.restore.meetings.groups.show');
+        Route::get('meetings/groups/{group}', [ProjectRestoreController::class, 'meetingGroup'])->name('projects.restore.meetings.groups.show');
+        Route::get('hosting', [ProjectRestoreController::class, 'hostingIndex'])->middleware('permission.type:project_hosting.view')->name('projects.restore.hosting.index');
     });
 
     // Project Import routes

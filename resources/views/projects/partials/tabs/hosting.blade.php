@@ -39,7 +39,10 @@
             ])
 
             <!-- Records List & Pagination Container -->
-            <div id="project-hosting-history" data-project-hosting-container data-index-url="{{ route('projects.hosting.index', $project) }}" class="relative min-h-[160px]">
+            @php
+                $hostingIndexUrl = $project->trashed() ? route('projects.restore.hosting.index', ['id' => $project->id]) : route('projects.hosting.index', $project);
+            @endphp
+            <div id="project-hosting-history" data-project-hosting-container data-index-url="{{ $hostingIndexUrl }}" class="relative min-h-[160px]">
                 @include('projects.partials.tabs.hosting.list', [
                     'project' => $project,
                     'hostingRecords' => $hostingRecords,

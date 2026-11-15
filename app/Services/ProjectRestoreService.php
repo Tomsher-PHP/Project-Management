@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Http\Controllers\ProjectChecklistController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectHostingController;
 use App\Http\Controllers\ProjectPaymentController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Models\AgileMilestone;
@@ -13,6 +15,7 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Models\ProjectTimeline;
 use App\Models\SprintGroup;
 use App\Traits\ProjectHeaderTrait;
 use Illuminate\Http\Request;
@@ -95,7 +98,10 @@ class ProjectRestoreService
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
             'notes' => $this->renderNotesTab($project, $request),
+            'meetings' => app(ProjectController::class)->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
+            'hosting' => app(ProjectHostingController::class)->renderHostingTab($project, $request),
+            'timelines' => app(ProjectController::class)->renderTimelinesTab($project),
             'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
@@ -343,6 +349,16 @@ class ProjectRestoreService
             })
             ->values();
 
+        // Project Tracking
+        $projectTrackings = $project->trackings()
+            ->with([
+                'attachments',
+                'attachments.addedBy:id,name',
+            ])
+            ->latest('date')
+            ->latest('id')
+            ->get();
+
         $currentStatus = [
             'label' => $project->projectStatus?->name ?? 'No Status',
             'color' => $project->projectStatus?->color ?: '#CBD5E1',
@@ -352,18 +368,48 @@ class ProjectRestoreService
             'color' => $project->projectStage?->color ?: '#CBD5E1',
         ];
 
+        $showTimelineHistory = $project->projectTimelines()->where('status', '!=', ProjectTimeline::STATUS_CANCELLED)->count() > 1;
+
+        $timelineHistory = collect();
+        if ($showTimelineHistory) {
+            $timelineHistory = $project->timelineHistories()
+                ->with(['addedBy:id,name', 'projectTimeline:id,name'])
+                ->get()
+                ->map(function ($history) {
+                    return [
+                        'timeline_name' => $history->projectTimeline?->name ?? 'Unknown Timeline',
+                        'from_label' => $history->from_status ? ucfirst(config('project_constants.project_timeline_statuses.' . $history->from_status, 'Unknown')) : 'Start',
+                        'from_color' => '#CBD5E1',
+                        'to_label' => ucfirst(config('project_constants.project_timeline_statuses.' . $history->status, 'Unknown')),
+                        'to_color' => '#CBD5E1',
+                        'changed_at' => $this->projectServices->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
+                        'changed_by' => $history->addedBy?->name ?? '--',
+                        'remarks' => $history->remarks,
+                    ];
+                })
+                ->values();
+        }
+
         return view('projects.partials.tabs.history', compact(
             'project',
             'statusHistory',
             'stageHistory',
             'currentStatus',
-            'currentStage'
+            'currentStage',
+            'projectTrackings',
+            'timelineHistory',
+            'showTimelineHistory'
         ))->render();
     }
 
     private function renderSettingsTab(Project $project): string
     {
-        return view('projects.partials.tabs.settings', compact('project'))->render();
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $preferences = $project->notificationPreferences()
+            ->get()
+            ->keyBy('notification_type');
+
+        return view('projects.partials.tabs.settings', compact('project', 'notificationTypes', 'preferences'))->render();
     }
 
     private function getPaginatedProjectNotes(Project $project, int $page)

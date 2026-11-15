@@ -3,6 +3,7 @@
     $canCustomerEndDate = auth()->user()->can('project.customer_end_date');
     $canChangeProjectStatus = !$isDeletedProject && auth()->user()->can('project.status_change');
     $canChangeProjectStage = !$isDeletedProject && auth()->user()->can('project.edit');
+    $canEditProject = !$isDeletedProject && auth()->user()->can('project.edit');
     $canAddProjectPayment = !$isDeletedProject && auth()->user()->can('project.add_payment_status');
     $canViewProjectPayment = auth()->user()->can('project.view_payment_status');
 
@@ -190,9 +191,9 @@
             @endif
 
             <div class="flex items-center gap-2">
-                @can('project.edit')
+                @if ($canEditProject)
                     <x-edit-button class="project-edit-btn" data-project="{{ json_encode($project) }}" title="Edit project" />
-                @endcan
+                @endif
 
                 <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-bgray-500 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-300 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-header-collapse-toggle aria-expanded="{{ $isExpanded ? 'true' : 'false' }}" aria-label="{{ $isExpanded ? 'Collapse project header details' : 'Expand project header details' }}">
                     <svg class="h-4 w-4 transition duration-200 {{ $isExpanded ? 'rotate-180' : '' }}" data-project-header-collapse-icon style="{{ $isExpanded ? 'transform: rotate(180deg);' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor">

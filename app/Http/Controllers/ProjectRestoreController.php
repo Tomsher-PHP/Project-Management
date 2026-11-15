@@ -126,6 +126,9 @@ class ProjectRestoreController extends Controller
             'history',
             'settings',
             'payments',
+            'meetings',
+            'hosting',
+            'timelines',
         ];
 
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
@@ -207,5 +210,21 @@ class ProjectRestoreController extends Controller
         $projectRestoreService->assertDeletedProject($project);
 
         return app(ProjectTaskController::class)->taskGroup($project, $group);
+    }
+
+    public function meetingGroup(Request $request, $id, string $group, ProjectRestoreService $projectRestoreService): JsonResponse
+    {
+        $project = $projectRestoreService->findDeletedProjectOrFail((int) $id);
+        $projectRestoreService->assertDeletedProject($project);
+
+        return app(ProjectController::class)->meetingGroup($request, $project, $group);
+    }
+
+    public function hostingIndex(Request $request, $id, ProjectRestoreService $projectRestoreService): JsonResponse
+    {
+        $project = $projectRestoreService->findDeletedProjectOrFail((int) $id);
+        $projectRestoreService->assertDeletedProject($project);
+
+        return app(ProjectHostingController::class)->index($request, $project);
     }
 }
