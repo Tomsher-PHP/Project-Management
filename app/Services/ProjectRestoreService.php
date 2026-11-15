@@ -9,13 +9,10 @@ use App\Http\Controllers\ProjectTaskController;
 use App\Models\AgileMilestone;
 use App\Models\AgileMilestoneStatus;
 use App\Models\AgileSprint;
-use App\Models\Project;
 use App\Models\Customer;
-use App\Models\ProjectCategory;
+use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
-use App\Models\Technology;
-use App\Providers\AppServiceProvider;
 use App\Traits\ProjectHeaderTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -50,13 +47,18 @@ class ProjectRestoreService
      */
     public function getDeletedProjects($perPage = 10)
     {
-        return Project::onlyTrashed()
+        $query = Project::onlyTrashed()
             ->accessibleBy(auth()->user())
             ->filter(request()->all())
-            ->sort(request()->all())
-            ->with(['customer.profileGrade', 'addedBy', 'teamLeader'])
-            ->orderByDesc('deleted_at')
-            ->paginate($perPage)
+            ->with(['customer.profileGrade', 'addedBy', 'teamLeader']);
+
+        if (request()->filled('sort_by')) {
+            $query->sort(request()->all());
+        } else {
+            $query->orderByDesc('deleted_at');
+        }
+
+        return $query->paginate($perPage)
             ->withQueryString();
     }
 
