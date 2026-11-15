@@ -77,13 +77,15 @@
                                     <x-view-button :action="route('projects.trackings.show', [$project, $tracking])" data-project-tracking-view data-tracking-id="{{ $tracking->id }}" title="View" />
                                 @endcan
 
-                                @can('project_tracking.edit')
-                                    <x-edit-button :action="route('projects.trackings.show', [$project, $tracking]) . '?mode=edit'" data-project-tracking-edit data-tracking-id="{{ $tracking->id }}" title="Edit" />
-                                @endcan
+                                @if (!$project->trashed())
+                                    @can('project_tracking.edit')
+                                        <x-edit-button :action="route('projects.trackings.show', [$project, $tracking]) . '?mode=edit'" data-project-tracking-edit data-tracking-id="{{ $tracking->id }}" title="Edit" />
+                                    @endcan
 
-                                @can('project_tracking.delete')
-                                    <x-delete-form :action="route('projects.trackings.destroy', [$project, $tracking])" :id="$tracking->id" ajax="true" render-target="#project-tracking-history" render-mode="replace_outer" form-class="project-tracking-delete-form" confirm-title="Delete Project Tracking" confirm-message="Are you sure you want to delete this project tracking entry?" data-project-tracking-delete title="Delete" />
-                                @endcan
+                                    @can('project_tracking.delete')
+                                        <x-delete-form :action="route('projects.trackings.destroy', [$project, $tracking])" :id="$tracking->id" ajax="true" render-target="#project-tracking-history" render-mode="replace_outer" form-class="project-tracking-delete-form" confirm-title="Delete Project Tracking" confirm-message="Are you sure you want to delete this project tracking entry?" data-project-tracking-delete title="Delete" />
+                                    @endcan
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -43,16 +43,18 @@
                 <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">
                     Keep track of servers, domains, SSL, database instances, and hosting services for this project.
                 </p>
-                @can('project_hosting.create')
-                    <div class="mt-4">
-                        <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-success-300 px-2 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-success-400" data-project-hosting-modal-open>
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                            <span>Add First Hosting Record</span>
-                        </button>
-                    </div>
-                @endcan
+                @if (!$project->trashed())
+                    @can('project_hosting.create')
+                        <div class="mt-4">
+                            <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-success-300 px-2 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-success-400" data-project-hosting-modal-open>
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span>Add First Hosting Record</span>
+                            </button>
+                        </div>
+                    @endcan
+                @endif
             @endif
         </div>
     @else
@@ -280,51 +282,53 @@
                                                 </button>
                                             @endcan
 
-                                            @can('project_hosting.edit')
-                                                <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-hosting-edit data-action="{{ route('projects.hosting.show', [$project, $record]) }}?mode=edit" data-hosting-id="{{ $record->id }}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                                                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
-                                                    </svg>
-                                                    <span>Edit Record</span>
-                                                </button>
+                                            @if (!$project->trashed())
+                                                @can('project_hosting.edit')
+                                                    <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-hosting-edit data-action="{{ route('projects.hosting.show', [$project, $record]) }}?mode=edit" data-hosting-id="{{ $record->id }}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
+                                                        </svg>
+                                                        <span>Edit Record</span>
+                                                    </button>
 
-                                                <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-hosting-renew data-action="{{ route('projects.hosting.renew', [$project, $record]) }}"
-                                                    data-record-json="{{ json_encode([
-                                                        'id' => $record->id,
-                                                        'name' => $record->name,
-                                                        'domain' => $record->domain,
-                                                        'expiry_date' => $record->expiry_date?->format('Y-m-d'),
-                                                        'expiry_date_formatted' => $record->expiry_date ? $record->expiry_date->format('d M Y') : '—',
-                                                        'start_date' => $record->start_date?->format('Y-m-d'),
-                                                        'hosting_billing_cycle_id' => $record->hosting_billing_cycle_id,
-                                                        'billing_amount' => $record->billing_amount,
-                                                        'currency_code' => $record->currency_code,
-                                                        'reference' => $record->reference,
-                                                        'renew_url' => route('projects.hosting.renew', [$project, $record]),
-                                                    ]) }}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                    </svg>
-                                                    <span>Renew</span>
-                                                </button>
-                                            @endcan
+                                                    <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-hosting-renew data-action="{{ route('projects.hosting.renew', [$project, $record]) }}"
+                                                        data-record-json="{{ json_encode([
+                                                            'id' => $record->id,
+                                                            'name' => $record->name,
+                                                            'domain' => $record->domain,
+                                                            'expiry_date' => $record->expiry_date?->format('Y-m-d'),
+                                                            'expiry_date_formatted' => $record->expiry_date ? $record->expiry_date->format('d M Y') : '—',
+                                                            'start_date' => $record->start_date?->format('Y-m-d'),
+                                                            'hosting_billing_cycle_id' => $record->hosting_billing_cycle_id,
+                                                            'billing_amount' => $record->billing_amount,
+                                                            'currency_code' => $record->currency_code,
+                                                            'reference' => $record->reference,
+                                                            'renew_url' => route('projects.hosting.renew', [$project, $record]),
+                                                        ]) }}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                        </svg>
+                                                        <span>Renew</span>
+                                                    </button>
+                                                @endcan
 
-                                            @can('project_hosting.delete')
-                                                <div class="my-1 border-t border-bgray-100 dark:border-darkblack-400"></div>
+                                                @can('project_hosting.delete')
+                                                    <div class="my-1 border-t border-bgray-100 dark:border-darkblack-400"></div>
 
-                                                <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-error-300 transition hover:bg-red-50 hover:text-red-600 dark:text-red-300 dark:hover:bg-darkblack-400 dark:hover:text-red-200" data-project-hosting-delete-trigger data-target-form="project-hosting-delete-form-{{ $record->id }}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M 6.496094 1 C 5.675781 1 5 1.675781 5 2.496094 L 5 3 L 2 3 L 2 4 L 3 4 L 3 12.5 C 3 13.328125 3.671875 14 4.5 14 L 10.5 14 C 11.328125 14 12 13.328125 12 12.5 L 12 4 L 13 4 L 13 3 L 10 3 L 10 2.496094 C 10 1.675781 9.324219 1 8.503906 1 Z M 6.496094 2 L 8.503906 2 C 8.785156 2 9 2.214844 9 2.496094 L 9 3 L 6 3 L 6 2.496094 C 6 2.214844 6.214844 2 6.496094 2 Z M 5 5 L 6 5 L 6 12 L 5 12 Z M 7 5 L 8 5 L 8 12 L 7 12 Z M 9 5 L 10 5 L 10 12 L 9 12 Z"></path>
-                                                    </svg>
-                                                    <span>Delete Record</span>
-                                                </button>
+                                                    <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-error-300 transition hover:bg-red-50 hover:text-red-600 dark:text-red-300 dark:hover:bg-darkblack-400 dark:hover:text-red-200" data-project-hosting-delete-trigger data-target-form="project-hosting-delete-form-{{ $record->id }}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path d="M 6.496094 1 C 5.675781 1 5 1.675781 5 2.496094 L 5 3 L 2 3 L 2 4 L 3 4 L 3 12.5 C 3 13.328125 3.671875 14 4.5 14 L 10.5 14 C 11.328125 14 12 13.328125 12 12.5 L 12 4 L 13 4 L 13 3 L 10 3 L 10 2.496094 C 10 1.675781 9.324219 1 8.503906 1 Z M 6.496094 2 L 8.503906 2 C 8.785156 2 9 2.214844 9 2.496094 L 9 3 L 6 3 L 6 2.496094 C 6 2.214844 6.214844 2 6.496094 2 Z M 5 5 L 6 5 L 6 12 L 5 12 Z M 7 5 L 8 5 L 8 12 L 7 12 Z M 9 5 L 10 5 L 10 12 L 9 12 Z"></path>
+                                                        </svg>
+                                                        <span>Delete Record</span>
+                                                    </button>
 
-                                                <form id="project-hosting-delete-form-{{ $record->id }}" action="{{ route('projects.hosting.destroy', [$project, $record]) }}" method="POST" class="delete-form project-hosting-delete-form hidden" data-id="{{ $record->id }}" data-ajax-delete="true" data-render-target="#project-hosting-history" data-render-mode="replace_inner" data-confirm-title="Delete Hosting Record" data-confirm-message="Are you sure you want to delete this hosting record?">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
-                                            @endcan
+                                                    <form id="project-hosting-delete-form-{{ $record->id }}" action="{{ route('projects.hosting.destroy', [$project, $record]) }}" method="POST" class="delete-form project-hosting-delete-form hidden" data-id="{{ $record->id }}" data-ajax-delete="true" data-render-target="#project-hosting-history" data-render-mode="replace_inner" data-confirm-title="Delete Hosting Record" data-confirm-message="Are you sure you want to delete this hosting record?">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                @endcan
+                                            @endif
                                         </div>
                                     </div>
                                 @endif

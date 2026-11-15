@@ -8,15 +8,17 @@
                 </h4>
             </div>
             <div class="flex gap-1">
-                @can('project_tracking.create')
-                    <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400" data-project-tracking-modal-open>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
+                @if (!$project->trashed())
+                    @can('project_tracking.create')
+                        <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400" data-project-tracking-modal-open>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
 
-                        <span>Add Tracking</span>
-                    </button>
-                @endcan
+                            <span>Add Tracking</span>
+                        </button>
+                    @endcan
+                @endif
 
                 @can('project_tracking.export')
                     <button type="button" id="bulk-export-project-trackings" data-url="{{ route('projects.trackings.bulk-export', $project) }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50" disabled>
