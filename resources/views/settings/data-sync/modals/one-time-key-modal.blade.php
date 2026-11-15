@@ -77,7 +77,7 @@
 
                 <!-- Modal Footer -->
                 <div class="flex items-center justify-end border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
-                    <button type="button" id="one-time-key-done-btn" class="inline-flex items-center justify-center rounded-lg bg-bgray-900 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-bgray-800 dark:bg-white dark:text-bgray-900 dark:hover:bg-bgray-100">
+                    <button type="button" id="one-time-key-done-btn" class="inline-flex items-center justify-center rounded-lg bg-success-300 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-success-400">
                         Done
                     </button>
                 </div>
