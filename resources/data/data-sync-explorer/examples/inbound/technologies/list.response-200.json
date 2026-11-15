@@ -1,0 +1,28 @@
+{
+    "success": true,
+    "message": "Records retrieved successfully.",
+    "data": [
+        {
+            "id": 1,
+            "name": "Laravel Framework",
+            "code": "500001",
+            "sort_order": 1,
+            "is_system": true,
+            "is_active": true
+        },
+        {
+            "id": 2,
+            "name": "React.js",
+            "code": "500002",
+            "sort_order": 2,
+            "is_system": false,
+            "is_active": true
+        }
+    ],
+    "pagination": {
+        "current_page": 1,
+        "per_page": 50,
+        "total": 2,
+        "last_page": 1
+    }
+}

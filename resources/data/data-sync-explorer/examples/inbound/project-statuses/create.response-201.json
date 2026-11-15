@@ -1,0 +1,16 @@
+{
+    "success": true,
+    "message": "Record created successfully.",
+    "data": {
+        "id": 14,
+        "name": "Under Quality Review",
+        "code": "100020",
+        "color": "#f59e0b",
+        "type": "in_progress",
+        "is_default": false,
+        "is_completed": false,
+        "sort_order": 15,
+        "is_system": false,
+        "is_active": true
+    }
+}

@@ -1,345 +1,693 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const registryEl = document.getElementById('data-sync-explorer-data');
-    if (!registryEl) return;
+export const EXPLORER_SECTIONS = ['headers', 'params', 'payload', 'responses', 'curl'];
+
+export function normalizeExplorerSearch(value) {
+    return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
+
+export function getExplorerSearchMatches(modules, value) {
+    const query = normalizeExplorerSearch(value);
+    const matches = {};
+
+    Object.entries(modules || {}).forEach(([moduleSlug, module]) => {
+        const operations = module.operations || {};
+        const moduleText = normalizeExplorerSearch([module.name, module.description].join(' '));
+        const moduleMatches = !query || moduleText.includes(query);
+        const operationKeys = Object.entries(operations)
+            .filter(([, operation]) => {
+                if (moduleMatches) return true;
+
+                const operationText = normalizeExplorerSearch([
+                    operation.name,
+                    operation.description,
+                    operation.method,
+                    operation.endpoint,
+                ].join(' '));
+
+                return operationText.includes(query);
+            })
+            .map(([operationKey]) => operationKey);
+
+        if (moduleMatches || operationKeys.length > 0) {
+            matches[moduleSlug] = operationKeys;
+        }
+    });
+
+    return matches;
+}
+
+export function resolveExplorerState(modules, searchParams, fallbackSection = 'headers') {
+    const moduleKeys = Object.keys(modules || {});
+    const requestedModule = searchParams.get('module');
+    const moduleSlug = requestedModule && modules[requestedModule]
+        ? requestedModule
+        : (moduleKeys[0] || '');
+    const operations = modules[moduleSlug]?.operations || {};
+    const operationKeys = Object.keys(operations);
+    const requestedOperation = searchParams.get('operation');
+    const operationKey = requestedOperation && operations[requestedOperation]
+        ? requestedOperation
+        : (operationKeys[0] || '');
+    const requestedSection = searchParams.get('section');
+    const section = EXPLORER_SECTIONS.includes(requestedSection)
+        ? requestedSection
+        : fallbackSection;
+
+    return { moduleSlug, operationKey, section };
+}
+
+export function buildExplorerUrl(currentUrl, explorerState) {
+    const url = new URL(currentUrl);
+    url.searchParams.set('module', explorerState.moduleSlug);
+    url.searchParams.set('operation', explorerState.operationKey);
+    url.searchParams.set('section', explorerState.section);
+
+    return url;
+}
+
+function initializeApiExplorer() {
+    const root = document.getElementById('api-explorer-root');
+    const registryElement = document.getElementById('data-sync-explorer-data');
+
+    if (!root || !registryElement || root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
 
     let explorerData = {};
     try {
-        explorerData = JSON.parse(registryEl.textContent || '{}');
+        explorerData = JSON.parse(registryElement.textContent || '{}');
     } catch (error) {
         console.error('Failed to parse Explorer registry data', error);
         return;
     }
 
     const modules = explorerData.modules || {};
-    let activeModuleSlug = 'technologies';
-    let activeOperationKey = 'list';
-    let activeSubtab = 'headers';
-    let activeResponseCode = '200';
+    const categories = explorerData.categories || {};
+    const moduleKeys = Object.keys(modules);
+    const copyTimers = new WeakMap();
 
-    // Clipboard copy helper
-    function copyText(text, button) {
-        if (!text) return;
+    const elements = {
+        content: document.getElementById('explorer-content'),
+        emptyState: document.getElementById('explorer-empty-state'),
+        operationDetails: document.getElementById('explorer-operation-details'),
+        operationEmpty: document.getElementById('explorer-operations-empty'),
+        operationContainer: document.getElementById('explorer-operations-container'),
+        mobileToggle: document.getElementById('explorer-mobile-nav-toggle'),
+        navigationBody: document.getElementById('explorer-navigation-body'),
+        searchInput: document.getElementById('explorer-search'),
+        searchClear: document.getElementById('explorer-search-clear'),
+        searchEmpty: document.getElementById('explorer-search-empty'),
+        searchEmptyClear: document.getElementById('explorer-search-empty-clear'),
+        copyStatus: document.getElementById('explorer-copy-status'),
+        moduleName: document.getElementById('explorer-module-name'),
+        moduleDescription: document.getElementById('explorer-module-desc'),
+        moduleCategory: document.getElementById('explorer-module-category-badge'),
+        operationTitle: document.getElementById('op-title'),
+        operationDescription: document.getElementById('op-description'),
+        methodBadge: document.getElementById('op-method-badge'),
+        fullUrl: document.getElementById('op-full-url'),
+        scopeBadge: document.getElementById('op-scope-badge'),
+        scopeDescription: document.getElementById('op-scope-desc'),
+        headersBody: document.getElementById('table-headers-body'),
+        pathBody: document.getElementById('table-path-params-body'),
+        queryBody: document.getElementById('table-query-params-body'),
+        pathContainer: document.getElementById('container-path-params'),
+        queryContainer: document.getElementById('container-query-params'),
+        paramsEmpty: document.getElementById('params-empty-notice'),
+        payloadWrapper: document.getElementById('payload-content-wrapper'),
+        payloadEmpty: document.getElementById('payload-empty-notice'),
+        payloadCode: document.getElementById('op-payload-code'),
+        responsePills: document.getElementById('response-status-pills'),
+        responseCode: document.getElementById('op-response-code'),
+        curlCode: document.getElementById('op-curl-code'),
+    };
 
-        const handleSuccess = () => {
-            const label = button.querySelector('.copy-label');
-            if (label) {
-                const originalLabel = label.textContent;
-                label.textContent = 'Copied!';
-                button.classList.add('text-success-300', 'border-success-300');
-                setTimeout(() => {
-                    label.textContent = originalLabel;
-                    button.classList.remove('text-success-300', 'border-success-300');
-                }, 1600);
-            }
-        };
+    let state = resolveExplorerState(modules, new URLSearchParams(window.location.search));
+    let activeResponseCode = '';
+    let searchQuery = '';
 
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(handleSuccess).catch(() => fallbackCopy(text, handleSuccess));
-        } else {
-            fallbackCopy(text, handleSuccess);
-        }
+    function announce(message) {
+        if (!elements.copyStatus) return;
+
+        elements.copyStatus.textContent = '';
+        window.requestAnimationFrame(() => {
+            elements.copyStatus.textContent = message;
+        });
     }
 
-    function fallbackCopy(text, onSuccess) {
+    function setCopyFeedback(button, succeeded) {
+        const label = button?.querySelector('.copy-label');
+        if (!label) return;
+
+        const originalLabel = button.dataset.copyLabel || label.textContent;
+        button.dataset.copyLabel = originalLabel;
+        label.textContent = succeeded ? 'Copied' : 'Copy failed';
+        button.classList.toggle('border-success-300', succeeded);
+        button.classList.toggle('text-success-400', succeeded);
+        announce(succeeded ? `${originalLabel} copied.` : `Unable to copy ${originalLabel.toLowerCase()}.`);
+
+        if (copyTimers.has(button)) {
+            window.clearTimeout(copyTimers.get(button));
+        }
+
+        copyTimers.set(button, window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.classList.remove('border-success-300', 'text-success-400');
+            copyTimers.delete(button);
+        }, 1600));
+    }
+
+    function fallbackCopy(text) {
         const textarea = document.createElement('textarea');
         textarea.value = text;
+        textarea.setAttribute('readonly', '');
         textarea.style.position = 'fixed';
         textarea.style.opacity = '0';
         document.body.appendChild(textarea);
-        textarea.focus();
         textarea.select();
 
+        let copied = false;
         try {
-            document.execCommand('copy');
-            if (onSuccess) onSuccess();
+            copied = document.execCommand('copy');
         } catch (error) {
             console.error('Fallback copy failed', error);
+        } finally {
+            textarea.remove();
         }
 
-        document.body.removeChild(textarea);
+        return copied;
     }
 
-    // Set up module selection
-    function selectModule(slug) {
-        if (!modules[slug]) {
-            slug = Object.keys(modules)[0];
+    async function copyText(text, button) {
+        if (!text) {
+            setCopyFeedback(button, false);
+            return;
         }
 
-        activeModuleSlug = slug;
-        const module = modules[slug];
-        if (!module) return;
-
-        // Highlight module in left sidebar
-        document.querySelectorAll('.explorer-module-btn').forEach(button => {
-            const buttonSlug = button.getAttribute('data-module-slug');
-            const countBadge = button.querySelector('.explorer-op-count');
-
-            if (buttonSlug === slug) {
-                button.className = 'explorer-module-btn w-full text-left flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold bg-success-300 text-white shadow-sm transition duration-150';
-                if (countBadge) {
-                    countBadge.className = 'explorer-op-count text-[11px] px-1.5 py-0.5 rounded font-mono bg-white/20 text-white';
-                }
+        let copied = false;
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                copied = true;
             } else {
-                button.className = 'explorer-module-btn w-full text-left flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium text-bgray-700 hover:bg-bgray-100 dark:text-bgray-200 dark:hover:bg-darkblack-600 transition duration-150';
-                if (countBadge) {
-                    countBadge.className = 'explorer-op-count text-[11px] px-1.5 py-0.5 rounded font-mono bg-bgray-100 text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300';
-                }
+                copied = fallbackCopy(text);
             }
-        });
+        } catch (error) {
+            copied = fallbackCopy(text);
+        }
 
-        // Header info
-        document.getElementById('explorer-module-name').textContent = module.name;
-        document.getElementById('explorer-module-desc').textContent = module.description;
-        document.getElementById('explorer-module-category-badge').textContent = module.category;
+        setCopyFeedback(button, copied);
+    }
 
-        // Render operations pills
-        const operationContainer = document.getElementById('explorer-operations-container');
-        operationContainer.innerHTML = '';
-        const operationKeys = Object.keys(module.operations || {});
+    function createTextCell(value, className = '') {
+        const cell = document.createElement('td');
+        cell.className = `px-3 py-2.5 ${className}`;
+        cell.textContent = value ?? '-';
+        return cell;
+    }
 
-        operationKeys.forEach(operationKey => {
-            const operation = module.operations[operationKey];
-            const operationButton = document.createElement('button');
-            operationButton.type = 'button';
-            operationButton.setAttribute('data-operation-key', operationKey);
-            operationButton.className = 'explorer-op-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition duration-150';
+    function createRequirementCell(required) {
+        const cell = document.createElement('td');
+        cell.className = 'px-3 py-2.5';
 
-            const methodLabel = document.createElement('span');
-            methodLabel.className = 'text-[10px] font-mono font-bold uppercase';
-            methodLabel.textContent = operation.method;
+        const label = document.createElement('span');
+        label.className = required
+            ? 'rounded border border-error-200 px-1.5 py-0.5 text-[10px] font-bold text-error-400 dark:border-error-900/50'
+            : 'rounded border border-bgray-200 px-1.5 py-0.5 text-[10px] font-bold text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300';
+        label.textContent = required ? 'Required' : 'Optional';
+        cell.appendChild(label);
 
-            const nameLabel = document.createElement('span');
-            nameLabel.textContent = operation.name;
+        return cell;
+    }
 
-            operationButton.appendChild(methodLabel);
-            operationButton.appendChild(nameLabel);
-            operationButton.addEventListener('click', function () {
-                selectOperation(operationKey);
+    function appendEmptyTableRow(body, columnCount, message) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = columnCount;
+        cell.className = 'px-3 py-5 text-center text-xs text-bgray-600 dark:text-bgray-300';
+        cell.textContent = message;
+        row.appendChild(cell);
+        body.appendChild(row);
+    }
+
+    function renderJson(codeElement, json) {
+        codeElement.replaceChildren();
+        const source = String(json || '{}');
+        const tokenPattern = /("(?:\\.|[^"\\])*")(?=\s*:)|("(?:\\.|[^"\\])*")|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\btrue\b|\bfalse\b|\bnull\b/g;
+        let cursor = 0;
+        let match;
+
+        while ((match = tokenPattern.exec(source)) !== null) {
+            if (match.index > cursor) {
+                codeElement.appendChild(document.createTextNode(source.slice(cursor, match.index)));
+            }
+
+            const token = document.createElement('span');
+            token.textContent = match[0];
+
+            if (match[1]) {
+                token.className = 'text-sky-300';
+            } else if (match[2]) {
+                token.className = 'text-emerald-300';
+            } else if (match[0] === 'true' || match[0] === 'false') {
+                token.className = 'text-violet-300';
+            } else if (match[0] === 'null') {
+                token.className = 'text-bgray-300';
+            } else {
+                token.className = 'text-amber-300';
+            }
+
+            codeElement.appendChild(token);
+            cursor = tokenPattern.lastIndex;
+        }
+
+        if (cursor < source.length) {
+            codeElement.appendChild(document.createTextNode(source.slice(cursor)));
+        }
+    }
+
+    function methodBadgeClasses(method) {
+        const base = 'shrink-0 rounded border px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wider';
+        const styles = {
+            GET: 'border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+            POST: 'border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+            PUT: 'border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+            PATCH: 'border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+            DELETE: 'border-rose-200 bg-rose-100 text-rose-700 dark:border-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+        };
+
+        return `${base} ${styles[method] || 'border-bgray-200 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300'}`;
+    }
+
+    function updateUrl(mode = 'push') {
+        if (!state.moduleSlug || !state.operationKey) return;
+
+        const url = buildExplorerUrl(window.location.href, state);
+
+        const method = mode === 'replace' ? 'replaceState' : 'pushState';
+        window.history[method]({ dataSyncExplorer: true }, '', url);
+    }
+
+    function closeMobileNavigation() {
+        if (!window.matchMedia('(max-width: 1023px)').matches) return;
+
+        elements.navigationBody?.classList.add('hidden');
+        elements.mobileToggle?.setAttribute('aria-expanded', 'false');
+    }
+
+    function updateSidebarState() {
+        const matches = getExplorerSearchMatches(modules, searchQuery);
+
+        root.querySelectorAll('[data-explorer-module-item]').forEach((moduleItem) => {
+            const moduleSlug = moduleItem.dataset.moduleSlug;
+            const operationMatches = matches[moduleSlug] || [];
+            const isVisible = Object.hasOwn(matches, moduleSlug);
+            const isActive = moduleSlug === state.moduleSlug;
+            const moduleButton = moduleItem.querySelector('.explorer-module-btn');
+            const operationList = moduleItem.querySelector('.explorer-module-operations');
+
+            moduleItem.hidden = !isVisible;
+            moduleButton?.setAttribute('aria-expanded', String(Boolean(searchQuery) || isActive));
+            moduleButton?.setAttribute('aria-current', isActive ? 'true' : 'false');
+            operationList?.classList.toggle('hidden', !searchQuery && !isActive);
+
+            if (moduleButton) {
+                moduleButton.className = isActive
+                    ? 'explorer-module-btn flex min-h-10 w-full items-center justify-between rounded-lg border-l-2 border-success-300 bg-bgray-50 px-3 py-2.5 text-left text-xs font-semibold text-bgray-900 transition focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-darkblack-600 dark:text-bgray-300'
+                    : 'explorer-module-btn flex min-h-10 w-full items-center justify-between rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-xs font-medium text-bgray-700 transition hover:bg-bgray-50 focus:outline-none focus:ring-2 focus:ring-success-300 dark:text-bgray-300 dark:hover:bg-darkblack-600';
+            }
+
+            moduleItem.querySelectorAll('[data-explorer-operation-item]').forEach((operationItem) => {
+                const operationKey = operationItem.dataset.operationKey;
+                const operationButton = operationItem.querySelector('.explorer-sidebar-operation');
+                const operationVisible = !searchQuery || operationMatches.includes(operationKey);
+                const operationActive = isActive && operationKey === state.operationKey;
+
+                operationItem.hidden = !operationVisible;
+                if (operationButton) {
+                    operationButton.setAttribute('aria-current', operationActive ? 'true' : 'false');
+                    operationButton.className = operationActive
+                        ? 'explorer-sidebar-operation flex min-h-9 w-full items-center gap-2 rounded bg-bgray-50 px-2 py-1.5 text-left text-xs font-semibold text-success-400 focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-darkblack-600'
+                        : 'explorer-sidebar-operation flex min-h-9 w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-bgray-600 transition hover:text-bgray-900 focus:outline-none focus:ring-2 focus:ring-success-300 dark:text-bgray-300';
+                }
             });
-
-            operationContainer.appendChild(operationButton);
         });
 
-        // Default to first operation in the module
-        selectOperation(operationKeys[0] || '');
+        root.querySelectorAll('[data-explorer-category]').forEach((category) => {
+            category.hidden = ![...category.querySelectorAll('[data-explorer-module-item]')]
+                .some((item) => !item.hidden);
+        });
+
+        const hasMatches = Object.keys(matches).length > 0;
+        if (elements.searchEmpty) elements.searchEmpty.hidden = hasMatches;
+        if (elements.searchClear) elements.searchClear.hidden = !searchQuery;
     }
 
-    // Set up operation selection
-    function selectOperation(operationKey) {
-        const module = modules[activeModuleSlug];
-        if (!module || !module.operations || !module.operations[operationKey]) return;
+    function renderOperations(module) {
+        elements.operationContainer.replaceChildren();
+        const operationKeys = Object.keys(module.operations || {});
+        elements.operationEmpty.hidden = operationKeys.length > 0;
+        elements.operationDetails.hidden = operationKeys.length === 0;
 
-        activeOperationKey = operationKey;
-        const operation = module.operations[operationKey];
+        operationKeys.forEach((operationKey) => {
+            const operation = module.operations[operationKey];
+            const button = document.createElement('button');
+            const method = document.createElement('span');
+            const label = document.createElement('span');
+            const isActive = operationKey === state.operationKey;
 
-        // Highlight active operation pill
-        document.querySelectorAll('.explorer-op-pill').forEach(button => {
-            const key = button.getAttribute('data-operation-key');
-            if (key === operationKey) {
-                button.className = 'explorer-op-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-success-300 text-white shadow-sm transition duration-150';
-            } else {
-                button.className = 'explorer-op-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-bgray-100 text-bgray-700 hover:bg-bgray-200 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:bg-darkblack-400 transition duration-150';
-            }
+            button.type = 'button';
+            button.dataset.operationKey = operationKey;
+            button.setAttribute('aria-pressed', String(isActive));
+            button.className = isActive
+                ? 'explorer-op-pill inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-success-300 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-900 focus:outline-none focus:ring-2 focus:ring-success-300 dark:bg-darkblack-600 dark:text-bgray-300'
+                : 'explorer-op-pill inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-bgray-200 px-3 py-1.5 text-xs font-medium text-bgray-700 transition hover:border-success-300 focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-darkblack-400 dark:text-bgray-300';
+
+            method.className = 'font-mono text-[10px] font-bold uppercase';
+            method.textContent = operation.method;
+            label.textContent = operation.name;
+
+            button.append(method, label);
+            button.addEventListener('click', () => {
+                applyState({
+                    moduleSlug: state.moduleSlug,
+                    operationKey,
+                    section: state.section,
+                }, 'push');
+            });
+            elements.operationContainer.appendChild(button);
         });
+    }
 
-        // Populate operation top details
-        document.getElementById('op-title').textContent = operation.name;
-        document.getElementById('op-description').textContent = operation.description;
+    function renderHeaders(headers) {
+        elements.headersBody.replaceChildren();
 
-        // Method badge colors
-        const methodBadge = document.getElementById('op-method-badge');
-        methodBadge.textContent = operation.method;
-        const method = (operation.method || 'GET').toUpperCase();
-        if (method === 'GET') {
-            methodBadge.className = 'px-2.5 py-1 text-xs font-bold rounded font-mono uppercase tracking-wider shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
-        } else if (method === 'POST') {
-            methodBadge.className = 'px-2.5 py-1 text-xs font-bold rounded font-mono uppercase tracking-wider shrink-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
-        } else if (method === 'PUT' || method === 'PATCH') {
-            methodBadge.className = 'px-2.5 py-1 text-xs font-bold rounded font-mono uppercase tracking-wider shrink-0 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
-        } else if (method === 'DELETE') {
-            methodBadge.className = 'px-2.5 py-1 text-xs font-bold rounded font-mono uppercase tracking-wider shrink-0 bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+        if (!headers.length) {
+            appendEmptyTableRow(elements.headersBody, 4, 'No request headers are documented.');
+            return;
         }
 
-        document.getElementById('op-full-url').textContent = operation.full_url;
-        document.getElementById('op-scope-badge').textContent = operation.scope || 'none';
-        document.getElementById('op-scope-desc').textContent = operation.scope_description || '';
-
-        // Headers table
-        const headersBody = document.getElementById('table-headers-body');
-        headersBody.innerHTML = '';
-        (operation.headers || []).forEach(header => {
+        headers.forEach((header) => {
             const row = document.createElement('tr');
             row.className = 'hover:bg-bgray-50 dark:hover:bg-darkblack-600/50';
-            row.innerHTML = `
-                <td class="py-2.5 px-3 font-mono font-semibold text-bgray-900 dark:text-white">${header.name}</td>
-                <td class="py-2.5 px-3 font-mono text-bgray-700 dark:text-bgray-300">${header.value}</td>
-                <td class="py-2.5 px-3"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${header.required ? 'bg-error-50 text-error-400 dark:bg-error-900/30' : 'bg-bgray-100 text-bgray-500 dark:bg-darkblack-400'}">${header.required ? 'Required' : 'Optional'}</span></td>
-                <td class="py-2.5 px-3 text-bgray-600 dark:text-bgray-300">${header.note || '-'}</td>
-            `;
-            headersBody.appendChild(row);
+            row.append(
+                createTextCell(header.name, 'font-mono font-semibold text-bgray-900 dark:text-bgray-300'),
+                createTextCell(header.value, 'font-mono text-bgray-700 dark:text-bgray-300'),
+                createRequirementCell(Boolean(header.required)),
+                createTextCell(header.note || '-', 'text-bgray-600 dark:text-bgray-300'),
+            );
+            elements.headersBody.appendChild(row);
+        });
+    }
+
+    function renderParameters(operation) {
+        const pathParameters = operation.path_params || [];
+        const queryParameters = operation.query_params || [];
+
+        elements.pathBody.replaceChildren();
+        elements.queryBody.replaceChildren();
+        elements.pathContainer.classList.toggle('hidden', pathParameters.length === 0);
+        elements.queryContainer.classList.toggle('hidden', queryParameters.length === 0);
+        elements.paramsEmpty.classList.toggle('hidden', pathParameters.length + queryParameters.length > 0);
+
+        pathParameters.forEach((parameter) => {
+            const row = document.createElement('tr');
+            row.append(
+                createTextCell(parameter.name, 'font-mono font-semibold text-bgray-900 dark:text-bgray-300'),
+                createTextCell(parameter.type, 'font-mono text-bgray-600 dark:text-bgray-300'),
+                createRequirementCell(Boolean(parameter.required)),
+                createTextCell(parameter.example || '-', 'font-mono text-bgray-700 dark:text-bgray-300'),
+                createTextCell(parameter.description, 'text-bgray-600 dark:text-bgray-300'),
+            );
+            elements.pathBody.appendChild(row);
         });
 
-        // Parameters tables
-        const pathBody = document.getElementById('table-path-params-body');
-        pathBody.innerHTML = '';
-        const pathParams = operation.path_params || [];
-        if (pathParams.length > 0) {
-            document.getElementById('container-path-params').classList.remove('hidden');
-            pathParams.forEach(parameter => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="py-2.5 px-3 font-mono font-semibold text-bgray-900 dark:text-white">${parameter.name}</td>
-                    <td class="py-2.5 px-3 font-mono text-bgray-600 dark:text-bgray-300">${parameter.type}</td>
-                    <td class="py-2.5 px-3"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${parameter.required ? 'bg-error-50 text-error-400' : 'bg-bgray-100 text-bgray-500'}">${parameter.required ? 'Required' : 'Optional'}</span></td>
-                    <td class="py-2.5 px-3 font-mono text-bgray-700 dark:text-bgray-300">${parameter.example || '-'}</td>
-                    <td class="py-2.5 px-3 text-bgray-600 dark:text-bgray-300">${parameter.description}</td>
-                `;
-                pathBody.appendChild(row);
-            });
-        } else {
-            document.getElementById('container-path-params').classList.add('hidden');
-        }
+        queryParameters.forEach((parameter) => {
+            const row = document.createElement('tr');
+            row.append(
+                createTextCell(parameter.name, 'font-mono font-semibold text-bgray-900 dark:text-bgray-300'),
+                createTextCell(parameter.type, 'font-mono text-bgray-600 dark:text-bgray-300'),
+                createTextCell(parameter.default || '-', 'font-mono text-bgray-700 dark:text-bgray-300'),
+                createTextCell(parameter.description, 'text-bgray-600 dark:text-bgray-300'),
+            );
+            elements.queryBody.appendChild(row);
+        });
+    }
 
-        const queryBody = document.getElementById('table-query-params-body');
-        queryBody.innerHTML = '';
-        const queryParams = operation.query_params || [];
-        if (queryParams.length > 0) {
-            document.getElementById('container-query-params').classList.remove('hidden');
-            queryParams.forEach(parameter => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="py-2.5 px-3 font-mono font-semibold text-bgray-900 dark:text-white">${parameter.name}</td>
-                    <td class="py-2.5 px-3 font-mono text-bgray-600 dark:text-bgray-300">${parameter.type}</td>
-                    <td class="py-2.5 px-3 font-mono text-bgray-700 dark:text-bgray-300">${parameter.default || '-'}</td>
-                    <td class="py-2.5 px-3 text-bgray-600 dark:text-bgray-300">${parameter.description}</td>
-                `;
-                queryBody.appendChild(row);
-            });
-        } else {
-            document.getElementById('container-query-params').classList.add('hidden');
-        }
+    function renderResponses(operation) {
+        elements.responsePills.replaceChildren();
+        const successStatus = String(operation.response_success?.status || 200);
+        const statuses = [
+            [successStatus, 'Success'],
+            ...Object.keys(operation.formatted_error_responses || {}).map((code) => [String(code), 'Error']),
+        ];
 
-        const noParams = pathParams.length === 0 && queryParams.length === 0;
-        document.getElementById('params-empty-notice').classList.toggle('hidden', !noParams);
-
-        // Payload
-        const hasPayload = !!operation.formatted_payload;
-        document.getElementById('payload-content-wrapper').classList.toggle('hidden', !hasPayload);
-        document.getElementById('payload-empty-notice').classList.toggle('hidden', hasPayload);
-        if (hasPayload) {
-            document.getElementById('op-payload-code').textContent = operation.formatted_payload;
-        }
-
-        // Responses
-        const pillsContainer = document.getElementById('response-status-pills');
-        pillsContainer.innerHTML = '';
-
-        const successStatus = (operation.response_success && operation.response_success.status) || 200;
-        const successButton = document.createElement('button');
-        successButton.type = 'button';
-        successButton.setAttribute('data-status-code', String(successStatus));
-        successButton.className = 'status-code-pill px-2 py-0.5 rounded text-xs font-mono font-semibold transition';
-        successButton.textContent = `${successStatus} Success`;
-        successButton.addEventListener('click', () => switchResponseStatus(String(successStatus)));
-        pillsContainer.appendChild(successButton);
-
-        const errors = operation.formatted_error_responses || {};
-        Object.keys(errors).forEach(errorCode => {
-            const errorButton = document.createElement('button');
-            errorButton.type = 'button';
-            errorButton.setAttribute('data-status-code', String(errorCode));
-            errorButton.className = 'status-code-pill px-2 py-0.5 rounded text-xs font-mono font-semibold transition';
-            errorButton.textContent = `${errorCode} Error`;
-            errorButton.addEventListener('click', () => switchResponseStatus(String(errorCode)));
-            pillsContainer.appendChild(errorButton);
+        statuses.forEach(([statusCode, label]) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.statusCode = statusCode;
+            button.className = 'status-code-pill rounded border px-2 py-1 font-mono text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-success-300';
+            button.textContent = `${statusCode} ${label}`;
+            button.addEventListener('click', () => switchResponseStatus(statusCode));
+            elements.responsePills.appendChild(button);
         });
 
-        switchResponseStatus(String(successStatus));
-        document.getElementById('op-curl-code').textContent = operation.curl_command || '';
+        switchResponseStatus(successStatus);
+    }
+
+    function updateTabCounts(operation) {
+        const counts = {
+            headers: (operation.headers || []).length,
+            params: (operation.path_params || []).length + (operation.query_params || []).length,
+            payload: operation.formatted_payload ? 1 : 0,
+            responses: 1 + Object.keys(operation.formatted_error_responses || {}).length,
+        };
+
+        root.querySelectorAll('[data-tab-count]').forEach((element) => {
+            const count = counts[element.dataset.tabCount];
+            element.textContent = Number.isInteger(count) ? String(count) : '';
+        });
+    }
+
+    function renderOperation(operation) {
+        elements.operationTitle.textContent = operation.name || '';
+        elements.operationDescription.textContent = operation.description || '';
+
+        const method = String(operation.method || 'GET').toUpperCase();
+        elements.methodBadge.textContent = method;
+        elements.methodBadge.className = methodBadgeClasses(method);
+        elements.fullUrl.textContent = operation.full_url || '';
+        elements.scopeBadge.textContent = operation.scope || 'none';
+        elements.scopeDescription.textContent = operation.scope_description || '';
+
+        renderHeaders(operation.headers || []);
+        renderParameters(operation);
+
+        const hasPayload = Boolean(operation.formatted_payload);
+        elements.payloadWrapper.classList.toggle('hidden', !hasPayload);
+        elements.payloadEmpty.classList.toggle('hidden', hasPayload);
+        renderJson(elements.payloadCode, operation.formatted_payload || '{}');
+
+        renderResponses(operation);
+        elements.curlCode.textContent = operation.curl_command || '';
+        updateTabCounts(operation);
+    }
+
+    function renderCurrentState() {
+        const module = modules[state.moduleSlug];
+        const operation = module?.operations?.[state.operationKey];
+
+        if (!module) return;
+
+        elements.moduleName.textContent = module.name || '';
+        elements.moduleDescription.textContent = module.description || '';
+        elements.moduleCategory.textContent = categories[module.category]?.name || module.category || '';
+        renderOperations(module);
+
+        if (operation) {
+            renderOperation(operation);
+        }
+
+        updateSidebarState();
+        switchSubtab(state.section, false);
+    }
+
+    function applyState(nextState, historyMode = null) {
+        const module = modules[nextState.moduleSlug];
+        if (!module) return;
+
+        const operationKeys = Object.keys(module.operations || {});
+        const operationKey = module.operations?.[nextState.operationKey]
+            ? nextState.operationKey
+            : (operationKeys[0] || '');
+        const section = EXPLORER_SECTIONS.includes(nextState.section)
+            ? nextState.section
+            : 'headers';
+
+        state = { moduleSlug: nextState.moduleSlug, operationKey, section };
+        renderCurrentState();
+
+        if (historyMode) updateUrl(historyMode);
     }
 
     function switchResponseStatus(statusCode) {
+        const operation = modules[state.moduleSlug]?.operations?.[state.operationKey];
+        if (!operation) return;
+
+        const successStatus = String(operation.response_success?.status || 200);
+        const errors = operation.formatted_error_responses || {};
+        const isSuccess = statusCode === successStatus;
+        const response = isSuccess
+            ? operation.formatted_success_response
+            : errors[statusCode];
+
+        if (!response) return;
         activeResponseCode = statusCode;
-        const module = modules[activeModuleSlug];
-        const operation = module.operations[activeOperationKey];
 
-        document.querySelectorAll('.status-code-pill').forEach(button => {
-            const code = button.getAttribute('data-status-code');
-            if (code === statusCode) {
-                if (code.startsWith('2')) {
-                    button.className = 'status-code-pill px-2 py-0.5 rounded text-xs font-mono font-bold bg-success-300 text-white shadow-sm';
-                } else {
-                    button.className = 'status-code-pill px-2 py-0.5 rounded text-xs font-mono font-bold bg-error-300 text-white shadow-sm';
-                }
-            } else {
-                button.className = 'status-code-pill px-2 py-0.5 rounded text-xs font-mono font-medium bg-bgray-100 text-bgray-600 hover:bg-bgray-200 dark:bg-darkblack-600 dark:text-bgray-300';
-            }
+        elements.responsePills.querySelectorAll('.status-code-pill').forEach((button) => {
+            const active = button.dataset.statusCode === activeResponseCode;
+            const success = button.dataset.statusCode.startsWith('2');
+            button.setAttribute('aria-pressed', String(active));
+            button.className = active
+                ? `status-code-pill rounded border px-2 py-1 font-mono text-xs font-bold focus:outline-none focus:ring-2 focus:ring-success-300 ${success ? 'border-success-300 text-success-400' : 'border-error-300 text-error-400'}`
+                : 'status-code-pill rounded border border-bgray-200 px-2 py-1 font-mono text-xs font-medium text-bgray-600 transition hover:text-bgray-900 focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-darkblack-400 dark:text-bgray-300';
         });
 
-        const responseCode = document.getElementById('op-response-code');
-        if (statusCode.startsWith('2')) {
-            responseCode.textContent = operation.formatted_success_response || '{}';
-            responseCode.className = 'text-cyan-300';
-        } else {
-            responseCode.textContent = (operation.formatted_error_responses && operation.formatted_error_responses[statusCode]) || '{}';
-            responseCode.className = 'text-rose-300';
-        }
+        renderJson(elements.responseCode, response);
     }
 
-    // Subtab switching
-    function switchSubtab(tabName) {
-        activeSubtab = tabName;
-        document.querySelectorAll('.op-subtab-btn').forEach(button => {
-            const tab = button.getAttribute('data-subtab');
-            if (tab === tabName) {
-                button.className = 'op-subtab-btn pb-3 text-xs font-semibold uppercase tracking-wider transition border-b-2 border-success-300 text-success-300 dark:text-success-300';
-            } else {
-                button.className = 'op-subtab-btn pb-3 text-xs font-semibold uppercase tracking-wider transition border-b-2 border-transparent text-bgray-500 hover:text-bgray-700 dark:text-bgray-400 dark:hover:text-bgray-200';
-            }
+    function switchSubtab(section, updateHistory = true) {
+        if (!EXPLORER_SECTIONS.includes(section)) section = 'headers';
+        state.section = section;
+
+        root.querySelectorAll('.op-subtab-btn').forEach((button) => {
+            const active = button.dataset.subtab === section;
+            button.setAttribute('aria-selected', String(active));
+            button.tabIndex = active ? 0 : -1;
+            button.className = active
+                ? 'op-subtab-btn border-b-2 border-success-300 pb-3 text-xs font-semibold uppercase tracking-wider text-success-400 focus:outline-none focus:ring-2 focus:ring-success-300'
+                : 'op-subtab-btn border-b-2 border-transparent pb-3 text-xs font-semibold uppercase tracking-wider text-bgray-600 transition hover:text-bgray-900 focus:outline-none focus:ring-2 focus:ring-success-300 dark:text-bgray-300';
         });
 
-        document.querySelectorAll('.op-subtab-pane').forEach(pane => {
-            pane.classList.toggle('hidden', pane.id !== `pane-${tabName}`);
+        root.querySelectorAll('.op-subtab-pane').forEach((pane) => {
+            const active = pane.id === `pane-${section}`;
+            pane.hidden = !active;
+            pane.classList.toggle('hidden', !active);
         });
+
+        if (updateHistory) updateUrl('push');
     }
 
-    document.querySelectorAll('.op-subtab-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            switchSubtab(this.getAttribute('data-subtab'));
+    function filterNavigation() {
+        searchQuery = normalizeExplorerSearch(elements.searchInput?.value);
+        updateSidebarState();
+    }
+
+    function clearSearch() {
+        if (!elements.searchInput) return;
+        elements.searchInput.value = '';
+        searchQuery = '';
+        updateSidebarState();
+        elements.searchInput.focus();
+    }
+
+    elements.mobileToggle?.addEventListener('click', () => {
+        const expanded = elements.mobileToggle.getAttribute('aria-expanded') === 'true';
+        elements.mobileToggle.setAttribute('aria-expanded', String(!expanded));
+        elements.navigationBody?.classList.toggle('hidden', expanded);
+    });
+
+    elements.searchInput?.addEventListener('input', filterNavigation);
+    elements.searchClear?.addEventListener('click', clearSearch);
+    elements.searchEmptyClear?.addEventListener('click', clearSearch);
+
+    root.querySelectorAll('.explorer-module-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            const moduleSlug = button.dataset.moduleSlug;
+            const module = modules[moduleSlug];
+            if (!module) return;
+
+            const matchedOperations = getExplorerSearchMatches(modules, searchQuery)[moduleSlug] || [];
+            const currentOperationIsVisible = moduleSlug === state.moduleSlug
+                && module.operations?.[state.operationKey]
+                && (!searchQuery || matchedOperations.includes(state.operationKey));
+            const operationKey = currentOperationIsVisible
+                ? state.operationKey
+                : (matchedOperations[0] || Object.keys(module.operations || {})[0] || '');
+            applyState({ moduleSlug, operationKey, section: state.section }, 'push');
         });
     });
 
-    document.querySelectorAll('.explorer-module-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            selectModule(this.getAttribute('data-module-slug'));
+    root.querySelectorAll('.explorer-sidebar-operation').forEach((button) => {
+        button.addEventListener('click', () => {
+            applyState({
+                moduleSlug: button.dataset.moduleSlug,
+                operationKey: button.dataset.operationKey,
+                section: state.section,
+            }, 'push');
+            closeMobileNavigation();
         });
     });
 
-    // Copy handlers
-    document.getElementById('btn-copy-url').addEventListener('click', function () {
-        copyText(document.getElementById('op-full-url').textContent, this);
+    const tabButtons = [...root.querySelectorAll('.op-subtab-btn')];
+    tabButtons.forEach((button, index) => {
+        button.addEventListener('click', () => switchSubtab(button.dataset.subtab));
+        button.addEventListener('keydown', (event) => {
+            let nextIndex = null;
+
+            if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                nextIndex = (index + 1) % tabButtons.length;
+            } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                nextIndex = (index - 1 + tabButtons.length) % tabButtons.length;
+            } else if (event.key === 'Home') {
+                nextIndex = 0;
+            } else if (event.key === 'End') {
+                nextIndex = tabButtons.length - 1;
+            }
+
+            if (nextIndex === null) return;
+            event.preventDefault();
+            tabButtons[nextIndex].focus();
+            switchSubtab(tabButtons[nextIndex].dataset.subtab);
+        });
     });
 
-    document.getElementById('btn-copy-headers').addEventListener('click', function () {
-        const module = modules[activeModuleSlug];
-        const operation = module.operations[activeOperationKey];
-        const headers = (operation.headers || []).map(header => `${header.name}: ${header.value}`).join('\n');
+    document.getElementById('btn-copy-url')?.addEventListener('click', function () {
+        copyText(elements.fullUrl.textContent, this);
+    });
+    document.getElementById('btn-copy-headers')?.addEventListener('click', function () {
+        const operation = modules[state.moduleSlug]?.operations?.[state.operationKey];
+        const headers = (operation?.headers || [])
+            .map((header) => `${header.name}: ${header.value}`)
+            .join('\n');
         copyText(headers, this);
     });
-
-    document.getElementById('btn-copy-payload').addEventListener('click', function () {
-        copyText(document.getElementById('op-payload-code').textContent, this);
+    document.getElementById('btn-copy-payload')?.addEventListener('click', function () {
+        copyText(elements.payloadCode.textContent, this);
+    });
+    document.getElementById('btn-copy-response')?.addEventListener('click', function () {
+        copyText(elements.responseCode.textContent, this);
+    });
+    document.getElementById('btn-copy-curl')?.addEventListener('click', function () {
+        copyText(elements.curlCode.textContent, this);
     });
 
-    document.getElementById('btn-copy-response').addEventListener('click', function () {
-        copyText(document.getElementById('op-response-code').textContent, this);
+    window.addEventListener('popstate', () => {
+        const nextState = resolveExplorerState(modules, new URLSearchParams(window.location.search));
+        applyState(nextState);
     });
 
-    document.getElementById('btn-copy-curl').addEventListener('click', function () {
-        copyText(document.getElementById('op-curl-code').textContent, this);
-    });
+    const hasModules = moduleKeys.length > 0;
+    elements.emptyState.hidden = hasModules;
+    elements.content.hidden = !hasModules;
 
-    // Initial render
-    selectModule('technologies');
-    switchSubtab('headers');
-});
+    if (hasModules) {
+        applyState(state, 'replace');
+    }
+}
+
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApiExplorer, { once: true });
+    } else {
+        initializeApiExplorer();
+    }
+}

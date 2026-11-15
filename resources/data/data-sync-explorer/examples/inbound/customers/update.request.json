@@ -1,0 +1,27 @@
+{
+    "name": "ABC Technologies International LLC",
+    "email": "contact@abctech.ae",
+    "industry_code": "743813",
+    "country_code": "AE",
+    "emirate": "Dubai",
+    "website": "https://abctech.ae",
+    "company_address": "Office 402, Business Bay, Dubai",
+    "sales_person_email": "sales@abctech.ae",
+    "is_active": true,
+    "contacts": [
+        {
+            "id": 15,
+            "name": "Ahmed Mohammed",
+            "designation": "Managing Director",
+            "mobile": "+971501234567",
+            "is_primary": true
+        },
+        {
+            "name": "Fatima Al-Zahra",
+            "email": "fatima@abctech.ae",
+            "mobile": "+971509988776",
+            "designation": "Operations Lead",
+            "is_primary": false
+        }
+    ]
+}

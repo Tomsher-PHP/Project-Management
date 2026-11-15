@@ -1,0 +1,9 @@
+{
+    "success": true,
+    "message": "Project updated successfully.",
+    "data": {
+        "project_id": 101,
+        "project_code": "PRJ00101",
+        "updated": true
+    }
+}
