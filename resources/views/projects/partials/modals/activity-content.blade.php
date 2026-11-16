@@ -50,7 +50,7 @@
                         ->values();
                     $eventClasses = match ($event) {
                         'created' => 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-300',
-                        'deleted' => 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300',
+                        'deleted' => 'bg-error-50 text-error-300 dark:bg-error-900/20 dark:text-error-300',
                         'restored' => 'bg-warning-50 text-warning-500 dark:bg-warning-900/20 dark:text-warning-300',
                         default => 'bg-blue-50 text-blue-500 dark:bg-blue-900/20 dark:text-blue-300',
                     };

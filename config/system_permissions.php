@@ -49,6 +49,7 @@ return [
     ['name' => 'project.customer_end_date',     'label' => 'Project', 'sort_order' => 4260, 'default_checked' => false],
     ['name' => 'project.add_payment_status',    'label' => 'Project', 'sort_order' => 4280, 'default_checked' => false],
     ['name' => 'project.view_payment_status',   'label' => 'Project', 'sort_order' => 4290, 'default_checked' => false],
+    ['name' => 'project.export',                'label' => 'Project', 'sort_order' => 4300, 'default_checked' => false],
 
     // PROJECT MILESTONE
     ['name' => 'project_milestone.view',    'label' => 'Project Milestone', 'sort_order' => 5000, 'default_checked' => true],
@@ -70,6 +71,12 @@ return [
     ['name' => 'project_tracking.edit',    'label' => 'Project Tracking', 'sort_order' => 6240, 'default_checked' => false],
     ['name' => 'project_tracking.delete',  'label' => 'Project Tracking', 'sort_order' => 6260, 'default_checked' => false],
     ['name' => 'project_tracking.export',  'label' => 'Project Tracking', 'sort_order' => 6280, 'default_checked' => false],
+
+    // PROJECT HOSTING
+    ['name' => 'project_hosting.view',    'label' => 'Project Hosting', 'sort_order' => 6300, 'default_checked' => false],
+    ['name' => 'project_hosting.create',  'label' => 'Project Hosting', 'sort_order' => 6320, 'default_checked' => false],
+    ['name' => 'project_hosting.edit',    'label' => 'Project Hosting', 'sort_order' => 6340, 'default_checked' => false],
+    ['name' => 'project_hosting.delete',  'label' => 'Project Hosting', 'sort_order' => 6360, 'default_checked' => false],
 
     // TASK
     ['name' => 'task.view_all_tasks',     'label' => 'Task', 'sort_order' => 7000, 'default_checked' => false],
@@ -160,6 +167,13 @@ return [
     ['name' => 'reimbursement.edit',       'label' => 'Reimbursement', 'sort_order' => 15130, 'default_checked' => false],
     ['name' => 'reimbursement.status_change',       'label' => 'Reimbursement', 'sort_order' => 15140, 'default_checked' => false],
     ['name' => 'reimbursement.delete',     'label' => 'Reimbursement', 'sort_order' => 15150, 'default_checked' => false],
+
+    // BROADCAST
+    ['name' => 'broadcast.view',          'label' => 'Broadcast', 'sort_order' => 15210, 'default_checked' => false],
+    ['name' => 'broadcast.create',        'label' => 'Broadcast', 'sort_order' => 15220, 'default_checked' => false],
+    ['name' => 'broadcast.edit',          'label' => 'Broadcast', 'sort_order' => 15230, 'default_checked' => false],
+    ['name' => 'broadcast.status_change', 'label' => 'Broadcast', 'sort_order' => 15240, 'default_checked' => false],
+    ['name' => 'broadcast.delete',        'label' => 'Broadcast', 'sort_order' => 15250, 'default_checked' => false],
 
     //======================================================================
     // Requests Actions Start
@@ -261,6 +275,12 @@ return [
     ['name' => 'project_settings.edit',   'label' => 'Settings - Project Settings', 'sort_order' => 57040, 'default_checked' => false],
     ['name' => 'project_settings.delete', 'label' => 'Settings - Project Settings', 'sort_order' => 57060, 'default_checked' => false],
 
+    ['name' => 'daily_work_report.view', 'label' => 'View Daily Work Reports', 'sort_order' => 58000, 'default_checked' => false,],
+    ['name' => 'daily_work_report.edit', 'label' => 'Manage Daily Work Report Settings and Recipients', 'sort_order' => 58020, 'default_checked' => false,],
+    ['name' => 'daily_work_report.generate', 'label' => 'Generate Daily Work Reports', 'sort_order' => 58040, 'default_checked' => false,],
+    ['name' => 'daily_work_report.send_test', 'label' => 'Send Test Daily Work Reports', 'sort_order' => 58060, 'default_checked' => false,],
+    ['name' => 'daily_work_report.retry', 'label' => 'Retry Failed Daily Work Reports', 'sort_order' => 58080, 'default_checked' => false,],
+
     // TASK SETTINGS
     ['name' => 'task_settings.view',   'label' => 'Settings - Task Settings', 'sort_order' => 61000, 'default_checked' => false],
     ['name' => 'task_settings.create', 'label' => 'Settings - Task Settings', 'sort_order' => 61020, 'default_checked' => false],
@@ -303,9 +323,30 @@ return [
     ['name' => 'company_expenses.edit',   'label' => 'Settings - Company Expenses', 'sort_order' => 69040, 'default_checked' => false],
     ['name' => 'company_expenses.delete', 'label' => 'Settings - Company Expenses', 'sort_order' => 69060, 'default_checked' => false],
 
+    // Server & Hosting
+    ['name' => 'server_hosting.view',   'label' => 'Settings - Server & Hosting', 'sort_order' => 69100, 'default_checked' => false],
+    ['name' => 'server_hosting.create', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69120, 'default_checked' => false],
+    ['name' => 'server_hosting.edit',   'label' => 'Settings - Server & Hosting', 'sort_order' => 69140, 'default_checked' => false],
+    ['name' => 'server_hosting.delete', 'label' => 'Settings - Server & Hosting', 'sort_order' => 69160, 'default_checked' => false],
+
+    // Broadcast Settings
+    ['name' => 'broadcast_settings.view',   'label' => 'Settings - Broadcast Settings', 'sort_order' => 69200, 'default_checked' => false],
+    ['name' => 'broadcast_settings.create', 'label' => 'Settings - Broadcast Settings', 'sort_order' => 69220, 'default_checked' => false],
+    ['name' => 'broadcast_settings.edit',   'label' => 'Settings - Broadcast Settings', 'sort_order' => 69240, 'default_checked' => false],
+    ['name' => 'broadcast_settings.delete', 'label' => 'Settings - Broadcast Settings', 'sort_order' => 69260, 'default_checked' => false],
+
+    // Data Sync
+    ['name' => 'data_sync_settings.view',   'label' => 'Settings - Data Sync', 'sort_order' => 69300, 'default_checked' => false],
+    ['name' => 'data_sync_settings.create', 'label' => 'Settings - Data Sync', 'sort_order' => 69320, 'default_checked' => false],
+    ['name' => 'data_sync_settings.edit',   'label' => 'Settings - Data Sync', 'sort_order' => 69340, 'default_checked' => false],
+    ['name' => 'data_sync_settings.delete', 'label' => 'Settings - Data Sync', 'sort_order' => 69360, 'default_checked' => false],
+
     // ---------------------------------------------------------------------------------------------------------------------------------
     // CONFIGURATION  -- Last Settings Module
     ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
     ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
+
+
+
 
 ];

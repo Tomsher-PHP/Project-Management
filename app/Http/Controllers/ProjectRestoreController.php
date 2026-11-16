@@ -126,6 +126,9 @@ class ProjectRestoreController extends Controller
             'history',
             'settings',
             'payments',
+            'meetings',
+            'hosting',
+            'timelines',
         ];
 
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
@@ -207,5 +210,45 @@ class ProjectRestoreController extends Controller
         $projectRestoreService->assertDeletedProject($project);
 
         return app(ProjectTaskController::class)->taskGroup($project, $group);
+    }
+
+    public function meetingGroup(Request $request, $id, string $group, ProjectRestoreService $projectRestoreService): JsonResponse
+    {
+        $project = $projectRestoreService->findDeletedProjectOrFail((int) $id);
+        $projectRestoreService->assertDeletedProject($project);
+
+        return response()->json([
+            'status' => true,
+            'html' => view('projects.partials.meetings.meeting-rows', [
+                'project' => $project,
+                'groupKey' => $group,
+                'meetings' => [],
+                'showEmptyState' => true,
+            ])->render(),
+            'pagination' => [
+                'page' => 1,
+                'next_page' => null,
+                'has_more_pages' => false,
+                'total' => 0,
+            ],
+        ]);
+    }
+
+    public function hostingIndex(Request $request, $id, ProjectRestoreService $projectRestoreService): JsonResponse
+    {
+        $project = $projectRestoreService->findDeletedProjectOrFail((int) $id);
+        $projectRestoreService->assertDeletedProject($project);
+
+        $html = '<div class="px-6 py-10 text-center"><div class="mx-auto max-w-md rounded-[8px] border border-dashed border-bgray-300 bg-bgray-50 px-6 py-8 text-center dark:border-darkblack-400 dark:bg-darkblack-500"><p class="text-base font-semibold text-error-300">No server & hosting records.</p><p class="mt-2 text-sm text-error-300">Server & hosting records are not available for deleted projects.</p></div></div>';
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+            'pagination' => [
+                'total' => 0,
+                'current_page' => 1,
+                'last_page' => 1,
+            ],
+        ]);
     }
 }

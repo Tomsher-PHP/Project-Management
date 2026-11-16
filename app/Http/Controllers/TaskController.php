@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TaskNoteRequest;
+use App\Exceptions\TaskTimerAlreadyRunningException;
+use App\Exceptions\TaskTimerStateConflictException;
 use App\Http\Requests\TaskCommentRequest;
+use App\Http\Requests\TaskNoteRequest;
 use App\Http\Requests\TaskQuickStoreRequest;
 use App\Models\Attachment;
 use App\Models\Project;
-use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\Task;
 use App\Models\TaskComment;
-use App\Models\TaskStatus;
 use App\Models\TaskNote;
+use App\Models\TaskStatus;
 use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Services\AttachmentService;
@@ -29,6 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Activitylog\Models\Activity;
 
 class TaskController extends Controller
@@ -65,14 +67,16 @@ class TaskController extends Controller
 
         // Preload relations for all tasks in the list to avoid N+1 queries when rendering the list and task cards
         $taskRowRelations = [
-            'project:id,name,project_code,project_flow',
-            'projectMilestone:id,name',
-            'projectSprint:id,name',
+            'project:id,name,project_code,project_flow,is_system,added_by,deleted_at',
+            'projectTimeline:id,name',
+            'projectMilestone:id,name,is_backlog,is_system',
+            'projectSprint:id,project_milestone_id,name,is_backlog,is_system',
             'currentAssignee:id,name',
             'status:id,name,color,type,is_completed',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];
+        $tasks->getCollection()->load($taskRowRelations);
         $tasks->getCollection()->each(function (Task $task) use ($taskRowRelations) {
             $this->loadTaskDescendantsForList($task, $taskRowRelations);
         });
@@ -242,6 +246,11 @@ class TaskController extends Controller
             'created_count' => $createdCount,
             'request_type' => $firstTask?->request_type,
             'request_status' => $firstTask?->request_status,
+            'project_task_group_key' => $firstTask
+                ? ($project->is_linear
+                    ? 'all-tasks'
+                    : ($firstTask->project_sprint_id ? 'sprint-' . $firstTask->project_sprint_id : 'ungrouped'))
+                : null,
         ], Response::HTTP_OK);
     }
 
@@ -520,13 +529,134 @@ class TaskController extends Controller
             'html' => view('tasks.partials.task-notes-list', [
                 'task' => $task,
                 'taskNotes' => $taskNotes,
-                'canRemove' => auth()->user()->can('update', $task),
+                'canRemove' => auth()->user()->can('task.remove_notes_files'),
                 'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'note_card_html' => $createdNote ? view('tasks.partials.task-note-card', [
+                'task' => $task,
                 'note' => $createdNote,
                 'canRemove' => auth()->user()?->can('task.remove_notes_files') ?? false,
             ])->render() : '',
+            'current_page' => $taskNotes->currentPage(),
+        ], Response::HTTP_OK);
+    }
+
+    public function editNote(Task $task, TaskNote $note): JsonResponse
+    {
+        abort_unless((int) $note->task_id === (int) $task->id, Response::HTTP_NOT_FOUND);
+        abort_unless((int) $note->added_by === (int) auth()->id(), Response::HTTP_FORBIDDEN, 'You can only edit notes created by you.');
+
+        $note->load('attachments');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $note->id,
+                'description' => $note->description,
+                'attachments' => $note->attachments->map(function ($attachment) {
+                    $ext = strtolower(pathinfo($attachment->original_name, PATHINFO_EXTENSION));
+                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
+
+                    return [
+                        'id' => $attachment->id,
+                        'original_name' => $attachment->original_name,
+                        'file_size' => $attachment->file_size,
+                        'file_type' => $attachment->file_type,
+                        'is_image' => $isImage,
+                        'url' => rescue(fn () => $attachment->url, null, false),
+                    ];
+                })->values(),
+            ],
+        ], Response::HTTP_OK);
+    }
+
+    public function updateNote(TaskNoteRequest $request, Task $task, TaskNote $note, AttachmentService $attachmentService): JsonResponse
+    {
+        abort_unless((int) $note->task_id === (int) $task->id, Response::HTTP_NOT_FOUND);
+        abort_unless((int) $note->added_by === (int) auth()->id(), Response::HTTP_FORBIDDEN, 'You can only edit notes created by you.');
+
+        DB::transaction(function () use ($task, $note, $request, $attachmentService) {
+            $validated = $request->validated();
+            $removedAttachmentIds = $validated['removed_attachment_ids'] ?? [];
+
+            if (!empty($removedAttachmentIds)) {
+                $attachmentsToDelete = $note->attachments()
+                    ->whereIn('id', $removedAttachmentIds)
+                    ->get();
+
+                if ($attachmentsToDelete->isNotEmpty()) {
+                    $attachmentService->delete($attachmentsToDelete);
+                }
+            }
+
+            $newAttachmentsUploaded = false;
+            if (!empty($validated['attachments'])) {
+                $projectCode = $task->project?->project_code ?: 'project';
+                $taskCode = $task->code ?: ('task-' . $task->id);
+                $directory = 'task_files/' . $projectCode . '/' . $taskCode . '/notes';
+
+                foreach ($validated['attachments'] as $file) {
+                    $attachmentService->upload(
+                        $file,
+                        $directory,
+                        $note,
+                        $this->filesystemDisk,
+                        'public',
+                        false,
+                        'task_note'
+                    );
+                }
+                $newAttachmentsUploaded = true;
+            }
+
+            $attachmentsChanged = !empty($removedAttachmentIds) || $newAttachmentsUploaded;
+            $newDescription = $validated['description'] ?? $validated['note'] ?? null;
+            $descriptionChanged = $note->description !== $newDescription;
+
+            if ($descriptionChanged) {
+                $note->description = $newDescription;
+                $note->updated_by = auth()->id();
+                $note->save();
+            } elseif ($attachmentsChanged) {
+                $note->updated_by = auth()->id();
+                $note->updated_at = now();
+                $note->saveQuietly();
+
+                $activity = activity('task_notes')
+                    ->performedOn($note)
+                    ->causedBy(auth()->user())
+                    ->withProperties([
+                        'parent_type' => Task::class,
+                        'parent_id' => $task->id,
+                        'labels' => ['description' => 'Description'],
+                        'display_attributes' => ['description' => $note->description],
+                    ])
+                    ->event('updated');
+
+                if (Schema::hasColumn('activity_log', 'parent_type') && Schema::hasColumn('activity_log', 'parent_id')) {
+                    $activity->tap(function ($act) use ($task) {
+                        $act->parent_type = Project::class;
+                        $act->parent_id = $task->project_id;
+                    });
+                }
+
+                $activity->log('updated');
+            }
+        });
+
+        $task = $this->loadTaskForDetail($task);
+        $currentPage = (int) $request->input('notes_page', 1);
+        $taskNotes = $this->getPaginatedTaskNotes($task, $currentPage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note updated successfully.',
+            'html' => view('tasks.partials.task-notes-list', [
+                'task' => $task,
+                'taskNotes' => $taskNotes,
+                'canRemove' => auth()->user()->can('task.remove_notes_files'),
+                'canCreate' => auth()->user()->can('task.add_notes_files'),
+            ])->render(),
             'current_page' => $taskNotes->currentPage(),
         ], Response::HTTP_OK);
     }
@@ -546,7 +676,7 @@ class TaskController extends Controller
             'html' => view('tasks.partials.task-notes-list', [
                 'task' => $task,
                 'taskNotes' => $taskNotes,
-                'canRemove' => auth()->user()->can('update', $task),
+                'canRemove' => auth()->user()->can('task.remove_notes_files'),
                 'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'current_page' => $taskNotes->currentPage(),
@@ -571,7 +701,7 @@ class TaskController extends Controller
             'html' => view('tasks.partials.task-notes-list', [
                 'task' => $task,
                 'taskNotes' => $taskNotes,
-                'canRemove' => auth()->user()->can('update', $task),
+                'canRemove' => auth()->user()->can('task.remove_notes_files'),
                 'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'current_page' => $taskNotes->currentPage(),
@@ -581,8 +711,9 @@ class TaskController extends Controller
     private function loadTaskForDetail(Task $task): Task
     {
         $task->load([
-            'project:id,name,project_code,project_flow,customer_id',
+            'project:id,name,project_code,project_flow,customer_id,is_system,added_by,deleted_at',
             'project.customer:id,name,customer_profile_grade_id',
+            'projectTimeline:id,name',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'projectSprint.projectMilestone:id,name',
@@ -629,17 +760,27 @@ class TaskController extends Controller
                 'project' => $task->project,
             ] + $taskServices->getTaskOverviewData($task))->render(),
             'scope' => $this->renderTaskScopeTab($task),
-            'notes' => view('tasks.partials.tabs.notes', [
-                'task' => $task,
-                'project' => $task->project,
-                'taskNotes' => $this->getPaginatedTaskNotes($task, (int) request()->input('notes_page', 1)),
-            ])->render(),
+            'notes' => $this->renderTaskNotesTab($task, request()),
             'history' => view('tasks.partials.tabs.history', [
                 'task' => $task,
                 'project' => $task->project,
             ] + $this->getTaskHistoryData($task))->render(),
             default => '',
         };
+    }
+
+    private function renderTaskNotesTab(Task $task, Request $request): string
+    {
+        $taskNotes = $this->getPaginatedTaskNotes($task, (int) $request->input('notes_page', 1));
+
+        $canRemove = auth()->user()->can('task.remove_notes_files');
+        $canCreate = auth()->user()->can('task.add_notes_files');
+
+        if ($request->ajax() && ($request->boolean('notes_only') || $request->header('X-Task-Notes-Pagination') || $request->input('view') === 'list')) {
+            return view('tasks.partials.task-notes-list', compact('task', 'taskNotes', 'canRemove', 'canCreate'))->render();
+        }
+
+        return view('tasks.partials.tabs.notes', compact('task', 'taskNotes', 'canRemove', 'canCreate'))->render();
     }
 
     private function renderTaskScopeTab(Task $task): string
@@ -854,32 +995,98 @@ class TaskController extends Controller
 
     /** Task timer functions */
 
-    public function start(Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
+    public function start(Request $request, Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
     {
+        if ($request->boolean('confirmed_switch')) {
+            return $this->switch($request, $task, $taskServices, $runningTaskNavbarService);
+        }
+
         $startRestriction = $taskServices->getStartRestriction($task);
 
         if ($startRestriction) {
-            $response = ['message' => $startRestriction['message']];
-
-            if (($startRestriction['reason'] ?? null) === 'running_timer_exists') {
-                $response['requires_confirmation'] = true;
-                $response['running_task_id'] = $startRestriction['running_task_id'] ?? null;
-                $response['running_task_name'] = $startRestriction['running_task_name'] ?? null;
-                $response['running_task_assignee_name'] = $startRestriction['running_task_assignee_name'] ?? null;
-            }
-
-            return response()->json(
-                $response,
-                $startRestriction['status']
-            );
+            return $this->buildStartRestrictionResponse($startRestriction);
         }
 
-        $taskServices->startTimer($task, auth()->id());
+        try {
+            $taskServices->startTimer($task, auth()->id());
+        } catch (TaskTimerAlreadyRunningException $e) {
+            return $this->buildStartRestrictionResponse($e->getRestriction());
+        }
 
         return response()->json([
             'message' => 'Timer started',
             'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser(auth()->id()),
         ], Response::HTTP_OK);
+    }
+
+    public function switch(Request $request, Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $expectedRunningTaskId = $request->filled('expected_running_task_id')
+            ? (int) $request->input('expected_running_task_id')
+            : ($request->filled('running_task_id') ? (int) $request->input('running_task_id') : null);
+
+        $confirmedNonAssigneeStop = $request->boolean('confirmed_non_assignee_stop');
+
+        try {
+            $result = $taskServices->switchTimer($task, $user, $expectedRunningTaskId, $confirmedNonAssigneeStop);
+
+            $responsePayload = [
+                'message' => $result['message'] ?? 'Timer switched successfully.',
+                'status' => $result['status'] ?? 'switched',
+                'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser($user->id),
+            ];
+
+            if (! empty($result['stopped_time_log'])) {
+                $responsePayload['stopped_task'] = [
+                    'task_id' => (int) $result['stopped_time_log']->task_id,
+                    'duration_seconds' => (int) $result['stopped_time_log']->duration_seconds,
+                ];
+            }
+
+            if (! empty($result['running_time_log'])) {
+                $responsePayload['started_task'] = [
+                    'task_id' => (int) $result['running_time_log']->task_id,
+                    'started_at' => $result['running_time_log']->started_at?->toISOString(),
+                ];
+            }
+
+            return response()->json($responsePayload, Response::HTTP_OK);
+        } catch (TaskTimerAlreadyRunningException $e) {
+            return $this->buildStartRestrictionResponse($e->getRestriction());
+        } catch (TaskTimerStateConflictException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'conflict' => true,
+                'current_running_task_id' => $e->getCurrentRunningTaskId(),
+                'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser($user->id),
+            ], Response::HTTP_CONFLICT);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage() ?: 'Failed to switch task timer.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    private function buildStartRestrictionResponse(array $startRestriction): JsonResponse
+    {
+        $response = ['message' => $startRestriction['message']];
+
+        if (($startRestriction['reason'] ?? null) === 'running_timer_exists') {
+            $response['requires_confirmation'] = true;
+            $response['running_task_id'] = $startRestriction['running_task_id'] ?? null;
+            $response['running_task_name'] = $startRestriction['running_task_name'] ?? null;
+            $response['running_task_assignee_name'] = $startRestriction['running_task_assignee_name'] ?? null;
+        }
+
+        return response()->json(
+            $response,
+            $startRestriction['status'] ?? Response::HTTP_UNPROCESSABLE_ENTITY
+        );
     }
 
     public function stop(Request $request, Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
@@ -918,20 +1125,26 @@ class TaskController extends Controller
         }
     }
 
-    public function transitionStatus(Request $request, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
-    {
+
+    public function transitionStatus(
+        Request $request,
+        TaskServices $taskServices,
+        RunningTaskNavbarService $runningTaskNavbarService
+    ): JsonResponse {
         $validator = validator($request->all(), [
             'status_id' => ['required', 'integer'],
             'moved_task_id' => ['required', 'integer'],
             'task_ids' => ['required', 'array', 'min:1'],
             'task_ids.*' => ['integer'],
             'include_task_detail' => ['nullable', 'boolean'],
+            'remarks' => ['nullable', 'string', 'max:2000'],
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()->first() ?: 'The given data was invalid.',
+                'message' => $validator->errors()->first()
+                    ?: 'The given data was invalid.',
                 'errors' => $validator->errors(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
@@ -940,16 +1153,77 @@ class TaskController extends Controller
 
         try {
             $statusId = (int) $validated['status_id'];
+            $taskId = (int) $validated['moved_task_id'];
+            $remarks = trim((string) ($validated['remarks'] ?? ''));
+
+            $taskBefore = Task::query()
+                ->with('status')
+                ->findOrFail($taskId);
+
+            $targetStatus = TaskStatus::query()->findOrFail($statusId);
+
+            $wasCompleted = (bool) ($taskBefore->status?->is_completed ?? false);
+            $willBeCompleted = (bool) $targetStatus->is_completed;
+
+            // Incomplete -> completed requires a developer note.
+            if (
+                !$wasCompleted &&
+                $willBeCompleted &&
+                !$taskBefore->developerNotes()->exists()
+            ) {
+                abort(
+                    Response::HTTP_UNPROCESSABLE_ENTITY,
+                    'Please add a developer note before moving this task to a completed status.'
+                );
+            }
+
+            // Completed -> incomplete requires a reopening remark.
+            $isReopening = $wasCompleted && !$willBeCompleted;
+
+            if ($isReopening && $remarks === '') {
+                abort(
+                    Response::HTTP_UNPROCESSABLE_ENTITY,
+                    'A remark is required when moving a completed task to an incomplete status.'
+                );
+            }
+
             $transitionResult = $taskServices->transitionStatus(
                 auth()->user(),
-                (int) $validated['moved_task_id'],
-                collect($validated['task_ids'])->map(fn($taskId) => (int) $taskId)->all(),
+                $taskId,
+                collect($validated['task_ids'])
+                    ->map(fn($id) => (int) $id)
+                    ->all(),
                 $statusId
             );
+
             $task = $transitionResult['task'];
 
+            // Store the remark on the existing history record created
+            // by the status-transition service. No new table or column.
+            if ($isReopening) {
+                $history = $task->statusHistories()
+                    ->where('status_id', $statusId)
+                    ->latest('id')
+                    ->first();
+
+                if (!$history) {
+                    throw new \RuntimeException(
+                        'The task status history record could not be found.'
+                    );
+                }
+
+                $history->update([
+                    'remarks' => $remarks,
+                ]);
+            }
+
             $task = $this->loadTaskForDetail($task);
-            $taskServices->hydrateKanbanTimerState(collect([$task]), 'current_assignee');
+
+            $taskServices->hydrateKanbanTimerState(
+                collect([$task]),
+                'current_assignee'
+            );
+
             $response = [
                 'success' => true,
                 'message' => 'Task status updated successfully.',
@@ -957,42 +1231,58 @@ class TaskController extends Controller
                 'html' => view('tasks.kanban._card', [
                     'task' => $task,
                     'status' => $task->status,
-                    'priorities' => config('project_constants.task_priorities', []),
+                    'priorities' => config(
+                        'project_constants.task_priorities',
+                        []
+                    ),
                 ])->render(),
-                'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser(auth()->id()),
+                'navbar_timer' => $runningTaskNavbarService
+                    ->getFrontendStateForUser(auth()->id()),
             ];
 
-            if (! empty($transitionResult['timer_stopped'])) {
-                $response['timer_stopped'] = $transitionResult['timer_stopped'];
+            if (!empty($transitionResult['timer_stopped'])) {
+                $response['timer_stopped'] =
+                    $transitionResult['timer_stopped'];
             }
 
-            if (! empty($validated['include_task_detail'])) {
-                $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, (int) auth()->id());
+            if (!empty($validated['include_task_detail'])) {
+                $totalSeconds = $taskServices->getTotalTrackedSeconds(
+                    $task->id,
+                    (int) auth()->id()
+                );
+
                 $historyData = $this->getTaskHistoryData($task);
                 $displayData = $taskServices->getTaskDisplayData($task);
-                $headerData = $this->getTaskHeaderData($task, $taskServices);
+                $headerData = $this->getTaskHeaderData(
+                    $task,
+                    $taskServices
+                );
 
-                $response['header_html'] = view('tasks.partials.header', [
-                    'task' => $task,
-                    'project' => $task->project,
-                    'totalTrackedSeconds' => $totalSeconds,
-                ] + $displayData + $headerData)->render();
+                $response['header_html'] = view(
+                    'tasks.partials.header',
+                    [
+                        'task' => $task,
+                        'project' => $task->project,
+                        'totalTrackedSeconds' => $totalSeconds,
+                    ] + $displayData + $headerData
+                )->render();
 
-                $response['history_html'] = view('tasks.partials.tabs.history', [
-                    'task' => $task,
-                    'project' => $task->project,
-                ] + $historyData)->render();
+                $response['history_html'] = view(
+                    'tasks.partials.tabs.history',
+                    [
+                        'task' => $task,
+                        'project' => $task->project,
+                    ] + $historyData
+                )->render();
             }
 
             return response()->json($response);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], $e->getStatusCode());
         } catch (\Throwable $e) {
-
             info('Error while changing task status: ' . $e->getMessage());
 
             return response()->json([
@@ -1001,6 +1291,7 @@ class TaskController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
 
     /** Task helper methods */
     public function dropdownOptions(Request $request, TaskServices $taskServices)
@@ -1020,6 +1311,123 @@ class TaskController extends Controller
 
         return response()->json([
             'options' => $tasks,
+        ]);
+    }
+
+
+    /**
+     * Display the developer note for a task.
+     */
+    public function developerNotesModal(Task $task): JsonResponse
+    {
+        $task = $this->loadTaskForDetail($task);
+        $user = request()->user();
+
+        $isCompleted = (bool) ($task->status?->is_completed ?? false);
+
+        $canEdit = $user !== null
+            && ! $isCompleted
+            && (int) $task->current_assignee_id === (int) $user->id;
+
+        $note = $task->developerNotes()
+            ->with('creator:id,name')
+            ->latest('id')
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'note' => $note ? [
+                'id' => $note->id,
+                'note' => $note->note,
+                'creator_name' => $note->creator?->name ?? 'Former User',
+                'created_at' => $note->created_at?->format('d M Y, h:i A'),
+                'updated_at' => $note->updated_at?->format('d M Y, h:i A'),
+            ] : null,
+            'can_edit' => $canEdit,
+            'is_completed' => $isCompleted,
+        ], Response::HTTP_OK);
+    }
+
+    /**
+     * Create or update the single developer note for a task.
+     * Only the current assignee can save while the task is incomplete.
+     */
+    public function storeDeveloperNote(Request $request, Task $task): JsonResponse
+    {
+        $user = $request->user();
+
+        $task->loadMissing('status');
+
+        $isCompleted = (bool) ($task->status?->is_completed ?? false);
+
+        abort_unless(
+            $user !== null
+                && ! $isCompleted
+                && (int) $task->current_assignee_id === (int) $user->id,
+            Response::HTTP_FORBIDDEN,
+            'Only the current assignee can add or edit developer notes while the task is incomplete.'
+        );
+
+        $validated = $request->validate([
+            'note' => ['required', 'string', 'max:10000'],
+        ]);
+
+        $noteText = trim($validated['note']);
+
+        if ($noteText === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please enter a developer note.',
+                'errors' => [
+                    'note' => ['Please enter a developer note.'],
+                ],
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $developerNote = $task->developerNotes()->updateOrCreate(
+            ['task_id' => $task->id],
+            [
+                'created_by' => $user->id,
+                'note' => $noteText,
+            ]
+        );
+
+        $developerNote->load('creator:id,name');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Developer note saved successfully.',
+            'note' => [
+                'id' => $developerNote->id,
+                'note' => $developerNote->note,
+                'creator_name' => $developerNote->creator?->name ?? 'Former User',
+                'created_at' => $developerNote->created_at?->format('d M Y, h:i A'),
+                'updated_at' => $developerNote->updated_at?->format('d M Y, h:i A'),
+            ],
+        ], Response::HTTP_OK);
+    }
+
+    public function deleteDeveloperNote(Task $task): JsonResponse
+    {
+        $user = request()->user();
+
+        $task->loadMissing('status');
+
+        $isCompleted = (bool) ($task->status?->is_completed ?? false);
+
+        abort_unless(
+            $user !== null
+                && ! $isCompleted
+                && (int) $task->current_assignee_id === (int) $user->id,
+            Response::HTTP_FORBIDDEN,
+            'Only the current assignee can remove developer notes while the task is incomplete.'
+        );
+
+        $task->developerNotes()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Developer note removed successfully.',
         ]);
     }
 }

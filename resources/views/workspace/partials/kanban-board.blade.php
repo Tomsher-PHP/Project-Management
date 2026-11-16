@@ -19,6 +19,8 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
+                    <x-button.refresh-button type="button" data-workspace-kanban-refresh title="Refresh kanban board" aria-label="Refresh kanban board" />
+
                     <label class="relative min-w-[200px] flex-1 sm:min-w-[240px] lg:max-w-[300px]">
                         <span class="pointer-events-none absolute inset-y-0 left-3 inline-flex items-center text-bgray-700 dark:text-bgray-300">
                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

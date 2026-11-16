@@ -30,7 +30,10 @@ class TechnologyController extends Controller
 
     public function store(TechnologyRequest $request)
     {
-        $technology = Technology::create($request->validated());
+        $data = $request->validated();
+        $data['code'] = $data['code'] ?? Technology::generateUniqueCode();
+
+        $technology = Technology::create($data);
 
         return response()->json([
             'status' => true,
@@ -41,7 +44,12 @@ class TechnologyController extends Controller
 
     public function update(TechnologyRequest $request, Technology $technology)
     {
-        $technology->update($request->validated());
+        $data = $request->validated();
+        if (empty($technology->code)) {
+            $data['code'] = Technology::generateUniqueCode();
+        }
+
+        $technology->update($data);
 
         return response()->json([
             'status' => true,

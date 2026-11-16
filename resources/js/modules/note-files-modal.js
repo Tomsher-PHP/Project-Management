@@ -8,6 +8,10 @@ export const createNoteFilesModalController = ({
     let resetComposer = () => {};
 
     const close = () => {
+        if (!modal || !modal.isConnected) {
+            modal = document.querySelector(modalSelector);
+        }
+
         if (!modal) {
             return;
         }
@@ -18,6 +22,10 @@ export const createNoteFilesModalController = ({
     };
 
     const open = () => {
+        if (!modal || !modal.isConnected) {
+            modal = document.querySelector(modalSelector);
+        }
+
         if (!modal) {
             return;
         }
@@ -65,6 +73,7 @@ export const createNoteFilesModalController = ({
             editor = currentEditor;
             resetComposer = currentResetComposer;
         },
+        open,
         close,
     };
 };

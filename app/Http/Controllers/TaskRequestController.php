@@ -111,27 +111,28 @@ class TaskRequestController extends Controller
                 : "{$processedCount} task request(s) rejected successfully.");
     }
 
-    public function cancel(
-        Request $request,
-        Task $task,
-        TaskRequestServices $taskRequestServices
-    ): RedirectResponse {
-        $validated = $request->validate([
-            'cancellation_reason' => [
-                'required',
-                'string',
-                'max:2000',
-            ],
-        ]);
-
-        $taskRequestServices->cancelRequest(
-            $request->user(),
-            $task,
-            $validated['cancellation_reason']
+    public function destroy(Request $request, Task $task, TaskServices $taskServices): RedirectResponse
+    {
+        abort_unless(
+            $task->request_type === Task::REQUEST_TYPE_SELF
+                && (int) $task->current_assignee_id === (int) $request->user()->id,
+            Response::HTTP_FORBIDDEN
         );
+
+        abort_unless($task->request_status === Task::REQUEST_PENDING, Response::HTTP_NOT_FOUND);
+
+        $deleteRestriction = $taskServices->getDeleteRestriction($task);
+
+        if ($deleteRestriction) {
+            return redirect()
+                ->back()
+                ->with('error', $deleteRestriction['message']);
+        }
+
+        $task->delete();
 
         return redirect()
             ->route('tasks.requests.index')
-            ->with('success', 'Task request cancelled successfully.');
+            ->with('success', 'Task request deleted successfully.');
     }
 }

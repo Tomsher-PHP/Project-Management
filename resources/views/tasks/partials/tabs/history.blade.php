@@ -79,6 +79,14 @@
 
                                         <span class="text-xs text-bgray-700 dark:text-bgray-300">{{ $entry['changed_by'] }} at @appDateTime($entry['changed_at'])</span>
                                     </div>
+
+                                    {{-- Display remarks when available --}}
+                                    @if (!empty($entry['remarks']))
+                                        <div class="mt-3 text-sm text-bgray-700 dark:text-bgray-300">
+
+                                            <i class="whitespace-pre-line break-words">{{ $entry['remarks'] }}</i>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach

@@ -72,6 +72,18 @@
     /* bgray-300 */
 }
 
+/* Quill placeholder - Light theme */
+.ql-editor.ql-blank::before {
+    color: #9ca3af !important;
+    opacity: 1;
+}
+
+/* Quill placeholder - Dark theme */
+.dark .ql-editor.ql-blank::before {
+    color: #9ca3af !important;
+    opacity: 1;
+}
+
 /* View Modal Description Heading Styles */
 #viewModalDescription h1 {
     font-size: 1.25rem;
@@ -165,4 +177,12 @@
 }
 .max-w-0 {
     max-width: 0px !important;
+}
+
+/* Prevent Chromium/Edge autofill style recalculation flickering */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s !important;
 }

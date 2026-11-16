@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProjectExport;
 use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectCommentRequest;
@@ -18,11 +19,11 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
+use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
 use App\Models\ServiceType;
-use App\Models\Technology;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
@@ -40,6 +41,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProjectController extends Controller
 {
@@ -112,6 +115,39 @@ class ProjectController extends Controller
         ));
     }
 
+    public function export(Request $request): BinaryFileResponse
+    {
+        $user = auth()->user();
+
+        if (! $user || ! $user->can('project.export')) {
+            abort(403);
+        }
+
+        $projects = Project::accessibleBy($user)
+            ->with([
+                'customer.profileGrade',
+                'technologies',
+                'parentProject',
+                'projectTimelines',
+                'serviceTypes',
+                'projectStatus',
+                'projectStage',
+                'salesPerson',
+            ])
+            ->filter($request->all())
+            ->sort($request->all())
+            ->orderBy('projects.id', 'desc')
+            ->get();
+
+        $timestamp = now((string) config('constants.timezone', config('app.timezone')))->format('Y-m-d_His');
+        $fileName = 'projects-export_' . $timestamp . '.xlsx';
+
+        return Excel::download(
+            new ProjectExport($projects, $request->all()),
+            $fileName
+        );
+    }
+
     public function store(ProjectRequest $request, ProjectServices $service)
     {
         $project = $service->create($request->validated());
@@ -123,15 +159,27 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function edit(Project $project)
+    public function edit(Project $project, TaskFormService $taskFormService)
     {
         $project->load(['technologies', 'parentProject', 'projectTimelines', 'serviceTypes']);
+
+        $taskCreateData = [];
+
+        if (auth()->user()?->can('task.create')) {
+            $taskCreateDependencies = $taskFormService->getInitialDependencies();
+            $taskCreateDependencies['projects'] = $taskFormService->buildDependencies($project)['projects'];
+
+            $taskCreateData = [
+                ...$taskFormService->getCreateData(auth()->user()),
+                'taskCreateDependencies' => $taskCreateDependencies,
+            ];
+        }
 
         return view('projects.detail-page', array_merge([
             'project' => $project,
             'projectActivitiesCount' => $this->getProjectActivitiesQuery($project)->count(),
             'projectCommentsCount' => $project->comments()->count(),
-        ], $this->getProjectHeaderData($project)));
+        ], $this->getProjectHeaderData($project), $taskCreateData));
     }
 
     public function activityModal(Project $project): JsonResponse
@@ -208,10 +256,16 @@ class ProjectController extends Controller
             'checklists',
             'meetings',
             'history',
+            'hosting',
+            'timelines',
             'settings',
             'payments'
         ];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
+
+        if ($tab === 'tasks' && $request->ajax() && $request->boolean('tasks_only')) {
+            return response()->json($service->getTasksTabResponse($project, $request));
+        }
 
         return response()->json([
             'status' => true,
@@ -300,6 +354,60 @@ class ProjectController extends Controller
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
                 'canCreate' => auth()->user()->can('project.add_notes_files'),
+                'isDeletedProjectView' => $project->trashed(),
+            ])->render(),
+            'current_page' => $projectNotes->currentPage(),
+        ], Response::HTTP_OK);
+    }
+
+    public function editNote(Project $project, ProjectNote $note): JsonResponse
+    {
+        abort_unless((int) $note->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless((int) $note->added_by === (int) auth()->id(), Response::HTTP_FORBIDDEN, 'You can only edit notes created by you.');
+        abort_if($project->trashed(), Response::HTTP_FORBIDDEN, 'Cannot edit notes on a deleted project.');
+
+        $note->load('attachments');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $note->id,
+                'description' => $note->description,
+                'attachments' => $note->attachments->map(function ($attachment) {
+                    $ext = strtolower(pathinfo($attachment->original_name, PATHINFO_EXTENSION));
+                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
+
+                    return [
+                        'id' => $attachment->id,
+                        'original_name' => $attachment->original_name,
+                        'file_size' => $attachment->file_size,
+                        'file_type' => $attachment->file_type,
+                        'is_image' => $isImage,
+                        'url' => rescue(fn () => $attachment->url, null, false),
+                    ];
+                })->values(),
+            ],
+        ], Response::HTTP_OK);
+    }
+
+    public function updateNote(ProjectNoteRequest $request, Project $project, ProjectNote $note, ProjectServices $service): JsonResponse
+    {
+        abort_unless((int) $note->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless((int) $note->added_by === (int) auth()->id(), Response::HTTP_FORBIDDEN, 'You can only edit notes created by you.');
+        abort_if($project->trashed(), Response::HTTP_FORBIDDEN, 'Cannot edit notes on a deleted project.');
+
+        $service->updateNote($note, $request->validated());
+        $currentPage = (int) $request->input('notes_page', 1);
+        $projectNotes = $this->getPaginatedProjectNotes($project, $currentPage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note updated successfully.',
+            'html' => view('projects.partials.project-notes-list', [
+                'projectNotes' => $projectNotes,
+                'canRemove' => auth()->user()->can('project.remove_notes_files'),
+                'canCreate' => auth()->user()->can('project.add_notes_files'),
+                'isDeletedProjectView' => $project->trashed(),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -320,6 +428,7 @@ class ProjectController extends Controller
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
                 'canCreate' => auth()->user()->can('project.add_notes_files'),
+                'isDeletedProjectView' => $project->trashed(),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -343,6 +452,7 @@ class ProjectController extends Controller
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
                 'canCreate' => auth()->user()->can('project.add_notes_files'),
+                'isDeletedProjectView' => $project->trashed(),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -458,12 +568,18 @@ class ProjectController extends Controller
         return match ($tab) {
             'overview' => $this->renderOverviewTab($project),
             'milestones' => $this->renderMilestonesTab($project),
-            'tasks' => app(ProjectTaskController::class)->renderTasksTab($project),
+            'tasks' => $service->renderTasksTab(
+                $project,
+                $request->filled('preferred_group') ? (string) $request->input('preferred_group') : null,
+                $request->filled('search') ? (string) $request->input('search') : null
+            ),
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
             'notes' => $this->renderNotesTab($project, $request),
             'meetings' => $this->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
+            'hosting' => app(\App\Http\Controllers\ProjectHostingController::class)->renderHostingTab($project),
+            'timelines' => $this->renderTimelinesTab($project),
             'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
@@ -514,7 +630,7 @@ class ProjectController extends Controller
 
         $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
         $agileSprints = AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get();
-        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function($q) {
+        $agileSprintGroups = \App\Models\SprintGroup::active()->with(['agileSprints' => function ($q) {
             $q->active()->orderBy('sort_order', 'asc');
         }])->orderBy('sort_order', 'asc')->get();
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
@@ -578,10 +694,18 @@ class ProjectController extends Controller
     {
         $projectNotes = $this->getPaginatedProjectNotes($project, (int) $request->input('notes_page', 1));
 
-        return view('projects.partials.tabs.notes', compact('project', 'projectNotes'))->render();
+        $canRemove = !$project->trashed() && auth()->user()->can('project.remove_notes_files');
+        $canCreate = !$project->trashed() && auth()->user()->can('project.add_notes_files');
+        $isDeletedProjectView = $project->trashed();
+
+        if ($request->ajax() && ($request->boolean('notes_only') || $request->header('X-Project-Notes-Pagination') || $request->input('view') === 'list')) {
+            return view('projects.partials.project-notes-list', compact('projectNotes', 'canRemove', 'canCreate', 'isDeletedProjectView'))->render();
+        }
+
+        return view('projects.partials.tabs.notes', compact('project', 'projectNotes', 'canRemove', 'canCreate', 'isDeletedProjectView'))->render();
     }
 
-    private function renderMeetingsTab(Project $project): string
+    public function renderMeetingsTab(Project $project): string
     {
         $authUser = auth()->user();
         $perPage = 4;
@@ -768,13 +892,13 @@ class ProjectController extends Controller
 
         // Project Tracking
         $projectTrackings = $project->trackings()
-        ->with([
-            'attachments',
-            'attachments.addedBy:id,name',
-        ])
-        ->latest('date')
-        ->latest('id')
-        ->get();
+            ->with([
+                'attachments',
+                'attachments.addedBy:id,name',
+            ])
+            ->latest('date')
+            ->latest('id')
+            ->get();
 
         $currentStatus = [
             'label' => $project->projectStatus?->name ?? 'No Status',
@@ -820,9 +944,45 @@ class ProjectController extends Controller
         ))->render();
     }
 
+    public function renderTimelinesTab(Project $project): string
+    {
+        return view('projects.partials.tabs.timelines', compact('project'))->render();
+    }
+
     private function renderSettingsTab(Project $project): string
     {
-        return view('projects.partials.tabs.settings', compact('project'))->render();
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $preferences = $project->notificationPreferences()
+            ->get()
+            ->keyBy('notification_type');
+
+        return view('projects.partials.tabs.settings', compact('project', 'notificationTypes', 'preferences'))->render();
+    }
+
+    public function updateNotificationSettings(Request $request, Project $project): JsonResponse
+    {
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $notifications = $request->input('notifications', []);
+
+        foreach ($notificationTypes as $typeKey => $label) {
+            $isEnabled = filter_var($notifications[$typeKey] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+            ProjectNotificationPreference::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'notification_type' => $typeKey,
+                ],
+                [
+                    'is_enabled' => $isEnabled,
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification settings updated successfully.',
+            'notifications' => $project->notificationPreferences()->pluck('is_enabled', 'notification_type'),
+        ], Response::HTTP_OK);
     }
 
     private function applyProjectChangeDateValidation($validator, ?string $changeDate, ?Carbon $minimumDate): void

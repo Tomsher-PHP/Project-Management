@@ -81,22 +81,23 @@
                                             @if ($currentTab === 'types' || $currentTab === 'tags')
                                                 <span class="mt-1.5 inline-flex h-3 w-3 shrink-0 rounded-full border border-bgray-200 dark:border-darkblack-400" style="background-color: {{ $record->color ?: '#E5E7EB' }}"></span>
                                             @endif
-                                            <div>
+                                            <div class="flex flex-col gap-1">
                                                 <div class="flex flex-wrap items-center gap-2">
                                                     <p class="text-base font-semibold text-bgray-900 dark:text-white">
                                                         {{ $record->name }}
                                                     </p>
                                                     @if ($record->is_system)
-                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
                                                             System
                                                         </span>
                                                     @endif
                                                     @if ($currentTab !== 'tags' && $record->is_default)
-                                                        <span class="inline-flex rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-600 dark:bg-success-900/30 dark:text-success-300">
+                                                        <span class="inline-flex px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-300">
                                                             Default
                                                         </span>
                                                     @endif
                                                 </div>
+                                                <span class="text-sm text-bgray-600 dark:text-bgray-300">{{ $record->code ?: '--' }}</span>
                                                 @if ($currentTab === 'types' && $record->description)
                                                     <p class="mt-1 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                                         {{ \Illuminate\Support\Str::limit($record->description, 60, '...') }}

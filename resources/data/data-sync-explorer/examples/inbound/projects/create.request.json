@@ -1,0 +1,82 @@
+{
+    "customer": {
+        "external_code": "CRM-CUS-1025",
+        "external_id": "9021",
+        "name": "ABC Technologies LLC",
+        "email": "info@abctech.ae",
+        "industry_code": "743813",
+        "website": "https://abctech.ae",
+        "country_code": "AE",
+        "emirate": "Dubai",
+        "company_address": "Level 14, Al Saada Tower, Dubai",
+        "sales_person_email": "sales@abctech.ae",
+        "contacts": [
+            {
+                "name": "Ahmed Mohammed",
+                "email": "ahmed@abctech.ae",
+                "mobile": "+971501234567",
+                "designation": "Director",
+                "is_primary": true
+            },
+            {
+                "name": "Sarah Jenkins",
+                "email": "sarah@abctech.ae",
+                "mobile": "+971507654321",
+                "designation": "Technical Lead",
+                "is_primary": false
+            }
+        ]
+    },
+    "projects": [
+        {
+            "external_code": "CRM-PRJ-1001",
+            "external_id": "PRJ-901",
+            "name": "Corporate Portal Redesign",
+            "project_flow": "agile",
+            "priority": "high",
+            "status_code": "100001",
+            "stage_code": "200001",
+            "start_date": "2026-12-01",
+            "end_date": "2027-02-28",
+            "customer_end_date": "2027-03-15",
+            "estimated_time_minutes": 12000,
+            "customer_estimate_minutes": 10800,
+            "default_task_estimate_seconds": 3600,
+            "domain": "portal.abctech.ae",
+            "sales_person_email": "sales@abctech.ae",
+            "technology_codes": [
+                "500001",
+                "500002"
+            ],
+            "category_codes": [
+                "600001"
+            ],
+            "service_type_codes": [
+                "700001"
+            ],
+            "default_billable": true,
+            "is_active": true
+        },
+        {
+            "external_code": "CRM-PRJ-1002",
+            "external_id": "PRJ-902",
+            "name": "Mobile Companion Application",
+            "project_flow": "agile",
+            "priority": "medium",
+            "status_code": "100001",
+            "stage_code": "200001",
+            "start_date": "2027-01-15",
+            "end_date": "2027-04-30",
+            "estimated_time_minutes": 9000,
+            "sales_person_email": "sales@abctech.ae",
+            "technology_codes": [
+                "500002"
+            ],
+            "category_codes": [
+                "600002"
+            ],
+            "default_billable": true,
+            "is_active": true
+        }
+    ]
+}

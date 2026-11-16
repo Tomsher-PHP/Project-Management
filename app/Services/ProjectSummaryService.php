@@ -207,7 +207,7 @@ class ProjectSummaryService
             return 0;
         }
 
-        return Task::whereIn('id', $involvedTaskIds)->where('request_status', 'pending')->count();
+        return Task::whereIn('id', $involvedTaskIds)->where('request_status', Task::REQUEST_PENDING)->count();
     }
 
     /**
@@ -413,5 +413,4 @@ class ProjectSummaryService
         $remainingMinutes = $minutes % 60;
         return sprintf('%02dh %02dm', $hours, $remainingMinutes);
     }
-
 }

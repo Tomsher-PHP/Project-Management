@@ -20,10 +20,18 @@ class MeetingSettingsSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            MeetingType::updateOrCreate(
-                ['name' => $type['name']],
-                $type
-            );
+            $record = MeetingType::withTrashed()->where('name', $type['name'])->first();
+            if ($record) {
+                $record->fill($type);
+                if (empty($record->code)) {
+                    $record->code = MeetingType::generateUniqueCode();
+                }
+                $record->save();
+
+                continue;
+            }
+
+            MeetingType::create($type + ['code' => MeetingType::generateUniqueCode()]);
         }
 
         $locations = [
@@ -33,10 +41,18 @@ class MeetingSettingsSeeder extends Seeder
         ];
 
         foreach ($locations as $location) {
-            MeetingLocation::updateOrCreate(
-                ['name' => $location['name']],
-                $location
-            );
+            $record = MeetingLocation::withTrashed()->where('name', $location['name'])->first();
+            if ($record) {
+                $record->fill($location);
+                if (empty($record->code)) {
+                    $record->code = MeetingLocation::generateUniqueCode();
+                }
+                $record->save();
+
+                continue;
+            }
+
+            MeetingLocation::create($location + ['code' => MeetingLocation::generateUniqueCode()]);
         }
 
         $tags = [
@@ -49,10 +65,18 @@ class MeetingSettingsSeeder extends Seeder
         ];
 
         foreach ($tags as $tag) {
-            MeetingTag::updateOrCreate(
-                ['name' => $tag['name']],
-                $tag
-            );
+            $record = MeetingTag::withTrashed()->where('name', $tag['name'])->first();
+            if ($record) {
+                $record->fill($tag);
+                if (empty($record->code)) {
+                    $record->code = MeetingTag::generateUniqueCode();
+                }
+                $record->save();
+
+                continue;
+            }
+
+            MeetingTag::create($tag + ['code' => MeetingTag::generateUniqueCode()]);
         }
     }
 }

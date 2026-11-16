@@ -45,14 +45,24 @@ class TechnologySeeder extends Seeder
         ];
 
         foreach ($array as $key => $name) {
-            Technology::firstOrCreate(
-                ['name' => $name],
-                [
-                    'sort_order' => $key + 1,
-                    'is_system' => 1,
-                    'is_active' => 1,
-                ]
-            );
+            $technology = Technology::withTrashed()->where('name', $name)->first();
+
+            if ($technology) {
+                if (empty($technology->code)) {
+                    $technology->code = Technology::generateUniqueCode();
+                    $technology->save();
+                }
+
+                continue;
+            }
+
+            Technology::create([
+                'name' => $name,
+                'code' => Technology::generateUniqueCode(),
+                'sort_order' => $key + 1,
+                'is_system' => 1,
+                'is_active' => 1,
+            ]);
         }
     }
 }

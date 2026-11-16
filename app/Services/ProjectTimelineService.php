@@ -54,17 +54,23 @@ class ProjectTimelineService
         });
     }
 
-    public function syncOriginalTimelineFromProject(Project $project): void
+    public function syncOriginalTimelineFromProject(Project $project, ?string $timelineName = null): void
     {
         $originalTimeline = $project->projectTimelines()->where('type', 'original')->first();
         if ($originalTimeline) {
-            $originalTimeline->update([
+            $updates = [
                 'start_date' => $project->start_date,
                 'end_date' => $project->end_date,
                 'customer_end_date' => $project->customer_end_date,
                 'estimated_time_seconds' => $project->estimated_time_seconds,
                 'customer_estimate_seconds' => $project->customer_estimate_seconds,
-            ]);
+            ];
+
+            if ($timelineName !== null && $timelineName !== '') {
+                $updates['name'] = $timelineName;
+            }
+
+            $originalTimeline->update($updates);
         }
     }
 

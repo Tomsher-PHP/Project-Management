@@ -105,6 +105,14 @@
         </div>
 
         @include('tasks.partials.create-modal')
+        @include('projects.partials.modals.task-move', [
+            'project' => null,
+            'projectTimelines' => collect(),
+            'projectMilestones' => collect(),
+            'projectSprints' => collect(),
+            'isDeletedProjectView' => false,
+        ])
+        @include('projects.partials.modals.task-logs')
     </main>
 
     <x-filters.drawer>

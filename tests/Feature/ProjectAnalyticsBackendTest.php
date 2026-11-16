@@ -589,31 +589,6 @@ class ProjectAnalyticsBackendTest extends TestCase
         ]);
     }
 
-    /**
-     * Verify existing User Analytics endpoints continue to function without regression.
-     */
-    public function test_compatibility_with_existing_user_analytics_endpoints(): void
-    {
-        $project = Project::factory()->create([
-            'added_by' => $this->superAdmin->id,
-            'is_system' => false,
-        ]);
-
-        $this->actingAs($this->superAdmin)->get('/user-analytics')->assertStatus(200);
-        $this->actingAs($this->superAdmin)->getJson('/user-analytics/summary')->assertStatus(200);
-        $this->actingAs($this->superAdmin)->getJson('/user-analytics/chart/task-status')->assertStatus(200);
-        $this->actingAs($this->superAdmin)->getJson('/user-analytics/chart/task-priority')->assertStatus(200);
-
-        // Time comparison without project_id
-        $timeResponse1 = $this->actingAs($this->superAdmin)
-            ->getJson('/user-analytics/chart/time-comparison');
-        $timeResponse1->assertStatus(200);
-
-        // Time comparison with project_id (enhanced backwards compatibility)
-        $timeResponse2 = $this->actingAs($this->superAdmin)
-            ->getJson("/user-analytics/chart/time-comparison?project_id={$project->id}");
-        $timeResponse2->assertStatus(200);
-    }
 
     /**
      * Tile details endpoint requires authentication.

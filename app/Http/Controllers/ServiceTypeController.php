@@ -32,6 +32,7 @@ class ServiceTypeController extends Controller
     public function store(ServiceTypeRequest $request)
     {
         $data = $request->validated();
+        $data['code'] = $data['code'] ?? ServiceType::generateUniqueCode();
         $data['added_by'] = auth()->id();
         $data['is_active'] = $request->has('is_active') ? $request->is_active : true;
 
@@ -54,6 +55,9 @@ class ServiceTypeController extends Controller
         }
 
         $data = $request->validated();
+        if (empty($serviceType->code)) {
+            $data['code'] = ServiceType::generateUniqueCode();
+        }
         $data['updated_by'] = auth()->id();
 
         $serviceType->update($data);

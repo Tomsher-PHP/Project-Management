@@ -7,6 +7,7 @@ use App\Models\ProjectMember;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
+use App\Models\ProjectHostingRecord;
 use App\Models\ProjectTimeline;
 use App\Models\ProjectServiceType;
 use App\Models\ServiceType;
@@ -299,11 +300,13 @@ class ProjectAnalyticsService
             $estimatedData[] = [
                 'x' => 0,
                 'y' => $originLabel,
+                'total_seconds' => 0,
             ];
 
             $actualData[] = [
                 'x' => 0,
                 'y' => $originLabel,
+                'total_seconds' => 0,
             ];
         }
 
@@ -317,11 +320,13 @@ class ProjectAnalyticsService
             $estimatedData[] = [
                 'x' => round($estimatedTotalSeconds / 3600, 2),
                 'y' => $milestone->name,
+                'total_seconds' => $estimatedTotalSeconds,
             ];
 
             $actualData[] = [
                 'x' => round($actualTotalSeconds / 3600, 2),
                 'y' => $milestone->name,
+                'total_seconds' => $actualTotalSeconds,
             ];
         }
 
@@ -461,10 +466,10 @@ class ProjectAnalyticsService
 
         $serviceTypes = $serviceTypeCounts->isNotEmpty()
             ? ServiceType::withTrashed()
-                ->whereIn('id', $serviceTypeCounts->keys())
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name', 'code', 'color'])
+            ->whereIn('id', $serviceTypeCounts->keys())
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'code', 'color'])
             : collect();
 
         $assignedProjectIds = ProjectServiceType::query()
@@ -1335,5 +1340,303 @@ class ProjectAnalyticsService
         $minutes = intdiv(max(0, $seconds) % 3600, 60);
 
         return sprintf('%02dh %02dm', $hours, $minutes);
+    }
+
+    /**
+     * Get parent projects overview list with timelines estimate & spent metrics and child count.
+     */
+    public function getParentProjectsOverview(User $authUser, ?User $selectedUser = null, ?int $projectId = null): array
+    {
+        $baseProjects = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId);
+
+        $parentProjects = (clone $baseProjects)
+            ->whereNull('projects.parent_project_id')
+            ->whereHas('reworkProjects')
+            ->with([
+                'serviceTypes:id,name,color',
+                'projectTimelines' => fn($q) => $q->select('id', 'project_id', 'estimated_time_seconds', 'actual_time_seconds'),
+            ])
+            ->withCount([
+                'reworkProjects as child_projects_count' => fn($q) => $q->whereNull('deleted_at'),
+            ])
+            ->orderBy('projects.name', 'asc')
+            ->get();
+
+        $items = $parentProjects->map(function (Project $project) {
+            $estimateSeconds = (int) $project->projectTimelines->sum('estimated_time_seconds');
+            $spentSeconds = (int) $project->projectTimelines->sum('actual_time_seconds');
+
+            return [
+                'id' => $project->id,
+                'name' => $project->name,
+                'project_code' => $project->project_code ?? '',
+                'url' => route('projects.edit', $project->id),
+                'service_types' => $project->serviceTypes->map(fn($st) => [
+                    'id' => $st->id,
+                    'name' => $st->name,
+                    'color' => $st->color ?: '#3B82F6',
+                ])->values()->all(),
+                'service_type_names' => $project->serviceTypes->isNotEmpty()
+                    ? $project->serviceTypes->pluck('name')->implode(', ')
+                    : '--',
+                'estimate_seconds' => $estimateSeconds,
+                'estimate_formatted' => $this->formatDuration($estimateSeconds),
+                'spent_seconds' => $spentSeconds,
+                'spent_formatted' => $this->formatDuration($spentSeconds),
+                'child_projects_count' => (int) $project->child_projects_count,
+            ];
+        })->values()->all();
+
+        return [
+            'can_view' => true,
+            'projects' => $items,
+            'total_count' => count($items),
+        ];
+    }
+
+    /**
+     * Get child projects overview list for a given parent project.
+     */
+    public function getChildProjectsOverview(User $authUser, Project $parentProject, ?User $selectedUser = null): array
+    {
+        $childQuery = Project::query()
+            ->accessibleBy($authUser)
+            ->whereNull('projects.deleted_at')
+            ->where('projects.parent_project_id', $parentProject->id);
+
+        if ($selectedUser) {
+            $childQuery->whereIn('projects.id', $this->getUserInvolvedProjectIds($selectedUser));
+        }
+
+        $children = $childQuery
+            ->with([
+                'serviceTypes:id,name,color',
+                'projectTimelines' => fn($q) => $q->select('id', 'project_id', 'estimated_time_seconds', 'actual_time_seconds'),
+            ])
+            ->withCount([
+                'reworkProjects as child_projects_count' => fn($q) => $q->whereNull('deleted_at'),
+            ])
+            ->orderBy('projects.name', 'asc')
+            ->get();
+
+        return $children->map(function (Project $child) {
+            $estimateSeconds = (int) $child->projectTimelines->sum('estimated_time_seconds');
+            $spentSeconds = (int) $child->projectTimelines->sum('actual_time_seconds');
+
+            return [
+                'id' => $child->id,
+                'name' => $child->name,
+                'project_code' => $child->project_code ?? '',
+                'url' => route('projects.edit', $child->id),
+                'service_types' => $child->serviceTypes->map(fn($st) => [
+                    'id' => $st->id,
+                    'name' => $st->name,
+                    'color' => $st->color ?: '#3B82F6',
+                ])->values()->all(),
+                'service_type_names' => $child->serviceTypes->isNotEmpty()
+                    ? $child->serviceTypes->pluck('name')->implode(', ')
+                    : '--',
+                'estimate_seconds' => $estimateSeconds,
+                'estimate_formatted' => $this->formatDuration($estimateSeconds),
+                'spent_seconds' => $spentSeconds,
+                'spent_formatted' => $this->formatDuration($spentSeconds),
+                'child_projects_count' => (int) $child->child_projects_count,
+            ];
+        })->values()->all();
+    }
+
+    /**
+     * Get hosting records expiring in the next specified days (default 45 days) for accessible projects.
+     */
+    public function getExpiringHostingRecords(User $authUser, ?User $selectedUser = null, ?int $projectId = null, int $days = 45): array
+    {
+        if (! $authUser->can('project_hosting.view')) {
+            return [
+                'can_view' => false,
+                'records' => [],
+                'total_count' => 0,
+            ];
+        }
+
+        $baseProjects = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId);
+        $projectIds = $baseProjects->pluck('projects.id')->toArray();
+
+        if (empty($projectIds)) {
+            return [
+                'can_view' => true,
+                'records' => [],
+                'total_count' => 0,
+            ];
+        }
+
+        $startDateStr = now()->toDateString();
+        $maxEndDateStr = now()->addDays($days)->toDateString();
+
+        $records = ProjectHostingRecord::query()
+            ->whereHas('hostingServiceStatus', function ($q) {
+                $q->where('code', 'active');
+            })
+            ->whereIn('project_id', $projectIds)
+            ->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '>=', $startDateStr)
+            ->whereDate('expiry_date', '<=', $maxEndDateStr)
+            ->orderBy('expiry_date', 'asc')
+            ->with([
+                'project:id,name,project_code',
+                'hostingProvider:id,name',
+                'hostingService:id,name',
+                'hostingServiceStatus:id,name,color',
+            ])
+            ->get();
+
+        $today = now()->startOfDay();
+        $in30Days = now()->addDays(30)->endOfDay();
+
+        $items = $records->map(function (ProjectHostingRecord $record) use ($today, $in30Days) {
+            $expiryDate = $record->expiry_date ? Carbon::parse($record->expiry_date)->startOfDay() : null;
+            $daysRemaining = $expiryDate ? (int) $today->diffInDays($expiryDate, false) : 0;
+
+            $expiryBadgeText = 'Not set';
+            $expiryBadgeClass = 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-400';
+
+            if ($expiryDate) {
+                if ($expiryDate->lt($today)) {
+                    $expiryBadgeText = 'Expired';
+                    $expiryBadgeClass = 'bg-error-50 text-error-300 dark:bg-darkblack-500 dark:text-error-300 font-semibold';
+                } elseif ($expiryDate->equalTo($today)) {
+                    $expiryBadgeText = 'Expires today';
+                    $expiryBadgeClass = 'bg-amber-50 text-amber-600 dark:bg-darkblack-500 dark:text-amber-400 font-semibold';
+                } elseif ($expiryDate->lte($in30Days)) {
+                    $expiryBadgeText = 'Expires in ' . $daysRemaining . ' ' . \Illuminate\Support\Str::plural('day', $daysRemaining);
+                    $expiryBadgeClass = 'bg-amber-50 text-amber-600 dark:bg-darkblack-500 dark:text-amber-400 font-medium';
+                } else {
+                    $expiryBadgeText = 'Expires in ' . $daysRemaining . ' ' . \Illuminate\Support\Str::plural('day', $daysRemaining);
+                    $expiryBadgeClass = 'bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300';
+                }
+            }
+
+            $ownershipLabel = ProjectHostingRecord::OWNERSHIP_TYPES[$record->ownership_type] ?? ucfirst((string) $record->ownership_type);
+            $isCompany = $record->ownership_type === ProjectHostingRecord::OWNERSHIP_COMPANY;
+
+            $statusName = $record->hostingServiceStatus?->name ?? '—';
+            $statusColor = $record->hostingServiceStatus?->color ?: '#6B7280';
+
+            return [
+                'id' => $record->id,
+                'project_id' => $record->project_id,
+                'project_name' => $record->project?->name ?? '—',
+                'project_code' => $record->project?->project_code ?? '',
+                'project_url' => $record->project_id ? route('projects.edit', $record->project_id) : '#',
+                'name' => $record->name,
+                'domain' => $record->domain,
+                'provider_name' => $record->hostingProvider?->name ?? '—',
+                'service_type_name' => $record->hostingService?->name ?? '—',
+                'ownership_type' => $record->ownership_type,
+                'ownership_label' => $ownershipLabel,
+                'is_company' => $isCompany,
+                'status_name' => $statusName,
+                'status_color' => $statusColor,
+                'expiry_date' => $record->expiry_date?->format('Y-m-d'),
+                'formatted_expiry_date' => \App\Providers\AppServiceProvider::formatAppDate($record->expiry_date),
+                'days_remaining' => max(0, $daysRemaining),
+                'expiry_badge_text' => $expiryBadgeText,
+                'expiry_badge_class' => $expiryBadgeClass,
+            ];
+        })->values()->all();
+
+        return [
+            'can_view' => true,
+            'records' => $items,
+            'total_count' => count($items),
+        ];
+    }
+
+    /**
+     * Get hosting records whose expiry date has passed strictly before today for accessible projects.
+     * Filtered by stored status: Active, Suspended, Expired.
+     */
+    public function getExpiredHostingRecords(User $authUser, ?User $selectedUser = null, ?int $projectId = null): array
+    {
+        if (! $authUser->can('project_hosting.view')) {
+            return [
+                'can_view' => false,
+                'records' => [],
+                'total_count' => 0,
+            ];
+        }
+
+        $baseProjects = $this->getFilteredProjectsQuery($authUser, $selectedUser, $projectId);
+        $projectIds = $baseProjects->pluck('projects.id')->toArray();
+
+        if (empty($projectIds)) {
+            return [
+                'can_view' => true,
+                'records' => [],
+                'total_count' => 0,
+            ];
+        }
+
+        $todayStr = now()->toDateString();
+        $allowedStatusCodes = ['active', 'suspended', 'expired'];
+
+        $records = ProjectHostingRecord::query()
+            ->whereHas('hostingServiceStatus', function ($q) use ($allowedStatusCodes) {
+                $q->whereIn('code', $allowedStatusCodes);
+            })
+            ->whereIn('project_id', $projectIds)
+            ->whereNotNull('expiry_date')
+            ->whereDate('expiry_date', '<', $todayStr)
+            ->orderBy('expiry_date', 'asc')
+            ->with([
+                'project:id,name,project_code',
+                'hostingProvider:id,name',
+                'hostingService:id,name',
+                'hostingServiceStatus:id,name,color',
+            ])
+            ->get();
+
+        $today = now()->startOfDay();
+
+        $items = $records->map(function (ProjectHostingRecord $record) use ($today) {
+            $expiryDate = $record->expiry_date ? Carbon::parse($record->expiry_date)->startOfDay() : null;
+            $overdueDays = $expiryDate ? (int) $expiryDate->diffInDays($today) : 0;
+
+            $expiryBadgeText = 'Expired ' . $overdueDays . ' ' . \Illuminate\Support\Str::plural('day', $overdueDays) . ' ago';
+            $expiryBadgeClass = 'bg-error-50 text-error-300 dark:bg-darkblack-500 dark:text-error-300 font-semibold';
+
+            $ownershipLabel = ProjectHostingRecord::OWNERSHIP_TYPES[$record->ownership_type] ?? ucfirst((string) $record->ownership_type);
+            $isCompany = $record->ownership_type === ProjectHostingRecord::OWNERSHIP_COMPANY;
+
+            $statusName = $record->hostingServiceStatus?->name ?? '—';
+            $statusColor = $record->hostingServiceStatus?->color ?: '#6B7280';
+
+            return [
+                'id' => $record->id,
+                'project_id' => $record->project_id,
+                'project_name' => $record->project?->name ?? '—',
+                'project_code' => $record->project?->project_code ?? '',
+                'project_url' => $record->project_id ? route('projects.edit', $record->project_id) : '#',
+                'name' => $record->name,
+                'domain' => $record->domain,
+                'provider_name' => $record->hostingProvider?->name ?? '—',
+                'service_type_name' => $record->hostingService?->name ?? '—',
+                'ownership_type' => $record->ownership_type,
+                'ownership_label' => $ownershipLabel,
+                'is_company' => $isCompany,
+                'status_name' => $statusName,
+                'status_color' => $statusColor,
+                'expiry_date' => $record->expiry_date?->format('Y-m-d'),
+                'formatted_expiry_date' => \App\Providers\AppServiceProvider::formatAppDate($record->expiry_date),
+                'overdue_days' => $overdueDays,
+                'expiry_badge_text' => $expiryBadgeText,
+                'expiry_badge_class' => $expiryBadgeClass,
+            ];
+        })->values()->all();
+
+        return [
+            'can_view' => true,
+            'records' => $items,
+            'total_count' => count($items),
+        ];
     }
 }

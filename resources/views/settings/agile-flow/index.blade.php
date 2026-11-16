@@ -18,7 +18,7 @@
     <div class="2xl:flex 2xl:space-x-[48px]">
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
             <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
-                    @include('settings.project-tabs', ['currentTab' => $currentTab])
+                @include('settings.project-tabs', ['currentTab' => $currentTab])
 
                 <div class="flex flex-col space-y-5">
                     <div class="table-content w-full overflow-x-auto">
@@ -32,16 +32,16 @@
                                         <x-sorting.sortable-column column="name" label="Name" />
                                     </div>
                                 </td>
-                                @if($currentTab === 'sprints')
-                                <td class="px-6 py-5 xl:w-[200px] xl:px-0">
-                                    <div class="flex w-full items-center space-x-2.5">
-                                        <x-sorting.sortable-column column="sprint_group_id" label="Sprint Group" />
-                                    </div>
-                                </td>
+                                @if ($currentTab === 'sprints')
+                                    <td class="px-6 py-5 xl:w-[200px] xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
+                                            <x-sorting.sortable-column column="sprint_group_id" label="Sprint Group" />
+                                        </div>
+                                    </td>
                                 @elseif($currentTab === 'sprint_groups')
-                                <td class="px-6 py-5 xl:w-[150px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Sprint Count</span>
-                                </td>
+                                    <td class="px-6 py-5 xl:w-[150px] xl:px-0">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Sprint Count</span>
+                                    </td>
                                 @endif
                                 <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
@@ -72,31 +72,31 @@
                                                         {{ $record->name }}
                                                     </p>
                                                     @if ($record->is_system)
-                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
                                                             System
                                                         </span>
                                                     @endif
                                                 </div>
-                                                @if($currentTab !== 'sprint_groups')
-                                                <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
-                                                    {{ \Illuminate\Support\Str::limit($record->description ?: 'No description added.', 50, '...') }}
-                                                </p>
+                                                @if ($currentTab !== 'sprint_groups')
+                                                    <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
+                                                        {{ \Illuminate\Support\Str::limit($record->description ?: 'No description added.', 50, '...') }}
+                                                    </p>
                                                 @endif
                                             </div>
                                         </div>
                                     </td>
-                                    @if($currentTab === 'sprints')
-                                    <td class="px-6 py-5 xl:w-[200px] xl:px-0">
-                                        <p class="text-sm text-bgray-700 dark:text-bgray-300">
-                                            {{ $record->sprintGroup ? $record->sprintGroup->name : '-' }}
-                                        </p>
-                                    </td>
+                                    @if ($currentTab === 'sprints')
+                                        <td class="px-6 py-5 xl:w-[200px] xl:px-0">
+                                            <p class="text-sm text-bgray-700 dark:text-bgray-300">
+                                                {{ $record->sprintGroup ? $record->sprintGroup->name : '-' }}
+                                            </p>
+                                        </td>
                                     @elseif($currentTab === 'sprint_groups')
-                                    <td class="px-6 py-5 xl:w-[150px] xl:px-0">
-                                        <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">
-                                            {{ $record->agile_sprints_count ?? 0 }}
-                                        </p>
-                                    </td>
+                                        <td class="px-6 py-5 xl:w-[150px] xl:px-0">
+                                            <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                                                {{ $record->agile_sprints_count ?? 0 }}
+                                            </p>
+                                        </td>
                                     @endif
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center text-center">
@@ -145,26 +145,26 @@
             <input type="color" name="color" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
         </div>
 
-        @if($currentTab === 'sprints' && isset($sprintGroups))
-        <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sprint Group</label>
-            <select name="sprint_group_id" class="tom-select w-full border-gray-300 dark:border-darkblack-400">
-                <option value="">Select Sprint Group</option>
-                @foreach($sprintGroups as $group)
-                    <option value="{{ $group->id }}">{{ $group->name }}</option>
-                @endforeach
-            </select>
-        </div>
+        @if ($currentTab === 'sprints' && isset($sprintGroups))
+            <div>
+                <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sprint Group</label>
+                <select name="sprint_group_id" class="tom-select w-full border-gray-300 dark:border-darkblack-400">
+                    <option value="">Select Sprint Group</option>
+                    @foreach ($sprintGroups as $group)
+                        <option value="{{ $group->id }}">{{ $group->name }}</option>
+                    @endforeach
+                </select>
+            </div>
         @endif
 
-        @if($currentTab !== 'sprint_groups')
-        <div>
-            <div class="mb-2.5 flex items-center justify-between gap-3">
-                <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
-                <span class="text-xs font-medium text-bgray-600 dark:text-bgray-300"><span data-modal-description-count>0</span>/100</span>
+        @if ($currentTab !== 'sprint_groups')
+            <div>
+                <div class="mb-2.5 flex items-center justify-between gap-3">
+                    <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
+                    <span class="text-xs font-medium text-bgray-600 dark:text-bgray-300"><span data-modal-description-count>0</span>/100</span>
+                </div>
+                <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
             </div>
-            <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
-        </div>
         @endif
 
         <div>
@@ -185,7 +185,7 @@
 
     <x-filters.drawer>
         <x-filters.input-search name="search" :label="$entityLabel . ' Name'" />
-        @if($currentTab === 'sprints' && isset($sprintGroups))
+        @if ($currentTab === 'sprints' && isset($sprintGroups))
             <x-filters.multi-select name="sprint_group_id" label="Sprint Group" :options="$sprintGroups" />
         @endif
         <x-filters.select name="is_active" label="Is Active" :options="[

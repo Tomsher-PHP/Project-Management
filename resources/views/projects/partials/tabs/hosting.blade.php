@@ -1,0 +1,99 @@
+<!-- Project Hosting Tab -->
+@can('project_hosting.view')
+    <div class="space-y-4" data-project-hosting-root>
+        <!-- Summary Cards -->
+        @include('projects.partials.tabs.hosting.summary-cards', [
+            'project' => $project,
+            'summaryMetrics' => $summaryMetrics,
+        ])
+
+        <!-- Main Hosting Section -->
+        <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+            <!-- Header -->
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
+                <div>
+                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">
+                        Server & Hosting
+                    </h4>
+                    <p class="text-xs text-bgray-700 dark:text-bgray-300">
+                        Manage project hosting services, providers, billing, and renewal dates.
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    @if (!$project->trashed())
+                        <x-button.export-button :action="route('projects.hosting.export', $project)" :params="request()->only(['search', 'hosting_provider_id', 'hosting_service_id', 'hosting_service_status_id', 'ownership_type', 'expiry_status'])" label="Export" aria-label="Export project hosting records" data-project-hosting-export-form button-class="inline-flex items-center gap-2 rounded-lg border border-success-300 bg-white px-3 py-1.5 text-xs font-semibold text-success-400 shadow-sm transition duration-200 hover:bg-success-300 hover:text-white dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-success-300 dark:hover:text-white" />
+                    @endif
+                    @if (!$project->trashed())
+                        @can('project_hosting.create')
+                            <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400" data-project-hosting-modal-open>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span>Add Hosting</span>
+                            </button>
+                        @endcan
+                    @endif
+                </div>
+            </div>
+
+            @if ($project->trashed())
+                <div class="px-6 py-10 text-center">
+                    <div class="mx-auto max-w-md rounded-[8px] border border-dashed border-bgray-300 bg-bgray-50 px-6 py-8 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
+                        <p class="text-base font-semibold text-error-300">
+                            No server & hosting records.
+                        </p>
+                        <p class="mt-2 text-sm text-error-300">
+                            Server & hosting records are not available for deleted projects.
+                        </p>
+                    </div>
+                </div>
+            @else
+                <!-- Search & Filters Toolbar -->
+                @include('projects.partials.tabs.hosting.filters', [
+                    'project' => $project,
+                    'filterOptions' => $filterOptions,
+                ])
+
+                <!-- Records List & Pagination Container -->
+                @php
+                    $hostingIndexUrl = $project->trashed() ? route('projects.restore.hosting.index', ['id' => $project->id]) : route('projects.hosting.index', $project);
+                @endphp
+                <div id="project-hosting-history" data-project-hosting-container data-index-url="{{ $hostingIndexUrl }}" class="relative min-h-[160px]">
+                    @include('projects.partials.tabs.hosting.list', [
+                        'project' => $project,
+                        'hostingRecords' => $hostingRecords,
+                        'formOptions' => $formOptions,
+                    ])
+                </div>
+            @endif
+        </section>
+
+        @if (!$project->trashed() && (auth()->user()?->can('project_hosting.create') || auth()->user()?->can('project_hosting.edit')))
+            @include('projects.partials.tabs.hosting.form-modal', [
+                'project' => $project,
+                'formOptions' => $formOptions,
+            ])
+        @endif
+
+        @include('projects.partials.tabs.hosting.view-modal', [
+            'project' => $project,
+        ])
+
+        @include('projects.partials.tabs.hosting.renewal-history-modal', [
+            'project' => $project,
+        ])
+
+        @include('projects.partials.tabs.hosting.status-history-modal', [
+            'project' => $project,
+        ])
+
+        @if (!$project->trashed())
+            @can('project_hosting.edit')
+                @include('projects.partials.tabs.hosting.renewal-modal', [
+                    'project' => $project,
+                    'formOptions' => $formOptions,
+                ])
+            @endcan
+        @endif
+    </div>
+@endcan

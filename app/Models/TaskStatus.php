@@ -18,6 +18,7 @@ class TaskStatus extends Model
     public const TYPE_ACTIVE = 'active';
     public const TYPE_COMPLETED = 'completed';
     public const TYPE_ARCHIVED = 'archived';
+    
 
     protected $fillable = [
         'name',

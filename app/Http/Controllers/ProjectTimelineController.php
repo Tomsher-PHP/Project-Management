@@ -28,7 +28,7 @@ class ProjectTimelineController extends Controller
             'success' => true,
             'message' => 'Project timeline created successfully.',
             'timeline' => $timeline,
-            'html' => view('projects.partials.tabs.settings.timelines-list', [
+            'html' => view('projects.partials.tabs.timelines.timelines-list', [
                 'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
                 'project' => $project,
                 'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
@@ -49,7 +49,7 @@ class ProjectTimelineController extends Controller
             'success' => true,
             'message' => 'Project timeline updated successfully.',
             'timeline' => $timeline,
-            'html' => view('projects.partials.tabs.settings.timelines-list', [
+            'html' => view('projects.partials.tabs.timelines.timelines-list', [
                 'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
                 'project' => $project,
                 'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
@@ -83,7 +83,7 @@ class ProjectTimelineController extends Controller
             'status' => true,
             'success' => true,
             'message' => 'Project timeline deleted successfully.',
-            'html' => view('projects.partials.tabs.settings.timelines-list', [
+            'html' => view('projects.partials.tabs.timelines.timelines-list', [
                 'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
                 'project' => $project,
                 'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
@@ -98,13 +98,13 @@ class ProjectTimelineController extends Controller
         abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
 
         $timeline = $this->timelineService->activateTimeline($projectTimeline, request('remark'));
-        
+
         return response()->json([
             'status' => true,
             'success' => true,
             'message' => 'Project timeline activated successfully.',
             'timeline' => $timeline,
-            'html' => view('projects.partials.tabs.settings.timelines-list', [
+            'html' => view('projects.partials.tabs.timelines.timelines-list', [
                 'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
                 'project' => $project,
                 'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),
@@ -119,13 +119,13 @@ class ProjectTimelineController extends Controller
         abort_unless($projectTimeline->project_id === $project->id, 403, 'Timeline does not belong to this project.');
 
         $timeline = $this->timelineService->completeTimeline($projectTimeline, request('remark'));
-        
+
         return response()->json([
             'status' => true,
             'success' => true,
             'message' => 'Project timeline completed successfully.',
             'timeline' => $timeline,
-            'html' => view('projects.partials.tabs.settings.timelines-list', [
+            'html' => view('projects.partials.tabs.timelines.timelines-list', [
                 'projectTimelines' => $project->projectTimelines()->orderBy('sort_order')->get(),
                 'project' => $project,
                 'canEdit' => auth()->user()->can('project.edit') && !$project->trashed(),

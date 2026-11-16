@@ -5,24 +5,27 @@ namespace App\Services;
 use App\Models\Appraisal;
 use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
+use App\Models\LeaveNotificationSetting;
+use App\Models\LeaveRequest;
+use App\Models\Meeting;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\Shift;
 use App\Models\Task;
+use App\Models\TaskExtendTimeRequest;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\UserNotificationSetting;
+use App\Notifications\LeaveExternalRecipientNotification;
 use App\Notifications\TaskAssignedNotification;
-use App\Models\TaskExtendTimeRequest;
 use App\Providers\AppServiceProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use App\Models\LeaveRequest;
-use App\Models\Meeting;
+
 
 class NotificationService
 {
@@ -121,15 +124,112 @@ class NotificationService
     }
 
     // Multiple users
-    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = [], array $emailSubjectContext = []): void
-    {
-        User::whereIn('id', $userIds)
-            ->chunk(50, function ($users) use ($title, $message, $url, $notificationType, $actorUserId, $projectId, $emailDetails, $emailSubjectContext) {
+    public function sendToMany(
+        array $userIds,
+        string $title,
+        string $message,
+        ?string $url = null,
+        ?string $notificationType = null,
+        ?int $actorUserId = null,
+        ?int $projectId = null,
+        array $emailDetails = [],
+        array $emailSubjectContext = []
+    ): void {
+        $isLeaveNotification =
+            $notificationType === UserNotificationSetting::LEAVE_REQUEST;
+
+        $configuredUserIds = [];
+        $externalEmails = [];
+
+        /*
+        * Load additional recipients only for leave notifications.
+        */
+        if ($isLeaveNotification) {
+            $setting = LeaveNotificationSetting::query()->first();
+
+            if ($setting && $setting->is_enabled) {
+                $configuredUserIds = collect($setting->user_ids ?? [])
+                    ->filter()
+                    ->map(fn($id) => (int) $id)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $externalEmails = collect($setting->external_emails ?? [])
+                    ->map(fn($email) => strtolower(trim($email)))
+                    ->filter(fn($email) => filter_var(
+                        $email,
+                        FILTER_VALIDATE_EMAIL
+                    ))
+                    ->unique()
+                    ->values()
+                    ->all();
+            }
+        }
+
+        /*
+        * Combine normal recipients with configured PMS recipients.
+        */
+        $allUserIds = collect($userIds)
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->merge($configuredUserIds)
+            ->unique()
+            ->values()
+            ->all();
+
+        $configuredUserIdLookup = array_fill_keys(
+            $configuredUserIds,
+            true
+        );
+
+        $mailRecipientEmails = [];
+
+        /*
+        * Notify PMS users.
+        *
+        * Configured PMS recipients receive both database and
+        * email notifications. Other recipients retain their
+        * existing notification channel preferences.
+        */
+        User::whereIn('id', $allUserIds)
+            ->chunk(50, function ($users) use (
+                $title,
+                $message,
+                $url,
+                $notificationType,
+                $actorUserId,
+                $projectId,
+                $emailDetails,
+                $emailSubjectContext,
+                $configuredUserIdLookup,
+                &$mailRecipientEmails
+            ) {
                 foreach ($users as $user) {
-                    $channels = $this->getNotificationChannels($user->id, $notificationType);
+                    $isConfiguredRecipient = isset(
+                        $configuredUserIdLookup[(int) $user->id]
+                    );
+
+                    if ($isConfiguredRecipient) {
+                        $channels = ['database', 'mail'];
+                    } else {
+                        $channels = $this->getNotificationChannels(
+                            $user->id,
+                            $notificationType
+                        );
+                    }
 
                     if ($channels === []) {
                         continue;
+                    }
+
+                    if (
+                        in_array('mail', $channels, true) &&
+                        filled($user->email)
+                    ) {
+                        $mailRecipientEmails[] = strtolower(
+                            trim($user->email)
+                        );
                     }
 
                     $user->notify(new TaskAssignedNotification(
@@ -139,11 +239,44 @@ class NotificationService
                         $channels,
                         $actorUserId,
                         $projectId,
-                        $this->buildEmailDetails($emailDetails, $actorUserId, $projectId),
+                        $this->buildEmailDetails(
+                            $emailDetails,
+                            $actorUserId,
+                            $projectId
+                        ),
                         $emailSubjectContext
                     ));
                 }
             });
+
+        /*
+        * Send leave emails to external addresses.
+        *
+        * Do not send a second email to an address that has
+        * already received the email through a PMS user account.
+        */
+        if ($isLeaveNotification && $externalEmails !== []) {
+            $externalEmails = array_values(array_diff(
+                $externalEmails,
+                array_unique($mailRecipientEmails)
+            ));
+
+            foreach ($externalEmails as $email) {
+                \Illuminate\Support\Facades\Notification::route(
+                    'mail',
+                    $email
+                )->notify(new LeaveExternalRecipientNotification(
+                    $title,
+                    $message,
+                    $url,
+                    $this->buildEmailDetails(
+                        $emailDetails,
+                        $actorUserId,
+                        $projectId
+                    )
+                ));
+            }
+        }
     }
 
     public function notifyAppraisalAssigned(Appraisal $appraisal, User $actor, int $assigneeId): void
@@ -2857,7 +2990,7 @@ class NotificationService
                 ->pluck('id')
                 ->filter()
                 ->reject(
-                    fn ($userId) => (int) $userId === (int) $cancelledBy->id
+                    fn($userId) => (int) $userId === (int) $cancelledBy->id
                 )
                 ->unique()
                 ->values()

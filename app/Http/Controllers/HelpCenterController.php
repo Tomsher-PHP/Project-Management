@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FeatureUpdate;
+use App\Models\FeatureUpdateUserStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 
@@ -12,30 +14,83 @@ class HelpCenterController extends Controller
      */
     public function index(): View
     {
+        $articles = $this->articles();
+
         return view('help-center.index', [
-            'categories' => $this->categories(),
-            'articles' => $this->articles(),
-            'searchIndex' => $this->searchIndex(),
+            'categories' => $this->categories($articles),
+            'articles' => $articles,
+            'searchIndex' => $this->searchIndex($articles),
             'currentArticle' => null,
         ]);
     }
 
     /**
-     * Display a single Help Center article.
+     * Display a single Help Center announcement.
+     *
+     * Opening an announcement automatically marks it as read.
      */
     public function show(string $article): View
     {
+        // $user = auth()->user();
+
+        // Find the currently published announcement.
+        $featureUpdate = FeatureUpdate::query()
+            ->where('slug', $article)
+            ->where('status', 'published')
+            ->where(function ($query) {
+                $query->whereNull('publish_at')
+                    ->orWhere('publish_at', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now());
+            })
+            ->firstOrFail();
+
+
+            $user = auth()->user();
+
+            if ($user) {
+                FeatureUpdateUserStatus::updateOrCreate(
+                    [
+                        'feature_update_id' => $featureUpdate->id,
+                        'user_id' => $user->id,
+                    ],
+                    [
+                        'acknowledged_at' => now(),
+                        'skipped_at' => null,
+                    ]
+                );
+            }
+
+
+        // Mark this announcement as read for the current user.
+        FeatureUpdateUserStatus::updateOrCreate(
+            [
+                'feature_update_id' => $featureUpdate->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'acknowledged_at' => now(),
+                'skipped_at' => null,
+            ]
+        );
+
+        // Fetch articles AFTER updating the read status.
         $articles = $this->articles();
+
         $currentArticle = $articles->firstWhere('slug', $article);
 
         abort_if(blank($currentArticle), 404);
 
-        $currentIndex = $articles->search(fn (array $item): bool => $item['slug'] === $article);
+        $currentIndex = $articles->search(
+            fn (array $item): bool => $item['slug'] === $article
+        );
 
         return view('help-center.show', [
-            'categories' => $this->categories(),
+            'categories' => $this->categories($articles),
             'articles' => $articles,
-            'searchIndex' => $this->searchIndex(),
+            'searchIndex' => $this->searchIndex($articles),
             'currentArticle' => $currentArticle,
             'previousArticle' => $articles->get($currentIndex - 1),
             'nextArticle' => $articles->get($currentIndex + 1),
@@ -43,76 +98,113 @@ class HelpCenterController extends Controller
     }
 
     /**
-     * Central Help Center registry.
+     * Get all currently published feature announcements.
      *
-     * Add future modules here so the home, sidebar, article pages, and search
-     * stay in sync without duplicating navigation logic.
+     * Help Center displays all published announcements,
+     * regardless of their popup targeting.
      */
-    private function categories(): array
+    private function publishedFeatures(): Collection
     {
-        return [
-            [
-                'title' => 'Project Management',
-                'articles' => [
-                    [
-                        'slug' => 'start-assigned-task',
-                        'title' => 'How do I start working on an assigned task?',
-                        'description' => 'Learn how to move an assigned task into progress, start the timer, and complete or pause work safely.',
-                        'keywords' => 'assigned task workspace kanban board open todo progressing progress timer play completed on hold agile linear',
-                        'view' => 'help-center.articles.start-assigned-task',
-                    ],
-                    [
-                        'slug' => 'no-task-assigned',
-                        'title' => 'What should I do if no task is assigned to me?',
-                        'description' => 'Create a task request with the right project, priority, estimate, and details when no work is assigned.',
-                        'keywords' => 'no task assigned task request reporter approve reject estimated time priority project description working hours',
-                        'view' => 'help-center.articles.no-task-assigned',
-                    ],
-                    [
-                        'slug' => 'request-more-estimated-time',
-                        'title' => 'How do I request more estimated time for a task?',
-                        'description' => 'Request an estimate change when a task needs more approved working time.',
-                        'keywords' => 'request estimate change estimated hours minutes approval modal new estimate time extension expires',
-                        'view' => 'help-center.articles.request-more-estimated-time',
-                    ],
-                    [
-                        'slug' => 'task-management-best-practices',
-                        'title' => 'What are the best practices for task management?',
-                        'description' => 'Follow the core timer, status, estimate, and task-request habits that keep project reports accurate.',
-                        'keywords' => 'best practices task management reporting timer stop start status updated estimate extension task request',
-                        'view' => 'help-center.articles.task-management-best-practices',
-                    ],
-                ],
-            ],
-        ];
+        $userId = auth()->id();
+
+        return FeatureUpdate::query()
+            ->where('status', 'published')
+            ->where(function ($query) {
+                $query->whereNull('publish_at')
+                    ->orWhere('publish_at', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now());
+            })
+            ->with([
+                'userStatuses' => function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])
+            ->orderByDesc('publish_at')
+            ->orderByDesc('id')
+            ->get();
     }
 
+    /**
+     * Convert feature records into the Help Center article structure.
+     */
     private function articles(): Collection
     {
-        return collect($this->categories())
-            ->flatMap(fn (array $category) => collect($category['articles'])->map(function (array $article) use ($category): array {
-                $article['category'] = $category['title'];
-                $article['url'] = route('help-center.show', $article['slug']);
+        return $this->publishedFeatures()
+            ->map(function (FeatureUpdate $feature): array {
+                $userStatus = $feature->userStatuses->first();
+                $category = $feature->module_name ?: 'General';
+
+                $description = $feature->short_description
+                    ?: strip_tags($feature->description ?? '');
+
+                $article = [
+                    'id' => $feature->id,
+                    'slug' => $feature->slug,
+                    'title' => $feature->title,
+                    'description' => $description,
+                    'content' => $feature->description,
+                    'instructions' => $feature->instructions,
+                    'feature_type' => $feature->feature_type,
+                    'module_name' => $feature->module_name,
+                    'icon' => $feature->icon,
+                    'cover_image' => $feature->cover_image,
+                    'screenshots' => $feature->screenshots ?? [],
+                    'video_url' => $feature->video_url,
+                    'category' => $category,
+                    'is_read' => !is_null($userStatus?->acknowledged_at),
+                    'is_unread' => is_null($userStatus?->acknowledged_at),
+                    'is_skipped' => !is_null($userStatus?->skipped_at),
+                    'published_at' => $feature->publish_at,
+                    'url' => route('help-center.show', $feature->slug),
+                ];
+
                 $article['searchable'] = trim(implode(' ', [
                     $article['title'],
                     $article['description'],
-                    $article['keywords'],
+                    $article['content'],
+                    $article['instructions'],
+                    $article['feature_type'],
+                    $article['module_name'],
                     $article['category'],
                 ]));
 
                 return $article;
-            }))
+            })
             ->values();
     }
 
-    private function searchIndex(): Collection
+    /**
+     * Group announcements by module for Help Center navigation.
+     */
+    private function categories(Collection $articles): array
     {
-        return $this->articles()
+        return $articles
+            ->groupBy('category')
+            ->map(function (Collection $items, string $category) {
+                return [
+                    'title' => $category,
+                    'articles' => $items->values()->all(),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Build the Help Center search index.
+     */
+    private function searchIndex(Collection $articles): Collection
+    {
+        return $articles
             ->map(fn (array $article): array => [
                 'title' => $article['title'],
                 'description' => $article['description'],
                 'url' => $article['url'],
                 'searchable' => $article['searchable'],
+                'is_read' => $article['is_read'],
             ])
             ->values();
     }

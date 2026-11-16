@@ -32,6 +32,7 @@ class ProjectStatusController extends Controller
     public function store(ProjectStatusRequest $request)
     {
         $data = $request->validated();
+        $data['code'] = $data['code'] ?? ProjectStatus::generateUniqueCode();
         $data['is_default'] = $request->boolean('is_default');
 
         $projectStatus = DB::transaction(function () use ($data) {
@@ -54,6 +55,9 @@ class ProjectStatusController extends Controller
     public function update(ProjectStatusRequest $request, ProjectStatus $projectStatus)
     {
         $data = $request->validated();
+        if (empty($projectStatus->code) || ! preg_match('/^\d{6}$/', (string) $projectStatus->code)) {
+            $data['code'] = ProjectStatus::generateUniqueCode();
+        }
         $data['is_default'] = $request->boolean('is_default');
 
         $projectStatus = DB::transaction(function () use ($projectStatus, $data) {

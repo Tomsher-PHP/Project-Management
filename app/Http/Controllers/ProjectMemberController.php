@@ -46,11 +46,19 @@ class ProjectMemberController extends Controller
 
                 if ($existing) {
                     if ($existing->pivot->removed_at) {
-                        $project->membersAll()->updateExistingPivot($userId, [
+                        $member = ProjectMember::where('project_id', $project->id)
+                            ->where('user_id', $userId)
+                            ->first();
+
+                        if ($member) {
+                            $member->deleteQuietly();
+                        }
+
+                        ProjectMember::create([
+                            'project_id' => $project->id,
+                            'user_id' => $userId,
                             'project_role' => $role,
                             'is_active' => true,
-                            'removed_at' => null,
-                            'removed_by' => null,
                         ]);
 
                         $newlyAddedIds[] = $userId;
@@ -61,11 +69,11 @@ class ProjectMemberController extends Controller
                         ];
                     }
                 } else {
-                    $project->membersAll()->syncWithoutDetaching([
-                        $userId => [
-                            'project_role' => $role,
-                            'is_active' => true,
-                        ]
+                    ProjectMember::create([
+                        'project_id' => $project->id,
+                        'user_id' => $userId,
+                        'project_role' => $role,
+                        'is_active' => true,
                     ]);
 
                     $newlyAddedIds[] = $userId;
@@ -168,10 +176,15 @@ class ProjectMemberController extends Controller
             ->whereNull('project_members.removed_at')
             ->firstOrFail();
 
-        $previousIsActive = (bool) $member->pivot->is_active;
+        $projectMember = ProjectMember::where('project_id', $project->id)
+            ->where('user_id', $userId)
+            ->whereNull('removed_at')
+            ->firstOrFail();
+
+        $previousIsActive = (bool) $projectMember->is_active;
         $newIsActive = ! $previousIsActive;
 
-        $updated = $member->pivot->update([
+        $updated = $projectMember->update([
             'is_active' => $newIsActive,
         ]);
         if ($updated) {
@@ -255,9 +268,20 @@ class ProjectMemberController extends Controller
         $oldRole = $targetMember?->pivot->project_role;
 
         if (!in_array($role, ['team_leader', 'coordinator'], true)) {
-            $project->membersAll()->updateExistingPivot($userId, [
-                'project_role' => $role,
-            ]);
+            $targetMember = ProjectMember::where('project_id', $project->id)
+                ->where('user_id', $userId)
+                ->whereNull('removed_at')
+                ->first();
+
+            if ($targetMember) {
+                $targetMember->update([
+                    'project_role' => $role,
+                ]);
+            } else {
+                $project->membersAll()->updateExistingPivot($userId, [
+                    'project_role' => $role,
+                ]);
+            }
 
             if ($oldRole !== $role) {
                 $roleNotifications[] = [
@@ -280,9 +304,20 @@ class ProjectMemberController extends Controller
             ->first();
 
         if ($existingRoleHolder) {
-            $project->membersAll()->updateExistingPivot($existingRoleHolder->id, [
-                'project_role' => 'member',
-            ]);
+            $existingMember = ProjectMember::where('project_id', $project->id)
+                ->where('user_id', $existingRoleHolder->id)
+                ->whereNull('removed_at')
+                ->first();
+
+            if ($existingMember) {
+                $existingMember->update([
+                    'project_role' => 'member',
+                ]);
+            } else {
+                $project->membersAll()->updateExistingPivot($existingRoleHolder->id, [
+                    'project_role' => 'member',
+                ]);
+            }
 
             $updatedUserIds[] = (int) $existingRoleHolder->id;
             $roleNotifications[] = [
@@ -292,9 +327,20 @@ class ProjectMemberController extends Controller
             ];
         }
 
-        $project->membersAll()->updateExistingPivot($userId, [
-            'project_role' => $role,
-        ]);
+        $targetMember = ProjectMember::where('project_id', $project->id)
+            ->where('user_id', $userId)
+            ->whereNull('removed_at')
+            ->first();
+
+        if ($targetMember) {
+            $targetMember->update([
+                'project_role' => $role,
+            ]);
+        } else {
+            $project->membersAll()->updateExistingPivot($userId, [
+                'project_role' => $role,
+            ]);
+        }
 
         if ($oldRole !== $role) {
             $roleNotifications[] = [

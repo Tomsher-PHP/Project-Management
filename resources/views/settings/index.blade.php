@@ -141,7 +141,24 @@
                         </div>
                     </div>
                 </a>
-            @endcanany
+            @endcan
+
+            @can('server_hosting.view')
+                <a href="{{ route('settings.hosting-providers.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Server & Hosting
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
 
             @can('task_settings.view')
                 <a href="{{ route('settings.task-statuses.index') }}" class="block group transition duration-300">
@@ -253,7 +270,7 @@
                             </div>
 
                             <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
-                                Leave Types
+                                Leave Settings
                             </h3>
 
                         </div>
@@ -261,7 +278,26 @@
                 </a>
             @endcan
 
-            @can('company_expenses.view')
+            @can('daily_work_report.view')
+                <a href="{{ route('settings.daily-work-reports.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 16l2 2 4-4" />
+                                </svg>
+                            </div>
+
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Report Settings
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
+
+            {{-- @can('company_expenses.view')
                 <a href="{{ route('settings.expense-payment-modes.index') }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                         <div class="flex flex-col items-center justify-center text-center h-full">
@@ -272,6 +308,40 @@
                             </div>
                             <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
                                 Company Expense
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan --}}
+
+            @can('broadcast_settings.view')
+                <a href="{{ route('settings.broadcast-categories.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Broadcast Settings
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
+
+            @can('data_sync_settings.view')
+                <a href="{{ route('settings.data-sync.index') }}" class="block group transition duration-300" title="Manage API connections and synchronization settings.">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Data Sync
                             </h3>
                         </div>
                     </div>

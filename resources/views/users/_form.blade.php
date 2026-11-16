@@ -147,7 +147,7 @@
                     </label>
 
                     <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', isset($user) ? optional($user->details?->dob)->format('Y-m-d') : '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" data-format="{{ $globalDateFormat }}" data-open-to-date="{{ now(config('constants.timezone'))->subYears(17)->startOfYear()->toDateString() }}" placeholder="Select a date">
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" data-open-to-date="{{ now(config('constants.timezone'))->subYears(17)->startOfYear()->toDateString() }}" placeholder="Select a date">
 
                     @error('dob')
                         <p class="mt-2 text-sm text-error-300">
@@ -393,7 +393,7 @@
                     </label>
 
                     <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', isset($user) ? optional($user->details?->joining_date)->format('Y-m-d') : now(config('constants.timezone'))->toDateString()) }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
+                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Select a date">
 
                     @error('joining_date')
                         <p class="mt-2 text-sm text-error-300">

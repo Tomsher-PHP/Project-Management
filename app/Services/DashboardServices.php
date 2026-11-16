@@ -3,12 +3,10 @@
 namespace App\Services;
 
 use App\Models\BreakWorkRequest;
-use App\Models\HandoffRequest;
 use App\Models\LeaveRequest;
 use App\Models\Project;
 use App\Models\ProjectStatus;
 use App\Models\Task;
-use App\Models\TaskExtendTimeRequest;
 use App\Models\TaskStatus;
 use App\Models\TaskTimeLog;
 use App\Models\TaskTimeLogChangeRequest;
@@ -78,7 +76,7 @@ class DashboardServices
 
         if ($user->canAny(['task.view', 'task.view_all_tasks'])) {
             $taskRequests = $this->visibleTaskRequestQuery($user)
-                ->where('request_status', 'pending')
+                ->where('request_status', Task::REQUEST_PENDING)
                 ->count();
         }
 

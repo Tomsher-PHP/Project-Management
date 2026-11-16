@@ -2,7 +2,7 @@
     <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-task-create-close></div>
 
     <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
-        <div class="relative z-10 w-full max-w-[95vw] 2xl:max-w-[1400px] transition-all duration-200" data-task-create-modal-panel>
+        <div class="relative z-10 w-full max-w-[95vw] 2xl:max-w-[1400px]" data-task-create-modal-panel>
             <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-2 dark:border-darkblack-400 sm:px-7">
                     <div>
@@ -16,25 +16,28 @@
                     </button>
                 </div>
 
-                <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(340px,1fr)]" data-task-create-form data-store-url="{{ route('tasks.store') }}" data-default-store-url="{{ route('tasks.store') }}" data-request-store-url="{{ route('tasks.request.store') }}" data-self-assignee-id="{{ auth()->id() }}" enctype="multipart/form-data">
+                <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(340px,1fr)]" data-task-create-form data-store-url="{{ route('tasks.store') }}" data-default-store-url="{{ route('tasks.store') }}" data-request-store-url="{{ route('tasks.request.store') }}" data-self-assignee-id="{{ auth()->id() }}" enctype="multipart/form-data" autocomplete="off">
                     <input type="hidden" name="request_type" value="assigned" data-task-create-request-type>
                     <input type="hidden" name="handoff_request_id" id="handoff_request_id">
 
                     <!-- Left Column: Task Form Fields -->
                     <div class="min-h-0 overflow-y-auto border-b border-bgray-200 px-6 py-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r sm:px-7">
                         <div class="grid gap-5 md:grid-cols-2">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                                <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
-                                    <option value="">Search your project here..</option>
-                                    @foreach ($taskCreateProjects as $projectOption)
-                                        <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
-                                            {{ $projectOption->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_id"></p>
-                            </div>
+                            @if (isset($taskCreateFixedProject) && $taskCreateFixedProject)
+                                <input type="hidden" name="project_id" value="{{ $taskCreateFixedProject->id }}">
+                            @else
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
+                                    <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0" data-placeholder="Search your project here..">
+                                        @foreach ($taskCreateProjects as $projectOption)
+                                            <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
+                                                {{ $projectOption->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_id"></p>
+                                </div>
+                            @endif
 
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
@@ -66,9 +69,19 @@
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="parent_task_id"></p>
                             </div>
 
+                            @can('task.create')
+                                <div class="md:col-span-2" data-task-create-timeline-field>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Timeline</label>
+                                    <select name="project_timeline_id" class="tom-select w-full" data-sort="0">
+                                        <option value="">Select project first</option>
+                                    </select>
+                                    <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_timeline_id"></p>
+                                </div>
+                            @endcan
+
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
-                                <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
+                                <input type="text" name="name" autocomplete="off" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="name"></p>
                             </div>
 

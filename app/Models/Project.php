@@ -59,6 +59,7 @@ class Project extends Model
         'start_date',
         'end_date',
         'customer_end_date',
+        'deleted_at',
     ];
 
     protected $searchable = ['name', 'project_code'];
@@ -66,11 +67,15 @@ class Project extends Model
     public static function booted()
     {
         static::creating(function ($model) {
-            $model->added_by = Auth::id();
+            if (blank($model->added_by)) {
+                $model->added_by = Auth::id();
+            }
         });
 
         static::updating(function ($model) {
-            $model->updated_by = Auth::id();
+            if (! $model->isDirty('updated_by') && Auth::id() !== null) {
+                $model->updated_by = Auth::id();
+            }
         });
     }
 
@@ -80,7 +85,16 @@ class Project extends Model
         $lastProjectCode = $lastProject ? $lastProject->project_code : 'PRJ00000';
         $lastNumber = (int) substr($lastProjectCode, 3);
         $newNumber = $lastNumber + 1;
-        return 'PRJ' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+
+        do {
+            $candidate = 'PRJ' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+            $exists = self::withTrashed()->where('project_code', $candidate)->exists();
+            if ($exists) {
+                $newNumber++;
+            }
+        } while ($exists);
+
+        return $candidate;
     }
 
     public function scopeAccessibleBy($query, $user)
@@ -409,53 +423,6 @@ class Project extends Model
         return $this->project_categories;
     }
 
-    /*----------------Activity Log Customization----------------*/
-
-    // Never show these fields in activity log details.
-    protected array $activityLogExceptAttributes = [
-        'added_by',
-        'updated_by',
-        'actual_time_seconds',
-    ];
-
-    // For activity log attribute labels
-    public function getActivityAttributeLabels(): array
-    {
-        return [
-            'customer_id' => 'Customer',
-            'project_flow' => 'Project Flow',
-            'status_id' => 'Status',
-            'project_stage_id' => 'Project Stage',
-            'project_category_ids' => 'Project Categories',
-            'sales_person_id' => 'Sales Person',
-            'default_task_estimate_seconds' => 'Default Task Estimate',
-            'estimated_time_seconds' => 'Estimated Time',
-            'customer_estimate_seconds' => 'Customer Estimate Time',
-            'default_billable' => 'Default Billable',
-            'is_active' => 'Active',
-        ];
-    }
-
-    // For activity log attribute value display
-    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
-    {
-        return match ($attribute) {
-            'status_id' => ProjectStatus::find($value)?->name ?? $value,
-            'project_stage_id' => ProjectStage::find($value)?->name ?? $value,
-            'project_category_ids' => is_array($value) && ! empty($value)
-                ? ProjectCategory::whereIn('id', $value)->pluck('name')->implode(', ')
-                : 'None',
-            'sales_person_id' => User::find($value)?->name ?? $value,
-            'customer_id' => Customer::find($value)?->name ?? $value,
-            'default_billable' => $value ? 'Yes' : 'No',
-            'is_active' => $value ? 'Active' : 'Inactive',
-            'estimated_time_seconds' => $this->secondsToReadable($value),
-            'customer_estimate_seconds' => $this->secondsToReadable($value),
-            'default_task_estimate_seconds' => $this->secondsToReadable($value),
-            default => $value,
-        };
-    }
-
     public function meetings()
     {
         return $this->hasMany(Meeting::class, 'project_id');
@@ -464,6 +431,16 @@ class Project extends Model
     public function trackings()
     {
         return $this->hasMany(ProjectTracking::class);
+    }
+
+    public function hostingRecords()
+    {
+        return $this->hasMany(ProjectHostingRecord::class);
+    }
+
+    public function notificationPreferences()
+    {
+        return $this->hasMany(ProjectNotificationPreference::class);
     }
 
     public function projectTimelines()
@@ -511,5 +488,52 @@ class Project extends Model
         }
 
         return null;
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'added_by',
+        'updated_by',
+        'actual_time_seconds',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'customer_id' => 'Customer',
+            'project_flow' => 'Project Flow',
+            'status_id' => 'Status',
+            'project_stage_id' => 'Project Stage',
+            'project_category_ids' => 'Project Categories',
+            'sales_person_id' => 'Sales Person',
+            'default_task_estimate_seconds' => 'Default Task Estimate',
+            'estimated_time_seconds' => 'Estimated Time',
+            'customer_estimate_seconds' => 'Customer Estimate Time',
+            'default_billable' => 'Default Billable',
+            'is_active' => 'Active',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'status_id' => ProjectStatus::find($value)?->name ?? $value,
+            'project_stage_id' => ProjectStage::find($value)?->name ?? $value,
+            'project_category_ids' => is_array($value) && ! empty($value)
+                ? ProjectCategory::whereIn('id', $value)->pluck('name')->implode(', ')
+                : 'None',
+            'sales_person_id' => User::find($value)?->name ?? $value,
+            'customer_id' => Customer::find($value)?->name ?? $value,
+            'default_billable' => $value ? 'Yes' : 'No',
+            'is_active' => $value ? 'Active' : 'Inactive',
+            'estimated_time_seconds' => $this->secondsToReadable($value),
+            'customer_estimate_seconds' => $this->secondsToReadable($value),
+            'default_task_estimate_seconds' => $this->secondsToReadable($value),
+            default => $value,
+        };
     }
 }

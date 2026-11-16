@@ -2,6 +2,18 @@
     $isLoaded = $isOpen;
     $isDeletedProjectView = $project->trashed();
     $taskGroupLoadUrl = $isDeletedProjectView ? route('projects.restore.tasks.groups.show', ['id' => $project->id, 'group' => $group['key']]) : route('projects.tasks.groups.show', ['project' => $project, 'group' => $group['key']]);
+    if (filled($search ?? null)) {
+        $taskGroupLoadUrl .= (str_contains($taskGroupLoadUrl, '?') ? '&' : '?') . 'search=' . urlencode($search);
+    }
+
+    $hasEstimate = array_key_exists('has_estimate', $group) ? (bool) $group['has_estimate'] : isset($group['estimated_seconds']) && $group['estimated_seconds'] !== null && (int) $group['estimated_seconds'] > 0;
+
+    $derivedColorClass = $group['derived_color_class'] ?? '';
+    if ($derivedColorClass === '' && $hasEstimate) {
+        $estimatedSeconds = (int) ($group['estimated_seconds'] ?? 0);
+        $derivedSeconds = (int) ($group['derived_seconds'] ?? 0);
+        $derivedColorClass = $derivedSeconds > $estimatedSeconds ? 'text-error-300 dark:text-red-400' : 'text-success-400 dark:text-success-300';
+    }
 @endphp
 
 <article class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm transition dark:border-darkblack-400 dark:bg-darkblack-600" data-project-task-group data-group-key="{{ $group['key'] }}" data-expanded="{{ $isOpen ? 'true' : 'false' }}" data-load-url="{{ $taskGroupLoadUrl }}" style="border-left-width: 4px; border-left-color: {{ $group['accent_color'] }}; border-color: {{ $group['accent_color'] }};">
@@ -45,7 +57,7 @@
                 Estimate <span class="ml-1">{{ $group['estimated_label'] }}</span>
             </span>
 
-            <span title="Derived time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+            <span title="Derived time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium dark:bg-darkblack-500 {{ $derivedColorClass ?: 'text-bgray-700 dark:text-bgray-50' }}">
                 Derived <span class="ml-1">{{ $group['derived_label'] ?? '0h' }}</span>
             </span>
 
@@ -56,7 +68,7 @@
             @if (!$isDeletedProjectView)
                 @can('task.create')
                     @if (!$group['is_unscheduled'] && empty($group['is_linear_group']))
-                        <span class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $group['sprint_id'] }}">
+                        <span class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-task-create-open data-task-create-sprint-id="{{ $group['sprint_id'] }}">
                             + Task
                         </span>
                     @endif
@@ -73,6 +85,7 @@
                     'group' => $group,
                     'tasks' => $tasks,
                     'pagination' => $initialTasksPagination ?? ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+                    'search' => $search ?? null,
                 ])
             @endif
         </div>

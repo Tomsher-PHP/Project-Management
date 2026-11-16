@@ -16,13 +16,16 @@ class ProjectNotificationLog extends Model
 
     protected $fillable = [
         'project_notification_setting_id',
-        'project_timeline_id',
+        'link_id',
+        'link_type',
         'scheduled_for',
+        'reminder_occasion',
         'sent_at',
         'status',
     ];
 
     protected $casts = [
+        'link_id' => 'integer',
         'scheduled_for' => 'date',
         'sent_at' => 'datetime',
     ];
@@ -32,8 +35,8 @@ class ProjectNotificationLog extends Model
         return $this->belongsTo(ProjectNotificationSetting::class);
     }
 
-    public function projectTimeline()
+    public function link()
     {
-        return $this->belongsTo(ProjectTimeline::class);
+        return $this->morphTo(__FUNCTION__, 'link_type', 'link_id');
     }
 }

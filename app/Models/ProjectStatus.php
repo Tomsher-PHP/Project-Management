@@ -38,6 +38,27 @@ class ProjectStatus extends Model
 
     protected $searchable = ['name', 'code', 'type'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (ProjectStatus $status) {
+            if (empty($status->code) || static::withTrashed()->where('code', $status->code)->exists()) {
+                $status->code = static::generateUniqueCode();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique 6-digit numeric code (e.g. 123456).
+     */
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $code = (string) random_int(100000, 999999);
+        } while (static::withTrashed()->where('code', $code)->exists());
+
+        return $code;
+    }
+
     protected function casts(): array
     {
         return [

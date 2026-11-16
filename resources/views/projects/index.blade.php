@@ -12,20 +12,19 @@
 
         <x-filters.list-search />
 
-        <x-project-flow-indicator class="sm:ml-auto" />
+        <div class="flex flex-wrap items-center gap-3 sm:ml-auto">
+            @if (app(\App\Services\ProjectImportService::class)->hasAnyAccessibleModule(auth()->user()))
+                <x-button.link-button :href="route('projects.import.index')" icon="import" label="Imports" />
+            @endif
 
-        @can('project.restore')
-            <a href="{{ route('projects.restore.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h8" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h5" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h8" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 8l5 4-5 4" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 12h-8" />
-                </svg>
-                <span>Restore Projects</span>
-            </a>
-        @endcan
+            @can('project.export')
+                <x-button.export-button :action="route('projects.export')" :params="request()->all()" label="Export" button-class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white" />
+            @endcan
+
+            @can('project.restore')
+                <x-button.link-button :href="route('projects.restore.index')" icon="restore" label="Restore" />
+            @endcan
+        </div>
     </div>
 
     <div class="2xl:flex 2xl:space-x-[48px]">
@@ -106,10 +105,10 @@
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
                                                         {{ $project->name }}
                                                     </h4>
-                                                    <p class="text-sm text-bgray-700 dark:text-bgray-300">
-                                                        Code: {{ $project->project_code ?? '--' }}
-                                                    </p>
                                                 </a>
+                                                <p class="text-sm text-bgray-700 dark:text-bgray-300">
+                                                    Code: {{ $project->project_code ?? '--' }}
+                                                </p>
                                                 <div class="mt-3 w-full">
                                                     <div class="mb-1.5 flex items-center justify-between gap-3">
                                                         <span class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Completion</span>

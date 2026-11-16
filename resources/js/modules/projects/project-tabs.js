@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const projectId = tabsRoot.dataset.projectId;
     const defaultTab = tabsRoot.dataset.defaultTab || 'overview';
+    const forceInitialTab = tabsRoot.dataset.forceInitialTab || null;
     const tabsUrlTemplate = tabsRoot.dataset.tabsUrlTemplate || window.ProjectApp?.tabsUrlTemplate;
     // const storageKey = `projectTab_${projectId}`;
     const storageKey = `projectTab`;
@@ -90,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    const loadTab = async (tab, { forceReload = false } = {}) => {
+    const loadTab = async (tab, { forceReload = false, query = {} } = {}) => {
         const panel = getPanel(tab);
 
         if (!panel) {
@@ -118,6 +119,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             params.forEach((value, key) => {
                 requestUrl.searchParams.append(key, value);
+            });
+
+            Object.entries(query).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    requestUrl.searchParams.set(key, String(value));
+                }
             });
 
             const response = await fetch(requestUrl.toString(), {
@@ -176,11 +183,26 @@ document.addEventListener('DOMContentLoaded', function () {
         replaceTabContent(tab, html, activate);
     });
 
+    document.addEventListener('project-tab:reload', function (event) {
+        const tab = event.detail?.tab;
+
+        if (!tab || !availableTabs.includes(tab)) {
+            return;
+        }
+
+        loadTab(tab, {
+            forceReload: true,
+            query: event.detail?.query || {},
+        });
+    });
+
     const savedTab = localStorage.getItem(storageKey);
     const requestedTab = params.get('tab');
     const initialTab = availableTabs.includes(requestedTab)
         ? requestedTab
-        : (availableTabs.includes(savedTab) ? savedTab : defaultTab);
+        : (forceInitialTab && availableTabs.includes(forceInitialTab)
+            ? forceInitialTab
+            : (availableTabs.includes(savedTab) ? savedTab : defaultTab));
 
     loadTab(initialTab);
 });

@@ -1,0 +1,21 @@
+{
+    "success": true,
+    "message": "Records retrieved successfully.",
+    "data": [
+        {
+            "id": 1,
+            "name": "Information Technology",
+            "code": "743813",
+            "parent_code": null,
+            "sort_order": 1,
+            "is_system": true,
+            "is_active": true
+        }
+    ],
+    "pagination": {
+        "current_page": 1,
+        "per_page": 50,
+        "total": 1,
+        "last_page": 1
+    }
+}

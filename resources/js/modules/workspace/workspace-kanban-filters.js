@@ -4,6 +4,7 @@ const FILTER_SCOPE_SELECTOR = '[data-workspace-kanban-filters]';
 const FILTER_BUTTON_SELECTOR = '[data-workspace-kanban-filter-button]';
 const FILTER_COUNT_SELECTOR = '[data-workspace-kanban-filter-count]';
 const SEARCH_INPUT_SELECTOR = '[data-workspace-kanban-search]';
+const REFRESH_BUTTON_SELECTOR = '[data-workspace-kanban-refresh]';
 const SEARCH_DEBOUNCE_MS = 250;
 
 const FILTER_KEYS = [
@@ -31,6 +32,8 @@ const getFilterScope = () => document.querySelector(FILTER_SCOPE_SELECTOR);
 const getFilterButton = () => document.querySelector(FILTER_BUTTON_SELECTOR);
 
 const getSearchInput = () => document.querySelector(SEARCH_INPUT_SELECTOR);
+
+const getRefreshButton = () => document.querySelector(REFRESH_BUTTON_SELECTOR);
 
 const serializeFormFilters = (form) => {
     const params = new URLSearchParams();
@@ -188,8 +191,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetLink = form.closest('#filterDrawerWrapper')?.querySelector('.sticky a[href]');
     let searchDebounceTimer = null;
 
+    const refreshButton = getRefreshButton();
+
     button.addEventListener('click', () => {
         window.FilterDrawer?.open?.();
+    });
+
+    refreshButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        const params = buildWorkspaceKanbanParams(form);
+        updateBrowserFilters(params);
+        syncFilterButtonState(params);
+        reloadWorkspaceKanban();
     });
 
     syncFilterButtonState(buildWorkspaceKanbanParams(form));

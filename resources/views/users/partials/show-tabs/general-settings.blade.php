@@ -4,7 +4,6 @@
             <h3 class="mb-5 mt-10 text-3xl font-bold text-bgray-900 dark:text-white">
                 General Settings
             </h3>
-
             <div class="space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-2">
                     <div class="sm:w-1/2">
@@ -69,6 +68,7 @@
                         </div>
                     @endforeach
                 @endif
+
             </div>
         </div>
     </div>

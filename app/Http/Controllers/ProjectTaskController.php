@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskProjectUpdateRequest;
-use App\Http\Requests\TaskQuickStoreRequest;
 use App\Http\Requests\TaskMoveRequest;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Models\ProjectTimeline;
 use App\Models\Tag;
 use App\Models\Task;
 use App\Models\TaskMode;
@@ -20,6 +20,7 @@ use App\Services\ProjectServices;
 use App\Services\TaskRequestServices;
 use App\Services\TaskServices;
 use App\Services\TaskTimeExtendService;
+use App\Services\Task\RunningTaskNavbarService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -33,14 +34,16 @@ class ProjectTaskController extends Controller
 
     public function taskGroup(Project $project, string $group): JsonResponse
     {
-        $groupData = $this->findTaskGroup($project, $group);
+        $search = request('search');
+        $groupData = app(ProjectServices::class)->findTaskGroup($project, $group, $search);
 
         abort_unless($groupData, Response::HTTP_NOT_FOUND);
-        $taskPage = $this->getTaskGroupTaskPage(
+        $taskPage = app(ProjectServices::class)->getTaskGroupTaskPage(
             $project,
             $group,
             max((int) request()->integer('page', 1), 1),
-            self::TASKS_PER_GROUP_PAGE
+            self::TASKS_PER_GROUP_PAGE,
+            $search
         );
 
         return response()->json([
@@ -51,12 +54,14 @@ class ProjectTaskController extends Controller
                 'group' => $groupData,
                 'tasks' => $taskPage['tasks'],
                 'pagination' => $taskPage['pagination'],
+                'search' => $search,
             ])->render(),
             'items_html' => view('projects.partials.tasks.task-rows', [
                 'project' => $project,
                 'group' => $groupData,
                 'tasks' => $taskPage['tasks'],
                 'showEmptyState' => false,
+                'search' => $search,
             ])->render(),
             'pagination' => $taskPage['pagination'],
         ], Response::HTTP_OK);
@@ -150,33 +155,6 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function storeTask(TaskQuickStoreRequest $request, Project $project, TaskServices $taskService): JsonResponse
-    {
-        $validated = $request->validated();
-        $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
-        $tasks = $taskService->createQuickTask($project, $validated);
-        $firstTask = $tasks->first();
-        $createdCount = $tasks->count();
-
-        $project->refresh();
-
-        $message = $createdCount > 1
-            ? "{$createdCount} tasks added successfully."
-            : ($requestType === 'self'
-                ? 'Task request submitted successfully.'
-                : 'Task added successfully.');
-
-        return response()->json([
-            'status' => true,
-            'message' => $message,
-            'created_count' => $createdCount,
-            'html' => $this->renderTasksTab(
-                $project,
-                $firstTask ? $this->resolveTaskGroupKey($project, $firstTask) : null
-            ),
-        ], Response::HTTP_OK);
-    }
-
     public function taskModal(Request $request, Project $project, Task $task, TaskRequestServices $taskRequestServices): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
@@ -189,6 +167,7 @@ class ProjectTaskController extends Controller
         abort_if($approveMode && ! $canApproveRequest, Response::HTTP_FORBIDDEN);
 
         $task->load([
+            'projectTimeline:id,name',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'parentTask:id,name',
@@ -259,7 +238,7 @@ class ProjectTaskController extends Controller
         return response()->json([
             'status' => true,
             'html' => view(
-                'projects.partials.tasks.modals.log-content',
+                'projects.partials.modals.task-log-content',
                 [
                     'project'  => $project,
                     'task'     => $task,
@@ -269,7 +248,7 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService, TaskServices $taskService): JsonResponse
+    public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService, TaskServices $taskService, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless($this->canEditTaskModal($task), Response::HTTP_FORBIDDEN);
@@ -288,6 +267,7 @@ class ProjectTaskController extends Controller
             'status' => true,
             'message' => 'Task updated successfully.',
             'html' => $this->renderTasksTab($project, $this->resolveTaskGroupKey($project, $task)),
+            'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser(auth()->id()),
         ], Response::HTTP_OK);
     }
 
@@ -296,6 +276,7 @@ class ProjectTaskController extends Controller
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('move', $task), Response::HTTP_FORBIDDEN);
         $validated = $request->validated();
+        $targetTimelineId = (int) $validated['project_timeline_id'];
 
         $isCrossProject = ! empty($validated['move_to_another_project']);
 
@@ -318,7 +299,8 @@ class ProjectTaskController extends Controller
                 $targetProject,
                 $task,
                 $targetMilestoneId,
-                $targetSprintId
+                $targetSprintId,
+                $targetTimelineId
             );
 
             return response()->json([
@@ -331,7 +313,8 @@ class ProjectTaskController extends Controller
         $task = $projectService->moveTaskToSprint(
             $project,
             $task,
-            (int) $validated['project_sprint_id']
+            ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null,
+            $targetTimelineId
         );
 
         return response()->json([
@@ -363,85 +346,9 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function renderTasksTab(Project $project, ?string $preferredGroupKey = null): string
+    public function renderTasksTab(Project $project, ?string $preferredGroupKey = null, ?string $search = null): string
     {
-        $isLinearFlow = $project->project_flow === 'linear';
-        $taskGroupViewData = $this->getInitialTaskGroupViewData($project, $preferredGroupKey);
-        $taskGroups = $taskGroupViewData['taskGroups'];
-        $projectMilestones = $isLinearFlow ? collect() : ProjectMilestone::query()
-            ->where('project_id', $project->id)
-            ->orderForDisplay()
-            ->get(['id', 'name', 'is_backlog', 'is_system']);
-        $projectSprints = $isLinearFlow ? collect() : ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->with(['projectMilestone:id,name'])
-            ->orderForDisplay()
-            ->get(['id', 'project_milestone_id', 'name', 'is_backlog', 'is_system']);
-        $defaultSprintId = $projectSprints->first()?->id;
-        $initialGroupKey = $taskGroupViewData['initialGroupKey'];
-        $initialTaskPage = $initialGroupKey
-            ? $this->getTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
-            : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
-        $assignableUsers = $project->activeMembers()
-            ->orderBy('users.name')
-            ->get(['users.id', 'users.name', 'users.email']);
-        $taskTypeOptions = TaskType::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'color']);
-        $taskModeOptions = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'color']);
-        $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
-            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
-            ->values();
-        $taskStatuses = TaskStatus::query()
-            ->active()
-            ->forFlow($project->project_flow)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'color']);
-        $defaultTaskStatusId = $this->getDefaultTaskStatusId($project);
-        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskEstimateMinutes = $project->default_task_estimate_seconds !== null
-            ? intdiv((int) $project->default_task_estimate_seconds, 60)
-            : 0;
-        $tagOptions = Tag::query()
-            ->active()
-            ->orderBy('name')
-            ->get(['id', 'name', 'color']);
-
-        $nextTaskTypeSortOrder = ((int) TaskType::max('sort_order')) + 1;
-        $nextTaskModeSortOrder = ((int) TaskMode::max('sort_order')) + 1;
-
-        return view('projects.partials.tabs.tasks', [
-            'project' => $project,
-            'taskGroups' => $taskGroups,
-            'initialGroupKey' => $initialGroupKey,
-            'initialTasks' => $initialTaskPage['tasks'],
-            'initialTasksPagination' => $initialTaskPage['pagination'],
-            'totalTaskCount' => $taskGroupViewData['totalTaskCount'],
-            'sprintCount' => $taskGroupViewData['sprintCount'],
-            'isLinearFlow' => $isLinearFlow,
-            'assignableUsers' => $assignableUsers,
-            'projectMilestones' => $projectMilestones,
-            'projectSprints' => $projectSprints,
-            'defaultSprintId' => $defaultSprintId,
-            'taskGroupsPagination' => $taskGroupViewData['pagination'],
-            'taskStatuses' => $taskStatuses,
-            'defaultTaskStatusId' => $defaultTaskStatusId,
-            'taskTypeOptions' => $taskTypeOptions,
-            'taskModeOptions' => $taskModeOptions,
-            'nextTaskTypeSortOrder' => $nextTaskTypeSortOrder,
-            'nextTaskModeSortOrder' => $nextTaskModeSortOrder,
-            'taskPriorityOptions' => $taskPriorityOptions,
-            'defaultTaskPriority' => $defaultTaskPriority,
-            'defaultTaskEstimateMinutes' => $defaultTaskEstimateMinutes,
-            'tagOptions' => $tagOptions,
-        ])->render();
+        return app(ProjectServices::class)->renderTasksTab($project, $preferredGroupKey, $search);
     }
 
     private function getInitialTaskGroupViewData(Project $project, ?string $preferredGroupKey = null): array
@@ -661,9 +568,14 @@ class ProjectTaskController extends Controller
             ->where('project_id', $project->id)
             ->accessibleBy(auth()->user());
         $taskCount = (clone $allTasks)->count();
-        $estimatedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
-        $derivedSeconds = (int) (clone $allTasks)->sum('derived_time_seconds');
+        $derivedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
         $actualSeconds = (int) (clone $allTasks)->sum('actual_time_seconds');
+
+        $displayTimeline = $project->display_timeline;
+        $timelineEstimate = $displayTimeline?->estimated_time_seconds;
+        $hasEstimate = $displayTimeline !== null && $timelineEstimate !== null && (int) $timelineEstimate > 0;
+        $estimatedSeconds = $timelineEstimate !== null ? (int) $timelineEstimate : null;
+        $derivedColorClass = $this->resolveDerivedColorClass($estimatedSeconds, $derivedSeconds, $hasEstimate);
 
         return [
             'key' => 'all-tasks',
@@ -673,11 +585,13 @@ class ProjectTaskController extends Controller
             'accent_color' => '#3B82F6',
             'task_count' => $taskCount,
             'estimated_seconds' => $estimatedSeconds,
-            'estimated_label' => $this->formatSecondsShort($estimatedSeconds),
+            'estimated_label' => $this->formatSecondsShort((int) ($estimatedSeconds ?? 0)),
             'derived_seconds' => $derivedSeconds,
             'derived_label' => $this->formatSecondsShort($derivedSeconds),
             'actual_seconds' => $actualSeconds,
             'actual_label' => $this->formatSecondsShort($actualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
             'date_label' => null,
             'created_label' => null,
             'is_latest' => true,
@@ -688,9 +602,13 @@ class ProjectTaskController extends Controller
 
     private function mapProjectSprintToTaskGroup(ProjectSprint $projectSprint, int $index): array
     {
-        $sprintEstimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
+        $sprintEstimatedSeconds = $projectSprint->estimated_time_seconds !== null
+            ? (int) $projectSprint->estimated_time_seconds
+            : null;
         $sprintDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
         $sprintActualSeconds = (int) ($projectSprint->actual_time_seconds ?? 0);
+        $hasEstimate = $sprintEstimatedSeconds !== null && $sprintEstimatedSeconds > 0;
+        $derivedColorClass = $this->resolveDerivedColorClass($sprintEstimatedSeconds, $sprintDerivedSeconds, $hasEstimate);
 
         return [
             'key' => 'sprint-' . $projectSprint->id,
@@ -700,11 +618,13 @@ class ProjectTaskController extends Controller
             'accent_color' => $projectSprint->color ?: '#D1D5DB',
             'task_count' => (int) $projectSprint->tasks_count,
             'estimated_seconds' => $sprintEstimatedSeconds,
-            'estimated_label' => $this->formatSecondsShort($sprintEstimatedSeconds),
+            'estimated_label' => $this->formatSecondsShort((int) ($sprintEstimatedSeconds ?? 0)),
             'derived_seconds' => $sprintDerivedSeconds,
             'derived_label' => $this->formatSecondsShort($sprintDerivedSeconds),
             'actual_seconds' => $sprintActualSeconds,
             'actual_label' => $this->formatSecondsShort($sprintActualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
             'date_label' => $this->formatDateRange($projectSprint->start_date, $projectSprint->end_date),
             'created_label' => $projectSprint->created_at
                 ? AppServiceProvider::formatAppDate($projectSprint->created_at)
@@ -720,6 +640,8 @@ class ProjectTaskController extends Controller
         $ungroupedEstimatedSeconds = (int) (clone $ungroupedTasks)->sum('estimated_time_seconds');
         $ungroupedDerivedSeconds = (int) (clone $ungroupedTasks)->sum('derived_time_seconds');
         $ungroupedActualSeconds = (int) (clone $ungroupedTasks)->sum('actual_time_seconds');
+        $hasEstimate = $ungroupedEstimatedSeconds > 0;
+        $derivedColorClass = $this->resolveDerivedColorClass($ungroupedEstimatedSeconds, $ungroupedDerivedSeconds, $hasEstimate);
 
         return [
             'key' => 'ungrouped',
@@ -734,12 +656,25 @@ class ProjectTaskController extends Controller
             'derived_label' => $this->formatSecondsShort($ungroupedDerivedSeconds),
             'actual_seconds' => $ungroupedActualSeconds,
             'actual_label' => $this->formatSecondsShort($ungroupedActualSeconds),
+            'has_estimate' => $hasEstimate,
+            'derived_color_class' => $derivedColorClass,
             'date_label' => 'No sprint dates',
             'created_label' => null,
             'is_latest' => $isLatest,
             'is_unscheduled' => true,
             'is_linear_group' => false,
         ];
+    }
+
+    private function resolveDerivedColorClass(?int $estimatedSeconds, int $derivedSeconds, bool $hasEstimate): string
+    {
+        if (! $hasEstimate || $estimatedSeconds === null || $estimatedSeconds <= 0) {
+            return '';
+        }
+
+        return $derivedSeconds > $estimatedSeconds
+            ? 'text-error-300 dark:text-red-400'
+            : 'text-success-400 dark:text-success-300';
     }
 
     private function firstOrCreateTaskTag(string $name): Tag
@@ -877,6 +812,7 @@ class ProjectTaskController extends Controller
             'tags',
             'projectMilestone:id,name,is_backlog,is_system',
             'projectSprint:id,name,project_milestone_id,is_backlog,is_system',
+            'projectTimeline:id,name',
             'parentTask:id,name',
         ];
     }
@@ -1049,23 +985,4 @@ class ProjectTaskController extends Controller
         return $hours . 'h ' . $minutes . 'm';
     }
 
-    private function getDefaultTaskStatusId(Project $project): ?int
-    {
-        return TaskStatus::query()
-            ->active()
-            ->forFlow($project->project_flow)
-            ->where('is_default', 1)
-            ->value('id');
-    }
-
-    private function getDefaultTaskPriorityValue(): string
-    {
-        $priorities = config('project_constants.task_priorities', []);
-
-        if (array_key_exists('medium', $priorities)) {
-            return 'medium';
-        }
-
-        return (string) (array_key_first($priorities) ?? 'medium');
-    }
 }

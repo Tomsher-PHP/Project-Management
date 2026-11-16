@@ -39,6 +39,17 @@ class LeaveRequestStoreRequest extends FormRequest
             ],
 
             /*
+             * Expected Return-to-Work Date
+             *
+             * Must be on or after the requested leave end date.
+             */
+            'return_to_work_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:requested_to_date',
+            ],
+
+            /*
              * Required only for half-day leave.
              *
              * Multi-day half-day leave is allowed.
@@ -77,6 +88,7 @@ class LeaveRequestStoreRequest extends FormRequest
     ): void {
         $validator->after(
             function (Validator $validator): void {
+
                 /*
                  * ------------------------------------------------------
                  * Attachment validation

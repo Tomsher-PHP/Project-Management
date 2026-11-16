@@ -39,7 +39,12 @@
 <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
         <div>
-            <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">{{ $modalTitle }}</h3>
+            <div class="flex items-center gap-2.5">
+                <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">{{ $modalTitle }}</h3>
+                <span class="rounded-full bg-bgray-100 px-2.5 py-0.5 text-xs font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">
+                    {{ $task->code ?: 'T-' . str_pad($task->id, 3, '0', STR_PAD_LEFT) }}
+                </span>
+            </div>
             <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                 {{ $isRejectedTask ? 'Rejected tasks are read-only and cannot be updated.' : 'Review and update the working details for this task.' }}
             </p>
@@ -321,6 +326,10 @@
                                 <div class="flex items-start justify-between gap-3">
                                     <dt class="text-bgray-700 dark:text-bgray-300">Sprint</dt>
                                     <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectSprint?->name ?? '--' }}</dd>
+                                </div>
+                                <div class="flex items-start justify-between gap-3">
+                                    <dt class="text-bgray-700 dark:text-bgray-300">Project Timeline</dt>
+                                    <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectTimeline?->name ?? '--' }}</dd>
                                 </div>
                                 <div class="flex items-start justify-between gap-3">
                                     <dt class="text-bgray-700 dark:text-bgray-300">Created By</dt>

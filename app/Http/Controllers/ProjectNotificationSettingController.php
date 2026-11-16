@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectNotificationSettingRequest;
+use App\Models\Project;
+use App\Models\ProjectNotificationDefault;
+use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectNotificationSetting;
 use App\Models\User;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectNotificationSettingController extends Controller
 {
@@ -19,25 +22,40 @@ class ProjectNotificationSettingController extends Controller
 
     public function index()
     {
-        $setting = ProjectNotificationSetting::where('notification_type', 'timeline_ending_soon')->first();
+        $setting = ProjectNotificationSetting::with(['days', 'users', 'recipients'])
+            ->where('notification_type', ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON)
+            ->first();
 
         if (!$setting) {
             $setting = new ProjectNotificationSetting([
-                'notification_type' => 'timeline_ending_soon',
+                'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON,
                 'is_enabled' => true,
-                'days_before' => 3,
             ]);
             $selectedUsers = [];
+            $selectedEmails = '';
+            $selectedDays = [3];
         } else {
             $selectedUsers = $setting->users->pluck('id')->toArray();
+            $emailsList = $setting->recipients()
+                ->whereNotNull('email')
+                ->pluck('email')
+                ->toArray();
+            $selectedEmails = implode("\n", $emailsList);
+            $selectedDays = $setting->days->pluck('days_before')->sortDesc()->values()->toArray();
         }
 
         $users = User::active()->get();
+
+        // Load project notification defaults for display
+        $timelineDefaults = ProjectNotificationDefault::where('setting_key', ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON)->get();
 
         return view('settings.project-notifications.index', [
             'setting' => $setting,
             'users' => $users,
             'selectedUsers' => $selectedUsers,
+            'selectedEmails' => $selectedEmails,
+            'selectedDays' => $selectedDays,
+            'timelineDefaults' => $timelineDefaults,
             'currentTab' => 'notifications',
             'createPermission' => 'project_settings.create',
             'editPermission' => 'project_settings.edit',
@@ -48,14 +66,21 @@ class ProjectNotificationSettingController extends Controller
     {
         $data = $request->validated();
 
-        $setting = ProjectNotificationSetting::create([
-            'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON,
-            'is_enabled' => $data['is_enabled'],
-            'days_before' => $data['days_before'],
-            'created_by' => auth()->id(),
-        ]);
+        DB::transaction(function () use ($data, $request) {
+            $setting = ProjectNotificationSetting::create([
+                'notification_type' => ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON,
+                'is_enabled' => $data['is_enabled'],
+                'created_by' => auth()->id(),
+            ]);
 
-        $setting->users()->sync($data['user_ids'] ?? []);
+            $this->syncDays($setting, $data['days_before'] ?? []);
+            $this->syncRecipients($setting, $data['user_ids'] ?? [], $data['emails'] ?? []);
+            $this->syncDefaults($request->input('defaults', []));
+
+            if (!empty($data['apply_to_existing_projects'])) {
+                $this->applyDefaultsToExistingProjects();
+            }
+        });
 
         return redirect()->route('settings.project-notifications.index')
             ->with('success', 'Notification settings created successfully.');
@@ -63,16 +88,172 @@ class ProjectNotificationSettingController extends Controller
 
     public function update(ProjectNotificationSettingRequest $request, ProjectNotificationSetting $project_notification)
     {
+        // Ensure that the setting model being updated belongs to the timeline notification type
+        if ($project_notification->notification_type !== ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON) {
+            abort(404);
+        }
+
         $data = $request->validated();
 
-        $project_notification->update([
-            'is_enabled' => $data['is_enabled'],
-            'days_before' => $data['days_before'],
-        ]);
+        DB::transaction(function () use ($project_notification, $data, $request) {
+            $project_notification->update([
+                'is_enabled' => $data['is_enabled'],
+            ]);
 
-        $project_notification->users()->sync($data['user_ids'] ?? []);
+            $this->syncDays($project_notification, $data['days_before'] ?? []);
+            $this->syncRecipients($project_notification, $data['user_ids'] ?? [], $data['emails'] ?? []);
+            $this->syncDefaults($request->input('defaults', []));
+
+            if (!empty($data['apply_to_existing_projects'])) {
+                $this->applyDefaultsToExistingProjects();
+            }
+        });
 
         return redirect()->route('settings.project-notifications.index')
             ->with('success', 'Notification settings updated successfully.');
+    }
+
+    /**
+     * Synchronize Project Notification Defaults for agile and linear flows.
+     */
+    protected function syncDefaults(array $defaults): void
+    {
+        if (empty($defaults)) {
+            return;
+        }
+
+        $timelineKey = ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON;
+
+        foreach (['agile', 'linear'] as $flow) {
+            if (array_key_exists($flow, $defaults)) {
+                $isEnabled = filter_var($defaults[$flow], FILTER_VALIDATE_BOOLEAN);
+
+                $record = ProjectNotificationDefault::where('setting_key', $timelineKey)
+                    ->where('conditions->project_flow', $flow)
+                    ->first();
+
+                if ($record) {
+                    $record->update([
+                        'setting_value' => ['is_enabled' => $isEnabled],
+                    ]);
+                } else {
+                    ProjectNotificationDefault::create([
+                        'setting_key' => $timelineKey,
+                        'conditions' => ['project_flow' => $flow],
+                        'setting_value' => ['is_enabled' => $isEnabled],
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Apply timeline ending soon notification defaults to all existing projects.
+     */
+    protected function applyDefaultsToExistingProjects(): void
+    {
+        $timelineKey = ProjectNotificationSetting::NOTIFICATION_TYPE_TIMELINE_ENDING_SOON;
+
+        $timelineDefaults = ProjectNotificationDefault::where('setting_key', $timelineKey)->get();
+
+        $agileDefault = $timelineDefaults->first(fn($d) => ($d->conditions['project_flow'] ?? null) === 'agile');
+        $linearDefault = $timelineDefaults->first(fn($d) => ($d->conditions['project_flow'] ?? null) === 'linear');
+
+        $agileEnabled = !empty($agileDefault->setting_value['is_enabled']);
+        $linearEnabled = !empty($linearDefault->setting_value['is_enabled']);
+
+        // Update or create preferences for all projects according to their flow
+        $projects = Project::all(['id', 'project_flow']);
+
+        foreach ($projects as $project) {
+            $isEnabled = ($project->project_flow === 'linear') ? $linearEnabled : $agileEnabled;
+
+            ProjectNotificationPreference::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'notification_type' => $timelineKey,
+                ],
+                [
+                    'is_enabled' => $isEnabled,
+                ]
+            );
+        }
+    }
+
+    /**
+     * Synchronize reminder intervals in project_notification_setting_days safely within transaction.
+     */
+    protected function syncDays(ProjectNotificationSetting $setting, array $days): void
+    {
+        $normalizedDays = [];
+        foreach ($days as $day) {
+            $intDay = (int) $day;
+            if ($intDay >= 0 && !in_array($intDay, $normalizedDays, true)) {
+                $normalizedDays[] = $intDay;
+            }
+        }
+
+        // Fetch existing day rows
+        $existingRows = $setting->days()->get();
+
+        // Delete day rows not in submitted list
+        foreach ($existingRows as $row) {
+            if (!in_array($row->days_before, $normalizedDays, true)) {
+                $row->delete();
+            }
+        }
+
+        $storedDays = $existingRows->pluck('days_before')->toArray();
+
+        // Create new entries
+        foreach ($normalizedDays as $day) {
+            if (!in_array($day, $storedDays, true)) {
+                $setting->days()->create([
+                    'days_before' => $day,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Synchronize PMS user recipients and external email recipients safely within transaction.
+     */
+    protected function syncRecipients(ProjectNotificationSetting $setting, array $userIds, array $emails): void
+    {
+        // 1. Sync PMS users using the existing belongsToMany relationship
+        $setting->users()->sync($userIds);
+
+        // 2. Synchronize external email recipients
+        // Normalize submitted email list to lowercase trimmed values, unique
+        $normalizedEmails = [];
+        foreach ($emails as $email) {
+            $cleanEmail = strtolower(trim((string) $email));
+            if ($cleanEmail !== '' && !in_array($cleanEmail, $normalizedEmails, true)) {
+                $normalizedEmails[] = $cleanEmail;
+            }
+        }
+
+        // Fetch existing email recipient rows for this setting
+        $existingEmailRows = $setting->recipients()->whereNotNull('email')->get();
+
+        // Delete email rows that are no longer in the submitted list
+        foreach ($existingEmailRows as $row) {
+            if (!in_array(strtolower(trim($row->email)), $normalizedEmails, true)) {
+                $row->delete();
+            }
+        }
+
+        // Existing emails that are already stored
+        $storedEmails = $existingEmailRows->pluck('email')->map(fn($e) => strtolower(trim($e)))->toArray();
+
+        // Insert new email recipient rows that don't already exist
+        foreach ($normalizedEmails as $email) {
+            if (!in_array($email, $storedEmails, true)) {
+                $setting->recipients()->create([
+                    'user_id' => null,
+                    'email' => $email,
+                ]);
+            }
+        }
     }
 }

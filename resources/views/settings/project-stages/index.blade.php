@@ -65,12 +65,12 @@
                                                         {{ $projectStage->name }}
                                                     </p>
                                                     @if ($projectStage->is_system)
-                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
                                                             System
                                                         </span>
                                                     @endif
                                                     @if ($projectStage->is_default)
-                                                        <span class="inline-flex rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-600 dark:bg-success-900/30 dark:text-success-300">
+                                                        <span class="inline-flex px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-300">
                                                             Default
                                                         </span>
                                                     @endif
@@ -94,7 +94,7 @@
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
                                             @can('project_settings.edit')
-                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-code="{{ $projectStage->code }}" data-color="{{ $projectStage->color }}" data-is_default="{{ (int) $projectStage->is_default }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage" title="Edit Project Stage" />
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-color="{{ $projectStage->color }}" data-is_default="{{ (int) $projectStage->is_default }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage" title="Edit Project Stage" />
                                             @endcan
                                             @can('project_settings.delete')
                                                 @if (!$projectStage->is_system)
@@ -123,13 +123,7 @@
 
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
-            <input type="text" name="name" data-project-stage-name class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-        </div>
-
-        <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Code <x-red-star /></label>
-            <input type="text" name="code" data-project-stage-code class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" pattern="[a-z0-9_]+" autocomplete="off">
-            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">Lowercase only. Spaces are converted to underscores.</p>
+            <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
 
         <div>
@@ -180,7 +174,3 @@
     <!-- Filter drawer end -->
 
 @endsection
-
-@push('scripts')
-    @vite('resources/js/modules/project-stage-form.js')
-@endpush

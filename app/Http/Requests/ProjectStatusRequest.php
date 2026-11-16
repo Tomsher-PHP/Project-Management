@@ -2,29 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProjectStatus;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProjectStatusRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
-        $rawCode = $this->input('code');
-        $rawName = $this->input('name');
-        $source = filled($rawCode) ? $rawCode : $rawName;
-
-        $normalizedCode = filled($source)
-            ? Str::of($source)
-            ->lower()
-            ->replaceMatches('/[^a-z0-9]+/', '_')
-            ->trim('_')
-            ->value()
-            : null;
-
-        $this->merge([
-            'code' => $normalizedCode,
-        ]);
+        if ($this->isMethod('post')) {
+            $this->merge(['code' => ProjectStatus::generateUniqueCode()]);
+        }
     }
 
     /**
@@ -43,15 +31,21 @@ class ProjectStatusRequest extends FormRequest
     public function rules(): array
     {
         $types = array_keys(config('project_constants.project_status_types'));
-        $id = $this->route('project_status') ?? null;
+        $routeParam = $this->route('project_status');
+        $id = is_object($routeParam) ? $routeParam->id : $routeParam;
 
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255', Rule::unique('project_statuses', 'name')->ignore($id)],
-            'code' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9_]+$/', Rule::unique('project_statuses', 'code')->ignore($id)],
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'type' => ['required', 'string', Rule::in($types)],
             'sort_order' => ['required', 'numeric'],
             'is_default' => ['boolean'],
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['code'] = ['required', 'digits:6', 'unique:project_statuses,code'];
+        }
+
+        return $rules;
     }
 }

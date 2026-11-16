@@ -218,6 +218,10 @@
                             <div class="absolute left-1/2 top-2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded bg-bgray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-500 shadow-sm dark:bg-darkblack-500 dark:text-orange-400">
                                 {{ $workspaceHoliday->name }}
                             </div>
+                        @elseif (!empty($workspaceLeaveName))
+                            <div class="absolute left-1/2 top-2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded bg-bgray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-600 shadow-sm dark:bg-darkblack-500 dark:text-blue-400">
+                                {{ $workspaceLeaveName }}
+                            </div>
                         @elseif ($assignedShift['is_weekend'] ?? false)
                             <div class="absolute left-1/2 top-2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded bg-bgray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 shadow-sm dark:bg-darkblack-500 dark:text-red-400">
                                 Day Off

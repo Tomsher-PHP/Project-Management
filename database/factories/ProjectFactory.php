@@ -27,7 +27,7 @@ class ProjectFactory extends Factory
         $statusId = ProjectStatus::query()->inRandomOrder()->value('id')
             ?? ProjectStatus::query()->create([
                 'name' => 'Planned',
-                'code' => 'planned',
+                'code' => ProjectStatus::generateUniqueCode(),
                 'color' => '#6c757d',
                 'type' => 'open',
                 'sort_order' => 1,

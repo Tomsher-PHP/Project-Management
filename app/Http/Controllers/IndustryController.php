@@ -30,7 +30,10 @@ class IndustryController extends Controller
 
     public function store(IndustryRequest $request)
     {
-        $industry = Industry::create($request->validated());
+        $data = $request->validated();
+        $data['code'] = $data['code'] ?? Industry::generateUniqueCode();
+
+        $industry = Industry::create($data);
 
         return response()->json([
             'status' => true,
@@ -41,7 +44,12 @@ class IndustryController extends Controller
 
     public function update(IndustryRequest $request, Industry $industry)
     {
-        $industry->update($request->validated());
+        $data = $request->validated();
+        if (empty($industry->code)) {
+            $data['code'] = Industry::generateUniqueCode();
+        }
+
+        $industry->update($data);
 
         return response()->json([
             'status' => true,

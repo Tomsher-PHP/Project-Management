@@ -43,7 +43,7 @@ function initBadgeState() {
     const badge = document.getElementById('notification-count');
     if (!badge) return;
 
-    const count = parseInt(badge.innerText.trim() || '0', 10);
+    const count = parseInt(badge.dataset.count ?? badge.innerText.trim(), 10) || 0;
 
     setNotificationCount(count);
 }
@@ -52,7 +52,7 @@ function incrementNotificationCount() {
     const badge = document.getElementById('notification-count');
     if (!badge) return;
 
-    let count = parseInt(badge.innerText || '0', 10);
+    let count = parseInt(badge.dataset.count ?? badge.innerText.trim(), 10) || 0;
     setNotificationCount(count + 1);
 }
 
@@ -60,9 +60,11 @@ function setNotificationCount(count) {
     const badge = document.getElementById('notification-count');
     if (!badge) return;
 
-    badge.innerText = count;
+    const numericCount = parseInt(count, 10) || 0;
+    badge.dataset.count = numericCount;
+    badge.innerText = numericCount > 99 ? '99+' : numericCount;
 
-    if (count > 0) {
+    if (numericCount > 0) {
         badge.classList.remove('hidden');
     } else {
         badge.classList.add('hidden');

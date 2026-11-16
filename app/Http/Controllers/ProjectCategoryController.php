@@ -29,7 +29,10 @@ class ProjectCategoryController extends Controller
 
     public function store(ProjectCategoryRequest $request)
     {
-        $projectCategory = ProjectCategory::create($request->validated());
+        $data = $request->validated();
+        $data['code'] = $data['code'] ?? ProjectCategory::generateUniqueCode();
+
+        $projectCategory = ProjectCategory::create($data);
 
         return response()->json([
             'status' => true,
@@ -40,7 +43,12 @@ class ProjectCategoryController extends Controller
 
     public function update(ProjectCategoryRequest $request, ProjectCategory $projectCategory)
     {
-        $projectCategory->update($request->validated());
+        $data = $request->validated();
+        if (empty($projectCategory->code)) {
+            $data['code'] = ProjectCategory::generateUniqueCode();
+        }
+
+        $projectCategory->update($data);
 
         return response()->json([
             'status' => true,

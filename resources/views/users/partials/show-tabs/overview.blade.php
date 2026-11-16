@@ -16,19 +16,19 @@
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Date of Birth</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ optional($user->details->dob)->format($globalDateFormat) ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->dob?->format($globalDateFormat) ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Phone</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->phone ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->phone ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">WhatsApp</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->whatsapp ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->whatsapp ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Gender</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ ucfirst($user->details->gender ?? '-') }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ ucfirst($user->details?->gender ?? '-') }}</p>
                     </div>
                 </div>
             </div>
@@ -40,31 +40,31 @@
                 <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Role</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->getRoleNameAttribute() ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->getRoleNames()->implode(', ') ?: '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Department</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->department->name ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->department?->name ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Designation</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->designation->name ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->designation?->name ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reporting To</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->reporter->name ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->reporter?->name ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Manager</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->manager->name ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->manager?->name ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Employee ID</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->employee_id ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->employee_id ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Date of Joining</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ optional($user->details->joining_date)->format($globalDateFormat) ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->joining_date?->format($globalDateFormat) ?? '-' }}</p>
                     </div>
                 </div>
             </div>
@@ -76,11 +76,11 @@
                 <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Person</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->contact_person ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->contact_person ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Number</label>
-                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->contact_person_number ?? '-' }}</p>
+                        <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->contact_person_number ?? '-' }}</p>
                     </div>
                 </div>
             </div>
@@ -91,7 +91,7 @@
                 </h4>
                 <div class="mt-6">
                     <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Address</label>
-                    <p class="text-gray-700 dark:text-bgray-50">{{ $user->details->address ?? '-' }}</p>
+                    <p class="text-gray-700 dark:text-bgray-50">{{ $user->details?->address ?? '-' }}</p>
                 </div>
             </div>
         </div>

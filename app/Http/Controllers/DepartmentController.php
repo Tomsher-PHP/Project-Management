@@ -29,7 +29,10 @@ class DepartmentController extends Controller
 
     public function store(DepartmentRequest $request)
     {
-        $department = Department::create($request->validated());
+        $data = $request->validated();
+        $data['code'] = $data['code'] ?? Department::generateUniqueCode();
+
+        $department = Department::create($data);
 
         return response()->json([
             'status' => true,
@@ -40,7 +43,12 @@ class DepartmentController extends Controller
 
     public function update(DepartmentRequest $request, Department $department)
     {
-        $department->update($request->validated());
+        $data = $request->validated();
+        if (empty($department->code)) {
+            $data['code'] = Department::generateUniqueCode();
+        }
+
+        $department->update($data);
 
         return response()->json([
             'status' => true,

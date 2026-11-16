@@ -44,6 +44,7 @@
     $canViewProductivityReports = $authUser?->can('reports.productivity_view');
 
     $canViewAppraisal = $authUser?->can('appraisal.view');
+    $canViewBroadcasts = $authUser?->can('broadcast.view');
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
     $canViewLeaveChangeRequests = $authUser?->can('leave_change_request.view');
     $canViewLeaveCancelRequests = $authUser?->can('leave_cancellation_request.view');
@@ -64,13 +65,12 @@
     };
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewAttendance || $canViewHolidays || $canViewExpenses || $canViewLeaveChangeRequests || $canViewLeaveCancelRequests;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal || $canViewBroadcasts || $canViewAttendance || $canViewHolidays || $canViewExpenses || $canViewLeaveChangeRequests || $canViewLeaveCancelRequests;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
     $isDashboardActive = request()->routeIs('dashboard');
     $isWorkspaceActive = request()->routeIs('user.workspace');
-    $isAnalyticsActive = request()->routeIs('user.analytics');
     $isProjectAnalyticsActive = request()->routeIs('project.analytics*');
     $isRolesActive = request()->routeIs('roles.*');
     $isUsersActive = request()->routeIs('users.*');
@@ -113,6 +113,7 @@
     $isActivityLogActive = request()->routeIs('activity.log*');
 
     $isAppraisalActive = request()->routeIs('appraisal.*');
+    $isBroadcastsActive = request()->routeIs('broadcasts.*');
 
     $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
     $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
@@ -179,22 +180,6 @@
                             </div>
                         </a>
                     </li>
-                    <li class="item py-[8px] {{ $isAnalyticsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                        <a href="{{ route('user.analytics') }}">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="18" y1="20" x2="18" y2="10" />
-                                            <line x1="12" y1="20" x2="12" y2="4" />
-                                            <line x1="6" y1="20" x2="6" y2="14" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-base font-medium leading-none {{ $isAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
                     <li class="item py-[8px] {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                         <a href="{{ route('project.analytics') }}">
                             <div class="flex items-center justify-between">
@@ -205,7 +190,7 @@
                                             <path d="M22 12A10 10 0 0 0 12 2v10z" />
                                         </svg>
                                     </span>
-                                    <span class="item-text text-base font-medium leading-none {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : '' }}">Project Analytics</span>
+                                    <span class="item-text text-base font-medium leading-none {{ $isProjectAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
                                 </div>
                             </div>
                         </a>
@@ -394,9 +379,7 @@
                                             <a href="{{ route('tasks.requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Task</span>
                                                 @if (($requestMenuBadges['task_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['task_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['task_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -407,9 +390,7 @@
                                             <a href="{{ route('tasks.time-log-change-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskTimeChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Task Log</span>
                                                 @if (($requestMenuBadges['task_time'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['task_time'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['task_time']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -420,9 +401,7 @@
                                             <a href="{{ route('handoff_requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isHandoffsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Handoff</span>
                                                 @if (($requestMenuBadges['task_handoff'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['task_handoff'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['task_handoff']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -433,9 +412,7 @@
                                             <a href="{{ route('break-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isBreakRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Break</span>
                                                 @if (($requestMenuBadges['break_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['break_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['break_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -446,9 +423,7 @@
                                             <a href="{{ route('tasks.extend-time-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskTimeExtendRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Time Extend</span>
                                                 @if (($requestMenuBadges['task_time_extend_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['task_time_extend_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['task_time_extend_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -460,9 +435,7 @@
                                                 <span>Leave Requests</span>
 
                                                 @if (($requestMenuBadges['leave_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['leave_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['leave_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -470,13 +443,10 @@
                                     @if ($canViewLeaveChangeRequests)
                                         <!-- Leave Change Requests -->
                                         <li>
-                                            <a href="{{ route('leave-change-requests.index') }}"
-                                            class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                            <a href="{{ route('leave-change-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Change</span>
                                                 @if (($requestMenuBadges['leave_change_requests'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['leave_change_requests'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['leave_change_requests']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -485,13 +455,10 @@
                                     @if ($canViewLeaveCancelRequests)
                                         <!-- Leave Cancel Requests -->
                                         <li>
-                                            <a href="{{ route('leave-cancellation-requests.index') }}"
-                                            class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                            <a href="{{ route('leave-cancellation-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveCancelRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Cancel</span>
                                                 @if (($requestMenuBadges['leave_cancellation_request'] ?? 0) > 0)
-                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                                                        {{ $requestMenuBadges['leave_cancellation_request'] }}
-                                                    </span>
+                                                    <x-count-badge :count="$requestMenuBadges['leave_cancellation_request']" />
                                                 @endif
                                             </a>
                                         </li>
@@ -611,7 +578,26 @@
                             </li>
                         @endif
 
-                        @if ($canViewExpenses)
+                        @if ($canViewBroadcasts)
+                            <!-- Broadcasts -->
+                            <li class="item py-[8px] {{ $isBroadcastsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('broadcasts.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M3 11v2a2 2 0 002 2h2l4 4V5L7 9H5a2 2 0 00-2 2z" />
+                                                    <path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isBroadcastsActive ? $sidebarItemActiveClass : '' }}">Broadcasts</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
+
+                        {{-- @if ($canViewExpenses)
                             <!-- Company Expenses -->
                             <li class="item py-[8px] {{ $isExpensesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ $expensesRoute }}">
@@ -627,7 +613,7 @@
                                     </div>
                                 </a>
                             </li>
-                        @endif
+                        @endif --}}
                     </ul>
                 </div>
             @endif
@@ -833,7 +819,7 @@
                         {{ $authUser?->name }}
                     </p>
                     <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">
-                        {{ $authUser?->getRoleNames()->implode(', ') ?: 'No Role' }}
+                        {{ $authUser?->getRoleNames()?->implode(', ') ?: 'No Role' }}
                     </p>
                 </div>
             </div>

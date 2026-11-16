@@ -2,8 +2,8 @@
     <!-- Backdrop -->
     <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-tracking-modal-close></div>
 
-    <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-        <div class="relative z-10 w-full max-w-5xl">
+    <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
+        <div class="modal-content relative z-10 w-full max-w-5xl">
             <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
 
                 <!-- Header -->
@@ -37,28 +37,31 @@
 
                         <div class="space-y-6">
 
-                            <!-- Date -->
-                            <div>
-                                <label for="project_tracking_date" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                    Date
-                                    <span class="text-error-300">*</span>
-                                </label>
+                            <!-- Date & Title in 2 columns -->
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <!-- Date -->
+                                <div>
+                                    <label for="project_tracking_date" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
+                                        Date
+                                        <span class="text-error-300">*</span>
+                                    </label>
 
-                                <input type="date" id="project_tracking_date" name="date" value="{{ old('date', now()->format('Y-m-d')) }}" required data-project-tracking-date class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" autocomplete="off">
+                                    <input type="date" id="project_tracking_date" name="date" value="{{ old('date', now()->format('Y-m-d')) }}" required data-project-tracking-date class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" autocomplete="off">
 
-                                <p data-project-tracking-date-error class="mt-1 hidden text-xs text-error-300"></p>
-                            </div>
+                                    <p data-project-tracking-date-error class="mt-1 hidden text-xs text-error-300"></p>
+                                </div>
 
-                            <!-- Title -->
-                            <div>
-                                <label for="project_tracking_title" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                    Title
-                                    <span class="text-error-300">*</span>
-                                </label>
+                                <!-- Title -->
+                                <div>
+                                    <label for="project_tracking_title" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
+                                        Title
+                                        <span class="text-error-300">*</span>
+                                    </label>
 
-                                <input type="text" id="project_tracking_title" name="title" value="{{ old('title') }}" maxlength="255" required data-project-tracking-title placeholder="Enter tracking title" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 outline-none transition focus:border-success-300 focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                    <input type="text" id="project_tracking_title" name="title" value="{{ old('title') }}" maxlength="255" required data-project-tracking-title placeholder="Enter tracking title" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 outline-none transition focus:border-success-300 focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
-                                <p data-project-tracking-title-error class="mt-1 hidden text-xs text-error-300"></p>
+                                    <p data-project-tracking-title-error class="mt-1 hidden text-xs text-error-300"></p>
+                                </div>
                             </div>
 
                             <!-- Description -->

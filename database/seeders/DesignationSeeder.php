@@ -30,14 +30,27 @@ class DesignationSeeder extends Seeder
         ];
 
         foreach ($designations as $key => $name) {
-            Designation::updateOrCreate(
-                ['name' => $name],
-                [
-                    'sort_order' => $key + 1,
-                    'is_system' => 1,
-                    'is_active' => 1,
-                ]
-            );
+            $designation = Designation::withTrashed()->where('name', $name)->first();
+
+            if ($designation) {
+                $designation->sort_order = $key + 1;
+                $designation->is_system = 1;
+                $designation->is_active = 1;
+                if (empty($designation->code)) {
+                    $designation->code = Designation::generateUniqueCode();
+                }
+                $designation->save();
+
+                continue;
+            }
+
+            Designation::create([
+                'name' => $name,
+                'code' => Designation::generateUniqueCode(),
+                'sort_order' => $key + 1,
+                'is_system' => 1,
+                'is_active' => 1,
+            ]);
         }
     }
 }

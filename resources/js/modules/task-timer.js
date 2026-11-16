@@ -29,15 +29,18 @@ const syncNavbarTimerState = (payload = null) => {
         return false;
     }
 
+    const taskId = payload.taskId ? String(payload.taskId) : '';
+
     const detail = {
         active: payload.active === true || payload.active === '1' || payload.shouldShowTimer === true,
-        taskId: payload.taskId ? String(payload.taskId) : '',
+        taskId,
         taskName: payload.taskName || '',
         seconds: parseSeconds(payload.seconds),
         baseSeconds: parseSeconds(payload.baseSeconds ?? payload.seconds),
         estimatedSeconds: parseSeconds(payload.estimatedSeconds),
         startedAt: payload.startedAt || '',
-        stopUrl: payload.stopUrl || '',
+        startUrl: payload.startUrl || (taskId ? `/tasks/${taskId}/start` : ''),
+        stopUrl: payload.stopUrl || (taskId ? `/tasks/${taskId}/stop` : ''),
         state: payload.state === 'running' ? 'running' : 'stopped',
     };
 
@@ -462,32 +465,36 @@ export function initTaskTimer() {
                     return;
                 }
 
-                const stopRunningTask = async (stopPayload = {}) => {
-                    const stopResponse = await fetch(`/tasks/${data.running_task_id}/stop`, {
+                const sendSwitchRequest = async (switchPayload = {}) => {
+                    const switchResponse = await fetch(`/tasks/${taskId}/switch`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': csrfToken,
                             'Accept': 'application/json',
                         },
-                        body: JSON.stringify(stopPayload),
+                        body: JSON.stringify({
+                            expected_running_task_id: data.running_task_id,
+                            ...switchPayload,
+                        }),
                     });
 
-                    const stopData = await stopResponse.json();
-                    return { stopResponse, stopData };
+                    const switchData = await switchResponse.json();
+                    return { switchResponse, switchData };
                 };
 
-                let stopPayload = {};
-                let { stopResponse, stopData } = await stopRunningTask(stopPayload);
+                let switchPayload = {};
+                let { switchResponse, switchData } = await sendSwitchRequest(switchPayload);
 
                 if (
-                    !stopResponse.ok
-                    && stopData?.requires_confirmation
-                    && !stopPayload.confirmed_non_assignee_stop
+                    !switchResponse.ok
+                    && switchData?.requires_confirmation
+                    && switchData?.requires_non_assignee_stop
+                    && !switchPayload.confirmed_non_assignee_stop
                 ) {
                     const stopConfirmation = await confirmStopTimer({
-                        assigneeName: stopData.assignee_name || data.running_task_assignee_name || '',
-                        taskName: data.running_task_name || 'this task',
+                        assigneeName: switchData.running_task_assignee_name || switchData.assignee_name || data.running_task_assignee_name || '',
+                        taskName: switchData.running_task_name || data.running_task_name || 'this task',
                     });
 
                     if (!stopConfirmation.isConfirmed) {
@@ -500,21 +507,49 @@ export function initTaskTimer() {
                         return;
                     }
 
-                    stopPayload.confirmed_non_assignee_stop = true;
-                    ({ stopResponse, stopData } = await stopRunningTask(stopPayload));
+                    switchPayload.confirmed_non_assignee_stop = true;
+                    ({ switchResponse, switchData } = await sendSwitchRequest(switchPayload));
                 }
 
-                if (!stopResponse.ok) {
-                    throw new Error(stopData.message || 'Failed to stop running task');
+                if (!switchResponse.ok) {
+                    if (switchResponse.status === 409 || switchData?.conflict) {
+                        Alert.error(switchData.message || 'The running task state has changed. Please try again.');
+                        if (switchData?.navbar_timer) {
+                            syncNavbarTimerState(switchData.navbar_timer);
+                        }
+                        document.dispatchEvent(new CustomEvent('task-timer:refresh'));
+                        setButtonsBusyState(relatedButtons, false);
+                        syncTaskTimerState(taskId, {
+                            isRunning: false,
+                            startedAt: '',
+                            totalSeconds: getCurrentTaskSeconds(taskId),
+                        });
+                        return;
+                    }
+                    throw new Error(switchData.message || 'Failed to switch task timer');
                 }
 
-                syncTaskTimerState(String(data.running_task_id), {
-                    isRunning: false,
-                    startedAt: '',
-                    totalSeconds: parseSeconds(stopData?.data?.duration_seconds) + parseSeconds(getButtons(String(data.running_task_id))[0]?.dataset.totalSeconds),
-                });
+                if (switchData?.stopped_task?.task_id) {
+                    const stoppedTaskId = String(switchData.stopped_task.task_id);
+                    const stoppedDuration = parseSeconds(switchData.stopped_task.duration_seconds);
+                    const currentStoppedSeconds = parseSeconds(getButtons(stoppedTaskId)[0]?.dataset.totalSeconds);
 
-                ({ response, data } = await sendRequest(payload));
+                    syncTaskTimerState(stoppedTaskId, {
+                        isRunning: false,
+                        startedAt: '',
+                        totalSeconds: stoppedDuration + currentStoppedSeconds,
+                    });
+
+                    document.dispatchEvent(new CustomEvent('task-timer:stopped-remotely', {
+                        detail: {
+                            taskId: stoppedTaskId,
+                            totalSeconds: stoppedDuration + currentStoppedSeconds,
+                        },
+                    }));
+                }
+
+                response = switchResponse;
+                data = switchData;
             }
 
             if (
@@ -557,8 +592,9 @@ export function initTaskTimer() {
 
                 Alert.success(data.message || 'Timer stopped');
             } else {
-                const startedAt = new Date().toISOString();
-                const nextTotalSeconds = parseSeconds(button.dataset.totalSeconds);
+                const navbarTimer = data?.navbar_timer || {};
+                const startedAt = navbarTimer.startedAt || new Date().toISOString();
+                const nextTotalSeconds = parseSeconds(navbarTimer.baseSeconds ?? button.dataset.totalSeconds);
 
                 syncTaskTimerState(taskId, {
                     isRunning: true,
@@ -570,15 +606,17 @@ export function initTaskTimer() {
                     detail: {
                         active: true,
                         taskId,
-                        taskName: button.dataset.taskName || '',
-                        seconds: nextTotalSeconds,
+                        taskName: navbarTimer.taskName || button.dataset.taskName || '',
+                        seconds: parseSeconds(navbarTimer.seconds ?? nextTotalSeconds),
                         baseSeconds: nextTotalSeconds,
                         estimatedSeconds: parseSeconds(
-                            getDisplays(taskId)[0]?.dataset.estimatedSeconds
+                            navbarTimer.estimatedSeconds
+                            || getDisplays(taskId)[0]?.dataset.estimatedSeconds
                             || button.dataset.estimatedSeconds
                         ),
                         startedAt,
-                        stopUrl: `/tasks/${taskId}/stop`,
+                        startUrl: navbarTimer.startUrl || `/tasks/${taskId}/start`,
+                        stopUrl: navbarTimer.stopUrl || `/tasks/${taskId}/stop`,
                         state: 'running',
                     },
                 }));

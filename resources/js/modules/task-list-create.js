@@ -16,6 +16,9 @@ const ADVANCED_TASK_FIELDS = new Set([
 const taskCreateEditors = new WeakMap();
 const taskCreateNoteEditors = new WeakMap();
 const taskCreateFilesMap = new WeakMap();
+const taskCreateProjectRequests = new WeakMap();
+const taskCreateParentRequests = new WeakMap();
+const taskCreatePreparationIds = new WeakMap();
 
 const renderTaskCreateFiles = (root) => {
     const container = root.querySelector('#task_create_selected_files');
@@ -123,6 +126,26 @@ const setFieldValue = (field, value = '') => {
 
         field._flatpickr.clear();
     }
+};
+
+const setSelectValue = (field, value = '') => {
+    if (!field) {
+        return;
+    }
+
+    const normalizedValue = value === null || value === undefined ? '' : String(value);
+
+    if (field.tomselect) {
+        if (normalizedValue) {
+            field.tomselect.setValue(normalizedValue, true);
+        } else {
+            field.tomselect.clear(true);
+        }
+
+        return;
+    }
+
+    field.value = normalizedValue;
 };
 
 const setCheckboxValue = (field, checked) => {
@@ -288,6 +311,8 @@ const setTaskCreateMode = (root, mode = 'create') => {
     const form = root.querySelector('[data-task-create-form]');
     const titleNode = root.querySelector('[data-task-create-title]');
     const assigneeFieldWrapper = root.querySelector('[data-task-create-assignee-field]');
+    const timelineFieldWrapper = root.querySelector('[data-task-create-timeline-field]');
+    const timelineField = timelineFieldWrapper?.querySelector('[name="project_timeline_id"]');
     const requestTypeField = form?.querySelector('[data-task-create-request-type]');
     const submitButton = form?.querySelector('[data-task-create-submit]');
 
@@ -307,6 +332,18 @@ const setTaskCreateMode = (root, mode = 'create') => {
 
     if (assigneeFieldWrapper) {
         assigneeFieldWrapper.hidden = normalizedMode === 'request';
+    }
+
+    if (timelineFieldWrapper) {
+        const isRequestMode = normalizedMode === 'request';
+        timelineFieldWrapper.hidden = isRequestMode;
+
+        if (isRequestMode) {
+            setSelectOptions(timelineField, [], {
+                placeholder: 'Select project first',
+                disabled: true,
+            });
+        }
     }
 
     const assigneeTimeDueRow = root.querySelector('[data-task-create-row-assignee-time-due]');
@@ -472,6 +509,10 @@ const setEmptyProjectState = (form, dependencies = null) => {
         placeholder: 'Select project first',
         disabled: true,
     });
+    setSelectOptions(form.querySelector('[name="project_timeline_id"]'), [], {
+        placeholder: 'Select project first',
+        disabled: true,
+    });
     setSelectOptions(form.querySelector('[name="parent_task_id"]'), [], {
         placeholder: 'Select project first',
         disabled: true,
@@ -504,6 +545,10 @@ const setProjectLoadingState = (form) => {
         placeholder: 'Loading sprints...',
         disabled: true,
     });
+    setSelectOptions(form.querySelector('[name="project_timeline_id"]'), [], {
+        placeholder: 'Loading timelines...',
+        disabled: true,
+    });
     setSelectOptions(form.querySelector('[name="parent_task_id"]'), [], {
         placeholder: 'Loading parent tasks...',
         disabled: true,
@@ -518,16 +563,12 @@ const setProjectLoadingState = (form) => {
     });
 };
 
-const fetchProjectDependencies = async (dependencies, projectId) => {
+const fetchProjectDependencies = async (dependencies, projectId, { signal } = {}) => {
     if (!projectId) {
         return null;
     }
 
     const key = String(projectId);
-
-    if (dependencies.projects && dependencies.projects[key]) {
-        return dependencies.projects[key];
-    }
 
     if (!dependencies.projects) {
         dependencies.projects = {};
@@ -537,6 +578,8 @@ const fetchProjectDependencies = async (dependencies, projectId) => {
     const requestUrl = urlTemplate.replace(':id', encodeURIComponent(key));
 
     const response = await fetch(requestUrl, {
+        cache: 'no-store',
+        signal,
         headers: {
             Accept: 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
@@ -556,6 +599,7 @@ const fetchProjectDependencies = async (dependencies, projectId) => {
 const applyProjectDefaults = async (form, dependencies) => {
     const projectField = form.querySelector('[name="project_id"]');
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
+    const timelineField = form.querySelector('[name="project_timeline_id"]');
     const assigneeField = form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]');
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
@@ -563,25 +607,52 @@ const applyProjectDefaults = async (form, dependencies) => {
     const billableField = form.querySelector('input[type="checkbox"][name="is_billable"]');
 
     const projectId = projectField?.value || '';
+    const previousProjectRequest = taskCreateProjectRequests.get(form);
+
+    previousProjectRequest?.abort();
+    taskCreateParentRequests.get(form)?.abort();
 
     if (!projectId) {
+        taskCreateProjectRequests.delete(form);
+        taskCreateParentRequests.delete(form);
         setEmptyProjectState(form, dependencies);
-        return;
+        return null;
     }
 
+    const projectRequest = new AbortController();
+    taskCreateProjectRequests.set(form, projectRequest);
     setProjectLoadingState(form);
 
     let projectMeta = null;
     try {
-        projectMeta = await fetchProjectDependencies(dependencies, projectId);
+        projectMeta = await fetchProjectDependencies(dependencies, projectId, {
+            signal: projectRequest.signal,
+        });
     } catch (error) {
+        if (error.name === 'AbortError' || taskCreateProjectRequests.get(form) !== projectRequest) {
+            return null;
+        }
+
+        taskCreateProjectRequests.delete(form);
         setEmptyProjectState(form, dependencies);
         throw error;
     }
 
+    if (
+        taskCreateProjectRequests.get(form) !== projectRequest
+        || String(projectField?.value || '') !== String(projectId)
+    ) {
+        if (taskCreateProjectRequests.get(form) === projectRequest) {
+            taskCreateProjectRequests.delete(form);
+        }
+
+        return null;
+    }
+
     if (!projectMeta) {
+        taskCreateProjectRequests.delete(form);
         setEmptyProjectState(form, dependencies);
-        return;
+        return null;
     }
 
     const isAgile = projectMeta.flow === 'agile';
@@ -592,6 +663,14 @@ const applyProjectDefaults = async (form, dependencies) => {
     });
 
     updateSprintOptions(form, dependencies);
+
+    if (getTaskCreateMode(form.closest('[data-task-create-root]')) === 'create') {
+        setSelectOptions(timelineField, projectMeta.timelines || [], {
+            placeholder: (projectMeta.timelines || []).length ? 'Select timeline' : 'No active or completed timelines',
+            disabled: !(projectMeta.timelines || []).length,
+            value: projectMeta.default_timeline_id || '',
+        });
+    }
 
     setSelectOptions(assigneeField, projectMeta.assignees || [], {
         placeholder: 'Select assignee',
@@ -620,7 +699,29 @@ const applyProjectDefaults = async (form, dependencies) => {
     setEstimatedTimeValue(form, projectMeta.default_task_estimate_minutes ?? 0);
     setCheckboxValue(billableField, projectMeta.default_billable);
 
-    await loadParentTaskOptions(form, dependencies);
+    try {
+        await loadParentTaskOptions(form, dependencies);
+    } catch (error) {
+        if (taskCreateProjectRequests.get(form) === projectRequest) {
+            taskCreateProjectRequests.delete(form);
+        }
+
+        throw error;
+    }
+
+    if (
+        taskCreateProjectRequests.get(form) !== projectRequest
+        || String(projectField?.value || '') !== String(projectId)
+    ) {
+        if (taskCreateProjectRequests.get(form) === projectRequest) {
+            taskCreateProjectRequests.delete(form);
+        }
+
+        return null;
+    }
+
+    taskCreateProjectRequests.delete(form);
+    return projectMeta;
 };
 
 const loadParentTaskOptions = async (form, dependencies) => {
@@ -629,6 +730,10 @@ const loadParentTaskOptions = async (form, dependencies) => {
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
     const sprintField = form.querySelector('[name="project_sprint_id"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
+    const previousParentRequest = taskCreateParentRequests.get(form);
+
+    previousParentRequest?.abort();
+    taskCreateParentRequests.delete(form);
 
     if (!parentField) {
         return;
@@ -674,15 +779,49 @@ const loadParentTaskOptions = async (form, dependencies) => {
         requestUrl.searchParams.set('project_sprint_id', String(sprintField.value));
     }
 
-    const response = await fetch(requestUrl.toString(), {
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    });
-    const result = await response.json();
+    const requestContext = {
+        projectId: String(projectField?.value || ''),
+        milestoneId: String(milestoneField?.value || ''),
+        sprintId: String(sprintField?.value || ''),
+    };
+    const parentRequest = new AbortController();
+    taskCreateParentRequests.set(form, parentRequest);
+
+    let response;
+    let result;
+    try {
+        response = await fetch(requestUrl.toString(), {
+            signal: parentRequest.signal,
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        result = await response.json();
+    } catch (error) {
+        if (error.name === 'AbortError' || taskCreateParentRequests.get(form) !== parentRequest) {
+            return null;
+        }
+
+        taskCreateParentRequests.delete(form);
+        throw error;
+    }
+
+    if (
+        taskCreateParentRequests.get(form) !== parentRequest
+        || String(projectField?.value || '') !== requestContext.projectId
+        || String(milestoneField?.value || '') !== requestContext.milestoneId
+        || String(sprintField?.value || '') !== requestContext.sprintId
+    ) {
+        if (taskCreateParentRequests.get(form) === parentRequest) {
+            taskCreateParentRequests.delete(form);
+        }
+
+        return null;
+    }
 
     if (!response.ok || !result.status) {
+        taskCreateParentRequests.delete(form);
         throw new Error(result.message || 'Unable to load parent tasks.');
     }
 
@@ -690,14 +829,20 @@ const loadParentTaskOptions = async (form, dependencies) => {
         placeholder: (result.options || []).length ? 'Select parent task' : 'No parent tasks available',
         disabled: false,
     });
+
+    taskCreateParentRequests.delete(form);
+    return result.options || [];
 };
 
-const prepareTaskCreateModal = async (root, dependencies) => {
+const prepareTaskCreateModal = async (root, dependencies, prefill = {}) => {
     const form = root.querySelector('[data-task-create-form]');
 
     if (!form) {
         return;
     }
+
+    const preparationId = (taskCreatePreparationIds.get(root) || 0) + 1;
+    taskCreatePreparationIds.set(root, preparationId);
 
     initTomSelect(root);
     initializeEstimatedTimeInputs(form);
@@ -735,9 +880,65 @@ const prepareTaskCreateModal = async (root, dependencies) => {
     setEmptyProjectState(form, dependencies);
 
     const projectField = form.querySelector('[name="project_id"]');
+    const projectId = String(prefill.projectId || '');
+
+    if (projectField && projectId) {
+        const projectOption = {
+            value: projectId,
+            text: prefill.projectName || `Project #${projectId}`,
+            subtype: prefill.projectCode || '',
+        };
+
+        if (projectField.tomselect) {
+            if (!projectField.tomselect.options[projectId]) {
+                projectField.tomselect.addOption(projectOption);
+            }
+        } else if (
+            projectField.tagName === 'SELECT'
+            && !Array.from(projectField.options).some((option) => String(option.value) === projectId)
+        ) {
+            const option = document.createElement('option');
+            option.value = projectId;
+            option.textContent = projectOption.text;
+            projectField.appendChild(option);
+        }
+
+        setSelectValue(projectField, projectId);
+    }
 
     if (projectField?.value) {
-        await applyProjectDefaults(form, dependencies);
+        const selectedProjectId = String(projectField.value);
+        const projectMeta = await applyProjectDefaults(form, dependencies);
+
+        if (
+            taskCreatePreparationIds.get(root) !== preparationId
+            || !projectMeta
+            || String(projectField.value || '') !== selectedProjectId
+        ) {
+            return;
+        }
+
+        const sprintId = String(prefill.sprintId || '');
+        const selectedSprint = (projectMeta?.sprints || []).find((option) => option.value === sprintId);
+        const milestoneId = String(prefill.milestoneId || selectedSprint?.project_milestone_id || '');
+        const parentTaskId = String(prefill.parentTaskId || '');
+        const milestoneField = form.querySelector('[name="project_milestone_id"]');
+
+        setSelectValue(milestoneField, milestoneId);
+        updateSprintOptions(form, dependencies, {
+            selectedMilestoneId: milestoneId,
+            selectedSprintId: sprintId,
+        });
+        await loadParentTaskOptions(form, dependencies);
+
+        if (
+            taskCreatePreparationIds.get(root) !== preparationId
+            || String(projectField.value || '') !== selectedProjectId
+        ) {
+            return;
+        }
+
+        setSelectValue(form.querySelector('[name="parent_task_id"]'), parentTaskId);
     }
 };
 
@@ -849,7 +1050,14 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             openTaskCreateModal(root.querySelector('[data-task-create-modal]'));
 
             try {
-                await prepareTaskCreateModal(root, dependencies);
+                await prepareTaskCreateModal(root, dependencies, {
+                    projectId: openButton.dataset.taskCreateProjectId || '',
+                    projectName: openButton.dataset.taskCreateProjectName || '',
+                    projectCode: openButton.dataset.taskCreateProjectCode || '',
+                    milestoneId: openButton.dataset.taskCreateMilestoneId || '',
+                    sprintId: openButton.dataset.taskCreateSprintId || '',
+                    parentTaskId: openButton.dataset.taskCreateParentTaskId || '',
+                });
             } catch (error) {
                 Alert.errorModal(error.message || 'Unable to load project task options.');
             }
@@ -1025,6 +1233,27 @@ const initializeTaskCreateRoot = (root, dependencies) => {
                 throw new Error(
                     result.message || 'Unable to save the task.'
                 );
+            }
+
+            if (root.dataset.taskCreateSuccessMode === 'refresh-project-tasks') {
+                closeTaskCreateModal(root.querySelector('[data-task-create-modal]'));
+                Alert.success(result.message || 'Task added successfully.');
+                document.dispatchEvent(new CustomEvent('project-tab:reload', {
+                    detail: {
+                        tab: 'tasks',
+                        query: {
+                            preferred_group: result.project_task_group_key || '',
+                        },
+                    },
+                }));
+                isTaskCreateSubmitting = false;
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Save Task';
+                }
+
+                return;
             }
 
             window.location.reload();

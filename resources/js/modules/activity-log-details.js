@@ -7,9 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const content = document.getElementById('activity-log-modal-content');
     const hasVisibleSiblingModal = () => {
-        const siblingModal = document.getElementById('project-insights-modal');
+        const projectInsights = document.getElementById('project-insights-modal');
+        const taskInsights = document.getElementById('task-insights-modal');
 
-        return siblingModal && !siblingModal.classList.contains('hidden');
+        return (projectInsights && !projectInsights.classList.contains('hidden')) ||
+            (taskInsights && !taskInsights.classList.contains('hidden'));
     };
 
     const openModal = () => {

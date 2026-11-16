@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\LeaveType;
 use App\Models\User;
 use App\Models\UserLeaveBalance;
 use Carbon\Carbon;
@@ -361,5 +362,55 @@ class LeaveBalanceService
         }
 
         return $months;
+    }
+
+    public function hasAnyLeaveBalanceRecords(User $user): bool
+    {
+        return UserLeaveBalance::where('user_id', $user->id)
+            ->exists();
+    }
+
+    public function initializeZeroLeaveBalances(
+        User $user,
+        Carbon $fromDate,
+        Carbon $toDate,
+        int $createdBy
+    ): void {
+        $leaveTypes = LeaveType::where('status', true)->get();
+
+        $years = range($fromDate->year, $toDate->year);
+
+        foreach ($years as $year) {
+            foreach ($leaveTypes as $leaveType) {
+
+                UserLeaveBalance::firstOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'leave_type_id' => $leaveType->id,
+                        'year' => $year,
+                    ],
+                    [
+                        'valid_from' => Carbon::create($year, 1, 1)
+                            ->toDateString(),
+
+                        'valid_to' => Carbon::create($year, 12, 31)
+                            ->toDateString(),
+
+                        'yearly_entitlement' => 0,
+                        'monthly_entitlement' => 0,
+                        'opening_balance' => 0,
+                        'current_balance' => 0,
+                        'used_balance' => 0,
+                        'paid_days_used' => 0,
+                        'unpaid_days_used' => 0,
+                        'carry_forward_balance' => 0,
+                        'is_carry_forward' => false,
+                        'status' => true,
+                        'created_by' => $createdBy,
+                        'updated_by' => $createdBy,
+                    ]
+                );
+            }
+        }
     }
 }

@@ -8,7 +8,6 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ServiceType extends Model
 {
@@ -36,6 +35,27 @@ class ServiceType extends Model
     ];
 
     protected $searchable = ['name', 'code'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (ServiceType $serviceType) {
+            if (empty($serviceType->code) || static::withTrashed()->where('code', $serviceType->code)->exists()) {
+                $serviceType->code = static::generateUniqueCode();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique 6-digit numeric code (e.g. 123456).
+     */
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $code = (string) random_int(100000, 999999);
+        } while (static::withTrashed()->where('code', $code)->exists());
+
+        return $code;
+    }
 
     protected function casts(): array
     {

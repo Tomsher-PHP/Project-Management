@@ -20,3 +20,9 @@ Schedule::command('notify:check-daily-shift-hours')->everyFiveMinutes()->without
 Schedule::command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
 
 Schedule::command('project:timeline-ending-soon-notifications')->dailyAt('08:00')->withoutOverlapping();
+Schedule::command('project:hosting-expiry-notifications')->dailyAt('08:00')->withoutOverlapping();
+
+
+Schedule::command('app:generate-daily-work-reports')
+    ->everyMinute()
+    ->withoutOverlapping();

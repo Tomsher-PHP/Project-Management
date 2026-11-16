@@ -16,7 +16,7 @@ return [
     // Date format
     'date_format' => 'Y-m-d',
 
-    // Time format    
+    // Time format
     'time_format' => 'H:i',
 
     // Timezone
@@ -75,6 +75,7 @@ return [
         'technology.view',
         'industry.view',
         'project_settings.view',
+        'server_hosting.view',
         'task_settings.view',
         'kpi.view',
         'checklist_template.view',
@@ -82,6 +83,8 @@ return [
         'meeting_settings.view',
         'leave_types.view',
         'company_expenses.view',
+        'broadcast_settings.view',
+        'data_sync_settings.view',
         'configuration.view',
     ],
 
@@ -91,8 +94,35 @@ return [
     // User settings keys
     'user_settings' => [
         'daily_work_hours_warning_mail' => 'Daily Work Hours Warning Email',
+        'daily_work_report_mail' => 'Daily Work Report Email',
     ],
 
-    // Meeting reminder notification time in minutes 
+    // Meeting reminder notification time in minutes
     'meeting_reminder_notification_min' => 10,
+
+    // Supported Data Sync API settings modules
+    'data_sync_modules' => [
+        'technologies'       => 'technologies',
+        'industries'         => 'industries',
+        'project_categories' => 'project_categories',
+        'project_statuses'   => 'project_statuses',
+    ],
+
+    // Data Sync API permissions displayed when creating or editing API clients
+    'data_sync_api_permissions' => [
+        'settings_masters' => [
+            'label' => 'Settings Masters',
+            'permissions' => [
+                'settings.read' => 'Read Technologies, Industries, Categories, Statuses',
+                'settings.write' => 'Create, update, toggle and delete Settings masters',
+            ],
+        ],
+        'operations' => [
+            'label' => 'Operations',
+            'permissions' => [
+                'projects.write' => 'Create & update Customers and Projects',
+                'meetings.read' => 'Read scheduled active meetings',
+            ],
+        ],
+    ],
 ];

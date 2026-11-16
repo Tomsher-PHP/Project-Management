@@ -86,8 +86,12 @@
         <!-- Task Insights Modal -->
         @include('tasks.partials.modals.insights-modal')
 
-        <!-- Task Notes & Files Modal -->
+        <!-- Task NNNotes & Files Modal -->
         @include('tasks.partials.modals.notes-modal')
+
+        @include('tasks.partials.modals.dev-notes-modal')
+
+        @include('tasks.partials.modals.reopen-task-remark-modal')
     </main>
 
     <x-filters.drawer>
@@ -122,4 +126,5 @@
     @vite('resources/js/modules/task-list-create.js')
     @vite('resources/js/modules/tasks/kanban-board.js')
     @vite('resources/js/modules/tasks/extend-task.js')
+    @vite('resources/js/modules/tasks/developer-notes.js')
 @endpush
