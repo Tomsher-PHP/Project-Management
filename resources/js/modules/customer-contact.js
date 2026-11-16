@@ -24,7 +24,7 @@ $(document).ready(function () {
 
         clearForms(form);
 
-        modal.removeClass('hidden').addClass('flex');
+        modal.removeClass('hidden').addClass('block');
     });
 
     // --------------------------------------------------
@@ -77,7 +77,7 @@ $(document).ready(function () {
         modal.find('#addDataBtn').text('Update');
         modal.find('.submit-btn').text('Update');
 
-        modal.removeClass('hidden').addClass('flex');
+        modal.removeClass('hidden').addClass('block');
     });
 
     // --------------------------------------------------
@@ -88,7 +88,7 @@ $(document).ready(function () {
 
         const currentModal = $(this).closest('.modal');
 
-        currentModal.addClass('hidden').removeClass('flex');
+        currentModal.addClass('hidden').removeClass('block');
 
         clearForms(currentModal.find('form'));
 
@@ -271,7 +271,7 @@ $(document).ready(function () {
         reindexContacts();
 
         // Close and reset modal.
-        currentModal.addClass('hidden').removeClass('flex');
+        currentModal.addClass('hidden').removeClass('block');
 
         clearForms(currentForm);
 
