@@ -45,6 +45,16 @@ class GenerateScheduleTaskService
             ->orderBy('id')
             ->chunkById(100, function ($taskSchedules) use ($scheduledFor, &$generatedCount) {
                 foreach ($taskSchedules as $taskSchedule) {
+                    if (! $taskSchedule->project || $taskSchedule->project->trashed()) {
+                        Log::info('Skipped scheduled task generation.', [
+                            'task_schedule_id' => $taskSchedule->id,
+                            'scheduled_for_date' => $scheduledFor->toDateString(),
+                            'reason' => 'Project is soft deleted or missing',
+                        ]);
+
+                        continue;
+                    }
+
                     if ($taskSchedule->current_assignee_id && ! $this->isAssigneeActiveMember($taskSchedule)) {
                         Log::info('Skipped scheduled task generation.', [
                             'task_schedule_id' => $taskSchedule->id,
@@ -136,11 +146,24 @@ class GenerateScheduleTaskService
             return true;
         }
 
-        if (! $taskSchedule->project && ! $taskSchedule->project_id) {
+        if (! $taskSchedule->project_id && ! $taskSchedule->relationLoaded('project')) {
             return true;
         }
 
-        return (bool) $taskSchedule->project?->hasActiveMember($taskSchedule->current_assignee_id);
+        if ($taskSchedule->relationLoaded('project')) {
+            $project = $taskSchedule->project;
+            if (! $project || $project->trashed()) {
+                return false;
+            }
+
+            return (bool) $project->hasActiveMember($taskSchedule->current_assignee_id);
+        }
+
+        if (! $taskSchedule->project || $taskSchedule->project->trashed()) {
+            return false;
+        }
+
+        return (bool) $taskSchedule->project->hasActiveMember($taskSchedule->current_assignee_id);
     }
 
     protected function resolveShiftAssignmentForDate(int $userId, Carbon $date): ?UserShiftAssignment
@@ -171,6 +194,16 @@ class GenerateScheduleTaskService
     private function generateTask(TaskSchedule $taskSchedule, Carbon $scheduledFor): ?Task
     {
         $scheduledDate = $scheduledFor->toDateString();
+
+        if (! $taskSchedule->project || $taskSchedule->project->trashed()) {
+            Log::info('Skipped scheduled task generation.', [
+                'task_schedule_id' => $taskSchedule->id,
+                'scheduled_for_date' => $scheduledDate,
+                'reason' => 'Project is soft deleted or missing',
+            ]);
+
+            return null;
+        }
 
         if ($this->occurrenceExists($taskSchedule, $scheduledDate)) {
             return null;

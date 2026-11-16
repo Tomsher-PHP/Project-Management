@@ -6,7 +6,6 @@ use App\Models\HostingServiceStatus;
 use App\Models\Project;
 use App\Models\ProjectHostingRecord;
 use App\Models\ProjectNotificationDefault;
-use App\Models\ProjectNotificationPreference;
 use App\Models\ProjectNotificationSetting;
 use App\Models\ProjectNotificationLog;
 use App\Models\ProjectTimeline;
@@ -60,13 +59,13 @@ class ProjectNotificationService
             ->whereNotNull('end_date')
             ->whereHas('project', function ($query) {
                 // Respect project scoping & soft deletion
-                $query->whereNull('deleted_at');
+                $query->whereNull('projects.deleted_at');
             })
             ->get();
 
         foreach ($timelines as $timeline) {
             $project = $timeline->project;
-            if (!$project) {
+            if (!$project || $project->trashed()) {
                 continue;
             }
 
@@ -171,13 +170,13 @@ class ProjectNotificationService
                 $query->whereNotIn('hosting_service_status_id', $ineligibleStatusIds);
             })
             ->whereHas('project', function ($query) {
-                $query->whereNull('deleted_at');
+                $query->whereNull('projects.deleted_at');
             })
             ->get();
 
         foreach ($hostingRecords as $record) {
             $project = $record->project;
-            if (!$project) {
+            if (!$project || $project->trashed()) {
                 continue;
             }
 
@@ -452,7 +451,7 @@ class ProjectNotificationService
             ->where('users.is_active', true)
             ->where(function ($q) {
                 $q->where('users.delete_status', false)
-                  ->orWhereNull('users.delete_status');
+                    ->orWhereNull('users.delete_status');
             })
             ->get();
 

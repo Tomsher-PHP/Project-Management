@@ -34,10 +34,13 @@ class NotifyTaskStart extends Command
 
         $tasks = Task::query()
             ->with([
-                'project:id,name',
+                'project:id,name,deleted_at',
                 'status:id,name,type,is_completed',
                 'currentAssignee:id,name,email',
             ])
+            ->whereHas('project', function ($query) {
+                $query->whereNull('projects.deleted_at');
+            })
             ->whereNotNull('current_assignee_id')
             ->whereNotNull('due_date_time')
             ->whereNull('start_notify_at')
@@ -49,6 +52,10 @@ class NotifyTaskStart extends Command
 
         if ($tasks->isNotEmpty()) {
             foreach ($tasks as $task) {
+                if (! $task->project || $task->project->trashed()) {
+                    continue;
+                }
+
                 $dueAt = $task->due_date_time;
                 $startAt = $dueAt->copy()->subSeconds($task->estimated_time_seconds);
                 $notifyAt = $startAt->copy()->subMinutes($minutesBefore);
