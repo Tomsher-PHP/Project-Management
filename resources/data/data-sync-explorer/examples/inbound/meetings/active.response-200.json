@@ -1,0 +1,46 @@
+{
+    "success": true,
+    "data": [
+        {
+            "id": 101,
+            "title": "Quarterly Strategy Review",
+            "description": "Align on Q4 deliverables and team goals.",
+            "start_at": "2026-12-01T10:00:00.000000Z",
+            "end_at": "2026-12-01T11:30:00.000000Z",
+            "url": "https://meet.google.com/abc-defg-hij",
+            "location_details": "Conference Room B",
+            "rescheduled_from_id": null,
+            "status": {
+                "id": 1,
+                "code": "scheduled",
+                "name": "Scheduled",
+                "color": "#10B981"
+            },
+            "meeting_type": {
+                "id": 2,
+                "name": "Strategy Review",
+                "color": "#3B82F6"
+            },
+            "location": {
+                "id": 1,
+                "name": "Google Meet"
+            },
+            "project": {
+                "id": 45,
+                "name": "Corporate Portal Redesign"
+            },
+            "organizer": {
+                "id": 12,
+                "name": "Jane Organizer",
+                "email": "jane@example.com"
+            },
+            "participants": [
+                {
+                    "id": 14,
+                    "name": "Ahmed Mohammed",
+                    "email": "ahmed@abctech.ae"
+                }
+            ]
+        }
+    ]
+}

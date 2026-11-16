@@ -1,0 +1,9 @@
+{
+    "success": false,
+    "message": "Validation failed.",
+    "errors": {
+        "parent_code": [
+            "The selected parent industry code is invalid."
+        ]
+    }
+}

@@ -705,7 +705,7 @@ class ProjectController extends Controller
         return view('projects.partials.tabs.notes', compact('project', 'projectNotes', 'canRemove', 'canCreate', 'isDeletedProjectView'))->render();
     }
 
-    private function renderMeetingsTab(Project $project): string
+    public function renderMeetingsTab(Project $project): string
     {
         $authUser = auth()->user();
         $perPage = 4;
@@ -944,7 +944,7 @@ class ProjectController extends Controller
         ))->render();
     }
 
-    private function renderTimelinesTab(Project $project): string
+    public function renderTimelinesTab(Project $project): string
     {
         return view('projects.partials.tabs.timelines', compact('project'))->render();
     }

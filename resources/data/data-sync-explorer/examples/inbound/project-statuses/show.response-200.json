@@ -1,0 +1,16 @@
+{
+    "success": true,
+    "message": "Record retrieved successfully.",
+    "data": {
+        "id": 1,
+        "name": "In Progress",
+        "code": "100001",
+        "color": "#0d6efd",
+        "type": "in_progress",
+        "is_default": false,
+        "is_completed": false,
+        "sort_order": 1,
+        "is_system": true,
+        "is_active": true
+    }
+}

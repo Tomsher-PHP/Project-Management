@@ -1,0 +1,4 @@
+{
+    "success": false,
+    "message": "Circular parent industry relationship is not allowed."
+}

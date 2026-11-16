@@ -84,6 +84,7 @@ return [
         'leave_types.view',
         'company_expenses.view',
         'broadcast_settings.view',
+        'data_sync_settings.view',
         'configuration.view',
     ],
 
@@ -93,7 +94,7 @@ return [
     // User settings keys
     'user_settings' => [
         'daily_work_hours_warning_mail' => 'Daily Work Hours Warning Email',
-        'daily_work_report_mail'=> 'Daily Work Report Email',
+        'daily_work_report_mail' => 'Daily Work Report Email',
     ],
 
     // Meeting reminder notification time in minutes
@@ -105,5 +106,23 @@ return [
         'industries'         => 'industries',
         'project_categories' => 'project_categories',
         'project_statuses'   => 'project_statuses',
+    ],
+
+    // Data Sync API permissions displayed when creating or editing API clients
+    'data_sync_api_permissions' => [
+        'settings_masters' => [
+            'label' => 'Settings Masters',
+            'permissions' => [
+                'settings.read' => 'Read Technologies, Industries, Categories, Statuses',
+                'settings.write' => 'Create, update, toggle and delete Settings masters',
+            ],
+        ],
+        'operations' => [
+            'label' => 'Operations',
+            'permissions' => [
+                'projects.write' => 'Create & update Customers and Projects',
+                'meetings.read' => 'Read scheduled active meetings',
+            ],
+        ],
     ],
 ];

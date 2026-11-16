@@ -1,0 +1,12 @@
+{
+    "success": true,
+    "message": "Record updated successfully.",
+    "data": {
+        "id": 15,
+        "name": "TypeScript 5.x",
+        "code": "500010",
+        "sort_order": 6,
+        "is_system": false,
+        "is_active": false
+    }
+}
