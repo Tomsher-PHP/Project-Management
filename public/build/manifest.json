@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BgDyUuQA.css",
+    "file": "assets/app-BCZo5lZB.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -716,6 +716,28 @@
     "file": "assets/projects-count-chart-DmdS0gYL.js",
     "name": "projects-count-chart",
     "src": "resources/js/projects-count-chart.js",
+    "isEntry": true
+  },
+  "resources/js/settings/data-sync/api-explorer-tab.js": {
+    "file": "assets/api-explorer-tab-2WLpGJIu.js",
+    "name": "api-explorer-tab",
+    "src": "resources/js/settings/data-sync/api-explorer-tab.js",
+    "isEntry": true
+  },
+  "resources/js/settings/data-sync/client-tab.js": {
+    "file": "assets/client-tab-Kq_qwB4a.js",
+    "name": "client-tab",
+    "src": "resources/js/settings/data-sync/client-tab.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/settings/data-sync/data-sync-settings.js": {
+    "file": "assets/data-sync-settings-CmkGa7nh.js",
+    "name": "data-sync-settings",
+    "src": "resources/js/settings/data-sync/data-sync-settings.js",
     "isEntry": true
   }
 }
