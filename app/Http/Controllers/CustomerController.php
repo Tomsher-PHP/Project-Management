@@ -119,6 +119,7 @@ class CustomerController extends Controller
 
     public function update(CustomerRequest $request, Customer $customer, CustomerServices $service)
     {
+
         $service->update($customer, $request->validated());
 
         return redirect(session('customers_return_url', route('customers.index')))->with('success', 'Customer updated successfully.');

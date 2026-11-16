@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class CustomerContact extends Model
 {
@@ -22,13 +23,20 @@ class CustomerContact extends Model
         'mobile',
         'whatsapp',
         'designation',
+        'password',
         'is_primary',
         'is_active',
+        'username',
         'added_by',
         'updated_by',
     ];
 
+    protected $hidden = [
+        'password',
+    ];
+
     protected $casts = [
+        'password' => 'hashed',
         'is_primary' => 'boolean',
         'is_active' => 'boolean',
     ];
@@ -37,7 +45,7 @@ class CustomerContact extends Model
         'name',
     ];
 
-    public static function booted()
+    protected static function booted(): void
     {
         static::creating(function ($model) {
             $model->added_by = Auth::id() ?? null;

@@ -26,7 +26,6 @@
 
     <!-- Modal content start -->
     <x-add-form-modal modalId="multi-step-modal" module="Contact" formId="customerContactForm" action="#" button="Add">
-
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
             <!-- Name -->
@@ -71,9 +70,105 @@
                 </label>
                 <input type="text" id="extra_contact_whatsapp" name="whatsapp" placeholder="Enter WhatsApp number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
-
         </div>
 
+        <div class="md:col-span-2 mt-2">
+                <label class="inline-flex items-center gap-2 text-sm font-medium text-bgray-600 dark:text-bgray-50">
+                    <input type="checkbox"
+                        name="needs_login"
+                        value="1"
+                        data-login-toggle
+                        data-login-target="extra-contact-login-fields"
+                        class="h-4 w-4 rounded border-gray-300 text-success-300 focus:ring-0"
+                    >
+                    <span>This contact person needs login access</span>
+                </label>
+            </div>
+
+            <!-- Login Fields -->
+            <div id="extra-contact-login-fields" class="contact-login-fields md:col-span-2 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <!-- Username -->
+                    <div class="flex flex-col gap-2">
+                        <label for="extra_contact_username" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                            Username <x-red-star />
+                        </label>
+                        <input
+                            type="text"
+                            name="username"
+                            id="extra_contact_username"
+                            placeholder="Enter username"
+                            autocomplete="username"
+                            disabled
+                            class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400"
+                        >
+                    </div>
+
+                    <!-- Password -->
+                    <div class="flex flex-col gap-2">
+                        <label for="extra_contact_password" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                            Password <x-red-star />
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="password"
+                                name="password"
+                                id="extra_contact_password"
+                                placeholder="Enter password"
+                                autocomplete="new-password"
+                                disabled
+                                class="w-full rounded-lg border border-gray-300 p-2 pr-10 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400"
+                            >
+                            <button
+                                type="button"
+                                data-password-toggle
+                                data-target="extra_contact_password"
+                                class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50"
+                                aria-label="Show password"
+                                title="Show password"
+                            >
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="flex flex-col gap-2">
+                        <label for="extra_contact_password_confirmation" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                            Confirm Password <x-red-star />
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="password"
+                                name="password_confirmation"
+                                id="extra_contact_password_confirmation"
+                                placeholder="Confirm password"
+                                autocomplete="new-password"
+                                disabled
+                                class="w-full rounded-lg border border-gray-300 p-2 pr-10 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400"
+                            >
+                            <button
+                                type="button"
+                                data-password-toggle
+                                data-target="extra_contact_password_confirmation"
+                                class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50"
+                                aria-label="Show password"
+                                title="Show password"
+                            >
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
     </x-add-form-modal>
 @endsection
 

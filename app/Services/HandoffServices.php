@@ -180,6 +180,7 @@ class HandoffServices
         foreach ($purposes as $p) {
             $purposeOptions[$p] = $p;
         }
+        dd($query);
 
         return [
             'projects' => $projectIds->isEmpty() ? collect() : Project::query()->whereIn('id', $projectIds)->orderBy('name')->get(['id', 'name']),
