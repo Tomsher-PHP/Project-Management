@@ -86,6 +86,7 @@ class CustomerServices
     public function update(Customer $customer, array $data)
     {
         return DB::transaction(function () use ($customer, $data) {
+
             // 1. Update Customer
             $customer->update([
                 'name' => $data['name'],
@@ -119,10 +120,11 @@ class CustomerServices
             'mobile' => $data['primary_mobile'] ?? null,
             'landline' => $data['primary_landline'] ?? null,
             'whatsapp' => $data['primary_whatsapp'] ?? null,
+            'username' => $data['primary_username'] ?? null,
             'is_primary' => 1,
         ];
 
-        // Save primary contact password only when supplied.
+        // Save primary contact password only when a new password is supplied.
         if (!empty($data['primary_password'])) {
             $primaryData['password'] = $data['primary_password'];
         }

@@ -26,6 +26,7 @@ class CustomerContact extends Model
         'password',
         'is_primary',
         'is_active',
+        'username',
         'added_by',
         'updated_by',
     ];

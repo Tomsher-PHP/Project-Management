@@ -22,7 +22,9 @@ class CustomerRequest extends FormRequest
      */
     public function rules(): array
     {
-        $customerId = $this->route('customer')?->id;
+        $customer = $this->route('customer');
+        $customerId = $customer?->id;
+        $primaryContactId = $customer?->primaryContact?->id;
 
         $rules = [
             // Customer
@@ -49,6 +51,20 @@ class CustomerRequest extends FormRequest
             'primary_mobile' => ['nullable', 'string', 'max:255'],
             'primary_whatsapp' => ['nullable', 'string', 'max:255'],
             'primary_designation' => ['nullable', 'string', 'max:255'],
+
+            // Customer Portal Login
+            'primary_username' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('customer_contacts', 'username')->ignore($primaryContactId),
+            ],
+            'primary_password' => [
+                'nullable',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
 
             // Additional Contacts
             'contacts' => ['nullable', 'array'],
@@ -115,6 +131,8 @@ class CustomerRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            $customer = $this->route('customer');
+
             // At least one primary contact method is required.
             if (
                 empty($this->input('primary_email')) &&
@@ -125,6 +143,28 @@ class CustomerRequest extends FormRequest
                 $validator->errors()->add(
                     'primary_email',
                     'At least one required (Email, Mobile, WhatsApp, Landline).'
+                );
+            }
+
+            // Customer Portal Login
+            if (
+                filled($this->input('primary_password')) &&
+                blank($this->input('primary_username'))
+            ) {
+                $validator->errors()->add(
+                    'primary_username',
+                    'Username is required when setting a password.'
+                );
+            }
+
+            if (
+                filled($this->input('primary_username')) &&
+                blank($this->input('primary_password')) &&
+                (!$customer || blank($customer->primaryContact?->password))
+            ) {
+                $validator->errors()->add(
+                    'primary_password',
+                    'Password is required when creating customer portal credentials.'
                 );
             }
         });
@@ -155,6 +195,11 @@ class CustomerRequest extends FormRequest
             'primary_whatsapp.string' => 'Contact WhatsApp must be a string.',
             'primary_designation.string' => 'Contact designation must be a string.',
 
+            // Customer Portal Login
+            'primary_username.unique' => 'This customer portal username is already in use.',
+            'primary_password.min' => 'Portal password must be at least 8 characters.',
+            'primary_password.confirmed' => 'Portal password confirmation does not match.',
+
             // Additional Contacts
             'contacts.array' => 'Contacts must be an array.',
             'contacts.*.id.exists' => 'The selected contact is invalid.',
@@ -179,6 +224,9 @@ class CustomerRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'primary_username' => 'portal username',
+            'primary_password' => 'portal password',
+            'primary_password_confirmation' => 'portal password confirmation',
             'contacts.*.email' => 'contact email',
             'contacts.*.password' => 'contact password',
             'contacts.*.password_confirmation' => 'password confirmation',

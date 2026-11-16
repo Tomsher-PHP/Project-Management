@@ -215,12 +215,94 @@
             </div>
         </div>
 
+        <!-- ================= CUSTOMER PORTAL LOGIN CREDENTIALS ================= -->
+        <div class="mt-6">
+            <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+                Customer Portal Login Credentials
+            </h3>
+
+            <p class="text-sm text-bgray-500 dark:text-bgray-50 mb-5">
+                Enable login access if this primary contact needs to authenticate with the customer portal.
+            </p>
+
+            @php
+                $primaryNeedsLogin = old('primary_needs_login', !empty($customer?->primaryContact?->username));
+            @endphp
+
+            <label class="inline-flex items-center gap-2 text-sm font-medium text-bgray-600 dark:text-bgray-50">
+                <input type="checkbox" name="primary_needs_login" value="1" data-login-toggle data-login-target="primary-contact-login-fields" {{ $primaryNeedsLogin ? 'checked' : '' }} class="h-4 w-4 rounded border-gray-300 text-success-300 focus:ring-0">
+                <span>This primary contact needs login access</span>
+            </label>
+
+            <div id="primary-contact-login-fields" class="mt-5 {{ $primaryNeedsLogin ? '' : 'hidden' }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+                    <!-- Username -->
+                    <div class="flex flex-col gap-2">
+                        <label for="primary_username" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                            Username
+                        </label>
+
+                        <input type="text" id="primary_username" name="primary_username" value="{{ old('primary_username', $customer?->primaryContact?->username ?? '') }}" placeholder="Enter portal username" autocomplete="username" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
+
+                        @error('primary_username')
+                            <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Password -->
+                    <div class="flex flex-col gap-2">
+                        <label for="primary_password" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                            Password
+                        </label>
+
+                        <div class="relative">
+                            <input type="password" id="primary_password" name="primary_password" placeholder="{{ isset($customer) ? 'Leave blank to keep existing password' : 'Enter portal password' }}" autocomplete="new-password" class="w-full rounded-lg border border-gray-300 p-2 pr-10 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
+
+                            <button type="button" data-password-toggle data-target="primary_password" class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50" aria-label="Show password" title="Show password">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        @error('primary_password')
+                            <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="flex flex-col gap-2">
+                        <label for="primary_password_confirmation" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                            Confirm Password
+                        </label>
+
+                        <div class="relative">
+                            <input type="password" id="primary_password_confirmation" name="primary_password_confirmation" placeholder="Confirm portal password" autocomplete="new-password" class="w-full rounded-lg border border-gray-300 p-2 pr-10 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
+
+                            <button type="button" data-password-toggle data-target="primary_password_confirmation" class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50" aria-label="Show password" title="Show password">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
         <div class="pt-6 flex justify-left dark:border-darkblack-400 dark:text-white mb-2">
             <button type="button" data-target="#multi-step-modal" data-module="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
                 + Extra Contacts
             </button>
         </div>
     </div>
+
+
+
+
 
     <div id="extraContactsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         @include('customers._contact-template-card', ['customer' => $customer])

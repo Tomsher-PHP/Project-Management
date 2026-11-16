@@ -291,14 +291,30 @@ $(document).ready(function () {
     });
 
     // --------------------------------------------------
-    // TOGGLE LOGIN FIELDS
-    // Works for both modal fields and contact-card fields.
-    // --------------------------------------------------
-    $(document).on('change', '.contact-needs-login, [name="needs_login"]', function () {
-        const contact = $(this).closest('.contact-item, .contact-person-item');
+// TOGGLE LOGIN FIELDS
+// Supports primary contact, create modal and edit modal.
+// --------------------------------------------------
+$(document).on('change', '[data-login-toggle]', function () {
+    const checkbox = $(this);
+    const targetId = checkbox.data('login-target');
 
-        updateContactLoginFields(contact);
-    });
+    if (!targetId) {
+        return;
+    }
+
+    const loginFields = $('#' + targetId);
+    const enabled = checkbox.is(':checked');
+
+    loginFields.toggleClass('hidden', !enabled);
+    loginFields.find('input').prop('disabled', !enabled);
+});
+
+// Retain support for existing contact cards using the old class.
+$(document).on('change', '.contact-needs-login', function () {
+    const contact = $(this).closest('.contact-item, .contact-person-item');
+
+    updateContactLoginFields(contact);
+});
 
     // --------------------------------------------------
     // GET MODAL FORM DATA
@@ -501,22 +517,37 @@ $(document).ready(function () {
     // RESET MODAL FORM
     // --------------------------------------------------
     function clearForms(formElement) {
-        if (!formElement.length) {
-            return;
-        }
-
-        if (formElement[0]) {
-            formElement[0].reset();
-        }
-
-        clearErrors(formElement);
-
-        formElement.find('.contact-login-fields')
-            .hide()
-            .find('input')
-            .prop('disabled', true)
-            .prop('required', false);
+    if (!formElement.length) {
+        return;
     }
+
+    if (formElement[0]) {
+        formElement[0].reset();
+    }
+
+    clearErrors(formElement);
+
+    formElement.find('[data-login-toggle]').each(function () {
+        const checkbox = $(this);
+        const targetId = checkbox.data('login-target');
+
+        if (targetId) {
+            const loginFields = $('#' + targetId);
+
+            loginFields.addClass('hidden');
+
+            loginFields.find('input')
+                .prop('disabled', true)
+                .prop('required', false);
+        }
+    });
+
+    formElement.find('.contact-login-fields')
+    .addClass('hidden')
+    .find('input')
+    .prop('disabled', true)
+    .prop('required', false);
+}
 
     // --------------------------------------------------
     // EMAIL VALIDATION
@@ -525,4 +556,47 @@ $(document).ready(function () {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
     }
+
+
+
+
+
+
+// Password visibility toggle
+document.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-password-toggle]');
+
+    if (!button) {
+        return;
+    }
+
+    const input = document.getElementById(button.dataset.target);
+
+    if (!input) {
+        return;
+    }
+
+    const isPassword = input.type === 'password';
+
+    input.type = isPassword ? 'text' : 'password';
+
+    button.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    button.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
+
+    button.innerHTML = isPassword
+        ? `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.58 10.58a2 2 0 002.84 2.84M9.88 5.09A10.94 10.94 0 0112 4.75c6.25 0 9.75 7.25 9.75 7.25s-3.5 7.25-9.75 7.25c-1.2 0-2.3-.25-3.3-.7" />
+            </svg>`
+        : `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>`;
+});
+
+
+
+
+
+
+
 });

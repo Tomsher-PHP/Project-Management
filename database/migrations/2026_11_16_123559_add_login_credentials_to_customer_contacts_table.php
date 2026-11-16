@@ -6,17 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('customer_contacts', function (Blueprint $table) {
+            $table->string('username')->nullable()->unique();
             $table->string('password')->nullable();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('customer_contacts', function (Blueprint $table) {
-            $table->dropColumn('password');
+            $table->dropUnique(['username']);
+            $table->dropColumn(['username', 'password']);
         });
     }
 };
