@@ -178,6 +178,14 @@
     z-index: 9999 !important;
 }
 
+.ts-dropdown.ts-dropdown-auto-position {
+    overflow: hidden;
+}
+
+.ts-dropdown.ts-dropdown-auto-position.ts-dropdown-up {
+    margin-top: 0;
+}
+
 select {
     appearance: none !important;
     -webkit-appearance: none !important;
