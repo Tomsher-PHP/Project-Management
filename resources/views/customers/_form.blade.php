@@ -160,137 +160,93 @@
     </div>
 
     <!-- ================= PRIMARY CONTACT ================= -->
-    <div class="mt-5">
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">Contact Information</h3>
-        <!-- para for primary contact -->
-        <p class="text-base font-medium text-bgray-600 dark:text-bgray-50">Primary point of contact information for this customer.</p>
-        <div class="h-4"></div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <!-- Contact Name -->
+    @php
+        $primaryLoginEnabled = (bool) old(
+            'primary_login_enabled',
+            $customer?->primaryContact?->login_enabled ?? false,
+        );
+    @endphp
+    <div class="mt-5" data-login-scope>
+        <div class="mb-6 border-b border-bgray-200 pb-4 dark:border-darkblack-400">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Primary Contact</h3>
+            <p class="mt-1 text-base text-bgray-600 dark:text-bgray-50">Primary point of contact information for this customer.</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             <div class="flex flex-col gap-2">
                 <label for="contact_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Name <x-red-star /></label>
-                <input type="text" id="contact_name" name="primary_name" value="{{ old('primary_name', $customer->primaryContact->name ?? '') }}" placeholder="Enter contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
+                <input type="text" id="contact_name" name="primary_name" value="{{ old('primary_name', $customer->primaryContact->name ?? '') }}" placeholder="Enter contact name" class="w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
                 @error('primary_name')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Contact Email -->
-            <x-forms.email-input label="Contact Email" name="primary_email" id="contact_email" :value="old('primary_email', $customer->primaryContact->email ?? '')" placeholder="Enter contact email" domain-suffix="@gmail.com" />
-
-            <!-- Designation -->
             <div class="flex flex-col gap-2">
                 <label for="contact_designation" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Designation</label>
-                <input type="text" id="contact_designation" name="primary_designation" value="{{ old('primary_designation', $customer->primaryContact->designation ?? '') }}" placeholder="Enter designation" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
+                <input type="text" id="contact_designation" name="primary_designation" value="{{ old('primary_designation', $customer->primaryContact->designation ?? '') }}" placeholder="Enter designation" class="w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
                 @error('primary_designation')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Mobile -->
+            <div class="flex items-end pb-2">
+                <input type="hidden" name="primary_login_enabled" value="0">
+                <label class="inline-flex cursor-pointer items-center gap-3 text-base font-semibold text-bgray-700 dark:text-bgray-50">
+                    <input type="checkbox" name="primary_login_enabled" value="1" data-login-toggle {{ $primaryLoginEnabled ? 'checked' : '' }} class="h-5 w-5 rounded border-bgray-300 text-success-300 focus:ring-success-200">
+                    <span>Login access?</span>
+                </label>
+            </div>
+
+            <div class="md:col-span-2 xl:col-span-3 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50">
+                Please provide at least one contact method (Email, Mobile, WhatsApp, or Landline).
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="contact_email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Email <span data-login-email-required class="{{ $primaryLoginEnabled ? '' : 'hidden' }} text-error-300">*</span>
+                </label>
+                <input type="email" id="contact_email" name="primary_email" value="{{ old('primary_email', $customer->primaryContact->email ?? '') }}" placeholder="Enter email address" data-login-email autocomplete="email" {{ $primaryLoginEnabled ? 'required' : '' }} class="w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" oninput="this.value = this.value.toLowerCase()" />
+                @error('primary_email')
+                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
             <div class="flex flex-col gap-2">
                 <label for="contact_mobile" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Mobile Number</label>
-                <input type="text" id="contact_mobile" name="primary_mobile" value="{{ old('primary_mobile', $customer->primaryContact->mobile ?? '') }}" placeholder="Enter mobile number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
+                <input type="text" id="contact_mobile" name="primary_mobile" value="{{ old('primary_mobile', $customer->primaryContact->mobile ?? '') }}" placeholder="Enter mobile number" class="w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
                 @error('primary_mobile')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Landline -->
+            <div class="flex flex-col gap-2">
+                <label for="contact_whatsapp" class="text-base font-medium text-bgray-600 dark:text-bgray-50">WhatsApp Number</label>
+                <input type="text" id="contact_whatsapp" name="primary_whatsapp" value="{{ old('primary_whatsapp', $customer->primaryContact->whatsapp ?? '') }}" placeholder="Enter WhatsApp number" class="w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
+                @error('primary_whatsapp')
+                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
             <div class="flex flex-col gap-2">
                 <label for="contact_landline" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Landline</label>
-                <input type="text" id="contact_landline" name="primary_landline" value="{{ old('primary_landline', $customer->primaryContact->landline ?? '') }}" placeholder="Enter landline" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
+                <input type="text" id="contact_landline" name="primary_landline" value="{{ old('primary_landline', $customer->primaryContact->landline ?? '') }}" placeholder="Enter landline" class="w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
                 @error('primary_landline')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- WhatsApp -->
-            <div class="flex flex-col gap-2">
-                <label for="contact_whatsapp" class="text-base font-medium text-bgray-600 dark:text-bgray-50">WhatsApp Number</label>
-                <input type="text" id="contact_whatsapp" name="primary_whatsapp" value="{{ old('primary_whatsapp', $customer->primaryContact->whatsapp ?? '') }}" placeholder="Enter WhatsApp number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
-                @error('primary_whatsapp')
+            <div data-login-fields class="flex flex-col gap-2 {{ $primaryLoginEnabled ? '' : 'hidden' }}">
+                <label for="primary_password" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Password</label>
+                <div class="relative">
+                    <input type="password" id="primary_password" name="primary_password" placeholder="Enter password (optional)" autocomplete="new-password" {{ $primaryLoginEnabled ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-300 bg-white p-2 pr-11 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
+                    <button type="button" data-password-toggle data-target="primary_password" class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50" aria-label="Show password" title="Show password">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                    </button>
+                </div>
+                <p class="text-xs text-bgray-500 dark:text-bgray-300">Leave blank to allow the contact to set a password later.</p>
+                @error('primary_password')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
-            </div>
-        </div>
-
-        <!-- ================= CUSTOMER PORTAL LOGIN CREDENTIALS ================= -->
-        <div class="mt-6">
-            <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
-                Customer Portal Login Credentials
-            </h3>
-
-            <p class="text-sm text-bgray-500 dark:text-bgray-50 mb-5">
-                Enable login access if this primary contact needs to authenticate with the customer portal.
-            </p>
-
-            @php
-                $primaryNeedsLogin = old('primary_needs_login', !empty($customer?->primaryContact?->username));
-            @endphp
-
-            <label class="inline-flex items-center gap-2 text-sm font-medium text-bgray-600 dark:text-bgray-50">
-                <input type="checkbox" name="primary_needs_login" value="1" data-login-toggle data-login-target="primary-contact-login-fields" {{ $primaryNeedsLogin ? 'checked' : '' }} class="h-4 w-4 rounded border-gray-300 text-success-300 focus:ring-0">
-                <span>This primary contact needs login access</span>
-            </label>
-
-            <div id="primary-contact-login-fields" class="mt-5 {{ $primaryNeedsLogin ? '' : 'hidden' }}">
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-                    <!-- Username -->
-                    <div class="flex flex-col gap-2">
-                        <label for="primary_username" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                            Username
-                        </label>
-
-                        <input type="text" id="primary_username" name="primary_username" value="{{ old('primary_username', $customer?->primaryContact?->username ?? '') }}" placeholder="Enter portal username" autocomplete="username" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
-
-                        @error('primary_username')
-                            <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Password -->
-                    <div class="flex flex-col gap-2">
-                        <label for="primary_password" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                            Password
-                        </label>
-
-                        <div class="relative">
-                            <input type="password" id="primary_password" name="primary_password" placeholder="{{ isset($customer) ? 'Leave blank to keep existing password' : 'Enter portal password' }}" autocomplete="new-password" class="w-full rounded-lg border border-gray-300 p-2 pr-10 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
-
-                            <button type="button" data-password-toggle data-target="primary_password" class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50" aria-label="Show password" title="Show password">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        @error('primary_password')
-                            <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Confirm Password -->
-                    <div class="flex flex-col gap-2">
-                        <label for="primary_password_confirmation" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                            Confirm Password
-                        </label>
-
-                        <div class="relative">
-                            <input type="password" id="primary_password_confirmation" name="primary_password_confirmation" placeholder="Confirm portal password" autocomplete="new-password" class="w-full rounded-lg border border-gray-300 p-2 pr-10 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
-
-                            <button type="button" data-password-toggle data-target="primary_password_confirmation" class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50" aria-label="Show password" title="Show password">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
             </div>
         </div>
         <div class="pt-6 flex justify-left dark:border-darkblack-400 dark:text-white mb-2">
@@ -300,13 +256,23 @@
         </div>
     </div>
 
-
-
-
-
     <div id="extraContactsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         @include('customers._contact-template-card', ['customer' => $customer])
     </div>
+
+    @php
+        $contactErrors = collect($errors->get('contacts.*'))->flatten()->unique();
+    @endphp
+    @if ($contactErrors->isNotEmpty())
+        <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-error-300">
+            <p class="font-semibold">Please review the extra contacts:</p>
+            <ul class="mt-1 list-disc pl-5">
+                @foreach ($contactErrors as $contactError)
+                    <li>{{ $contactError }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <!-- ================= SUBMIT BUTTON ================= -->
     <div class="mt-5 pt-5 border-t border-gray-200 dark:border-darkblack-400 flex justify-end dark:border-darkblack-400 dark:text-white">

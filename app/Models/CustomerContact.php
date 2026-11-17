@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-class CustomerContact extends Model
+class CustomerContact extends Authenticatable
 {
     use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity;
 
@@ -26,7 +27,15 @@ class CustomerContact extends Model
         'password',
         'is_primary',
         'is_active',
-        'username',
+
+        // Customer Portal Authentication
+        'login_enabled',
+        'password_set_at',
+        'last_login_at',
+        'email_verified_at',
+        'force_password_reset',
+
+
         'added_by',
         'updated_by',
     ];
@@ -39,6 +48,13 @@ class CustomerContact extends Model
         'password' => 'hashed',
         'is_primary' => 'boolean',
         'is_active' => 'boolean',
+
+        // Customer Portal Authentication
+        'login_enabled' => 'boolean',
+        'password_set_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'email_verified_at' => 'datetime',
+        'force_password_reset' => 'boolean',
     ];
 
     protected $sortable = [
