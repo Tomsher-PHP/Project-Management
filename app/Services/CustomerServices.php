@@ -120,13 +120,15 @@ class CustomerServices
             'mobile' => $data['primary_mobile'] ?? null,
             'landline' => $data['primary_landline'] ?? null,
             'whatsapp' => $data['primary_whatsapp'] ?? null,
-            'username' => $data['primary_username'] ?? null,
+            'login_enabled' => (bool) $data['primary_login_enabled'],
             'is_primary' => 1,
         ];
 
-        // Save primary contact password only when a new password is supplied.
-        if (!empty($data['primary_password'])) {
+        // The model's hashed cast hashes the value. Omitting a blank password
+        // preserves existing credentials and their timestamp during updates.
+        if ($primaryData['login_enabled'] && filled($data['primary_password'] ?? null)) {
             $primaryData['password'] = $data['primary_password'];
+            $primaryData['password_set_at'] = now();
         }
 
         $primary = $customer->contacts()->updateOrCreate(
@@ -137,7 +139,7 @@ class CustomerServices
         $existingIds[] = $primary->id;
 
         // Additional Contacts
-        if (!empty($data['contacts'])) {
+        if (! empty($data['contacts'])) {
             foreach ($data['contacts'] as $contact) {
                 $contactData = [
                     'name' => $contact['name'],
@@ -146,15 +148,13 @@ class CustomerServices
                     'mobile' => $contact['mobile'] ?? null,
                     'landline' => $contact['landline'] ?? null,
                     'whatsapp' => $contact['whatsapp'] ?? null,
+                    'login_enabled' => (bool) $contact['login_enabled'],
                     'is_primary' => 0,
                 ];
 
-                // Save password only when a new password is supplied.
-                if (
-                    !empty($contact['needs_login']) &&
-                    !empty($contact['password'])
-                ) {
+                if ($contactData['login_enabled'] && filled($contact['password'] ?? null)) {
                     $contactData['password'] = $contact['password'];
+                    $contactData['password_set_at'] = now();
                 }
 
                 $record = $customer->contacts()->updateOrCreate(
