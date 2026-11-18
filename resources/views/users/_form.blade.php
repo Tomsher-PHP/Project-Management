@@ -517,7 +517,7 @@
         </div>
 
         <div class="mt-4 flex justify-start">
-            <button type="button" id="btn-add-emergency-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-500 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
+            <button type="button" id="btn-add-emergency-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-300 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
@@ -589,7 +589,7 @@
         </div>
 
         <div class="mt-4 flex justify-start">
-            <button type="button" id="btn-add-native-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-500 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
+            <button type="button" id="btn-add-native-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-300 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
