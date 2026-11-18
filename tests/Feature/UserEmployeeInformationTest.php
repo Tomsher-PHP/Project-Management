@@ -509,5 +509,68 @@ class UserEmployeeInformationTest extends TestCase
         $editResponse->assertSee('Married');
         $editResponse->assertSee('Green');
     }
+
+    public function test_show_page_renders_new_attributes_and_values(): void
+    {
+        $userService = app(UserService::class);
+        $user = $userService->createUser([
+            'name' => 'Show Profile User',
+            'email' => 'showprofile@example.com',
+            'password' => 'Password123!',
+            'roles' => [$this->testRole->id],
+            'address' => 'Villa 101, Palm Jumeirah, Dubai',
+            'native_address' => 'House 42, Green Valley, India',
+            'marital_status' => 'Married',
+            'children_count' => 3,
+            'favorite_color' => 'Blue',
+            'shirt_sizes' => ['casual' => 'XXL', 'formal' => 'XL'],
+            'shoe_sizes' => ['casual' => '43', 'formal' => '44'],
+            'emergency_contacts' => [
+                ['name' => 'Sarah Emergency', 'number' => '+971505556677', 'relation' => 'Spouse'],
+            ],
+            'native_contacts' => [
+                ['name' => 'John Native', 'number' => '+919888777666', 'relation' => 'Father'],
+            ],
+        ]);
+
+        $showResponse = $this->get(route('users.show', $user->id));
+        $showResponse->assertStatus(200);
+
+        // Address Information
+        $showResponse->assertSee('Address Information');
+        $showResponse->assertSee('Residence Address');
+        $showResponse->assertSee('Villa 101, Palm Jumeirah, Dubai');
+        $showResponse->assertSee('Native Address');
+        $showResponse->assertSee('House 42, Green Valley, India');
+
+        // Emergency Contact Information
+        $showResponse->assertSee('Emergency Contact Information');
+        $showResponse->assertSee('Sarah Emergency');
+        $showResponse->assertSee('+971505556677');
+        $showResponse->assertSee('Spouse');
+
+        // Native Contact Information
+        $showResponse->assertSee('Native Contact Information');
+        $showResponse->assertSee('John Native');
+        $showResponse->assertSee('+919888777666');
+        $showResponse->assertSee('Father');
+
+        // Personal Information & Preferences
+        $showResponse->assertSee('Personal Information & Preferences', false);
+        $showResponse->assertSee('Marital Status');
+        $showResponse->assertSee('Married');
+        $showResponse->assertSee('Children Count');
+        $showResponse->assertSee('3');
+        $showResponse->assertSee('Favorite Color');
+        $showResponse->assertSee('Blue');
+        $showResponse->assertSee('Casual Shirt Size');
+        $showResponse->assertSee('XXL');
+        $showResponse->assertSee('Formal Shirt Size');
+        $showResponse->assertSee('XL');
+        $showResponse->assertSee('Casual Shoe Size');
+        $showResponse->assertSee('43');
+        $showResponse->assertSee('Formal Shoe Size');
+        $showResponse->assertSee('44');
+    }
 }
 
