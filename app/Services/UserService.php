@@ -441,13 +441,30 @@ class UserService
                 'name' => $data['name'],
             ]);
 
+            $existingContacts = $user->details?->emergency_contacts ?? [];
+            if (!empty($data['contact_person']) || !empty($data['contact_person_number'])) {
+                if (!empty($existingContacts)) {
+                    $existingContacts[0]['name'] = $data['contact_person'] ?? null;
+                    $existingContacts[0]['number'] = $data['contact_person_number'] ?? null;
+                } else {
+                    $existingContacts = [
+                        [
+                            'name' => $data['contact_person'] ?? null,
+                            'number' => $data['contact_person_number'] ?? null,
+                            'relation' => null,
+                        ],
+                    ];
+                }
+            } elseif (array_key_exists('contact_person', $data) && array_key_exists('contact_person_number', $data)) {
+                $existingContacts = null;
+            }
+
             $user->details()->updateOrCreate(
                 ['user_id' => $user->id],
                 [
                     'phone' => $data['phone'] ?? null,
                     'whatsapp' => $data['whatsapp'] ?? null,
-                    'contact_person' => $data['contact_person'] ?? null,
-                    'contact_person_number' => $data['contact_person_number'] ?? null,
+                    'emergency_contacts' => $existingContacts,
                     'address' => $data['address'] ?? null,
                 ]
             );
@@ -493,15 +510,6 @@ class UserService
             }
 
             $detailsData['emergency_contacts'] = !empty($contacts) ? array_values($contacts) : null;
-
-            // Preserve backward compatibility with contact_person and contact_person_number
-            if (!empty($contacts)) {
-                $detailsData['contact_person'] = $contacts[0]['name'] ?? null;
-                $detailsData['contact_person_number'] = $contacts[0]['number'] ?? null;
-            } else {
-                $detailsData['contact_person'] = null;
-                $detailsData['contact_person_number'] = null;
-            }
         }
 
         // Process native contacts

@@ -21,8 +21,6 @@ class UserDetail extends Model
         'gender',
         'phone',
         'whatsapp',
-        'contact_person',
-        'contact_person_number',
 
         'joining_date',
         'leaving_date',
@@ -83,6 +81,16 @@ class UserDetail extends Model
     public function manager()
     {
         return $this->belongsTo(User::class, 'manager_id', 'id');
+    }
+
+    public function getContactPersonAttribute(): ?string
+    {
+        return $this->emergency_contacts[0]['name'] ?? null;
+    }
+
+    public function getContactPersonNumberAttribute(): ?string
+    {
+        return $this->emergency_contacts[0]['number'] ?? null;
     }
 
     /*----------------Activity Log Customization----------------*/

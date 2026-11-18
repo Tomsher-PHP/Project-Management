@@ -378,6 +378,16 @@ class UserEmployeeInformationTest extends TestCase
 
     public function test_old_emergency_contact_data_migration(): void
     {
+        // Add back old columns temporarily to test the migration logic
+        \Illuminate\Support\Facades\Schema::table('user_details', function (\Illuminate\Database\Schema\Blueprint $table) {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('user_details', 'contact_person')) {
+                $table->string('contact_person')->nullable();
+            }
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('user_details', 'contact_person_number')) {
+                $table->string('contact_person_number')->nullable();
+            }
+        });
+
         // Create an existing user detail with legacy columns
         $legacyUser = User::factory()->create();
         $detailId = DB::table('user_details')->insertGetId([
@@ -389,7 +399,7 @@ class UserEmployeeInformationTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        // Run the idempotent migration logic manually as in the migration
+        // Run the idempotent migration logic: migrate data and delete old column data
         DB::table('user_details')
             ->where('id', $detailId)
             ->where(function ($query) {
@@ -402,29 +412,36 @@ class UserEmployeeInformationTest extends TestCase
             })
             ->orderBy('id')
             ->each(function ($row) {
-                if (!empty($row->emergency_contacts) && $row->emergency_contacts !== '[]' && $row->emergency_contacts !== 'null') {
-                    return;
-                }
-
                 $name = trim($row->contact_person ?? '');
                 $number = trim($row->contact_person_number ?? '');
 
-                if ($name !== '' || $number !== '') {
-                    $contacts = [
-                        [
-                            'name' => $name !== '' ? $name : null,
-                            'number' => $number !== '' ? $number : null,
-                            'relation' => null,
-                        ],
-                    ];
+                $updateData = [
+                    'contact_person' => null,
+                    'contact_person_number' => null,
+                ];
 
-                    DB::table('user_details')
-                        ->where('id', $row->id)
-                        ->update([
-                            'emergency_contacts' => json_encode($contacts),
-                        ]);
+                if (empty($row->emergency_contacts) || $row->emergency_contacts === '[]' || $row->emergency_contacts === 'null') {
+                    if ($name !== '' || $number !== '') {
+                        $contacts = [
+                            [
+                                'name' => $name !== '' ? $name : null,
+                                'number' => $number !== '' ? $number : null,
+                                'relation' => null,
+                            ],
+                        ];
+                        $updateData['emergency_contacts'] = json_encode($contacts);
+                    }
                 }
+
+                DB::table('user_details')
+                    ->where('id', $row->id)
+                    ->update($updateData);
             });
+
+        // Drop old columns as done in migration
+        \Illuminate\Support\Facades\Schema::table('user_details', function (\Illuminate\Database\Schema\Blueprint $table) {
+            $table->dropColumn(['contact_person', 'contact_person_number']);
+        });
 
         $detail = UserDetail::find($detailId);
         $this->assertNotNull($detail->emergency_contacts);
@@ -432,7 +449,12 @@ class UserEmployeeInformationTest extends TestCase
         $this->assertEquals('Old Contact Person', $detail->emergency_contacts[0]['name']);
         $this->assertEquals('+971501112233', $detail->emergency_contacts[0]['number']);
         $this->assertNull($detail->emergency_contacts[0]['relation']);
-        // Verify original columns remain intact
+
+        // Verify old columns were dropped
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('user_details', 'contact_person'));
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('user_details', 'contact_person_number'));
+
+        // Verify model accessors still return the values seamlessly
         $this->assertEquals('Old Contact Person', $detail->contact_person);
         $this->assertEquals('+971501112233', $detail->contact_person_number);
     }

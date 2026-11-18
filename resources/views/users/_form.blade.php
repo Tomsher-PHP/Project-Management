@@ -466,9 +466,7 @@
                 }
             }
             if (empty($emergencyContacts)) {
-                $emergencyContacts = [
-                    ['name' => '', 'number' => '', 'relation' => ''],
-                ];
+                $emergencyContacts = [['name' => '', 'number' => '', 'relation' => '']];
             }
         @endphp
 
@@ -480,12 +478,7 @@
                             <label for="emergency_contact_name_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                 Contact Name
                             </label>
-                            <input type="text"
-                                   id="emergency_contact_name_{{ $index }}"
-                                   name="emergency_contacts[{{ $index }}][name]"
-                                   value="{{ $contact['name'] ?? '' }}"
-                                   placeholder="Enter contact name"
-                                   class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.name") border-red-500 @enderror">
+                            <input type="text" id="emergency_contact_name_{{ $index }}" name="emergency_contacts[{{ $index }}][name]" value="{{ $contact['name'] ?? '' }}" placeholder="Enter contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.name") border-red-500 @enderror">
                             @error("emergency_contacts.{$index}.name")
                                 <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                             @enderror
@@ -495,12 +488,7 @@
                             <label for="emergency_contact_number_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                 Contact Number
                             </label>
-                            <input type="text"
-                                   id="emergency_contact_number_{{ $index }}"
-                                   name="emergency_contacts[{{ $index }}][number]"
-                                   value="{{ $contact['number'] ?? '' }}"
-                                   placeholder="e.g. +971501234567"
-                                   class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.number") border-red-500 @enderror">
+                            <input type="text" id="emergency_contact_number_{{ $index }}" name="emergency_contacts[{{ $index }}][number]" value="{{ $contact['number'] ?? '' }}" placeholder="e.g. +971501234567" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.number") border-red-500 @enderror">
                             @error("emergency_contacts.{$index}.number")
                                 <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                             @enderror
@@ -510,12 +498,7 @@
                             <label for="emergency_contact_relation_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                 Relation
                             </label>
-                            <input type="text"
-                                   id="emergency_contact_relation_{{ $index }}"
-                                   name="emergency_contacts[{{ $index }}][relation]"
-                                   value="{{ $contact['relation'] ?? '' }}"
-                                   placeholder="e.g. Father, Spouse"
-                                   class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.relation") border-red-500 @enderror">
+                            <input type="text" id="emergency_contact_relation_{{ $index }}" name="emergency_contacts[{{ $index }}][relation]" value="{{ $contact['relation'] ?? '' }}" placeholder="e.g. Father, Spouse" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.relation") border-red-500 @enderror">
                             @error("emergency_contacts.{$index}.relation")
                                 <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                             @enderror
@@ -538,7 +521,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>+ Add Emergency Contact</span>
+                <span>Add Emergency Contact</span>
             </button>
         </div>
     </div>
@@ -555,9 +538,7 @@
                 $nativeContacts = $user->details?->native_contacts ?? [];
             }
             if (empty($nativeContacts)) {
-                $nativeContacts = [
-                    ['name' => '', 'number' => '', 'relation' => ''],
-                ];
+                $nativeContacts = [['name' => '', 'number' => '', 'relation' => '']];
             }
         @endphp
 
@@ -569,12 +550,7 @@
                             <label for="native_contact_name_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                 Contact Name
                             </label>
-                            <input type="text"
-                                   id="native_contact_name_{{ $index }}"
-                                   name="native_contacts[{{ $index }}][name]"
-                                   value="{{ $contact['name'] ?? '' }}"
-                                   placeholder="Enter contact name"
-                                   class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.name") border-red-500 @enderror">
+                            <input type="text" id="native_contact_name_{{ $index }}" name="native_contacts[{{ $index }}][name]" value="{{ $contact['name'] ?? '' }}" placeholder="Enter contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.name") border-red-500 @enderror">
                             @error("native_contacts.{$index}.name")
                                 <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                             @enderror
@@ -584,12 +560,7 @@
                             <label for="native_contact_number_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                 Contact Number
                             </label>
-                            <input type="text"
-                                   id="native_contact_number_{{ $index }}"
-                                   name="native_contacts[{{ $index }}][number]"
-                                   value="{{ $contact['number'] ?? '' }}"
-                                   placeholder="e.g. +919876543210"
-                                   class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.number") border-red-500 @enderror">
+                            <input type="text" id="native_contact_number_{{ $index }}" name="native_contacts[{{ $index }}][number]" value="{{ $contact['number'] ?? '' }}" placeholder="e.g. +919876543210" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.number") border-red-500 @enderror">
                             @error("native_contacts.{$index}.number")
                                 <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                             @enderror
@@ -599,12 +570,7 @@
                             <label for="native_contact_relation_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                 Relation
                             </label>
-                            <input type="text"
-                                   id="native_contact_relation_{{ $index }}"
-                                   name="native_contacts[{{ $index }}][relation]"
-                                   value="{{ $contact['relation'] ?? '' }}"
-                                   placeholder="e.g. Brother, Friend"
-                                   class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.relation") border-red-500 @enderror">
+                            <input type="text" id="native_contact_relation_{{ $index }}" name="native_contacts[{{ $index }}][relation]" value="{{ $contact['relation'] ?? '' }}" placeholder="e.g. Brother, Friend" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.relation") border-red-500 @enderror">
                             @error("native_contacts.{$index}.relation")
                                 <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                             @enderror
@@ -627,7 +593,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>+ Add Native Contact</span>
+                <span>Add Native Contact</span>
             </button>
         </div>
     </div>
@@ -651,7 +617,7 @@
                         $selectedMaritalStatus = old('marital_status', $user->details->marital_status ?? '');
                     @endphp
                     @foreach (config('constants.marital_statuses', []) as $key => $label)
-                        <option value="{{ $key }}" {{ (string)$selectedMaritalStatus === (string)$key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ (string) $selectedMaritalStatus === (string) $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -663,7 +629,7 @@
             </div>
 
             <!-- Children Count -->
-            <div id="children-count-wrapper" class="flex flex-col gap-2 {{ (string)$selectedMaritalStatus === 'Married' ? '' : 'hidden' }}">
+            <div id="children-count-wrapper" class="flex flex-col gap-2 {{ (string) $selectedMaritalStatus === 'Married' ? '' : 'hidden' }}">
                 <label for="children_count" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Children Count
                 </label>
@@ -671,10 +637,10 @@
                 <select name="children_count" id="children_count" class="tom-select w-full" data-sort="0">
                     <option value="">Select Children Count</option>
                     @php
-                        $selectedChildrenCount = old('children_count', isset($user->details->children_count) ? (string)$user->details->children_count : '');
+                        $selectedChildrenCount = old('children_count', isset($user->details->children_count) ? (string) $user->details->children_count : '');
                     @endphp
                     @foreach (config('constants.children_counts', []) as $key => $label)
-                        <option value="{{ $key }}" {{ $selectedChildrenCount !== '' && $selectedChildrenCount !== null && (string)$selectedChildrenCount === (string)$key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ $selectedChildrenCount !== '' && $selectedChildrenCount !== null && (string) $selectedChildrenCount === (string) $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -697,7 +663,7 @@
                         $selectedFavoriteColor = old('favorite_color', $user->details->favorite_color ?? '');
                     @endphp
                     @foreach (config('constants.favorite_colors', []) as $key => $label)
-                        <option value="{{ $key }}" {{ (string)$selectedFavoriteColor === (string)$key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ (string) $selectedFavoriteColor === (string) $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -720,7 +686,7 @@
                         $selectedCasualShirt = old('shirt_sizes.casual', $user->details->shirt_sizes['casual'] ?? '');
                     @endphp
                     @foreach (config('constants.shirt_sizes', []) as $key => $label)
-                        <option value="{{ $key }}" {{ (string)$selectedCasualShirt === (string)$key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ (string) $selectedCasualShirt === (string) $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -743,7 +709,7 @@
                         $selectedFormalShirt = old('shirt_sizes.formal', $user->details->shirt_sizes['formal'] ?? '');
                     @endphp
                     @foreach (config('constants.shirt_sizes', []) as $key => $label)
-                        <option value="{{ $key }}" {{ (string)$selectedFormalShirt === (string)$key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ (string) $selectedFormalShirt === (string) $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -766,7 +732,7 @@
                         $selectedCasualShoe = old('shoe_sizes.casual', $user->details->shoe_sizes['casual'] ?? '');
                     @endphp
                     @foreach (config('constants.shoe_sizes', []) as $key => $label)
-                        <option value="{{ $key }}" {{ (string)$selectedCasualShoe === (string)$key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ (string) $selectedCasualShoe === (string) $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -789,7 +755,7 @@
                         $selectedFormalShoe = old('shoe_sizes.formal', $user->details->shoe_sizes['formal'] ?? '');
                     @endphp
                     @foreach (config('constants.shoe_sizes', []) as $key => $label)
-                        <option value="{{ $key }}" {{ (string)$selectedFormalShoe === (string)$key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ (string) $selectedFormalShoe === (string) $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -938,7 +904,13 @@
                 });
 
                 // Contact Repeater Handler
-                function initContactRepeater({ containerId, addButtonId, fieldName, idPrefix, numberPlaceholder }) {
+                function initContactRepeater({
+                    containerId,
+                    addButtonId,
+                    fieldName,
+                    idPrefix,
+                    numberPlaceholder
+                }) {
                     const container = document.getElementById(containerId);
                     const addButton = document.getElementById(addButtonId);
                     if (!container || !addButton) return;
