@@ -256,6 +256,146 @@ export function initTomSelect(root = document) {
             });
     };
 
+    const enableAutoDropdownPosition = (instance) => {
+        const dropdown = instance?.dropdown;
+        const dropdownContent = instance?.dropdown_content;
+
+        if (!dropdown || !dropdownContent) {
+            return;
+        }
+
+        const viewportPadding = 8;
+        const originalContentMaxHeight = dropdownContent.style.maxHeight;
+        let animationFrame = null;
+        let isListening = false;
+
+        const resetContentHeight = () => {
+            dropdownContent.style.maxHeight = originalContentMaxHeight;
+        };
+
+        const positionDropdown = () => {
+            animationFrame = null;
+
+            if (!instance.isOpen || !dropdown.isConnected) {
+                return;
+            }
+
+            dropdown.classList.add('ts-dropdown-auto-position');
+            dropdown.classList.remove('ts-dropdown-up');
+            resetContentHeight();
+
+            // Preserve Tom Select's existing width and downward coordinates.
+            instance.positionDropdown();
+
+            const controlRect = instance.control.getBoundingClientRect();
+            const dropdownStyles = window.getComputedStyle(dropdown);
+            const dropdownGap = Number.parseFloat(dropdownStyles.marginTop) || 0;
+            const availableBelow = Math.max(
+                0,
+                window.innerHeight
+                    - controlRect.bottom
+                    - viewportPadding
+                    - dropdownGap
+            );
+            const availableAbove = Math.max(
+                0,
+                controlRect.top
+                    - viewportPadding
+                    - dropdownGap
+            );
+            const requiredHeight = dropdown.getBoundingClientRect().height;
+            const opensUp = requiredHeight > availableBelow
+                && availableAbove > availableBelow;
+            const availableHeight = opensUp
+                ? availableAbove
+                : availableBelow;
+
+            if (requiredHeight > availableHeight) {
+                const contentHeight = dropdownContent.getBoundingClientRect().height;
+                const dropdownChromeHeight = Math.max(
+                    0,
+                    requiredHeight - contentHeight
+                );
+                const availableContentHeight = Math.max(
+                    0,
+                    Math.floor(availableHeight - dropdownChromeHeight)
+                );
+
+                dropdownContent.style.maxHeight = `${availableContentHeight}px`;
+            }
+
+            dropdown.classList.toggle('ts-dropdown-up', opensUp);
+
+            if (opensUp) {
+                const dropdownHeight = dropdown.getBoundingClientRect().height;
+
+                dropdown.style.top = `${
+                    controlRect.top
+                    + window.scrollY
+                    - dropdownHeight
+                    - dropdownGap
+                }px`;
+            }
+        };
+
+        const schedulePosition = () => {
+            if (!instance.isOpen || animationFrame !== null) {
+                return;
+            }
+
+            animationFrame = window.requestAnimationFrame(positionDropdown);
+        };
+
+        const addViewportListeners = () => {
+            if (isListening) {
+                return;
+            }
+
+            isListening = true;
+            window.addEventListener('resize', schedulePosition, { passive: true });
+            window.addEventListener('scroll', schedulePosition, {
+                capture: true,
+                passive: true,
+            });
+        };
+
+        const removeViewportListeners = () => {
+            if (!isListening) {
+                return;
+            }
+
+            isListening = false;
+            window.removeEventListener('resize', schedulePosition);
+            window.removeEventListener('scroll', schedulePosition, true);
+
+            if (animationFrame !== null) {
+                window.cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            }
+        };
+
+        const resetDropdown = () => {
+            removeViewportListeners();
+            resetContentHeight();
+            dropdown.classList.remove(
+                'ts-dropdown-auto-position',
+                'ts-dropdown-up'
+            );
+        };
+
+        instance.on('dropdown_open', () => {
+            addViewportListeners();
+            positionDropdown();
+        });
+        instance.on('dropdown_close', resetDropdown);
+        instance.on('type', schedulePosition);
+        instance.on('load', schedulePosition);
+        instance.on('option_add', schedulePosition);
+        instance.on('item_add', schedulePosition);
+        instance.on('item_remove', schedulePosition);
+        instance.on('destroy', resetDropdown);
+    };
+
     /*
      * ==========================================================
      * Restore selected values from the original SELECT
@@ -551,6 +691,8 @@ export function initTomSelect(root = document) {
             config
         );
 
+        enableAutoDropdownPosition(instance);
+
         if (
             el.dataset.renderSubtype === 'true'
             && el.tagName === 'SELECT'
@@ -659,6 +801,8 @@ export function initTomSelect(root = document) {
             el,
             config
         );
+
+        enableAutoDropdownPosition(instance);
 
         syncOptionSubtypes(
             instance,
@@ -808,6 +952,8 @@ export function initTomSelect(root = document) {
             }
         );
 
+        enableAutoDropdownPosition(instance);
+
         applyDisabledStyles(
             instance,
             el
@@ -922,6 +1068,8 @@ export function initTomSelect(root = document) {
                 }
             }
         });
+
+        enableAutoDropdownPosition(instance);
 
         console.log(
             '[TomSelect] AFTER INIT',
@@ -1198,6 +1346,8 @@ export function initTomSelect(root = document) {
             el,
             config
         );
+
+        enableAutoDropdownPosition(instance);
 
         syncOptionSubtypes(
             instance,

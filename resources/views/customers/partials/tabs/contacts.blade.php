@@ -1,9 +1,14 @@
 <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
         <h3 class="text-base font-bold text-bgray-900 dark:text-white">Customer Contacts</h3>
-        <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
-            {{ $customer->contacts->count() }} {{ \Illuminate\Support\Str::plural('contact', $customer->contacts->count()) }}
-        </span>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
+                {{ $customer->contacts->count() }} {{ \Illuminate\Support\Str::plural('contact', $customer->contacts->count()) }}
+            </span>
+            <span class="inline-flex rounded-full bg-success-50 px-3 py-1 text-xs font-semibold text-success-400 dark:bg-success-300/10 dark:text-success-300">
+                {{ $customer->contacts->where('login_enabled', true)->count() }} login enabled
+            </span>
+        </div>
     </div>
 
     <div class="min-h-[260px] p-5">
@@ -24,9 +29,15 @@
                                 <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">{{ $contact->designation ?: 'Designation not specified' }}</p>
                             </div>
 
-                            @if ($contact->is_primary)
-                                <span class="inline-flex shrink-0 rounded-full bg-success-50 px-2.5 py-1 text-[11px] font-semibold text-success-400 dark:bg-success-300/10 dark:text-success-300">Primary</span>
-                            @endif
+                            <div class="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                                @if ($contact->is_primary)
+                                    <span class="inline-flex rounded-full bg-success-50 px-2.5 py-1 text-[11px] font-semibold text-success-400 dark:bg-success-300/10 dark:text-success-300">Primary</span>
+                                @endif
+
+                                @if ($contact->login_enabled)
+                                    <span class="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600 dark:bg-blue-400/10 dark:text-blue-600">Login enabled</span>
+                                @endif
+                            </div>
                         </div>
 
                         <dl class="mt-4 space-y-3 border-t border-bgray-100 pt-4 text-sm dark:border-darkblack-400">

@@ -1,4 +1,5 @@
 @php
+    $canEdit = ($canEdit ?? (auth()->user()->can('project.edit'))) && !$project->trashed();
     $projectTimelines = $projectTimelines ?? $project->projectTimelines->sortBy('sort_order');
 @endphp
 <div class="w-full">

@@ -15,12 +15,14 @@
 
     </div>
 
-    @can('project_tracking.create')
-        <!-- ========== Project Tracking Create Modal ========== -->
-        @include('projects.partials.project-trackings.form', [
-            'project' => $project,
-        ])
-    @endcan
+    @if (!$project->trashed())
+        @can('project_tracking.create')
+            <!-- ========== Project Tracking Create Modal ========== -->
+            @include('projects.partials.project-trackings.form', [
+                'project' => $project,
+            ])
+        @endcan
+    @endif
 
     @include('projects.partials.tabs.history.project-tracking-view-modal')
 

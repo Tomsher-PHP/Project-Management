@@ -1,0 +1,27 @@
+{
+    "success": true,
+    "message": "Customer and projects processed successfully.",
+    "data": {
+        "customer": {
+            "customer_id": 25,
+            "customer_code": "CUS00025",
+            "created": true
+        },
+        "projects": [
+            {
+                "project_id": 101,
+                "project_code": "PRJ00101",
+                "external_code": "CRM-PRJ-1001",
+                "external_id": "PRJ-901",
+                "created": true
+            },
+            {
+                "project_id": 102,
+                "project_code": "PRJ00102",
+                "external_code": "CRM-PRJ-1002",
+                "external_id": "PRJ-902",
+                "created": true
+            }
+        ]
+    }
+}

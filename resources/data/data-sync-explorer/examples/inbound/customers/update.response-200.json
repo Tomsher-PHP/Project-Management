@@ -1,0 +1,13 @@
+{
+    "success": true,
+    "message": "Customer updated successfully.",
+    "data": {
+        "customer_id": 25,
+        "customer_code": "CUS00025",
+        "updated": true,
+        "contacts": {
+            "created": 1,
+            "updated": 1
+        }
+    }
+}

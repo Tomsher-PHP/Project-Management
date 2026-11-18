@@ -59,6 +59,7 @@ class Project extends Model
         'start_date',
         'end_date',
         'customer_end_date',
+        'deleted_at',
     ];
 
     protected $searchable = ['name', 'project_code'];

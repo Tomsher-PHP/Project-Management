@@ -1,190 +1,292 @@
 let contactIndex = 0;
-let editingIndex = null;
 let editingCard = null;
 
 $(document).ready(function () {
-
     const modal = $('#multi-step-modal');
     const form = modal.find('form');
-    contactIndex = $('#extraContactsContainer .contact-item').length;
+    const contactsContainer = $('#extraContactsContainer');
 
-    // OPEN CREATE
-    $('.modal-open[data-target="#multi-step-modal"]').on('click', function () {
-        editingIndex = null;
-        editingCard = null;
+    contactIndex = contactsContainer.find('.contact-item').length;
 
-        let module = $(this).data('module');
-
-        // Change title and button text
-        modal.find('.modal-title').text(`Add ${module}`);
-        modal.find('.submit-btn').text(`Add`);
-
-        modal.removeClass('hidden');
-
-        clearForms(form);
+    $('[data-login-toggle]').each(function () {
+        updateLoginScope($(this).closest('[data-login-scope]'), false);
     });
 
-    // --- Edit Contact ---
-    $(document).on('click', '.edit-contact', function () {
+    $(document).on('click', '.modal-open[data-target="#multi-step-modal"]', function () {
+        editingCard = null;
+        resetModalForm();
+
+        modal.find('.modal-title').text(`Add ${$(this).data('module') || 'Contact'}`);
+        modal.find('#addDataBtn, .submit-btn').text('Add');
+        modal.removeClass('hidden').addClass('block');
+    });
+
+    $(document).on('click', '.edit-contact', function (event) {
+        event.preventDefault();
+
         editingCard = $(this).closest('.contact-item');
-        // editingIndex = editingCard.index();
-        editingIndex = $(this).data('index');
 
-        // Load data into modal
-        form.find('[name="name"]').val(editingCard.find('.contact-name-input').val());
-        form.find('[name="email"]').val(editingCard.find('.contact-email-input').val());
-        form.find('[name="designation"]').val(editingCard.find('.contact-designation-input').val());
-        form.find('[name="mobile"]').val(editingCard.find('.contact-mobile-input').val());
-        form.find('[name="landline"]').val(editingCard.find('.contact-landline-input').val());
-        form.find('[name="whatsapp"]').val(editingCard.find('.contact-whatsapp-input').val());
+        ['name', 'email', 'designation', 'mobile', 'landline', 'whatsapp'].forEach(function (field) {
+            form.find(`[name="${field}"]`).val(
+                editingCard.find(`.contact-${field}-input`).val() || '',
+            );
+        });
 
-        modal.find('.modal-title').text('Edit Contact');
-        modal.find('#addDataBtn').text('Update');
-        modal.removeClass('hidden');
+        // Existing passwords are never placed in the modal. For a contact added
+        // during this page visit, the hidden card value is preserved unless a
+        // replacement is entered.
+        form.find('[name="password"]').val('').attr('type', 'password');
+
+        const loginEnabled = Number(
+            editingCard.find('.contact-login-enabled-input').val(),
+        ) === 1;
+
+        form.find('[name="login_enabled"]')
+            .prop('checked', loginEnabled)
+            .trigger('change');
+
+        modal.find('.modal-title').text('Edit Extra Contact');
+        modal.find('#addDataBtn, .submit-btn').text('Update');
+        modal.removeClass('hidden').addClass('block');
     });
 
-    // CLOSE MODAL
-    $(document).on('click', '.modal-close', function () {
-        let modal = $(this).closest('.modal');
-
-        modal.addClass('hidden');
+    $(document).on('click', '#multi-step-modal .modal-close', function (event) {
+        event.preventDefault();
+        modal.addClass('hidden').removeClass('block');
+        resetModalForm();
         editingCard = null;
-        editingIndex = null;
-        clearForms(modal.find('form'));
     });
 
-    // SAVE CONTACT (frontend only)
-    $(document).on('click', '#addDataBtn', function () {
+    $(document).on('click', '#addDataBtn', function (event) {
+        event.preventDefault();
 
-        let modal = $('#multi-step-modal');
-        let form = modal.find('form');
-
-        const data = getFormData(form);
+        const data = getFormData();
+        clearErrors();
 
         if (!data.name) {
-            showError(form, 'name', 'Name is required');
+            showError('name', 'Name is required.');
             return;
         }
 
-        // If email is filled, check if it's valid
         if (data.email && !isValidEmail(data.email)) {
-            showError(form, 'email', 'Please enter a valid email address');
+            showError('email', 'Please enter a valid email address.');
             return;
         }
 
-        // At least one contact field is required
-        if (!data.email && !data.mobile && !data.landline && !data.whatsapp) {
-            showError(form, 'email', 'At least one required (Email, Mobile, WhatsApp, Landline)');
+        if (!data.email && !data.mobile && !data.whatsapp && !data.landline) {
+            showError(
+                'email',
+                'Please provide at least one contact method (Email, Mobile, WhatsApp, or Landline).',
+            );
             return;
         }
 
-        // EDIT MODE
-        if (editingCard !== null) {
+        if (data.login_enabled && !data.email) {
+            showError('email', 'Email is required when login access is enabled.');
+            return;
+        }
 
-            editingCard.find('.contact-name').text(data.name);
-            editingCard.find('.contact-email').text(data.email ?? '--');
-            editingCard.find('.contact-designation').text(data.designation ?? '--');
-            editingCard.find('.contact-mobile').text(data.mobile ?? '--');
-            editingCard.find('.contact-landline').text(data.landline ?? '--');
-            editingCard.find('.contact-whatsapp').text(data.whatsapp ?? '--');
+        if (data.password) {
+            if (data.password.length < 8) {
+                showError('password', 'Password must be at least 8 characters.');
+                return;
+            }
 
-            // Update hidden inputs
-            Object.entries(data).forEach(([key, value]) => {
-                editingCard.find(`.contact-${key}-input`).val(value);
-            });
+            if (!/[A-Za-z]/.test(data.password)) {
+                showError('password', 'Password must contain at least one letter.');
+                return;
+            }
 
+            if (!/[0-9]/.test(data.password)) {
+                showError('password', 'Password must contain at least one number.');
+                return;
+            }
+        }
+
+        const previousPassword = editingCard
+            ? String(editingCard.find('.contact-password-input').val() || '')
+            : '';
+
+        if (!data.login_enabled) {
+            data.password = '';
+        } else if (!data.password) {
+            data.password = previousPassword;
+        }
+
+        if (editingCard) {
+            updateContactCard(editingCard, data);
         } else {
-            // CREATE MODE
-            const template = createContactTemplate(data, contactIndex);
-            $('#extraContactsContainer').append(template);
+            contactsContainer.append(createContactCard(data, contactIndex));
             contactIndex++;
         }
 
-        // Reset state
+        reindexContacts();
+        modal.addClass('hidden').removeClass('block');
+        resetModalForm();
         editingCard = null;
-        editingIndex = null;
-
-        clearForms(form);
-        modal.addClass('hidden').removeClass('flex');
     });
 
-    // REMOVE CONTACT
-    $(document).on('click', '.remove-contact', function () {
-        const card = $(this).closest('.contact-item');
-        card.remove();
-
-        // Reindex all cards
-        $('#extraContactsContainer .contact-item').each(function (i) {
-
-            // Update edit button index
-            $(this).find('.edit-contact').attr('data-index', i);
-
-            // Update input names
-            $(this).find('input').each(function () {
-                let name = $(this).attr('name');
-                if (name) {
-                    let newName = name.replace(/contacts\[\d+\]/, `contacts[${i}]`);
-                    $(this).attr('name', newName);
-                }
-            });
-        });
-
-        // Reset global index
-        contactIndex = $('#extraContactsContainer .contact-item').length;
+    $(document).on('click', '.remove-contact', function (event) {
+        event.preventDefault();
+        $(this).closest('.contact-item').remove();
+        reindexContacts();
     });
 
-    // Get form data
-    const getFormData = (form) => {
+    $(document).on('change', '[data-login-toggle]', function () {
+        updateLoginScope($(this).closest('[data-login-scope]'), true);
+    });
+
+    $(document).on('click', '[data-password-toggle]', function () {
+        const button = $(this);
+        const input = document.getElementById(button.data('target'));
+
+        if (!input) {
+            return;
+        }
+
+        const showPassword = input.type === 'password';
+        input.type = showPassword ? 'text' : 'password';
+        button.attr('aria-label', showPassword ? 'Hide password' : 'Show password');
+        button.attr('title', showPassword ? 'Hide password' : 'Show password');
+    });
+
+    function getFormData() {
         return {
-            name: form.find('[name="name"]').val(),
-            email: form.find('[name="email"]').val(),
-            designation: form.find('[name="designation"]').val(),
-            mobile: form.find('[name="mobile"]').val(),
-            landline: form.find('[name="landline"]').val(),
-            whatsapp: form.find('[name="whatsapp"]').val(),
+            name: valueOf('name'),
+            email: valueOf('email').toLowerCase(),
+            designation: valueOf('designation'),
+            mobile: valueOf('mobile'),
+            landline: valueOf('landline'),
+            whatsapp: valueOf('whatsapp'),
+            login_enabled: form.find('[name="login_enabled"]').is(':checked') ? 1 : 0,
+            password: String(form.find('[name="password"]').val() || ''),
         };
     }
 
-    // Create template
-    const createContactTemplate = (data, index) => {
-        const template = $($('#contact-template').html());
+    function valueOf(field) {
+        return String(form.find(`[name="${field}"]`).val() || '').trim();
+    }
 
-        template.find('.edit-contact').attr('data-index', index);
+    function createContactCard(data, index) {
+        const templateHtml = $('#contact-template').html();
 
-        template.find('.contact-name').text(data.name);
-        template.find('.contact-email').text(data.email ?? '--');
-        template.find('.contact-designation').text(data.designation ?? '--');
-        template.find('.contact-mobile').text(data.mobile ?? '--');
-        template.find('.contact-landline').text(data.landline ?? '--');
-        template.find('.contact-whatsapp').text(data.whatsapp ?? '--');
+        if (!templateHtml) {
+            throw new Error('The customer contact card template was not found.');
+        }
 
-        Object.entries(data).forEach(([key, value]) => {
-            template.find(`.contact-${key}-input`)
-                .attr('name', `contacts[${index}][${key}]`)
-                .val(value);
+        const card = $(templateHtml);
+        updateContactCard(card, data);
+        setContactInputNames(card, index);
+
+        return card;
+    }
+
+    function updateContactCard(card, data) {
+        card.find('.contact-name').text(data.name);
+        card.find('.contact-email').text(data.email || '--');
+        card.find('.contact-designation').text(data.designation || '--');
+        card.find('.contact-mobile').text(data.mobile || '--');
+        card.find('.contact-landline').text(data.landline || '--');
+        card.find('.contact-whatsapp').text(data.whatsapp || '--');
+
+        ['name', 'email', 'designation', 'mobile', 'landline', 'whatsapp'].forEach(function (field) {
+            card.find(`.contact-${field}-input`).val(data[field] || '');
         });
 
-        return template;
+        card.find('.contact-login-enabled-input').val(data.login_enabled ? '1' : '0');
+        card.find('.contact-password-input').val(data.password || '');
+        card.find('.contact-login-badge')
+            .toggleClass('hidden', !data.login_enabled)
+            .toggleClass('inline-flex', Boolean(data.login_enabled));
     }
 
-    // Show validation error
-    const showError = (form, fieldName, message) => {
+    function setContactInputNames(card, index) {
+        const fieldClasses = {
+            name: 'contact-name-input',
+            email: 'contact-email-input',
+            designation: 'contact-designation-input',
+            mobile: 'contact-mobile-input',
+            landline: 'contact-landline-input',
+            whatsapp: 'contact-whatsapp-input',
+            login_enabled: 'contact-login-enabled-input',
+            password: 'contact-password-input',
+        };
+
+        Object.entries(fieldClasses).forEach(function ([field, className]) {
+            card.find(`.${className}`).attr('name', `contacts[${index}][${field}]`);
+        });
+
+        card.find('.edit-contact').attr('data-index', index);
+    }
+
+    function reindexContacts() {
+        contactsContainer.find('.contact-item').each(function (index) {
+            const card = $(this);
+
+            card.find('.edit-contact').attr('data-index', index);
+            card.find('input[name]').each(function () {
+                const input = $(this);
+                input.attr(
+                    'name',
+                    input.attr('name').replace(/^contacts\[\d+\]/, `contacts[${index}]`),
+                );
+            });
+        });
+
+        contactIndex = contactsContainer.find('.contact-item').length;
+    }
+
+    function updateLoginScope(scope, clearPassword) {
+        if (!scope.length) {
+            return;
+        }
+
+        const enabled = scope.find('[data-login-toggle]').first().is(':checked');
+        const fields = scope.find('[data-login-fields]');
+        const email = scope.find('[data-login-email]').first();
+
+        fields.toggleClass('hidden', !enabled);
+        fields.find('input').prop('disabled', !enabled);
+        email.prop('required', enabled);
+        scope.find('[data-login-email-required]').toggleClass('hidden', !enabled);
+
+        if (!enabled && clearPassword) {
+            fields.find('input[type="password"], input[type="text"][autocomplete="new-password"]')
+                .val('')
+                .attr('type', 'password');
+        }
+    }
+
+    function resetModalForm() {
+        if (form[0]) {
+            form[0].reset();
+        }
+
+        form.find('[name="password"]').val('').attr('type', 'password');
+        clearErrors();
+        updateLoginScope(form.find('[data-login-scope]'), false);
+    }
+
+    function showError(fieldName, message) {
+        const field = form.find(`[name="${fieldName}"]`).first();
+
+        if (!field.length) {
+            return;
+        }
+
+        field.addClass('border-red-500');
+        $('<p>')
+            .addClass('error-text mt-1 text-sm text-error-300')
+            .text(message)
+            .appendTo(field.closest('.flex.flex-col'));
+    }
+
+    function clearErrors() {
         form.find('.error-text').remove();
-        let fieldWrapper = form.find(`[name="${fieldName}"]`).closest('div');
-        fieldWrapper.append(`<span class="text-red-500 error-text">${message}</span>`);
+        form.find('.border-red-500').removeClass('border-red-500');
     }
 
-    // Clear form elements and errors
-    const clearForms = (form) => {
-        form[0].reset();
-        form.find('.error-text').remove();
-        form.find('input').removeClass('border-red-500');
-        form.find('select').removeClass('border-red-500');
-        form.find('textarea').removeClass('border-red-500');
-    }
-
-    const isValidEmail = (email) => {
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return regex.test(email);
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 });

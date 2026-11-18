@@ -1,0 +1,15 @@
+{
+    "name": "Corporate Portal Redesign - Phase 2",
+    "priority": "urgent",
+    "status_code": "100002",
+    "stage_code": "200002",
+    "end_date": "2027-03-31",
+    "estimated_time_minutes": 15000,
+    "technology_codes": [
+        "500001",
+        "500002"
+    ],
+    "category_codes": [
+        "600001"
+    ]
+}

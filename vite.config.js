@@ -9,6 +9,10 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
 
+                'resources/js/settings/data-sync/data-sync-settings.js',
+                'resources/js/settings/data-sync/client-tab.js',
+                'resources/js/settings/data-sync/api-explorer-tab.js',
+
                 'resources/js/modules/team.js',
                 'resources/js/modules/schedule-shift.js',
                 'resources/js/modules/create-schedule.js',

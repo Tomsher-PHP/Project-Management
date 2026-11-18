@@ -141,7 +141,7 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2">
+                                        <div class="flex w-full items-center gap-2">
                                             <x-view-button :action="route('customers.show', $customer)" />
                                             @can('customer.edit')
                                                 <x-edit-button :action="route('customers.edit', $customer->id)" />

@@ -4,18 +4,19 @@ namespace App\Services;
 
 use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Http\Controllers\ProjectChecklistController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectHostingController;
 use App\Http\Controllers\ProjectPaymentController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Models\AgileMilestone;
 use App\Models\AgileMilestoneStatus;
 use App\Models\AgileSprint;
-use App\Models\Project;
 use App\Models\Customer;
-use App\Models\ProjectCategory;
+use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
-use App\Models\Technology;
-use App\Providers\AppServiceProvider;
+use App\Models\ProjectTimeline;
+use App\Models\SprintGroup;
 use App\Traits\ProjectHeaderTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -50,13 +51,18 @@ class ProjectRestoreService
      */
     public function getDeletedProjects($perPage = 10)
     {
-        return Project::onlyTrashed()
+        $query = Project::onlyTrashed()
             ->accessibleBy(auth()->user())
             ->filter(request()->all())
-            ->sort(request()->all())
-            ->with(['customer.profileGrade', 'addedBy', 'teamLeader'])
-            ->orderByDesc('deleted_at')
-            ->paginate($perPage)
+            ->with(['customer.profileGrade', 'addedBy', 'teamLeader']);
+
+        if (request()->filled('sort_by')) {
+            $query->sort(request()->all());
+        } else {
+            $query->orderByDesc('deleted_at');
+        }
+
+        return $query->paginate($perPage)
             ->withQueryString();
     }
 
@@ -92,7 +98,10 @@ class ProjectRestoreService
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
             'notes' => $this->renderNotesTab($project, $request),
+            'meetings' => $this->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
+            'hosting' => $this->renderHostingTab($project, $request),
+            'timelines' => app(ProjectController::class)->renderTimelinesTab($project),
             'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
@@ -227,7 +236,10 @@ class ProjectRestoreService
             ->get();
 
         $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
-        $agileSprints = AgileSprint::active()->orderBy('sort_order', 'asc')->get();
+        $agileSprints = AgileSprint::active()->whereNull('sprint_group_id')->orderBy('sort_order', 'asc')->get();
+        $agileSprintGroups = SprintGroup::active()->with(['agileSprints' => function ($q) {
+            $q->active()->orderBy('sort_order', 'asc');
+        }])->orderBy('sort_order', 'asc')->get();
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
@@ -247,6 +259,7 @@ class ProjectRestoreService
             'projectMilestones' => $projectMilestones,
             'agileMilestones' => $agileMilestones,
             'agileSprints' => $agileSprints,
+            'agileSprintGroups' => $agileSprintGroups,
             'agileMilestoneStatuses' => $agileMilestoneStatuses,
             'assignableUsers' => $assignableUsers,
             'trashedProjectMilestones' => $trashedProjectMilestones,
@@ -336,6 +349,9 @@ class ProjectRestoreService
             })
             ->values();
 
+        // Project Tracking is not fetched for deleted projects
+        $projectTrackings = collect();
+
         $currentStatus = [
             'label' => $project->projectStatus?->name ?? 'No Status',
             'color' => $project->projectStatus?->color ?: '#CBD5E1',
@@ -345,18 +361,95 @@ class ProjectRestoreService
             'color' => $project->projectStage?->color ?: '#CBD5E1',
         ];
 
+        $showTimelineHistory = $project->projectTimelines()->where('status', '!=', ProjectTimeline::STATUS_CANCELLED)->count() > 1;
+
+        $timelineHistory = collect();
+        if ($showTimelineHistory) {
+            $timelineHistory = $project->timelineHistories()
+                ->with(['addedBy:id,name', 'projectTimeline:id,name'])
+                ->get()
+                ->map(function ($history) {
+                    return [
+                        'timeline_name' => $history->projectTimeline?->name ?? 'Unknown Timeline',
+                        'from_label' => $history->from_status ? ucfirst(config('project_constants.project_timeline_statuses.' . $history->from_status, 'Unknown')) : 'Start',
+                        'from_color' => '#CBD5E1',
+                        'to_label' => ucfirst(config('project_constants.project_timeline_statuses.' . $history->status, 'Unknown')),
+                        'to_color' => '#CBD5E1',
+                        'changed_at' => $this->projectServices->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
+                        'changed_by' => $history->addedBy?->name ?? '--',
+                        'remarks' => $history->remarks,
+                    ];
+                })
+                ->values();
+        }
+
         return view('projects.partials.tabs.history', compact(
             'project',
             'statusHistory',
             'stageHistory',
             'currentStatus',
-            'currentStage'
+            'currentStage',
+            'projectTrackings',
+            'timelineHistory',
+            'showTimelineHistory'
         ))->render();
     }
 
     private function renderSettingsTab(Project $project): string
     {
-        return view('projects.partials.tabs.settings', compact('project'))->render();
+        $notificationTypes = config('project_constants.project_notification_types', []);
+        $preferences = $project->notificationPreferences()
+            ->get()
+            ->keyBy('notification_type');
+
+        return view('projects.partials.tabs.settings', compact('project', 'notificationTypes', 'preferences'))->render();
+    }
+
+    private function renderMeetingsTab(Project $project): string
+    {
+        return view('projects.partials.tabs.meetings', [
+            'project' => $project,
+            'upcomingMeetings' => [],
+            'upcomingPagination' => [
+                'page' => 1,
+                'next_page' => null,
+                'has_more_pages' => false,
+                'total' => 0,
+            ],
+            'pastMeetings' => [],
+            'pastPagination' => [
+                'page' => 1,
+                'next_page' => null,
+                'has_more_pages' => false,
+                'total' => 0,
+            ],
+        ])->render();
+    }
+
+    private function renderHostingTab(Project $project, ?Request $request = null): string
+    {
+        abort_unless(auth()->user()?->can('project_hosting.view'), \Symfony\Component\HttpFoundation\Response::HTTP_FORBIDDEN);
+
+        $summaryMetrics = app(ProjectHostingService::class)->calculateSummaryMetrics($project);
+        $hostingRecords = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+        $formOptions = [
+            'providers' => collect(),
+            'services' => collect(),
+            'statuses' => collect(),
+        ];
+        $filterOptions = [
+            'providers' => collect(),
+            'services' => collect(),
+            'statuses' => collect(),
+        ];
+
+        return view('projects.partials.tabs.hosting', compact(
+            'project',
+            'hostingRecords',
+            'summaryMetrics',
+            'formOptions',
+            'filterOptions'
+        ))->render();
     }
 
     private function getPaginatedProjectNotes(Project $project, int $page)

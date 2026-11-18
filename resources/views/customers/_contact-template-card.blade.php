@@ -1,49 +1,21 @@
 <template id="contact-template">
-    <div class="relative bg-white dark:bg-darkblack-600 border border-success-300 dark:border-darkblack-400 rounded-xl p-4 shadow-sm hover:shadow-md transition contact-item">
+    <div class="contact-item relative rounded-xl border border-success-300 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600">
+        <button type="button" class="edit-contact absolute right-10 top-2 text-bgray-400 dark:text-bgray-300" data-index="">Edit</button>
+        <button type="button" class="remove-contact absolute right-2 top-2 text-bgray-400 dark:text-bgray-300">✕</button>
 
-        <!-- Edit Button -->
-        <button type="button" class="absolute top-2 right-10 text-gray-400 hover:text-blue-500 edit-contact" data-index="">
-            Edit
-        </button>
+        <div class="pr-20">
+            <h4 class="contact-name text-lg font-semibold text-bgray-800 dark:text-bgray-300"></h4>
+            <span class="contact-login-badge mt-1 hidden w-fit rounded-full bg-success-50 px-2 py-0.5 text-xs font-semibold text-success-400">Login enabled</span>
+        </div>
 
-        <!-- Remove -->
-        <button type="button" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 remove-contact">✕</button>
-
-        <!-- Name -->
-        <h4 class="text-lg font-semibold text-gray-800 dark:text-white contact-name"></h4>
-
-        <!-- Email -->
-        <p>
-            <span class="font-medium text-gray-700 dark:text-gray-200">Email:</span>
-            <span class="contact-email">--</span>
-        </p>
-
-        <!-- Divider -->
+        <p class="mt-2"><span class="font-medium text-bgray-700 dark:text-bgray-300">Email:</span> <span class="contact-email">--</span></p>
         <div class="my-3 border-t border-gray-200 dark:border-darkblack-400"></div>
 
-        <!-- Info -->
         <div class="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-
-            <p>
-                <span class="font-medium text-gray-700 dark:text-gray-200">Designation:</span>
-                <span class="contact-designation">--</span>
-            </p>
-
-            <p>
-                <span class="font-medium text-gray-700 dark:text-gray-200">Mobile:</span>
-                <span class="contact-mobile">--</span>
-            </p>
-
-            <p>
-                <span class="font-medium text-gray-700 dark:text-gray-200">Landline:</span>
-                <span class="contact-landline">--</span>
-            </p>
-
-            <p>
-                <span class="font-medium text-gray-700 dark:text-gray-200">WhatsApp:</span>
-                <span class="contact-whatsapp">--</span>
-            </p>
-
+            <p><span class="font-medium text-bgray-700 dark:text-bgray-300">Designation:</span> <span class="contact-designation">--</span></p>
+            <p><span class="font-medium text-bgray-700 dark:text-bgray-300">Mobile:</span> <span class="contact-mobile">--</span></p>
+            <p><span class="font-medium text-bgray-700 dark:text-bgray-300">Landline:</span> <span class="contact-landline">--</span></p>
+            <p><span class="font-medium text-bgray-700 dark:text-bgray-300">WhatsApp:</span> <span class="contact-whatsapp">--</span></p>
         </div>
 
         <input type="hidden" class="contact-name-input">
@@ -52,6 +24,8 @@
         <input type="hidden" class="contact-mobile-input">
         <input type="hidden" class="contact-landline-input">
         <input type="hidden" class="contact-whatsapp-input">
+        <input type="hidden" class="contact-login-enabled-input">
+        <input type="hidden" class="contact-password-input">
     </div>
 </template>
 
@@ -59,52 +33,39 @@
     $contacts = old('contacts') ?? (isset($customer) ? $customer->extraContacts->toArray() : []);
 @endphp
 
-<!-- Existing Contacts for edit form -->
 @foreach ($contacts as $key => $contact)
-    <div class="relative bg-white dark:bg-darkblack-600 border border-success-300 dark:border-darkblack-400 rounded-xl p-4 shadow-sm hover:shadow-md transition contact-item">
+    @php
+        $loginEnabled = filter_var($contact['login_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    @endphp
+    <div class="contact-item relative rounded-xl border border-success-300 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600" data-contact-id="{{ $contact['id'] ?? '' }}">
+        <button type="button" class="edit-contact absolute right-10 top-2 text-bgray-900 dark:text-bgray-300" data-index="{{ $key }}">Edit</button>
+        <button type="button" class="remove-contact absolute right-2 top-2 text-bgray-900 dark:text-bgray-300">✕</button>
 
-        <!-- Edit Button -->
-        <button type="button" class="absolute top-2 right-10 text-gray-400 hover:text-blue-500 edit-contact" data-index="{{ $key }}">
-            Edit
-        </button>
+        <div class="pr-20">
+            <h4 class="contact-name text-lg font-semibold text-bgray-800 dark:text-bgray-300">{{ $contact['name'] ?? '' }}</h4>
+            <span class="contact-login-badge mt-1 {{ $loginEnabled ? 'inline-flex' : 'hidden' }} w-fit rounded-full bg-success-50 px-2 py-0.5 text-xs font-semibold text-success-400">Login enabled</span>
+        </div>
 
-        <!-- Remove -->
-        <button type="button" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 remove-contact">
-            ✕
-        </button>
-
-        <!-- Name -->
-        <h4 class="text-lg font-semibold text-gray-800 dark:text-white contact-name">
-            {{ $contact['name'] ?? ($contact['name'] ?? '') }}
-        </h4>
-
-        <!-- Email -->
-        <p>
-            <span class="font-medium">Email:</span>
-            <span class="contact-email">
-                {{ $contact['email'] ?? '' }}
-            </span>
-        </p>
-
+        <p class="mt-2"><span class="font-medium text-bgray-800 dark:text-bgray-300">Email:</span> <span class="contact-email text-bgray-800 dark:text-bgray-300">{{ filled($contact['email'] ?? null) ? $contact['email'] : '--' }}</span></p>
         <div class="my-3 border-t"></div>
 
         <div class="space-y-1 text-sm">
-            <p><span class="font-medium">Designation:</span> <span class="contact-designation">{{ $contact['designation'] ?? '' }}</span></p>
-            <p><span class="font-medium">Mobile:</span> <span class="contact-mobile">{{ $contact['mobile'] ?? '' }}</span></p>
-            <p><span class="font-medium">Landline:</span> <span class="contact-landline">{{ $contact['landline'] ?? '' }}</span></p>
-            <p><span class="font-medium">WhatsApp:</span> <span class="contact-whatsapp">{{ $contact['whatsapp'] ?? '' }}</span></p>
+            <p><span class="font-medium text-bgray-600 dark:text-bgray-300">Designation:</span> <span class="contact-designation text-bgray-800 dark:text-bgray-300">{{ filled($contact['designation'] ?? null) ? $contact['designation'] : '--' }}</span></p>
+            <p><span class="font-medium text-bgray-600 dark:text-bgray-300">Mobile:</span> <span class="contact-mobile text-bgray-800 dark:text-bgray-300">{{ filled($contact['mobile'] ?? null) ? $contact['mobile'] : '--' }}</span></p>
+            <p><span class="font-medium text-bgray-600 dark:text-bgray-300">Landline:</span> <span class="contact-landline text-bgray-800 dark:text-bgray-300">{{ filled($contact['landline'] ?? null) ? $contact['landline'] : '--' }}</span></p>
+            <p><span class="font-medium text-bgray-600 dark:text-bgray-300">WhatsApp:</span> <span class="contact-whatsapp text-bgray-800 dark:text-bgray-300">{{ filled($contact['whatsapp'] ?? null) ? $contact['whatsapp'] : '--' }}</span></p>
         </div>
 
-        <!-- Hidden Inputs -->
         @if (isset($contact['id']))
-            <input type="hidden" name="contacts[{{ $key }}][id]" value="{{ $contact['id'] }}">
+            <input type="hidden" class="contact-id-input" name="contacts[{{ $key }}][id]" value="{{ $contact['id'] }}">
         @endif
-
-        <input type="hidden" class="contact-name-input" name="contacts[{{ $key }}][name]" value="{{ $contact['name'] ?? '' }}">
+        <input type="hidden" class="contact-name-input " name="contacts[{{ $key }}][name]" value="{{ $contact['name'] ?? '' }}">
         <input type="hidden" class="contact-email-input" name="contacts[{{ $key }}][email]" value="{{ $contact['email'] ?? '' }}">
         <input type="hidden" class="contact-designation-input" name="contacts[{{ $key }}][designation]" value="{{ $contact['designation'] ?? '' }}">
         <input type="hidden" class="contact-mobile-input" name="contacts[{{ $key }}][mobile]" value="{{ $contact['mobile'] ?? '' }}">
         <input type="hidden" class="contact-landline-input" name="contacts[{{ $key }}][landline]" value="{{ $contact['landline'] ?? '' }}">
         <input type="hidden" class="contact-whatsapp-input" name="contacts[{{ $key }}][whatsapp]" value="{{ $contact['whatsapp'] ?? '' }}">
+        <input type="hidden" class="contact-login-enabled-input" name="contacts[{{ $key }}][login_enabled]" value="{{ $loginEnabled ? '1' : '0' }}">
+        <input type="hidden" class="contact-password-input" name="contacts[{{ $key }}][password]" value="">
     </div>
 @endforeach

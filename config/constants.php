@@ -84,6 +84,7 @@ return [
         'leave_types.view',
         'company_expenses.view',
         'broadcast_settings.view',
+        'data_sync_settings.view',
         'configuration.view',
     ],
 
@@ -93,7 +94,7 @@ return [
     // User settings keys
     'user_settings' => [
         'daily_work_hours_warning_mail' => 'Daily Work Hours Warning Email',
-        'daily_work_report_mail'=> 'Daily Work Report Email',
+        'daily_work_report_mail' => 'Daily Work Report Email',
     ],
 
     // Meeting reminder notification time in minutes
@@ -105,5 +106,88 @@ return [
         'industries'         => 'industries',
         'project_categories' => 'project_categories',
         'project_statuses'   => 'project_statuses',
+    ],
+
+    // Data Sync API permissions displayed when creating or editing API clients
+    'data_sync_api_permissions' => [
+        'settings_masters' => [
+            'label' => 'Settings Masters',
+            'permissions' => [
+                'settings.read' => 'Read Technologies, Industries, Categories, Statuses',
+                'settings.write' => 'Create, update, toggle and delete Settings masters',
+            ],
+        ],
+        'operations' => [
+            'label' => 'Operations',
+            'permissions' => [
+                'projects.write' => 'Create & update Customers and Projects',
+                'meetings.read' => 'Read scheduled active meetings',
+            ],
+        ],
+    ],
+
+    // Employee information dropdown constants
+    'marital_statuses' => [
+        'Single' => 'Single',
+        'Married' => 'Married',
+        'Divorced' => 'Divorced',
+        'Widowed' => 'Widowed',
+    ],
+
+    'children_counts' => [
+        0 => '0',
+        1 => '1',
+        2 => '2',
+        3 => '3',
+        4 => '4',
+        5 => '5',
+        6 => '6',
+        7 => '7',
+        8 => '8',
+        9 => '9',
+        10 => '10+',
+    ],
+
+    'favorite_colors' => [
+        'Black' => 'Black',
+        'White' => 'White',
+        'Blue' => 'Blue',
+        'Red' => 'Red',
+        'Green' => 'Green',
+        'Yellow' => 'Yellow',
+        'Orange' => 'Orange',
+        'Purple' => 'Purple',
+        'Pink' => 'Pink',
+        'Brown' => 'Brown',
+        'Grey' => 'Grey',
+    ],
+
+    'shirt_sizes' => [
+        'XS' => 'XS',
+        'S' => 'S',
+        'M' => 'M',
+        'L' => 'L',
+        'XL' => 'XL',
+        'XXL' => 'XXL',
+        '3XL' => '3XL',
+        '4XL' => '4XL',
+        '5XL' => '5XL',
+    ],
+
+    'shoe_sizes' => [
+        35 => '35',
+        36 => '36',
+        37 => '37',
+        38 => '38',
+        39 => '39',
+        40 => '40',
+        41 => '41',
+        42 => '42',
+        43 => '43',
+        44 => '44',
+        45 => '45',
+        46 => '46',
+        47 => '47',
+        48 => '48',
     ],
 ];

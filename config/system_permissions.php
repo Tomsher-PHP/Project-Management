@@ -275,11 +275,11 @@ return [
     ['name' => 'project_settings.edit',   'label' => 'Settings - Project Settings', 'sort_order' => 57040, 'default_checked' => false],
     ['name' => 'project_settings.delete', 'label' => 'Settings - Project Settings', 'sort_order' => 57060, 'default_checked' => false],
 
-    ['name' => 'daily_work_report.view','label' => 'View Daily Work Reports','sort_order' => 58000,'default_checked' => false,],
-    ['name' => 'daily_work_report.edit','label' => 'Manage Daily Work Report Settings and Recipients','sort_order' => 58020,'default_checked' => false,],
-    ['name' => 'daily_work_report.generate','label' => 'Generate Daily Work Reports','sort_order' => 58040,'default_checked' => false,],
-    ['name' => 'daily_work_report.send_test','label' => 'Send Test Daily Work Reports','sort_order' => 58060,'default_checked' => false,],
-    ['name' => 'daily_work_report.retry','label' => 'Retry Failed Daily Work Reports','sort_order' => 58080,'default_checked' => false,],
+    ['name' => 'daily_work_report.view', 'label' => 'View Daily Work Reports', 'sort_order' => 58000, 'default_checked' => false,],
+    ['name' => 'daily_work_report.edit', 'label' => 'Manage Daily Work Report Settings and Recipients', 'sort_order' => 58020, 'default_checked' => false,],
+    ['name' => 'daily_work_report.generate', 'label' => 'Generate Daily Work Reports', 'sort_order' => 58040, 'default_checked' => false,],
+    ['name' => 'daily_work_report.send_test', 'label' => 'Send Test Daily Work Reports', 'sort_order' => 58060, 'default_checked' => false,],
+    ['name' => 'daily_work_report.retry', 'label' => 'Retry Failed Daily Work Reports', 'sort_order' => 58080, 'default_checked' => false,],
 
     // TASK SETTINGS
     ['name' => 'task_settings.view',   'label' => 'Settings - Task Settings', 'sort_order' => 61000, 'default_checked' => false],
@@ -335,12 +335,18 @@ return [
     ['name' => 'broadcast_settings.edit',   'label' => 'Settings - Broadcast Settings', 'sort_order' => 69240, 'default_checked' => false],
     ['name' => 'broadcast_settings.delete', 'label' => 'Settings - Broadcast Settings', 'sort_order' => 69260, 'default_checked' => false],
 
+    // Data Sync
+    ['name' => 'data_sync_settings.view',   'label' => 'Settings - Data Sync', 'sort_order' => 69300, 'default_checked' => false],
+    ['name' => 'data_sync_settings.create', 'label' => 'Settings - Data Sync', 'sort_order' => 69320, 'default_checked' => false],
+    ['name' => 'data_sync_settings.edit',   'label' => 'Settings - Data Sync', 'sort_order' => 69340, 'default_checked' => false],
+    ['name' => 'data_sync_settings.delete', 'label' => 'Settings - Data Sync', 'sort_order' => 69360, 'default_checked' => false],
+
     // ---------------------------------------------------------------------------------------------------------------------------------
     // CONFIGURATION  -- Last Settings Module
     ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
     ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
 
 
-   
+
 
 ];
