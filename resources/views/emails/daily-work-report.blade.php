@@ -64,6 +64,68 @@
             }
         };
 
+        $formatDeveloperNote = function ($note) {
+            if (empty($note)) {
+                return '';
+            }
+
+            $note = (string) $note;
+
+            // Decode HTML entities, including double-encoded HTML.
+            for ($i = 0; $i < 3; $i++) {
+                $decoded = html_entity_decode(
+                    $note,
+                    ENT_QUOTES | ENT_HTML5,
+                    'UTF-8'
+                );
+
+                if ($decoded === $note) {
+                    break;
+                }
+
+                $note = $decoded;
+            }
+
+            // Remove escape characters before HTML tags.
+            $note = preg_replace('/\\\\+(?=<\/?[a-z][^>]*>)/i', '', $note);
+
+            // Remove Quill UI elements.
+            $note = preg_replace(
+                '/<span[^>]*class=["\'][^"\']*ql-ui[^"\']*["\'][^>]*>.*?<\/span>/is',
+                '',
+                $note
+            );
+
+            // Preserve paragraph breaks and line breaks.
+            $note = preg_replace('/<\s*br\s*\/?>/i', "\n", $note);
+            $note = preg_replace('/<\/\s*(p|div|h[1-6])\s*>/i', "\n", $note);
+
+            // Preserve ordered and unordered list items.
+            $note = preg_replace_callback(
+                '/<\s*li\b([^>]*)>/i',
+                function ($matches) {
+                    if (stripos($matches[1], 'data-list="ordered"') !== false) {
+                        return "\n• ";
+                    }
+
+                    return "\n• ";
+                },
+                $note
+            );
+
+            $note = preg_replace('/<\/\s*li\s*>/i', "\n", $note);
+
+            // Remove remaining HTML tags.
+            $note = strip_tags($note);
+
+            // Clean up whitespace.
+            $note = preg_replace('/[ \t]+/', ' ', $note);
+            $note = preg_replace('/ *\n */', "\n", $note);
+            $note = preg_replace('/\n{3,}/', "\n\n", trim($note));
+
+            return \Illuminate\Support\Str::limit($note, 200, '...');
+        };
+
         $statusColor = function ($status) {
             $status = strtolower((string) $status);
 
@@ -108,10 +170,10 @@
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f4f6; padding:25px 10px;">
         <tr>
             <td align="center">
-                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:1100px; background-color:#ffffff; border-radius:10px; overflow:hidden;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:1100px; background-color:#ffffff; border-radius:10px; overflow:hidden;box-shadow: 1px 8px 13px 6px #ddd;">
                     {{-- Main Header --}}
                     <tr>
-                        <td style="background-color:#c8c8c8; padding:28px 30px;">
+                        <td style="background-color:#fff; padding:28px 30px;">
 
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
@@ -219,7 +281,7 @@
                                             </h2>
                                         </td>
                                         <td align="right">
-                                            <span style="font-size:11px; color:#64748b;">
+                                            <span style="font-size:11px; color:#fff;">
                                                 {{ $teamEmployeeCount }}
                                                 {{ $teamEmployeeCount === 1 ? 'Employee' : 'Employees' }}
                                             </span>
@@ -324,59 +386,82 @@
 
                                 $totalWorkingHours = $formatDuration($totalSeconds);
 
-                                // Attendance: display only leave or day off.
-                                $rawAttendanceStatus = data_get($employeeReport, 'attendance.status');
-                                $attendanceStatus = null;
+                                // Attendance information.
+                                $attendanceType = data_get($employeeReport, 'attendance.type');
+                                $attendanceStatus = data_get(
+                                    $employeeReport,
+                                    'attendance.label',
+                                    data_get($employeeReport, 'attendance.status')
+                                );
 
-                                if ($rawAttendanceStatus) {
-                                    $normalizedAttendance = strtolower(trim((string) $rawAttendanceStatus));
+                                if (!$attendanceType && $attendanceStatus) {
+                                    $normalizedAttendance = strtolower(trim((string) $attendanceStatus));
 
-                                    if (str_contains($normalizedAttendance, 'leave') || str_contains($normalizedAttendance, 'day off') || str_contains($normalizedAttendance, 'day_off')) {
-                                        $attendanceStatus = $rawAttendanceStatus;
+                                    if (str_contains($normalizedAttendance, 'holiday')) {
+                                        $attendanceType = 'holiday';
+                                    } elseif (str_contains($normalizedAttendance, 'leave')) {
+                                        $attendanceType = 'leave';
+                                    } elseif (
+                                        str_contains($normalizedAttendance, 'day off') ||
+                                        str_contains($normalizedAttendance, 'day_off')
+                                    ) {
+                                        $attendanceType = 'day_off';
                                     }
+                                }
+
+                                if (!in_array($attendanceType, ['holiday', 'leave', 'day_off'], true)) {
+                                    $attendanceStatus = null;
+                                    $attendanceType = null;
                                 }
 
                                 $taskCountUrls = data_get($employeeReport, 'task_count_urls', []);
                                 $taskCountItems = [
                                     [
                                         'key' => 'total',
-                                        'label' => 'Total Tasks',
+                                        'label' => 'Total Due',
+                                        'description' => 'Tasks due today or on previous days that are not yet completed.',
                                         'value' => $totalTasks,
                                         'color' => '#334155',
                                     ],
                                     [
                                         'key' => 'completed',
                                         'label' => 'Completed',
+                                        'description' => 'Completed tasks that had time logged during the reporting period.',
                                         'value' => $completedTasks,
                                         'color' => '#15803d',
                                     ],
                                     [
                                         'key' => 'in_progress',
                                         'label' => 'In Progress',
+                                        'description' => 'In-progress tasks that had time logged during the reporting period.',
                                         'value' => $inProgressTasks,
                                         'color' => '#2563eb',
                                     ],
                                     [
                                         'key' => 'pending',
                                         'label' => 'Pending',
+                                        'description' => 'Tasks that are pending and awaiting work.',
                                         'value' => $pendingCount,
                                         'color' => '#b45309',
                                     ],
                                     [
                                         'key' => 'upcoming',
                                         'label' => 'Upcoming',
+                                        'description' => 'Tasks scheduled for a future due date.',
                                         'value' => $upcomingCount,
                                         'color' => '#b45309',
                                     ],
                                     [
                                         'key' => 'overdue',
                                         'label' => 'Overdue',
+                                        'description' => 'Tasks whose due date has passed and are still not completed.',
                                         'value' => $overdueTasks,
                                         'color' => '#dc2626',
                                     ],
                                     [
                                         'key' => 'time_logged',
                                         'label' => 'Time Logged',
+                                        'description' => 'Total time recorded through task timers during the reporting period.',
                                         'value' => $totalWorkingHours,
                                         'color' => '#7c3aed',
                                     ],
@@ -391,6 +476,12 @@
                                             <td width="48%" valign="middle">
                                                 <div style="font-size:15px; font-weight:700; color:#1e293b;">
                                                     {{ $employeeName }}
+
+                                                    @if ($attendanceStatus)
+                                                        <span style="display:inline-block; vertical-align:middle; margin-left:6px; padding:3px 8px; background-color:{{ $attendanceType === 'holiday' ? '#dbeafe' : ($attendanceType === 'leave' ? '#ede9fe' : '#fef3c7') }}; color:{{ $attendanceColor($attendanceStatus) }}; border-radius:4px; font-size:10px; font-weight:600;">
+                                                            {{ $attendanceStatus }}
+                                                        </span>
+                                                    @endif
                                                 </div>
                                                 <div style="margin-top:3px; font-size:11px; color:#64748b;">
                                                     {{ $employeeEmail }}
@@ -433,21 +524,7 @@
                                 </td>
                             </tr>
 
-                            {{-- Attendance Information --}}
-                            @if ($attendanceStatus)
-                                <tr>
-                                    <td style="padding:10px 30px 5px;">
-                                        <div style="padding:9px 12px; background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; font-size:11px;">
-                                            <strong style="color:#64748b;">
-                                                Attendance:
-                                            </strong>
-                                            <span style="font-weight:bold; color:{{ $attendanceColor($attendanceStatus) }};">
-                                                {{ $attendanceStatus }}
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endif
+
 
                             {{-- Workload Summary --}}
                             @if (array_key_exists('current_workload', $employeeReport))
@@ -476,8 +553,15 @@
                                                                         {{ $item['value'] }}
                                                                     </div>
 
-                                                                    <div style="margin-top:4px; font-size:10px; color:#64748b;">
+                                                                    <div style="margin-top:4px; font-size:10px; color:#64748b; white-space:nowrap;">
                                                                         {{ $item['label'] }}
+
+                                                                        <span
+                                                                            title="{{ $item['description'] }}"
+                                                                            style="display:inline-block; margin-left:2px; width:13px; height:13px; line-height:13px; border-radius:50%; background-color:#e2e8f0; color:#475569; font-size:9px; font-weight:bold; text-align:center; cursor:help;"
+                                                                        >
+                                                                            i
+                                                                        </span>
                                                                     </div>
 
                                                                     @if ($isClickable)
@@ -659,9 +743,16 @@
                                                         {{-- Developer Notes --}}
                                                         <td style="padding:10px; border-bottom:1px solid #e5e7eb; font-size:12px; color:#334155;">
                                                             @if (!empty($task['developer_note']))
-                                                                <div style="white-space:pre-line; line-height:1.6;">
-                                                                    {{ $task['developer_note'] }}
+                                                                <div style="line-height:1.6; white-space:pre-line;">
+                                                                    {{ $formatDeveloperNote($task['developer_note']) }}
                                                                 </div>
+
+                                                                @if (!empty($task['url']))
+                                                                    <a href="{{ $task['url'] }}" target="_blank"
+                                                                        style="display:inline-block; margin-top:6px; color:#16a34a; font-weight:600; text-decoration:none;">
+                                                                        Read More →
+                                                                    </a>
+                                                                @endif
                                                             @else
                                                                 <span style="color:#94a3b8;">
                                                                     No developer notes

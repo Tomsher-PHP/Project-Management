@@ -10,8 +10,10 @@ use Illuminate\Support\Collection;
 class DailyWorkReportRecipientService
 {
     /**
-     * Existing individual-report recipient resolution.
-     * Kept for backward compatibility.
+     * Resolve recipients for an individual employee report.
+     *
+     * Includes the employee, reporting person, manager,
+     * and applicable global, team, and user-specific recipients.
      */
     public function resolve(
         User $employee,
@@ -20,6 +22,7 @@ class DailyWorkReportRecipientService
     ): Collection {
         $recipients = collect();
 
+        /* Employee */
         $this->addRecipient(
             $recipients,
             $employee->email,
@@ -27,11 +30,22 @@ class DailyWorkReportRecipientService
             'employee'
         );
 
+        /* Reporting Person and Manager */
         $details = $employee->details;
 
         if ($details) {
-            $reporter = User::find($details->reporter_id);
-            $manager = User::find($details->manager_id);
+            $relatedUserIds = array_filter([
+                $details->reporter_id,
+                $details->manager_id,
+            ]);
+
+            $relatedUsers = User::query()
+                ->whereIn('id', $relatedUserIds)
+                ->get()
+                ->keyBy('id');
+
+            $reporter = $relatedUsers->get($details->reporter_id);
+            $manager = $relatedUsers->get($details->manager_id);
 
             if ($reporter) {
                 $this->addRecipient(
@@ -52,6 +66,7 @@ class DailyWorkReportRecipientService
             }
         }
 
+        /* Global and User-specific Recipients */
         $additionalRecipients = DailyWorkReportRecipient::query()
             ->effective($reportDate)
             ->where('report_key', $reportKey)
@@ -75,6 +90,7 @@ class DailyWorkReportRecipientService
             );
         }
 
+        /* Active Team Recipients */
         $teams = Team::query()
             ->where('is_active', true)
             ->whereHas('users', function ($query) use ($employee) {
@@ -119,7 +135,7 @@ class DailyWorkReportRecipientService
     ): Collection {
         $recipients = collect();
 
-        // The supervisor receives the consolidated report.
+        /* Report Owner */
         $this->addRecipient(
             $recipients,
             $reportOwner->email,
@@ -127,7 +143,7 @@ class DailyWorkReportRecipientService
             'report_owner'
         );
 
-        // Global additional recipients receive every consolidated report.
+        /* Global Recipients */
         $globalRecipients = DailyWorkReportRecipient::query()
             ->effective($reportDate)
             ->where('report_key', $reportKey)
@@ -143,8 +159,10 @@ class DailyWorkReportRecipientService
             );
         }
 
+        /* Normalize Employees */
         $employees = $employees
             ->filter(fn ($employee) => $employee instanceof User)
+            ->reject(fn ($employee) => $employee->id == $reportOwner->id)
             ->unique('id')
             ->values();
 
@@ -154,7 +172,7 @@ class DailyWorkReportRecipientService
 
         $employeeIds = $employees->pluck('id')->all();
 
-        // User-specific additional recipients for all included employees.
+        /* User-specific Recipients */
         $userRecipients = DailyWorkReportRecipient::query()
             ->effective($reportDate)
             ->where('report_key', $reportKey)
@@ -171,7 +189,7 @@ class DailyWorkReportRecipientService
             );
         }
 
-        // Find all active teams containing at least one included employee.
+        /* Active Teams Containing Included Employees */
         $teams = Team::query()
             ->where('is_active', true)
             ->whereHas('users', function ($query) use ($employeeIds) {
@@ -179,7 +197,7 @@ class DailyWorkReportRecipientService
             })
             ->get();
 
-        // Team-specific additional recipients.
+        /* Team-specific Recipients */
         if ($teams->isNotEmpty()) {
             $teamRecipients = DailyWorkReportRecipient::query()
                 ->effective($reportDate)
@@ -200,7 +218,6 @@ class DailyWorkReportRecipientService
 
         return $recipients->values();
     }
-
 
     /**
      * Resolve global additional recipients separately.
@@ -234,6 +251,8 @@ class DailyWorkReportRecipientService
 
     /**
      * Add a recipient while deduplicating by email address.
+     *
+     * Multiple recipient sources are retained for the same email.
      */
     private function addRecipient(
         Collection $recipients,
@@ -242,6 +261,7 @@ class DailyWorkReportRecipientService
         string $source
     ): void {
         $email = trim((string) $email);
+        $name = trim((string) $name);
 
         if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return;
@@ -252,7 +272,7 @@ class DailyWorkReportRecipientService
         if (! $recipients->has($key)) {
             $recipients->put($key, [
                 'email' => $email,
-                'name' => $name,
+                'name' => $name ?: null,
                 'sources' => [],
             ]);
         }
@@ -263,7 +283,7 @@ class DailyWorkReportRecipientService
             $recipient['sources'][] = $source;
         }
 
-        if (empty($recipient['name']) && $name) {
+        if (empty($recipient['name']) && $name !== '') {
             $recipient['name'] = $name;
         }
 

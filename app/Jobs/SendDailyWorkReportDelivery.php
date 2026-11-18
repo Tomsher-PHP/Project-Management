@@ -4,9 +4,12 @@ namespace App\Jobs;
 
 use App\Mail\DailyWorkReportMail;
 use App\Models\DailyWorkReportDelivery;
+use App\Models\DailyWorkReportLog;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use RuntimeException;
 use Throwable;
 
 class SendDailyWorkReportDelivery implements ShouldQueue
@@ -15,7 +18,7 @@ class SendDailyWorkReportDelivery implements ShouldQueue
 
     public int $tries = 3;
 
-    public array $backoff = [60, 300, 900];
+    public array $backoff = [60, 300];
 
     public function __construct(
         public int $deliveryId
@@ -25,8 +28,7 @@ class SendDailyWorkReportDelivery implements ShouldQueue
     public function handle(): void
     {
         $delivery = DailyWorkReportDelivery::with(
-            'reportLog.user',
-            'reportLog.deliveries'
+            'reportLog.user'
         )->findOrFail($this->deliveryId);
 
         if ($delivery->status === 'sent') {
@@ -35,11 +37,18 @@ class SendDailyWorkReportDelivery implements ShouldQueue
 
         $delivery->increment('attempt_count');
 
-        try {
-            $reportLog = $delivery->reportLog;
+        $reportLog = $delivery->reportLog;
 
-            // The report log contains the complete report data.
-            // This can be an individual or consolidated report.
+        try {
+            if (! $reportLog) {
+                throw new RuntimeException('Daily work report log not found.');
+            }
+
+            if (blank($delivery->recipient_email)) {
+                throw new RuntimeException('Delivery recipient email is missing.');
+            }
+
+            // The report log contains the complete individual or consolidated report.
             Mail::to($delivery->recipient_email)
                 ->send(new DailyWorkReportMail($reportLog));
 
@@ -49,59 +58,99 @@ class SendDailyWorkReportDelivery implements ShouldQueue
                 'last_error' => null,
             ]);
 
-            $this->refreshReportStatus($reportLog->fresh());
+            $this->refreshReportStatus($reportLog->id);
 
         } catch (Throwable $exception) {
 
+            // Keep the delivery queued while Laravel has retries remaining.
             $delivery->update([
-                'status' => 'failed',
-                'last_error' => mb_substr(
-                    $exception->getMessage(),
-                    0,
-                    60000
-                ),
+                'status' => 'queued',
+                'last_error' => $this->formatError($exception),
             ]);
 
-            $this->refreshReportStatus(
-                $delivery->reportLog->fresh()
-            );
+            $this->refreshReportStatus($reportLog?->id);
 
             throw $exception;
         }
     }
 
     /**
-     * Update the overall report status based on all deliveries.
+     * Mark the delivery as failed after all queue attempts are exhausted.
      */
-    private function refreshReportStatus($reportLog): void
+    public function failed(?Throwable $exception): void
     {
-        $deliveries = $reportLog->deliveries()->get();
+        $delivery = DailyWorkReportDelivery::with(
+            'reportLog'
+        )->find($this->deliveryId);
 
-        $total = $deliveries->count();
-
-        $sent = $deliveries->where('status', 'sent')->count();
-
-        $failed = $deliveries->where('status', 'failed')->count();
-
-        // Anything not sent or failed is still pending/queued.
-        $pending = $total - $sent - $failed;
-
-        $status = 'queued';
-        $completedAt = null;
-
-        if ($total > 0 && $sent === $total) {
-            $status = 'sent';
-            $completedAt = now();
-
-        } elseif ($total > 0 && $sent + $failed === $total) {
-
-            $status = $sent > 0 ? 'partial' : 'failed';
-            $completedAt = now();
+        if (! $delivery || $delivery->status === 'sent') {
+            return;
         }
 
-        $reportLog->update([
-            'status' => $status,
-            'completed_at' => $completedAt,
+        $reportLogId = $delivery->reportLog?->id;
+
+        $delivery->update([
+            'status' => 'failed',
+            'last_error' => $exception
+                ? $this->formatError($exception)
+                : $delivery->last_error,
         ]);
+
+        $this->refreshReportStatus($reportLogId);
+    }
+
+    /**
+     * Update the overall report status based on all deliveries.
+     */
+    private function refreshReportStatus(?int $reportLogId): void
+    {
+        if (! $reportLogId) {
+            return;
+        }
+
+        DB::transaction(function () use ($reportLogId) {
+            $reportLog = DailyWorkReportLog::query()
+                ->lockForUpdate()
+                ->find($reportLogId);
+
+            if (! $reportLog) {
+                return;
+            }
+
+            $total = $reportLog->deliveries()->count();
+
+            $sent = $reportLog->deliveries()
+                ->where('status', 'sent')
+                ->count();
+
+            $failed = $reportLog->deliveries()
+                ->where('status', 'failed')
+                ->count();
+
+            $status = 'queued';
+            $completedAt = null;
+
+            if ($total > 0 && $sent === $total) {
+                $status = 'sent';
+                $completedAt = now();
+
+            } elseif ($total > 0 && ($sent + $failed) === $total) {
+                $status = $sent > 0 ? 'partial' : 'failed';
+                $completedAt = now();
+            }
+
+            $reportLog->update([
+                'status' => $status,
+                'completed_at' => $completedAt,
+            ]);
+        });
+    }
+
+    /**
+     * Format the exception message for database storage.
+     */
+    private function formatError(Throwable $exception): string
+    {
+        return mb_substr($exception->getMessage(), 0, 5000);
     }
 }
