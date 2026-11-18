@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-iUqqur_k.css",
+    "file": "assets/app-Cg9THS8C.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -629,7 +629,7 @@
     "isEntry": true
   },
   "resources/js/modules/users/user-edit.js": {
-    "file": "assets/user-edit-vxzGAL30.js",
+    "file": "assets/user-edit-DZeXu6L6.js",
     "name": "user-edit",
     "src": "resources/js/modules/users/user-edit.js",
     "isEntry": true

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -37,7 +38,7 @@ return new class extends Migration
             $table->timestamp('password_set_at')->nullable()->after('password');
             $table->timestamp('last_login_at')->nullable()->after('password_set_at');
             $table->timestamp('email_verified_at')->nullable()->after('last_login_at');
-            
+
             $table->boolean('force_password_reset')->default(false)->after('email_verified_at');
 
             $table->unique('email', 'customer_contacts_email_unique');

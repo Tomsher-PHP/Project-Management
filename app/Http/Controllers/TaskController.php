@@ -49,6 +49,8 @@ class TaskController extends Controller
 
     public function index(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
     {
+        session(['tasks_return_url' => $request->fullUrl()]);
+
         $user = $request->user();
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
@@ -988,8 +990,7 @@ class TaskController extends Controller
 
         $task->delete();
 
-        return redirect()
-            ->route('tasks.index')
+        return redirect(session('tasks_return_url', route('tasks.index')))
             ->with('success', 'Task deleted successfully.');
     }
 

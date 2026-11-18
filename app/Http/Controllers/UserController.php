@@ -414,16 +414,98 @@ class UserController extends Controller
 
     public function updateModal(Request $request, User $user, UserService $service)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'whatsapp' => 'nullable|string|max:20',
-            'contact_person' => 'nullable|string|max:255',
-            'contact_person_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'remove_profile_image' => 'nullable',
-        ]);
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'whatsapp' => ['nullable', 'string', 'max:20'],
+            'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'remove_profile_image' => ['nullable'],
+
+            // Address Information
+            'address' => ['nullable', 'string'],
+            'native_address' => ['nullable', 'string'],
+
+            // Emergency Contacts
+            'emergency_contacts' => ['nullable', 'array'],
+            'emergency_contacts.*' => ['array'],
+            'emergency_contacts.*.name' => ['nullable', 'string', 'max:255'],
+            'emergency_contacts.*.number' => [
+                'nullable',
+                'regex:/^\+?[0-9]+$/',
+                'max:30',
+            ],
+            'emergency_contacts.*.relation' => ['nullable', 'string', 'max:100'],
+
+            // Native Contacts
+            'native_contacts' => ['nullable', 'array'],
+            'native_contacts.*' => ['array'],
+            'native_contacts.*.name' => ['nullable', 'string', 'max:255'],
+            'native_contacts.*.number' => [
+                'nullable',
+                'regex:/^\+?[0-9]+$/',
+                'max:30',
+            ],
+            'native_contacts.*.relation' => ['nullable', 'string', 'max:100'],
+
+            // Personal Info & Preferences
+            'marital_status' => ['nullable', 'string', 'max:30', \Illuminate\Validation\Rule::in(array_keys(config('constants.marital_statuses', [])))],
+            'children_count' => ['nullable', 'integer', 'min:0', 'max:10', \Illuminate\Validation\Rule::in(array_keys(config('constants.children_counts', [])))],
+            'favorite_color' => ['nullable', 'string', 'max:30', \Illuminate\Validation\Rule::in(array_keys(config('constants.favorite_colors', [])))],
+
+            // Sizes
+            'shirt_sizes' => ['nullable', 'array'],
+            'shirt_sizes.casual' => ['nullable', 'string', \Illuminate\Validation\Rule::in(array_keys(config('constants.shirt_sizes', [])))],
+            'shirt_sizes.formal' => ['nullable', 'string', \Illuminate\Validation\Rule::in(array_keys(config('constants.shirt_sizes', [])))],
+
+            'shoe_sizes' => ['nullable', 'array'],
+            'shoe_sizes.casual' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(config('constants.shoe_sizes', [])))],
+            'shoe_sizes.formal' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(config('constants.shoe_sizes', [])))],
+
+            // Backward compatibility
+            'contact_person' => ['nullable', 'string', 'max:255'],
+            'contact_person_number' => ['nullable', 'string', 'max:20'],
+        ];
+
+        $messages = [
+            'emergency_contacts.*.number.regex' => 'The emergency contact number format is invalid.',
+            'native_contacts.*.number.regex' => 'The native contact number format is invalid.',
+            'shirt_sizes.casual.in' => 'The selected casual shirt size is invalid.',
+            'shirt_sizes.formal.in' => 'The selected formal shirt size is invalid.',
+            'shoe_sizes.casual.in' => 'The selected casual shoe size is invalid.',
+            'shoe_sizes.formal.in' => 'The selected formal shoe size is invalid.',
+        ];
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules, $messages);
+
+        $validator->after(function ($validator) use ($request) {
+            foreach (['emergency_contacts', 'native_contacts'] as $contactField) {
+                $contacts = $request->input($contactField);
+                if (is_array($contacts)) {
+                    $allowedKeys = ['name', 'number', 'relation'];
+                    foreach ($contacts as $index => $contact) {
+                        if (is_array($contact)) {
+                            $unexpected = array_diff(array_keys($contact), $allowedKeys);
+                            if (!empty($unexpected)) {
+                                $validator->errors()->add("{$contactField}.{$index}", 'Unexpected fields: ' . implode(', ', $unexpected));
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (['shirt_sizes', 'shoe_sizes'] as $sizeField) {
+                $sizes = $request->input($sizeField);
+                if (is_array($sizes)) {
+                    $allowedKeys = ['casual', 'formal'];
+                    $unexpected = array_diff(array_keys($sizes), $allowedKeys);
+                    if (!empty($unexpected)) {
+                        $validator->errors()->add($sizeField, 'Unexpected fields: ' . implode(', ', $unexpected));
+                    }
+                }
+            }
+        });
+
+        $validated = $validator->validate();
 
         $service->updateModalUser($user, $validated);
 

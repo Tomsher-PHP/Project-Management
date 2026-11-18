@@ -406,69 +406,363 @@
         </div>
     </div>
 
-    <!-- ================= EMERGENCY CONTACT ================= -->
-    <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
-            Emergency Contact
-        </h3>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            <!-- Contact Person Name -->
-            <div class="flex flex-col gap-2">
-                <label for="contact_person_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Contact Person Name
-                </label>
-
-                <input type="text" name="contact_person" id="contact_person_name" value="{{ old('contact_person', $user->details->contact_person ?? '') }}" placeholder="Enter emergency contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('contact_person') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
-
-                @error('contact_person')
-                    <p class="mt-2 text-sm text-error-300">
-                        {{ $message }}
-                    </p>
-                @enderror
-            </div>
-
-            <!-- Contact Person Number -->
-            <div class="flex flex-col gap-2">
-                <label for="contact_person_number" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Contact Person Number
-                </label>
-
-                <input type="text" name="contact_person_number" id="contact_person_number" value="{{ old('contact_person_number', $user->details->contact_person_number ?? '') }}" placeholder="Enter emergency contact number" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('contact_person_number') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
-
-                @error('contact_person_number')
-                    <p class="mt-2 text-sm text-error-300">
-                        {{ $message }}
-                    </p>
-                @enderror
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ================= ADDRESS ================= -->
-    <div class="mt-5">
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
+    <!-- ================= ADDRESS INFORMATION ================= -->
+    <div class="mt-8">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
             Address Information
         </h3>
 
-        <div class="grid grid-cols-1 gap-6">
-            <!-- Address -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Residence Address -->
             <div class="flex flex-col gap-2">
                 <label for="address" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Address
+                    Residence Address
                 </label>
 
-                <textarea name="address" id="address" rows="3" placeholder="Enter full address" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('address') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">{{ old('address', $user->details->address ?? '') }}</textarea>
+                <textarea name="address" id="address" rows="3" placeholder="Enter residence address" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error('address') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">{{ old('address', $user->details->address ?? '') }}</textarea>
 
                 @error('address')
                     <p class="mt-2 text-sm text-error-300">
                         {{ $message }}
                     </p>
+                @enderror
+            </div>
+
+            <!-- Native Address -->
+            <div class="flex flex-col gap-2">
+                <label for="native_address" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Native Address
+                </label>
+
+                <textarea name="native_address" id="native_address" rows="3" placeholder="Enter native address" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error('native_address') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">{{ old('native_address', $user->details->native_address ?? '') }}</textarea>
+
+                @error('native_address')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= EMERGENCY CONTACT INFORMATION ================= -->
+    <div class="mt-8">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+            Emergency Contact Information
+        </h3>
+
+        @php
+            $emergencyContacts = old('emergency_contacts');
+            if ($emergencyContacts === null) {
+                $emergencyContacts = $user->details?->emergency_contacts ?? [];
+                if (empty($emergencyContacts) && (!empty($user->details?->contact_person) || !empty($user->details?->contact_person_number))) {
+                    $emergencyContacts = [
+                        [
+                            'name' => $user->details->contact_person ?? '',
+                            'number' => $user->details->contact_person_number ?? '',
+                            'relation' => '',
+                        ],
+                    ];
+                }
+            }
+            if (empty($emergencyContacts)) {
+                $emergencyContacts = [['name' => '', 'number' => '', 'relation' => '']];
+            }
+        @endphp
+
+        <div id="emergency-contacts-container" class="space-y-4">
+            @foreach ($emergencyContacts as $index => $contact)
+                <div class="contact-row border border-gray-200 dark:border-darkblack-400 rounded-lg p-4 bg-gray-50/50 dark:bg-darkblack-500/50" data-index="{{ $index }}">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                        <div class="col-contact-name md:col-span-4 flex flex-col gap-2">
+                            <label for="emergency_contact_name_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                Contact Name
+                            </label>
+                            <input type="text" id="emergency_contact_name_{{ $index }}" name="emergency_contacts[{{ $index }}][name]" value="{{ $contact['name'] ?? '' }}" placeholder="Enter contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.name") border-red-500 @enderror">
+                            @error("emergency_contacts.{$index}.name")
+                                <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="col-contact-number md:col-span-4 flex flex-col gap-2">
+                            <label for="emergency_contact_number_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                Contact Number
+                            </label>
+                            <input type="text" id="emergency_contact_number_{{ $index }}" name="emergency_contacts[{{ $index }}][number]" value="{{ $contact['number'] ?? '' }}" placeholder="e.g. +971501234567" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.number") border-red-500 @enderror">
+                            @error("emergency_contacts.{$index}.number")
+                                <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="col-contact-relation md:col-span-3 flex flex-col gap-2">
+                            <label for="emergency_contact_relation_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                Relation
+                            </label>
+                            <input type="text" id="emergency_contact_relation_{{ $index }}" name="emergency_contacts[{{ $index }}][relation]" value="{{ $contact['relation'] ?? '' }}" placeholder="e.g. Father, Spouse" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("emergency_contacts.{$index}.relation") border-red-500 @enderror">
+                            @error("emergency_contacts.{$index}.relation")
+                                <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="md:col-span-1 flex items-center justify-end md:justify-center pt-8">
+                            <button type="button" class="btn-remove-contact inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition dark:bg-darkblack-600 dark:border-red-900/50" title="Remove Contact" aria-label="Remove contact">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mt-4 flex justify-start">
+            <button type="button" id="btn-add-emergency-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-300 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Emergency Contact</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= NATIVE CONTACT INFORMATION ================= -->
+    <div class="mt-8">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+            Native Contact Information
+        </h3>
+
+        @php
+            $nativeContacts = old('native_contacts');
+            if ($nativeContacts === null) {
+                $nativeContacts = $user->details?->native_contacts ?? [];
+            }
+            if (empty($nativeContacts)) {
+                $nativeContacts = [['name' => '', 'number' => '', 'relation' => '']];
+            }
+        @endphp
+
+        <div id="native-contacts-container" class="space-y-4">
+            @foreach ($nativeContacts as $index => $contact)
+                <div class="contact-row border border-gray-200 dark:border-darkblack-400 rounded-lg p-4 bg-gray-50/50 dark:bg-darkblack-500/50" data-index="{{ $index }}">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                        <div class="col-contact-name md:col-span-4 flex flex-col gap-2">
+                            <label for="native_contact_name_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                Contact Name
+                            </label>
+                            <input type="text" id="native_contact_name_{{ $index }}" name="native_contacts[{{ $index }}][name]" value="{{ $contact['name'] ?? '' }}" placeholder="Enter contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.name") border-red-500 @enderror">
+                            @error("native_contacts.{$index}.name")
+                                <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="col-contact-number md:col-span-4 flex flex-col gap-2">
+                            <label for="native_contact_number_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                Contact Number
+                            </label>
+                            <input type="text" id="native_contact_number_{{ $index }}" name="native_contacts[{{ $index }}][number]" value="{{ $contact['number'] ?? '' }}" placeholder="e.g. +919876543210" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.number") border-red-500 @enderror">
+                            @error("native_contacts.{$index}.number")
+                                <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="col-contact-relation md:col-span-3 flex flex-col gap-2">
+                            <label for="native_contact_relation_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                Relation
+                            </label>
+                            <input type="text" id="native_contact_relation_{{ $index }}" name="native_contacts[{{ $index }}][relation]" value="{{ $contact['relation'] ?? '' }}" placeholder="e.g. Brother, Friend" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400 @error("native_contacts.{$index}.relation") border-red-500 @enderror">
+                            @error("native_contacts.{$index}.relation")
+                                <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="md:col-span-1 flex items-center justify-end md:justify-center pt-8">
+                            <button type="button" class="btn-remove-contact inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition dark:bg-darkblack-600 dark:border-red-900/50" title="Remove Contact" aria-label="Remove contact">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mt-4 flex justify-start">
+            <button type="button" id="btn-add-native-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-300 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Native Contact</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= PERSONAL INFORMATION & PREFERENCES ================= -->
+    <div class="mt-8">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+            Personal Information & Preferences
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Marital Status -->
+            <div class="flex flex-col gap-2">
+                <label for="marital_status" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Marital Status
+                </label>
+
+                <select name="marital_status" id="marital_status" class="tom-select w-full" data-sort="0">
+                    <option value="">Select Marital Status</option>
+                    @php
+                        $selectedMaritalStatus = old('marital_status', $user->details->marital_status ?? '');
+                    @endphp
+                    @foreach (config('constants.marital_statuses', []) as $key => $label)
+                        <option value="{{ $key }}" {{ (string) $selectedMaritalStatus === (string) $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('marital_status')
+                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Children Count -->
+            <div id="children-count-wrapper" class="flex flex-col gap-2 {{ (string) $selectedMaritalStatus === 'Married' ? '' : 'hidden' }}">
+                <label for="children_count" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Children Count
+                </label>
+
+                <select name="children_count" id="children_count" class="tom-select w-full" data-sort="0">
+                    <option value="">Select Children Count</option>
+                    @php
+                        $selectedChildrenCount = old('children_count', isset($user->details->children_count) ? (string) $user->details->children_count : '');
+                    @endphp
+                    @foreach (config('constants.children_counts', []) as $key => $label)
+                        <option value="{{ $key }}" {{ $selectedChildrenCount !== '' && $selectedChildrenCount !== null && (string) $selectedChildrenCount === (string) $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('children_count')
+                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Favorite Color -->
+            <div class="flex flex-col gap-2">
+                <label for="favorite_color" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Favorite Color
+                </label>
+
+                <select name="favorite_color" id="favorite_color" class="tom-select w-full" data-sort="0">
+                    <option value="">Select Favorite Color</option>
+                    @php
+                        $selectedFavoriteColor = old('favorite_color', $user->details->favorite_color ?? '');
+                    @endphp
+                    @foreach (config('constants.favorite_colors', []) as $key => $label)
+                        <option value="{{ $key }}" {{ (string) $selectedFavoriteColor === (string) $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('favorite_color')
+                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Casual Shirt Size -->
+            <div class="flex flex-col gap-2">
+                <label for="shirt_size_casual" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Casual Shirt Size
+                </label>
+
+                <select name="shirt_sizes[casual]" id="shirt_size_casual" class="tom-select w-full" data-sort="0">
+                    <option value="">Select Casual Shirt Size</option>
+                    @php
+                        $selectedCasualShirt = old('shirt_sizes.casual', $user->details->shirt_sizes['casual'] ?? '');
+                    @endphp
+                    @foreach (config('constants.shirt_sizes', []) as $key => $label)
+                        <option value="{{ $key }}" {{ (string) $selectedCasualShirt === (string) $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('shirt_sizes.casual')
+                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Formal Shirt Size -->
+            <div class="flex flex-col gap-2">
+                <label for="shirt_size_formal" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Formal Shirt Size
+                </label>
+
+                <select name="shirt_sizes[formal]" id="shirt_size_formal" class="tom-select w-full" data-sort="0">
+                    <option value="">Select Formal Shirt Size</option>
+                    @php
+                        $selectedFormalShirt = old('shirt_sizes.formal', $user->details->shirt_sizes['formal'] ?? '');
+                    @endphp
+                    @foreach (config('constants.shirt_sizes', []) as $key => $label)
+                        <option value="{{ $key }}" {{ (string) $selectedFormalShirt === (string) $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('shirt_sizes.formal')
+                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Casual Shoe Size -->
+            <div class="flex flex-col gap-2">
+                <label for="shoe_size_casual" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Casual Shoe Size
+                </label>
+
+                <select name="shoe_sizes[casual]" id="shoe_size_casual" class="tom-select w-full" data-sort="0">
+                    <option value="">Select Casual Shoe Size</option>
+                    @php
+                        $selectedCasualShoe = old('shoe_sizes.casual', $user->details->shoe_sizes['casual'] ?? '');
+                    @endphp
+                    @foreach (config('constants.shoe_sizes', []) as $key => $label)
+                        <option value="{{ $key }}" {{ (string) $selectedCasualShoe === (string) $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('shoe_sizes.casual')
+                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Formal Shoe Size -->
+            <div class="flex flex-col gap-2">
+                <label for="shoe_size_formal" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Formal Shoe Size
+                </label>
+
+                <select name="shoe_sizes[formal]" id="shoe_size_formal" class="tom-select w-full" data-sort="0">
+                    <option value="">Select Formal Shoe Size</option>
+                    @php
+                        $selectedFormalShoe = old('shoe_sizes.formal', $user->details->shoe_sizes['formal'] ?? '');
+                    @endphp
+                    @foreach (config('constants.shoe_sizes', []) as $key => $label)
+                        <option value="{{ $key }}" {{ (string) $selectedFormalShoe === (string) $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('shoe_sizes.formal')
+                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
         </div>
@@ -608,6 +902,177 @@
                     input.type = input.type === 'password' ? 'text' : 'password';
                     updatePasswordToggle(button, input);
                 });
+
+                // Contact Repeater Handler
+                function initContactRepeater({
+                    containerId,
+                    addButtonId,
+                    fieldName,
+                    idPrefix,
+                    numberPlaceholder
+                }) {
+                    const container = document.getElementById(containerId);
+                    const addButton = document.getElementById(addButtonId);
+                    if (!container || !addButton) return;
+
+                    function reindex() {
+                        const rows = container.querySelectorAll('.contact-row');
+                        rows.forEach((row, idx) => {
+                            row.dataset.index = idx;
+
+                            const nameLabel = row.querySelector('.col-contact-name label');
+                            const nameInput = row.querySelector('.col-contact-name input');
+                            if (nameLabel && nameInput) {
+                                const id = `${idPrefix}_name_${idx}`;
+                                nameLabel.setAttribute('for', id);
+                                nameInput.id = id;
+                                nameInput.name = `${fieldName}[${idx}][name]`;
+                            }
+
+                            const numLabel = row.querySelector('.col-contact-number label');
+                            const numInput = row.querySelector('.col-contact-number input');
+                            if (numLabel && numInput) {
+                                const id = `${idPrefix}_number_${idx}`;
+                                numLabel.setAttribute('for', id);
+                                numInput.id = id;
+                                numInput.name = `${fieldName}[${idx}][number]`;
+                            }
+
+                            const relLabel = row.querySelector('.col-contact-relation label');
+                            const relInput = row.querySelector('.col-contact-relation input');
+                            if (relLabel && relInput) {
+                                const id = `${idPrefix}_relation_${idx}`;
+                                relLabel.setAttribute('for', id);
+                                relInput.id = id;
+                                relInput.name = `${fieldName}[${idx}][relation]`;
+                            }
+                        });
+                    }
+
+                    function createRow(index) {
+                        const row = document.createElement('div');
+                        row.className = 'contact-row border border-gray-200 dark:border-darkblack-400 rounded-lg p-4 bg-gray-50/50 dark:bg-darkblack-500/50';
+                        row.dataset.index = index;
+                        row.innerHTML = `
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                                <div class="col-contact-name md:col-span-4 flex flex-col gap-2">
+                                    <label for="${idPrefix}_name_${index}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        Contact Name
+                                    </label>
+                                    <input type="text"
+                                           id="${idPrefix}_name_${index}"
+                                           name="${fieldName}[${index}][name]"
+                                           value=""
+                                           placeholder="Enter contact name"
+                                           class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                                </div>
+
+                                <div class="col-contact-number md:col-span-4 flex flex-col gap-2">
+                                    <label for="${idPrefix}_number_${index}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        Contact Number
+                                    </label>
+                                    <input type="text"
+                                           id="${idPrefix}_number_${index}"
+                                           name="${fieldName}[${index}][number]"
+                                           value=""
+                                           placeholder="${numberPlaceholder || '+971501234567'}"
+                                           class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                                </div>
+
+                                <div class="col-contact-relation md:col-span-3 flex flex-col gap-2">
+                                    <label for="${idPrefix}_relation_${index}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        Relation
+                                    </label>
+                                    <input type="text"
+                                           id="${idPrefix}_relation_${index}"
+                                           name="${fieldName}[${index}][relation]"
+                                           value=""
+                                           placeholder="e.g. Father, Brother"
+                                           class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                                </div>
+
+                                <div class="md:col-span-1 flex items-center justify-end md:justify-center pt-8">
+                                    <button type="button" class="btn-remove-contact inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition dark:bg-darkblack-600 dark:border-red-900/50" title="Remove Contact" aria-label="Remove contact">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        return row;
+                    }
+
+                    addButton.addEventListener('click', () => {
+                        const rows = container.querySelectorAll('.contact-row');
+                        const nextIndex = rows.length;
+                        const newRow = createRow(nextIndex);
+                        container.appendChild(newRow);
+                        reindex();
+                    });
+
+                    container.addEventListener('click', (e) => {
+                        const removeBtn = e.target.closest('.btn-remove-contact');
+                        if (!removeBtn) return;
+                        const row = removeBtn.closest('.contact-row');
+                        if (!row) return;
+
+                        const rows = container.querySelectorAll('.contact-row');
+                        if (rows.length <= 1) {
+                            row.querySelectorAll('input').forEach(input => input.value = '');
+                        } else {
+                            row.remove();
+                            reindex();
+                        }
+                    });
+                }
+
+                // Initialize repeaters
+                initContactRepeater({
+                    containerId: 'emergency-contacts-container',
+                    addButtonId: 'btn-add-emergency-contact',
+                    fieldName: 'emergency_contacts',
+                    idPrefix: 'emergency_contact',
+                    numberPlaceholder: '+971501234567',
+                });
+
+                initContactRepeater({
+                    containerId: 'native-contacts-container',
+                    addButtonId: 'btn-add-native-contact',
+                    fieldName: 'native_contacts',
+                    idPrefix: 'native_contact',
+                    numberPlaceholder: '+919876543210',
+                });
+
+                // Children Count Conditional Visibility
+                const maritalStatusSelect = document.getElementById('marital_status');
+                const childrenCountWrapper = document.getElementById('children-count-wrapper');
+                const childrenCountSelect = document.getElementById('children_count');
+
+                function syncChildrenCountVisibility() {
+                    if (!maritalStatusSelect || !childrenCountWrapper) return;
+                    const isMarried = maritalStatusSelect.value === 'Married';
+                    if (isMarried) {
+                        childrenCountWrapper.classList.remove('hidden');
+                    } else {
+                        childrenCountWrapper.classList.add('hidden');
+                        if (childrenCountSelect) {
+                            if (childrenCountSelect.tomselect) {
+                                childrenCountSelect.tomselect.clear();
+                            } else {
+                                childrenCountSelect.value = '';
+                            }
+                        }
+                    }
+                }
+
+                if (maritalStatusSelect) {
+                    maritalStatusSelect.addEventListener('change', syncChildrenCountVisibility);
+                    if (maritalStatusSelect.tomselect) {
+                        maritalStatusSelect.tomselect.on('change', syncChildrenCountVisibility);
+                    }
+                    syncChildrenCountVisibility();
+                }
             });
         </script>
     @endpush

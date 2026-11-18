@@ -18,6 +18,8 @@
         </div>
 
         @php
+            session(['tasks_return_url' => url()->full()]);
+
             $typeOptions = collect($taskTypeOptions)->map(
                 fn($type) => (object) [
                     'id' => $type->id,
