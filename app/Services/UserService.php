@@ -64,11 +64,8 @@ class UserService
             }
 
             // Create user details
-            $user->details()->create(
-                collect($data)
-                    ->only((new UserDetail())->getFillable())
-                    ->toArray()
-            );
+            $detailsData = $this->prepareUserDetailsData($data);
+            $user->details()->create($detailsData);
 
             // Handle profile image upload
             if (!empty($data['profile_image'])) {
@@ -196,9 +193,7 @@ class UserService
             }
 
             // Update or create user details
-            $detailsData = collect($data)
-                ->only((new UserDetail())->getFillable())
-                ->toArray();
+            $detailsData = $this->prepareUserDetailsData($data);
 
             $user->details()->updateOrCreate([], $detailsData);
 
@@ -322,7 +317,7 @@ class UserService
      * @param User $authUser The user for whom to retrieve accessible users.
      * @param array $excludeIds Optional array of user IDs to exclude from the results.
      * @param array $includeIds Optional array of user IDs to include in the results (even if not accessible).
-     * @return \Illuminate\Support\Collection Collection of User models.
+     * @return \Illuminate\Support\Collection of User models.
      */
     public function getAccessibleUsers(User $authUser, array $excludeIds = [], array $includeIds = [])
     {
@@ -465,6 +460,130 @@ class UserService
 
             return $user->load(['details', 'primaryAttachment']);
         });
+    }
+
+    /**
+     * Prepare and sanitize user details data for storage.
+     */
+    public function prepareUserDetailsData(array $data): array
+    {
+        $fillable = (new UserDetail())->getFillable();
+        $detailsData = collect($data)->only($fillable)->toArray();
+
+        // Process emergency contacts
+        if (array_key_exists('emergency_contacts', $data)) {
+            $contacts = [];
+            if (is_array($data['emergency_contacts'])) {
+                foreach ($data['emergency_contacts'] as $contact) {
+                    if (!is_array($contact)) {
+                        continue;
+                    }
+                    $name = isset($contact['name']) && trim((string)$contact['name']) !== '' ? trim((string)$contact['name']) : null;
+                    $number = isset($contact['number']) && trim((string)$contact['number']) !== '' ? trim((string)$contact['number']) : null;
+                    $relation = isset($contact['relation']) && trim((string)$contact['relation']) !== '' ? trim((string)$contact['relation']) : null;
+
+                    if ($name !== null || $number !== null || $relation !== null) {
+                        $contacts[] = [
+                            'name' => $name,
+                            'number' => $number,
+                            'relation' => $relation,
+                        ];
+                    }
+                }
+            }
+
+            $detailsData['emergency_contacts'] = !empty($contacts) ? array_values($contacts) : null;
+
+            // Preserve backward compatibility with contact_person and contact_person_number
+            if (!empty($contacts)) {
+                $detailsData['contact_person'] = $contacts[0]['name'] ?? null;
+                $detailsData['contact_person_number'] = $contacts[0]['number'] ?? null;
+            } else {
+                $detailsData['contact_person'] = null;
+                $detailsData['contact_person_number'] = null;
+            }
+        }
+
+        // Process native contacts
+        if (array_key_exists('native_contacts', $data)) {
+            $contacts = [];
+            if (is_array($data['native_contacts'])) {
+                foreach ($data['native_contacts'] as $contact) {
+                    if (!is_array($contact)) {
+                        continue;
+                    }
+                    $name = isset($contact['name']) && trim((string)$contact['name']) !== '' ? trim((string)$contact['name']) : null;
+                    $number = isset($contact['number']) && trim((string)$contact['number']) !== '' ? trim((string)$contact['number']) : null;
+                    $relation = isset($contact['relation']) && trim((string)$contact['relation']) !== '' ? trim((string)$contact['relation']) : null;
+
+                    if ($name !== null || $number !== null || $relation !== null) {
+                        $contacts[] = [
+                            'name' => $name,
+                            'number' => $number,
+                            'relation' => $relation,
+                        ];
+                    }
+                }
+            }
+
+            $detailsData['native_contacts'] = !empty($contacts) ? array_values($contacts) : null;
+        }
+
+        // Process shirt sizes
+        if (array_key_exists('shirt_sizes', $data)) {
+            if (is_array($data['shirt_sizes'])) {
+                $casual = isset($data['shirt_sizes']['casual']) && trim((string)$data['shirt_sizes']['casual']) !== '' ? trim((string)$data['shirt_sizes']['casual']) : null;
+                $formal = isset($data['shirt_sizes']['formal']) && trim((string)$data['shirt_sizes']['formal']) !== '' ? trim((string)$data['shirt_sizes']['formal']) : null;
+
+                if ($casual !== null || $formal !== null) {
+                    $detailsData['shirt_sizes'] = [
+                        'casual' => $casual,
+                        'formal' => $formal,
+                    ];
+                } else {
+                    $detailsData['shirt_sizes'] = null;
+                }
+            } else {
+                $detailsData['shirt_sizes'] = null;
+            }
+        }
+
+        // Process shoe sizes
+        if (array_key_exists('shoe_sizes', $data)) {
+            if (is_array($data['shoe_sizes'])) {
+                $casual = isset($data['shoe_sizes']['casual']) && trim((string)$data['shoe_sizes']['casual']) !== '' ? trim((string)$data['shoe_sizes']['casual']) : null;
+                $formal = isset($data['shoe_sizes']['formal']) && trim((string)$data['shoe_sizes']['formal']) !== '' ? trim((string)$data['shoe_sizes']['formal']) : null;
+
+                if ($casual !== null || $formal !== null) {
+                    $detailsData['shoe_sizes'] = [
+                        'casual' => $casual,
+                        'formal' => $formal,
+                    ];
+                } else {
+                    $detailsData['shoe_sizes'] = null;
+                }
+            } else {
+                $detailsData['shoe_sizes'] = null;
+            }
+        }
+
+        // Enforce Marital Status & Children Count conditional rule
+        if (array_key_exists('marital_status', $data)) {
+            $maritalStatus = isset($data['marital_status']) && trim((string)$data['marital_status']) !== '' ? trim((string)$data['marital_status']) : null;
+            $detailsData['marital_status'] = $maritalStatus;
+
+            if ($maritalStatus !== 'Married') {
+                $detailsData['children_count'] = null;
+            } elseif (array_key_exists('children_count', $data)) {
+                $childrenCount = $data['children_count'];
+                $detailsData['children_count'] = ($childrenCount !== null && $childrenCount !== '') ? (int)$childrenCount : null;
+            }
+        } elseif (array_key_exists('children_count', $data)) {
+            $childrenCount = $data['children_count'];
+            $detailsData['children_count'] = ($childrenCount !== null && $childrenCount !== '') ? (int)$childrenCount : null;
+        }
+
+        return $detailsData;
     }
 
     // Disable dependentcies when user is deleted
