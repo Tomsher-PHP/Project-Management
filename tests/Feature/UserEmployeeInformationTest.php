@@ -468,9 +468,9 @@ class UserEmployeeInformationTest extends TestCase
         $createResponse->assertSee('Residence Address');
         $createResponse->assertSee('Native Address');
         $createResponse->assertSee('Emergency Contact Information');
-        $createResponse->assertSee('+ Add Emergency Contact');
+        $createResponse->assertSee('Add Emergency Contact');
         $createResponse->assertSee('Native Contact Information');
-        $createResponse->assertSee('+ Add Native Contact');
+        $createResponse->assertSee('Add Native Contact');
         $createResponse->assertSee('Personal Information & Preferences', false);
         $createResponse->assertSee('Marital Status');
         $createResponse->assertSee('Children Count');
@@ -571,6 +571,77 @@ class UserEmployeeInformationTest extends TestCase
         $showResponse->assertSee('43');
         $showResponse->assertSee('Formal Shoe Size');
         $showResponse->assertSee('44');
+    }
+
+    public function test_modal_update_saves_employee_information(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Modal User Initial',
+        ]);
+        $user->details()->create([
+            'gender' => 'male',
+        ]);
+
+        $payload = [
+            'name' => 'Modal User Updated',
+            'phone' => '+971501234567',
+            'whatsapp' => '+971501234567',
+            'address' => 'Apartment 502, Marina, Dubai',
+            'native_address' => 'Village 12, Kerala, India',
+            'marital_status' => 'Married',
+            'children_count' => 2,
+            'favorite_color' => 'Red',
+            'shirt_sizes' => [
+                'casual' => 'L',
+                'formal' => 'M',
+            ],
+            'shoe_sizes' => [
+                'casual' => '42',
+                'formal' => '43',
+            ],
+            'emergency_contacts' => [
+                [
+                    'name' => 'Modal Emergency 1',
+                    'number' => '+971509990001',
+                    'relation' => 'Spouse',
+                ],
+            ],
+            'native_contacts' => [
+                [
+                    'name' => 'Modal Native 1',
+                    'number' => '+919998881111',
+                    'relation' => 'Father',
+                ],
+            ],
+        ];
+
+        $response = $this->putJson(route('users.modal.update', $user->id), $payload);
+        $response->assertStatus(200);
+        $response->assertJson([
+            'message' => 'User updated successfully.',
+        ]);
+
+        $user->refresh();
+        $this->assertEquals('Modal User Updated', $user->name);
+
+        $details = $user->details;
+        $this->assertEquals('Apartment 502, Marina, Dubai', $details->address);
+        $this->assertEquals('Village 12, Kerala, India', $details->native_address);
+        $this->assertEquals('Married', $details->marital_status);
+        $this->assertEquals(2, $details->children_count);
+        $this->assertEquals('Red', $details->favorite_color);
+        $this->assertEquals(['casual' => 'L', 'formal' => 'M'], $details->shirt_sizes);
+        $this->assertEquals(['casual' => '42', 'formal' => '43'], $details->shoe_sizes);
+
+        $this->assertCount(1, $details->emergency_contacts);
+        $this->assertEquals('Modal Emergency 1', $details->emergency_contacts[0]['name']);
+        $this->assertEquals('+971509990001', $details->emergency_contacts[0]['number']);
+        $this->assertEquals('Spouse', $details->emergency_contacts[0]['relation']);
+
+        $this->assertCount(1, $details->native_contacts);
+        $this->assertEquals('Modal Native 1', $details->native_contacts[0]['name']);
+        $this->assertEquals('+919998881111', $details->native_contacts[0]['number']);
+        $this->assertEquals('Father', $details->native_contacts[0]['relation']);
     }
 }
 

@@ -65,8 +65,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Normal fields
-            const input = document.querySelector(`[name="${field}"]`);
+            // Normal fields and nested array/object fields
+            let input = form.querySelector(`[name="${field}"]`);
+            if (!input && field.includes('.')) {
+                const parts = field.split('.');
+                const bracketName = parts[0] + parts.slice(1).map(p => `[${p}]`).join('');
+                input = form.querySelector(`[name="${bracketName}"]`);
+            }
 
             if (input) {
                 const wrapper = input.closest('.flex.flex-col') || input.parentElement;

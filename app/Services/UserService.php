@@ -441,32 +441,33 @@ class UserService
                 'name' => $data['name'],
             ]);
 
-            $existingContacts = $user->details?->emergency_contacts ?? [];
-            if (!empty($data['contact_person']) || !empty($data['contact_person_number'])) {
-                if (!empty($existingContacts)) {
-                    $existingContacts[0]['name'] = $data['contact_person'] ?? null;
-                    $existingContacts[0]['number'] = $data['contact_person_number'] ?? null;
+            // Handle legacy contact_person fallback if emergency_contacts is not provided
+            if (!array_key_exists('emergency_contacts', $data) && (array_key_exists('contact_person', $data) || array_key_exists('contact_person_number', $data))) {
+                $existingContacts = $user->details?->emergency_contacts ?? [];
+                if (!empty($data['contact_person']) || !empty($data['contact_person_number'])) {
+                    if (!empty($existingContacts)) {
+                        $existingContacts[0]['name'] = $data['contact_person'] ?? null;
+                        $existingContacts[0]['number'] = $data['contact_person_number'] ?? null;
+                    } else {
+                        $existingContacts = [
+                            [
+                                'name' => $data['contact_person'] ?? null,
+                                'number' => $data['contact_person_number'] ?? null,
+                                'relation' => null,
+                            ],
+                        ];
+                    }
                 } else {
-                    $existingContacts = [
-                        [
-                            'name' => $data['contact_person'] ?? null,
-                            'number' => $data['contact_person_number'] ?? null,
-                            'relation' => null,
-                        ],
-                    ];
+                    $existingContacts = null;
                 }
-            } elseif (array_key_exists('contact_person', $data) && array_key_exists('contact_person_number', $data)) {
-                $existingContacts = null;
+                $data['emergency_contacts'] = $existingContacts;
             }
+
+            $detailsData = $this->prepareUserDetailsData($data);
 
             $user->details()->updateOrCreate(
                 ['user_id' => $user->id],
-                [
-                    'phone' => $data['phone'] ?? null,
-                    'whatsapp' => $data['whatsapp'] ?? null,
-                    'emergency_contacts' => $existingContacts,
-                    'address' => $data['address'] ?? null,
-                ]
+                $detailsData
             );
 
             if (!empty($data['profile_image'])) {
