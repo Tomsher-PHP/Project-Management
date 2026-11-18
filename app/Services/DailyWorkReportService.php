@@ -10,48 +10,76 @@ use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Models\Team;
 use App\Models\User;
-use App\Models\UserShiftAssignment;
+use App\Models\Holiday;
+use App\Models\LeaveRequest;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 class DailyWorkReportService
 {
     /**
-     * Function to generate Individual Employee Report
+     * Generate an individual employee report.
      *
      * @var User $employee
      * @var CarbonInterface $start
      * @var CarbonInterface $end
      * @return array
      */
-    public function generate(User $employee, CarbonInterface $start, CarbonInterface $end): array {
+    public function generate(User $employee, CarbonInterface $start, CarbonInterface $end): array
+    {
         $userId = $employee->id;
-        $reportDate = $start->toDateString();
+        $reportDate = $end->toDateString();
 
         /* Employee Roles */
         $roleNames = $employee->getRoleNames()->implode(', ');
 
         /* Employee Assigned Shift */
-        $shiftAssignment = UserShiftAssignment::query()
-            ->with('shift')
+        $timelineShift = app(UserTimelineService::class)->getAssignedShift(
+            $userId,
+            $reportDate
+        );
+
+        $assignedShift = $timelineShift ? [
+            'name' => $timelineShift['shift_name'] ?? null,
+            'start' => $timelineShift['time_from'] ?? null,
+            'end' => $timelineShift['time_to'] ?? null,
+            'is_weekend' => (bool) ($timelineShift['is_weekend'] ?? false),
+        ] : null;
+
+        /* Employee Attendance */
+        $workspaceHoliday = Holiday::forUserOnDate($employee, $reportDate);
+
+        $workspaceLeave = LeaveRequest::query()
+            ->with('leaveType:id,name')
             ->where('user_id', $userId)
-            ->whereDate('date_from', '<=', $reportDate)
-            ->where(function ($query) use ($reportDate) {
-                $query->whereNull('date_to')
-                    ->orWhereDate('date_to', '>=', $reportDate);
-            })
-            ->orderByDesc('date_from')
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereRaw(
+                'DATE(COALESCE(approved_from_date, requested_from_date)) <= ?',
+                [$reportDate]
+            )
+            ->whereRaw(
+                'DATE(COALESCE(approved_to_date, requested_to_date)) >= ?',
+                [$reportDate]
+            )
             ->first();
 
-        $assignedShift = null;
+        $leaveTypeName = trim($workspaceLeave?->leaveType?->name ?? '');
+        $attendanceStatus = null;
+        $attendanceLabel = null;
 
-        if ($shiftAssignment) {
-            $assignedShift = [
-                'name' => $shiftAssignment->shift_name
-                    ?? $shiftAssignment->shift?->name,
-                'start' => $shiftAssignment->time_from,
-                'end' => $shiftAssignment->time_to,
-            ];
+        if ($workspaceHoliday) {
+            $attendanceStatus = 'holiday';
+            $attendanceLabel = $workspaceHoliday->name;
+        } elseif ($leaveTypeName !== '') {
+            $attendanceStatus = 'leave';
+            $attendanceLabel = 'On ' . $leaveTypeName;
+
+            if (!preg_match('/leave$/i', $leaveTypeName)) {
+                $attendanceLabel .= ' Leave';
+            }
+        } elseif ($assignedShift['is_weekend'] ?? false) {
+            $attendanceStatus = 'day_off';
+            $attendanceLabel = 'Day Off';
         }
 
         /* Currently Assigned Tasks */
@@ -61,6 +89,8 @@ class DailyWorkReportService
                 'project',
                 'status',
                 'developerNotes',
+                'projectMilestone',
+                'projectSprint',
             ])
             ->whereHas('project', function ($query) {
                 $query->whereNull('deleted_at');
@@ -90,6 +120,8 @@ class DailyWorkReportService
                 'project',
                 'status',
                 'developerNotes',
+                'projectMilestone',
+                'projectSprint',
             ])
             ->whereHas('project', function ($query) {
                 $query->whereNull('deleted_at');
@@ -97,8 +129,8 @@ class DailyWorkReportService
             ->get();
 
         /* Workload Counts */
-        // Total Tasks: all currently assigned tasks due today or earlier,
-        // regardless of their current status (including completed tasks).
+
+        // Total: currently assigned, due today or earlier, and not completed.
         $totalDueTasks = $currentTasks->filter(
             function ($task) use ($reportDate) {
                 $dueDate = $task->due_date_time;
@@ -109,7 +141,7 @@ class DailyWorkReportService
             }
         );
 
-        // Pending: tasks still in To Do/Pending status and due today or earlier.
+        // Pending: tasks in pending status and due today or earlier.
         $pendingTasks = $currentTasks->filter(
             function ($task) use ($reportDate) {
                 $dueDate = $task->due_date_time;
@@ -148,29 +180,16 @@ class DailyWorkReportService
             ->where('added_by', $userId)
             ->whereBetween('added_at', [$start, $end])
             ->whereHas('task', function ($query) {
-                $query->whereNull('deleted_at');
+                $query->whereNull('deleted_at')
+                    ->whereHas('project', function ($projectQuery) {
+                        $projectQuery->whereNull('deleted_at');
+                    });
             })
             ->get();
 
         /* Employee's Completed Task Activity */
         $completedTaskIds = $statusChanges
-            ->filter(
-                fn ($history) => $history->status?->is_completed
-            )
-            ->pluck('task_id')
-            ->unique()
-            ->values();
-
-        /* Completed Tasks With Time Logged */
-        $completedLoggedTaskIds = TaskStatusHistory::query()
-            ->whereIn('task_id', $loggedTaskIds)
-            ->whereBetween('added_at', [$start, $end])
-            ->whereHas('status', function ($query) {
-                $query->where('is_completed', true);
-            })
-            ->whereHas('task', function ($query) {
-                $query->whereNull('deleted_at');
-            })
+            ->filter(fn ($history) => $history->status?->is_completed)
             ->pluck('task_id')
             ->unique()
             ->values();
@@ -180,6 +199,12 @@ class DailyWorkReportService
             ->with(['task.project'])
             ->where('user_id', $userId)
             ->whereBetween('created_at', [$start, $end])
+            ->whereHas('task', function ($query) {
+                $query->whereNull('deleted_at')
+                    ->whereHas('project', function ($projectQuery) {
+                        $projectQuery->whereNull('deleted_at');
+                    });
+            })
             ->get();
 
         /* Developer Notes During Reporting Period */
@@ -187,25 +212,39 @@ class DailyWorkReportService
             ->with(['task.project'])
             ->where('created_by', $userId)
             ->whereBetween('updated_at', [$start, $end])
+            ->whereHas('task', function ($query) {
+                $query->whereNull('deleted_at')
+                    ->whereHas('project', function ($projectQuery) {
+                        $projectQuery->whereNull('deleted_at');
+                    });
+            })
             ->get();
 
         /* New Task Assignments */
         $newAssignments = $employee->taskAssignmentLogs()
             ->with(['task.project'])
             ->whereBetween('assigned_to', [$start, $end])
+            ->whereHas('task', function ($query) {
+                $query->whereNull('deleted_at')
+                    ->whereHas('project', function ($projectQuery) {
+                        $projectQuery->whereNull('deleted_at');
+                    });
+            })
             ->get();
 
+        /* Total Logged Time */
         $totalLoggedSeconds = (int) $timeLogs->sum(
             fn ($log) => (int) ($log->duration_seconds ?? 0)
         );
 
+        /* Upcoming Tasks */
         $upcomingTasks = $currentTasks->filter(
             function ($task) use ($reportDate) {
                 $dueDate = $task->due_date_time;
 
-                return $task->status?->type === 'pending'
+                return $task->status?->type === TaskStatus::TYPE_PENDING
                     && (
-                        !$dueDate
+                        ! $dueDate
                         || $dueDate->toDateString() > $reportDate
                     );
             }
@@ -235,29 +274,36 @@ class DailyWorkReportService
 
             'shift' => $assignedShift,
 
-            /* Workload Overview */
+            'attendance' => [
+                'status' => $attendanceLabel,
+                'type' => $attendanceStatus,
+                'label' => $attendanceLabel,
+            ],
 
+            /* Workload Overview */
             'current_workload' => [
                 'total' => $totalDueTasks->count(),
-                'completed' => $completedLoggedTaskIds->count(),
+                'completed' => $completedTaskIds->count(),
                 'in_progress' => $inProgressTasks->count(),
                 'pending' => $pendingTasks->count(),
                 'overdue' => $overdueTasks->count(),
+
                 'tasks' => $loggedTasks->map(
                     fn ($task) => $this->taskSummary($task)
                 )->values()->all(),
+
                 'pending_tasks' => $pendingTasks->map(
                     fn ($task) => $this->taskSummary($task)
                 )->values()->all(),
 
                 'upcoming' => $upcomingTasks->count(),
+
                 'upcoming_tasks' => $upcomingTasks->map(
                     fn ($task) => $this->taskSummary($task)
                 )->values()->all(),
             ],
 
             /* Daily Activity */
-
             'daily_activity' => [
                 'completed_task_ids' => $completedTaskIds->all(),
 
@@ -290,9 +336,9 @@ class DailyWorkReportService
                     return [
                         'task_name' => $log->task?->name,
                         'project_name' => $log->task?->project?->name,
-                        'started_at' => $log->started_at,
-                        'ended_at' => $log->ended_at,
-                        'duration_seconds' => (int) ($log->duration_seconds ?? 0),
+                        'started_at' => $log->report_started_at,
+                        'ended_at' => $log->report_ended_at,
+                        'duration_seconds' => (int) $log->report_duration_seconds,
                         'note' => $log->note,
                     ];
                 })->values()->all(),
@@ -321,8 +367,7 @@ class DailyWorkReportService
     }
 
     /**
-     *
-     * Task Summary
+     * Generate a task summary.
      *
      * @var Task $task
      * @return array
@@ -360,11 +405,13 @@ class DailyWorkReportService
             'id' => $task->id,
             'name' => $task->name,
             'code' => $task->code,
+
             // Links
             'url' => route('tasks.edit', $task->id),
             'project_url' => $task->project_id
                 ? route('projects.edit', $task->project_id)
                 : null,
+
             'project' => $task->project?->name,
             'milestone' => $task->projectMilestone?->name,
             'sprints' => $task->projectSprint?->name ?? '-',
@@ -380,15 +427,18 @@ class DailyWorkReportService
     }
 
     /**
+     * Generate a consolidated team-wise report.
      *
-     * Consolidated Team-wise Report
      * The employees collection must be supplied by the existing recipient
-     * reporting-hierarchy logic.
-     * This method does not expand the reporting scope by adding every
-     * user belonging to the same team.
+     * reporting-hierarchy logic. This method does not expand the reporting
+     * scope by adding every user belonging to the same team.
      */
-    public function generateConsolidated(User $reportOwner, Collection $employees, CarbonInterface $start, CarbonInterface $end): array {
-
+    public function generateConsolidated(
+        User $reportOwner,
+        Collection $employees,
+        CarbonInterface $start,
+        CarbonInterface $end
+    ): array {
         /* Normalize Employees */
         $employees = $employees
             ->filter(fn ($employee) => $employee instanceof User)
@@ -399,7 +449,6 @@ class DailyWorkReportService
         /* Generate Individual Reports */
         $employeeReportsById = $employees->mapWithKeys(
             function (User $employee) use ($start, $end) {
-
                 $report = $this->generate($employee, $start, $end);
 
                 return [$employee->id => $report];
@@ -407,7 +456,7 @@ class DailyWorkReportService
         );
 
         /**
-         * Retrieve Team Details
+         * Retrieve team details.
          *
          * Load all users belonging to teams that contain at least one
          * employee in this report. This lets us identify the team leader
@@ -434,12 +483,10 @@ class DailyWorkReportService
         }
 
         /* Build User Team Details */
-
         $teamDetailsByUser = [];
 
         foreach ($teams as $team) {
             foreach ($team->users as $teamUser) {
-
                 $teamRole = $teamUser->pivot->team_role ?? null;
 
                 $teamDetailsByUser[$teamUser->id][] = [
@@ -454,15 +501,14 @@ class DailyWorkReportService
         }
 
         /* Attach Team Details to Each Employee Report */
-
         foreach ($employeeReportsById as $employeeId => $report) {
             $report['employee']['teams'] =
                 $teamDetailsByUser[$employeeId] ?? [];
+
             $employeeReportsById->put($employeeId, $report);
         }
 
         /* Build Team-wise Report Groups */
-
         $teamGroups = [];
         $assignedEmployeeIds = [];
 
@@ -475,9 +521,9 @@ class DailyWorkReportService
                 $teamRole = $teamUser->pivot->team_role ?? null;
 
                 /* Team Leader */
-
                 if ($teamRole === 'team_leader') {
                     $leaderReport = $employeeReportsById->get($teamUser->id);
+
                     $leader = [
                         'id' => $teamUser->id,
                         'name' => $teamUser->name,
@@ -500,7 +546,6 @@ class DailyWorkReportService
                 }
 
                 /* Team Members */
-
                 $memberReport = $employeeReportsById->get($teamUser->id);
 
                 if ($memberReport === null) {
@@ -513,8 +558,7 @@ class DailyWorkReportService
                 $teamReportCount++;
             }
 
-            // Skip Teams Without Any Reports
-
+            // Skip teams without any reports.
             if ($teamReportCount === 0) {
                 continue;
             }
@@ -528,8 +572,9 @@ class DailyWorkReportService
             ];
         }
 
-        //Employees Without a Team
+        /* Employees Without a Team */
         $assignedEmployeeIds = array_unique($assignedEmployeeIds);
+
         $noTeamEmployees = $employeeReportsById
             ->reject(function ($report, $employeeId) use ($assignedEmployeeIds) {
                 return in_array($employeeId, $assignedEmployeeIds);
@@ -552,8 +597,7 @@ class DailyWorkReportService
             ];
         }
 
-        // Consolidated Report
-
+        /* Consolidated Report */
         return [
             'report_owner' => [
                 'id' => $reportOwner->id,
@@ -578,16 +622,20 @@ class DailyWorkReportService
     }
 
     /**
-     * Get the task count URLs for the given employee and date range.
+     * Get task count URLs for the given employee and date range.
      *
-     * @var User  $employee
-     * @var  CarbonInterface  $start
-     * @var  CarbonInterface  $end
+     * @var User $employee
+     * @var CarbonInterface $start
+     * @var CarbonInterface $end
      * @return array
      */
-    private function taskCountUrls(User $employee, CarbonInterface $start, CarbonInterface $end): array {
+    private function taskCountUrls(
+        User $employee,
+        CarbonInterface $start,
+        CarbonInterface $end
+    ): array {
         $userId = $employee->id;
-        $reportDate = $start->toDateString();
+        $reportDate = $end->toDateString();
 
         $pendingStatusIds = TaskStatus::query()
             ->where('type', TaskStatus::TYPE_PENDING)
@@ -646,7 +694,7 @@ class DailyWorkReportService
             ]),
 
             'overdue' => $buildUrl([
-                'due_date_end' => \Carbon\Carbon::parse($reportDate)
+                'due_date_end' => $end->copy()
                     ->subDay()
                     ->toDateString(),
                 'exclude_completed' => 1,
