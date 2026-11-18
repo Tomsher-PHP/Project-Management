@@ -151,9 +151,11 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $this->basePayload())
             ->assertStatus(201);
 
-        $customerId = $response->json('data.customer.customer_id');
-        $this->assertNotNull($customerId);
+        $this->assertArrayNotHasKey('customer_id', $response->json('data.customer'));
+        $customerCode = $response->json('data.customer.customer_code');
+        $this->assertNotNull($customerCode);
         $this->assertTrue($response->json('data.customer.created'));
+        $customerId = Customer::where('customer_code', $customerCode)->value('id');
 
         $this->assertDatabaseHas('customers', [
             'id' => $customerId,
@@ -189,7 +191,8 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $this->assertSame($existingCustomer->id, $response->json('data.customer.customer_id'));
+        $this->assertArrayNotHasKey('customer_id', $response->json('data.customer'));
+        $this->assertSame($existingCustomer->customer_code, $response->json('data.customer.customer_code'));
         $this->assertFalse($response->json('data.customer.created'));
 
         // Customer count remains 1
@@ -234,7 +237,9 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $this->basePayload())
             ->assertStatus(201);
 
-        $customerId = $response->json('data.customer.customer_id');
+        $this->assertArrayNotHasKey('customer_id', $response->json('data.customer'));
+        $customerCode = $response->json('data.customer.customer_code');
+        $customerId = Customer::where('customer_code', $customerCode)->value('id');
 
         $this->assertDatabaseHas('customer_contacts', [
             'customer_id' => $customerId,
@@ -269,7 +274,9 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $customerId = $response->json('data.customer.customer_id');
+        $this->assertArrayNotHasKey('customer_id', $response->json('data.customer'));
+        $customerCode = $response->json('data.customer.customer_code');
+        $customerId = Customer::where('customer_code', $customerCode)->value('id');
 
         $this->assertDatabaseHas('customer_contacts', [
             'customer_id' => $customerId,
@@ -315,7 +322,10 @@ class DataSyncProjectCreationTest extends TestCase
                 ],
             ],
             'projects' => [
-                ['name' => 'Project For Existing Customer'],
+                [
+                    'external_code' => 'PRJ-FOR-EXISTING-CUS',
+                    'name' => 'Project For Existing Customer',
+                ],
             ],
         ];
 
@@ -323,11 +333,19 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        // Contact count remains 1 and existing contact is unmodified
-        $this->assertSame(1, CustomerContact::where('customer_id', $existingCustomer->id)->count());
-        $this->assertDatabaseMissing('customer_contacts', [
+        // Contact count is 2 and repeating request does not duplicate contacts
+        $this->assertSame(2, CustomerContact::where('customer_id', $existingCustomer->id)->count());
+        $this->assertDatabaseHas('customer_contacts', [
             'name' => 'Ignored New Contact',
+            'email' => 'ignored@static.ae',
         ]);
+
+        // Repeat request
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->postJson('/api/data-sync/projects', $payload)
+            ->assertStatus(200);
+
+        $this->assertSame(2, CustomerContact::where('customer_id', $existingCustomer->id)->count());
     }
 
     public function test_7_single_project_creation(): void
@@ -336,11 +354,12 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $this->basePayload())
             ->assertStatus(201);
 
-        $projectId = $response->json('data.projects.0.project_id');
-        $this->assertNotNull($projectId);
+        $this->assertArrayNotHasKey('project_id', $response->json('data.projects.0'));
+        $projectCode = $response->json('data.projects.0.project_code');
+        $this->assertNotNull($projectCode);
         $this->assertTrue($response->json('data.projects.0.created'));
 
-        $project = Project::find($projectId);
+        $project = Project::where('project_code', $projectCode)->first();
         $this->assertNotNull($project);
         $this->assertSame('Corporate Website Development', $project->name);
         $this->assertSame('agile', $project->project_flow);
@@ -382,7 +401,9 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $customerId = $response->json('data.customer.customer_id');
+        $this->assertArrayNotHasKey('customer_id', $response->json('data.customer'));
+        $customerCode = $response->json('data.customer.customer_code');
+        $customerId = Customer::where('customer_code', $customerCode)->value('id');
 
         $projects = Project::all();
         $this->assertCount(2, $projects);
@@ -403,8 +424,9 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $projectId = $response->json('data.projects.0.project_id');
-        $project = Project::find($projectId);
+        $this->assertArrayNotHasKey('project_id', $response->json('data.projects.0'));
+        $projectCode = $response->json('data.projects.0.project_code');
+        $project = Project::where('project_code', $projectCode)->first();
 
         $this->assertSame($this->defaultStatus->id, $project->status_id);
     }
@@ -421,8 +443,9 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $projectId = $response->json('data.projects.0.project_id');
-        $project = Project::find($projectId);
+        $this->assertArrayNotHasKey('project_id', $response->json('data.projects.0'));
+        $projectCode = $response->json('data.projects.0.project_code');
+        $project = Project::where('project_code', $projectCode)->first();
 
         $this->assertSame($this->defaultStage->id, $project->project_stage_id);
     }
@@ -444,8 +467,9 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $projectId = $response->json('data.projects.0.project_id');
-        $project = Project::with(['technologies', 'serviceTypes'])->find($projectId);
+        $this->assertArrayNotHasKey('project_id', $response->json('data.projects.0'));
+        $projectCode = $response->json('data.projects.0.project_code');
+        $project = Project::with(['technologies', 'serviceTypes'])->where('project_code', $projectCode)->first();
 
         $this->assertSame([(int) $this->testCategory->id], $project->project_category_ids);
         $this->assertTrue($project->technologies->contains('id', $this->testTechnology->id));
@@ -469,8 +493,9 @@ class DataSyncProjectCreationTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $projectId = $response->json('data.projects.0.project_id');
-        $project = Project::with(['technologies', 'serviceTypes'])->find($projectId);
+        $this->assertArrayNotHasKey('project_id', $response->json('data.projects.0'));
+        $projectCode = $response->json('data.projects.0.project_code');
+        $project = Project::with(['technologies', 'serviceTypes'])->where('project_code', $projectCode)->first();
 
         $this->assertSame([(int) $this->testCategory->id], $project->project_category_ids);
         $this->assertCount(1, $project->technologies);
@@ -563,7 +588,7 @@ class DataSyncProjectCreationTest extends TestCase
         $this->assertSame($initialProjects, Project::count());
     }
 
-    public function test_17_existing_customer_data_remains_unchanged(): void
+    public function test_17_existing_customer_data_is_updated_on_upsert(): void
     {
         $customer = Customer::create([
             'customer_code' => 'CUS10003',
@@ -575,11 +600,11 @@ class DataSyncProjectCreationTest extends TestCase
         $payload = [
             'customer' => [
                 'pms_customer_code' => 'CUS10003',
-                'name' => 'Attempted Overwrite Name',
-                'email' => 'hacked@customer.ae',
+                'name' => 'Updated Customer Name',
+                'email' => 'updated@customer.ae',
             ],
             'projects' => [
-                ['name' => 'Unchanged Customer Project'],
+                ['name' => 'Customer Project'],
             ],
         ];
 
@@ -588,8 +613,8 @@ class DataSyncProjectCreationTest extends TestCase
             ->assertStatus(201);
 
         $freshCustomer = $customer->fresh();
-        $this->assertSame('Original Customer Name', $freshCustomer->name);
-        $this->assertSame('original@customer.ae', $freshCustomer->email);
+        $this->assertSame('Updated Customer Name', $freshCustomer->name);
+        $this->assertSame('updated@customer.ae', $freshCustomer->email);
     }
 
     public function test_18_repeated_request_behavior(): void

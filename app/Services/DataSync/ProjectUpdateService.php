@@ -88,6 +88,14 @@ class ProjectUpdateService
 
                     // Safe mapping enrichment if missing a secondary identifier
                     $this->mappingService->enrichMapping($projectMapping, $externalCode, $externalId);
+                } elseif ($existingMapping === null) {
+                    $this->mappingService->createMapping(
+                        $apiClient->id,
+                        DataSyncEntityMapping::ENTITY_TYPE_PROJECT,
+                        $externalCode,
+                        $externalId,
+                        $project->id
+                    );
                 }
             }
 

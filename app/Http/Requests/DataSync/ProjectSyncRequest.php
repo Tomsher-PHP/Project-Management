@@ -38,6 +38,40 @@ class ProjectSyncRequest extends FormRequest
     }
 
     /**
+     * Check if the customer already exists in PMS by code or mapping.
+     */
+    protected function isExistingCustomer(): bool
+    {
+        $customer = $this->input('customer');
+        if (! is_array($customer)) {
+            return false;
+        }
+
+        if (! empty($customer['pms_customer_code'])) {
+            return true;
+        }
+
+        /** @var ApiClient|null $apiClient */
+        $apiClient = $this->attributes->get('api_client') ?? request()->attributes->get('api_client');
+        if ($apiClient instanceof ApiClient) {
+            $extCode = isset($customer['external_code']) && trim((string) $customer['external_code']) !== ''
+                ? (string) $customer['external_code'] : null;
+            $extId = isset($customer['external_id']) && trim((string) $customer['external_id']) !== ''
+                ? (string) $customer['external_id'] : null;
+
+            if ($extCode !== null || $extId !== null) {
+                $mapping = app(\App\Services\DataSync\ExternalEntityMappingService::class)
+                    ->resolveCustomerMapping($apiClient->id, $extCode, $extId);
+                if ($mapping !== null) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Prepare data before validation rules are applied.
      */
     protected function prepareForValidation(): void
@@ -50,6 +84,31 @@ class ProjectSyncRequest extends FormRequest
             if (isset($customer['pms_customer_code']) && trim((string) $customer['pms_customer_code']) === '') {
                 $customer['pms_customer_code'] = null;
             }
+
+            // Normalize contact aliases and empty emails
+            if (isset($customer['contacts']) && is_array($customer['contacts'])) {
+                foreach ($customer['contacts'] as $index => $contact) {
+                    if (is_array($contact)) {
+                        $whatsapp = isset($contact['whatsapp']) && trim((string) $contact['whatsapp']) !== ''
+                            ? $contact['whatsapp']
+                            : ($contact['whatsapp_number'] ?? null);
+                        $landline = isset($contact['landline']) && trim((string) $contact['landline']) !== ''
+                            ? $contact['landline']
+                            : ($contact['landline_number'] ?? null);
+
+                        if ($whatsapp !== null) {
+                            $customer['contacts'][$index]['whatsapp'] = $whatsapp;
+                        }
+                        if ($landline !== null) {
+                            $customer['contacts'][$index]['landline'] = $landline;
+                        }
+                        if (isset($contact['email']) && trim((string) $contact['email']) === '') {
+                            $customer['contacts'][$index]['email'] = null;
+                        }
+                    }
+                }
+            }
+
             $this->merge(['customer' => $customer]);
         }
 
@@ -76,13 +135,15 @@ class ProjectSyncRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isExisting = $this->isExistingCustomer();
+
         return [
             // Customer Object
             'customer' => ['required', 'array'],
             'customer.external_code' => ['nullable', 'string', 'max:255'],
             'customer.external_id' => ['nullable', 'string', 'max:255'],
             'customer.pms_customer_code' => ['nullable', 'string', 'regex:/^CUS\d+$/i', 'max:255'],
-            'customer.name' => ['required_without:customer.pms_customer_code', 'nullable', 'string', 'max:255'],
+            'customer.name' => [$isExisting ? 'nullable' : 'required', 'string', 'max:255'],
             'customer.email' => ['nullable', 'email', 'max:150'],
             'customer.industry_code' => ['nullable', 'digits:6'],
             'customer.website' => ['nullable', 'url', 'max:255'],
@@ -93,15 +154,17 @@ class ProjectSyncRequest extends FormRequest
             'customer.is_active' => ['nullable', 'boolean'],
 
             // Customer Contacts
-            'customer.contacts' => ['required_without:customer.pms_customer_code', 'nullable', 'array'],
+            'customer.contacts' => [$isExisting ? 'nullable' : 'required', 'array'],
             'customer.contacts.*' => ['required', 'array'],
             'customer.contacts.*.name' => ['required', 'string', 'max:255'],
             'customer.contacts.*.email' => ['nullable', 'email', 'max:150'],
             'customer.contacts.*.mobile' => ['nullable', 'string', 'max:255'],
             'customer.contacts.*.whatsapp' => ['nullable', 'string', 'max:255'],
             'customer.contacts.*.landline' => ['nullable', 'string', 'max:255'],
+            'customer.contacts.*.whatsapp_number' => ['nullable', 'string', 'max:255'],
+            'customer.contacts.*.landline_number' => ['nullable', 'string', 'max:255'],
             'customer.contacts.*.designation' => ['nullable', 'string', 'max:255'],
-            'customer.contacts.*.is_primary' => ['required', 'boolean'],
+            'customer.contacts.*.is_primary' => [$isExisting ? 'nullable' : 'required', 'boolean'],
             'customer.contacts.*.is_active' => ['nullable', 'boolean'],
 
             // Projects Array
@@ -153,12 +216,11 @@ class ProjectSyncRequest extends FormRequest
             return;
         }
 
-        $pmsCustomerCode = trim((string) ($customer['pms_customer_code'] ?? ''));
-        $hasPmsCustomerCode = $pmsCustomerCode !== '';
+        $isExisting = $this->isExistingCustomer();
         $contacts = $customer['contacts'] ?? null;
 
         // If new customer and contacts is empty or not an array
-        if (! $hasPmsCustomerCode) {
+        if (! $isExisting) {
             if (! is_array($contacts) || empty($contacts)) {
                 $validator->errors()->add('customer.contacts', 'At least one customer contact is required.');
                 return;
@@ -187,7 +249,7 @@ class ProjectSyncRequest extends FormRequest
 
         $primaryCount = count($primaryContacts);
 
-        if (! $hasPmsCustomerCode) {
+        if (! $isExisting) {
             if ($primaryCount === 0) {
                 $validator->errors()->add('customer.contacts', 'A primary contact is required.');
                 return;
@@ -500,6 +562,7 @@ class ProjectSyncRequest extends FormRequest
                     ? filter_var($project['default_billable'], FILTER_VALIDATE_BOOLEAN) : true,
                 'is_active' => isset($project['is_active'])
                     ? filter_var($project['is_active'], FILTER_VALIDATE_BOOLEAN) : true,
+                'raw_input' => $project,
             ];
         }
 

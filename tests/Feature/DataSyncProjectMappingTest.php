@@ -164,9 +164,11 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $customerId = $response->json('data.customer.customer_id');
-        $this->assertNotNull($customerId);
+        $this->assertArrayNotHasKey('customer_id', $response->json('data.customer'));
+        $customerCode = $response->json('data.customer.customer_code');
+        $this->assertNotNull($customerCode);
         $this->assertTrue($response->json('data.customer.created'));
+        $customerId = Customer::where('customer_code', $customerCode)->value('id');
 
         $this->assertDatabaseHas('data_sync_entity_mappings', [
             'api_client_id' => $this->apiClient->id,
@@ -197,7 +199,7 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $firstPayload)
             ->assertStatus(201);
 
-        $customerId = $firstResponse->json('data.customer.customer_id');
+        $customerCode = $firstResponse->json('data.customer.customer_code');
 
         // Second sync with same customer external code but a different project
         $secondPayload = $this->basePayload([
@@ -217,7 +219,7 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $secondPayload)
             ->assertStatus(201);
 
-        $this->assertSame($customerId, $secondResponse->json('data.customer.customer_id'));
+        $this->assertSame($customerCode, $secondResponse->json('data.customer.customer_code'));
         $this->assertFalse($secondResponse->json('data.customer.created'));
         $this->assertSame(1, Customer::where('name', 'ABC Technologies LLC')->count());
     }
@@ -237,9 +239,11 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $projectId = $response->json('data.projects.0.project_id');
-        $this->assertNotNull($projectId);
+        $this->assertArrayNotHasKey('project_id', $response->json('data.projects.0'));
+        $projectCode = $response->json('data.projects.0.project_code');
+        $this->assertNotNull($projectCode);
         $this->assertTrue($response->json('data.projects.0.created'));
+        $projectId = Project::where('project_code', $projectCode)->value('id');
 
         $this->assertDatabaseHas('data_sync_entity_mappings', [
             'api_client_id' => $this->apiClient->id,
@@ -270,14 +274,15 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $projectId = $firstResponse->json('data.projects.0.project_id');
+        $this->assertArrayNotHasKey('project_id', $firstResponse->json('data.projects.0'));
+        $projectCode = $firstResponse->json('data.projects.0.project_code');
 
         // Repeated sync should resolve the mapped project and not duplicate it
         $secondResponse = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(200);
 
-        $this->assertSame($projectId, $secondResponse->json('data.projects.0.project_id'));
+        $this->assertSame($projectCode, $secondResponse->json('data.projects.0.project_code'));
         $this->assertFalse($secondResponse->json('data.projects.0.created'));
         $this->assertSame(1, Project::count());
     }
@@ -290,16 +295,16 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $firstCustomerId = $firstResponse->json('data.customer.customer_id');
-        $firstProjectId = $firstResponse->json('data.projects.0.project_id');
+        $firstCustomerCode = $firstResponse->json('data.customer.customer_code');
+        $firstProjectCode = $firstResponse->json('data.projects.0.project_code');
 
         $secondResponse = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(200);
 
-        $this->assertSame($firstCustomerId, $secondResponse->json('data.customer.customer_id'));
+        $this->assertSame($firstCustomerCode, $secondResponse->json('data.customer.customer_code'));
         $this->assertFalse($secondResponse->json('data.customer.created'));
-        $this->assertSame($firstProjectId, $secondResponse->json('data.projects.0.project_id'));
+        $this->assertSame($firstProjectCode, $secondResponse->json('data.projects.0.project_code'));
         $this->assertFalse($secondResponse->json('data.projects.0.created'));
 
         $this->assertSame(1, Customer::count());
@@ -317,7 +322,7 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(201);
 
-        $firstProjectId = $firstResponse->json('data.projects.0.project_id');
+        $firstProjectCode = $firstResponse->json('data.projects.0.project_code');
 
         // Flush cache to simulate 10-minute cache expiration
         Cache::flush();
@@ -328,7 +333,7 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $payload)
             ->assertStatus(200);
 
-        $this->assertSame($firstProjectId, $secondResponse->json('data.projects.0.project_id'));
+        $this->assertSame($firstProjectCode, $secondResponse->json('data.projects.0.project_code'));
         $this->assertFalse($secondResponse->json('data.customer.created'));
         $this->assertFalse($secondResponse->json('data.projects.0.created'));
 
@@ -357,7 +362,7 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $initialPayload)
             ->assertStatus(201);
 
-        $projectAId = $firstResponse->json('data.projects.0.project_id');
+        $projectACode = $firstResponse->json('data.projects.0.project_code');
 
         // 2. Second sync with Project A (existing), Project B (new), and Project C (new)
         $secondPayload = $this->basePayload([
@@ -392,17 +397,17 @@ class DataSyncProjectMappingTest extends TestCase
         $this->assertCount(3, $projects);
 
         // Project A is reused
-        $this->assertSame($projectAId, $projects[0]['project_id']);
+        $this->assertSame($projectACode, $projects[0]['project_code']);
         $this->assertFalse($projects[0]['created']);
         $this->assertSame('CRM-PRJ-A', $projects[0]['external_code']);
 
         // Project B is newly created
-        $this->assertNotSame($projectAId, $projects[1]['project_id']);
+        $this->assertNotSame($projectACode, $projects[1]['project_code']);
         $this->assertTrue($projects[1]['created']);
         $this->assertSame('CRM-PRJ-B', $projects[1]['external_code']);
 
         // Project C is newly created
-        $this->assertNotSame($projectAId, $projects[2]['project_id']);
+        $this->assertNotSame($projectACode, $projects[2]['project_code']);
         $this->assertTrue($projects[2]['created']);
         $this->assertSame('CRM-PRJ-C', $projects[2]['external_code']);
 
@@ -428,15 +433,15 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $firstPayload)
             ->assertStatus(201);
 
-        $customerId = $firstResponse->json('data.customer.customer_id');
-        $projectId = $firstResponse->json('data.projects.0.project_id');
+        $customerCode = $firstResponse->json('data.customer.customer_code');
+        $projectCode = $firstResponse->json('data.projects.0.project_code');
 
         $secondResponse = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->postJson('/api/data-sync/projects', $firstPayload)
             ->assertStatus(200);
 
-        $this->assertSame($customerId, $secondResponse->json('data.customer.customer_id'));
-        $this->assertSame($projectId, $secondResponse->json('data.projects.0.project_id'));
+        $this->assertSame($customerCode, $secondResponse->json('data.customer.customer_code'));
+        $this->assertSame($projectCode, $secondResponse->json('data.projects.0.project_code'));
         $this->assertFalse($secondResponse->json('data.customer.created'));
         $this->assertFalse($secondResponse->json('data.projects.0.created'));
     }
@@ -460,15 +465,15 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $firstPayload)
             ->assertStatus(201);
 
-        $customerId = $firstResponse->json('data.customer.customer_id');
-        $projectId = $firstResponse->json('data.projects.0.project_id');
+        $customerCode = $firstResponse->json('data.customer.customer_code');
+        $projectCode = $firstResponse->json('data.projects.0.project_code');
 
         $secondResponse = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->postJson('/api/data-sync/projects', $firstPayload)
             ->assertStatus(200);
 
-        $this->assertSame($customerId, $secondResponse->json('data.customer.customer_id'));
-        $this->assertSame($projectId, $secondResponse->json('data.projects.0.project_id'));
+        $this->assertSame($customerCode, $secondResponse->json('data.customer.customer_code'));
+        $this->assertSame($projectCode, $secondResponse->json('data.projects.0.project_code'));
         $this->assertFalse($secondResponse->json('data.customer.created'));
         $this->assertFalse($secondResponse->json('data.projects.0.created'));
     }
@@ -578,8 +583,8 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $payloadA)
             ->assertStatus(201);
 
-        $customerAId = $responseA->json('data.customer.customer_id');
-        $projectAId = $responseA->json('data.projects.0.project_id');
+        $customerACode = $responseA->json('data.customer.customer_code');
+        $projectACode = $responseA->json('data.projects.0.project_code');
 
         // Create Client B
         $resultB = app(ApiClientService::class)->createClient('Mapping Test Client B', [
@@ -608,12 +613,12 @@ class DataSyncProjectMappingTest extends TestCase
             ->postJson('/api/data-sync/projects', $payloadB)
             ->assertStatus(201);
 
-        $customerBId = $responseB->json('data.customer.customer_id');
-        $projectBId = $responseB->json('data.projects.0.project_id');
+        $customerBCode = $responseB->json('data.customer.customer_code');
+        $projectBCode = $responseB->json('data.projects.0.project_code');
 
         // Mappings must be independent
-        $this->assertNotSame($customerAId, $customerBId);
-        $this->assertNotSame($projectAId, $projectBId);
+        $this->assertNotSame($customerACode, $customerBCode);
+        $this->assertNotSame($projectACode, $projectBCode);
 
         $this->assertSame(2, Customer::count());
         $this->assertSame(2, Project::count());
