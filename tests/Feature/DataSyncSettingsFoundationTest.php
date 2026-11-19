@@ -55,7 +55,7 @@ class DataSyncSettingsFoundationTest extends TestCase
 
     public function test_requests_without_api_key_return_401(): void
     {
-        $this->getJson('/api/data-sync/settings/technologies')
+        $this->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(401)
             ->assertJson([
                 'success' => false,
@@ -66,7 +66,7 @@ class DataSyncSettingsFoundationTest extends TestCase
     public function test_requests_with_invalid_api_key_return_401(): void
     {
         $this->withHeader('Authorization', 'Bearer azo_live_invalid.azo_sec_invalid')
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(401)
             ->assertJson([
                 'success' => false,
@@ -83,7 +83,7 @@ class DataSyncSettingsFoundationTest extends TestCase
         $key = $result['plain_text_key'];
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(403)
             ->assertJson([
                 'success' => false,
@@ -91,7 +91,11 @@ class DataSyncSettingsFoundationTest extends TestCase
             ]);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'Rust'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '500001',
+                'name' => 'Rust',
+            ])
             ->assertStatus(403)
             ->assertJson([
                 'success' => false,
@@ -109,7 +113,7 @@ class DataSyncSettingsFoundationTest extends TestCase
 
         foreach (['technologies', 'industries', 'project_categories', 'project_statuses'] as $module) {
             $this->withHeader('Authorization', 'Bearer ' . $key)
-                ->getJson("/api/data-sync/settings/{$module}")
+                ->getJson("/api/data-sync/settings?module={$module}")
                 ->assertStatus(200)
                 ->assertJson([
                     'success' => true,
@@ -117,7 +121,7 @@ class DataSyncSettingsFoundationTest extends TestCase
                 ]);
 
             $this->withHeader('Authorization', 'Bearer ' . $key)
-                ->getJson("/api/data-sync/settings/{$module}/123456")
+                ->getJson("/api/data-sync/settings/123456?module={$module}")
                 ->assertStatus(404)
                 ->assertJson([
                     'success' => false,
@@ -126,7 +130,11 @@ class DataSyncSettingsFoundationTest extends TestCase
         }
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->postJson('/api/data-sync/settings/technologies')
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '500001',
+                'name' => 'Rust',
+            ])
             ->assertStatus(403)
             ->assertJson([
                 'success' => false,
@@ -134,15 +142,7 @@ class DataSyncSettingsFoundationTest extends TestCase
             ]);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->putJson('/api/data-sync/settings/technologies/123456')
-            ->assertStatus(403)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Insufficient API permissions.',
-            ]);
-
-        $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->deleteJson('/api/data-sync/settings/technologies/123456')
+            ->deleteJson('/api/data-sync/settings/123456?module=technologies')
             ->assertStatus(403)
             ->assertJson([
                 'success' => false,
@@ -159,7 +159,7 @@ class DataSyncSettingsFoundationTest extends TestCase
         $key = $result['plain_text_key'];
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(403)
             ->assertJson([
                 'success' => false,
@@ -167,7 +167,7 @@ class DataSyncSettingsFoundationTest extends TestCase
             ]);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->getJson('/api/data-sync/settings/technologies/123456')
+            ->getJson('/api/data-sync/settings/123456?module=technologies')
             ->assertStatus(403)
             ->assertJson([
                 'success' => false,
@@ -175,20 +175,32 @@ class DataSyncSettingsFoundationTest extends TestCase
             ]);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'Go'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '500002',
+                'name' => 'Go',
+            ])
             ->assertStatus(201);
 
         $createdCode = $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'Rust'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '500003',
+                'name' => 'Rust',
+            ])
             ->assertStatus(201)
             ->json('data.code');
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->putJson("/api/data-sync/settings/technologies/{$createdCode}", ['name' => 'Rust Lang'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => $createdCode,
+                'name' => 'Rust Lang',
+            ])
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->deleteJson("/api/data-sync/settings/technologies/{$createdCode}")
+            ->deleteJson("/api/data-sync/settings/{$createdCode}?module=technologies")
             ->assertStatus(200)
             ->assertJson([
                 'success' => true,
@@ -196,7 +208,7 @@ class DataSyncSettingsFoundationTest extends TestCase
             ]);
     }
 
-    public function test_unsupported_module_slug_returns_404_when_authorized(): void
+    public function test_unsupported_module_slug_returns_422_when_authorized(): void
     {
         $result = app(ApiClientService::class)->createClient('Full Settings Client', [
             ApiClient::SCOPE_SETTINGS_READ,
@@ -206,19 +218,23 @@ class DataSyncSettingsFoundationTest extends TestCase
         $key = $result['plain_text_key'];
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->getJson('/api/data-sync/settings/unsupported_module')
-            ->assertStatus(404)
+            ->getJson('/api/data-sync/settings?module=unsupported_module')
+            ->assertStatus(422)
             ->assertJson([
                 'success' => false,
-                'message' => 'Invalid Data Sync module.',
+                'message' => 'Validation failed.',
             ]);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->postJson('/api/data-sync/settings/unsupported_module')
-            ->assertStatus(404)
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'unsupported_module',
+                'code' => '500001',
+                'name' => 'Test',
+            ])
+            ->assertStatus(422)
             ->assertJson([
                 'success' => false,
-                'message' => 'Invalid Data Sync module.',
+                'message' => 'Validation failed.',
             ]);
     }
 
@@ -250,11 +266,15 @@ class DataSyncSettingsFoundationTest extends TestCase
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'TypeScript'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '500004',
+                'name' => 'TypeScript',
+            ])
             ->assertStatus(201);
     }
 
@@ -271,7 +291,7 @@ class DataSyncSettingsFoundationTest extends TestCase
         $lastResponse = null;
         for ($i = 0; $i < 59; $i++) {
             $lastResponse = $this->withHeader('Authorization', 'Bearer ' . $key)
-                ->getJson('/api/data-sync/settings/technologies')
+                ->getJson('/api/data-sync/settings?module=technologies')
                 ->assertStatus(200);
         }
 
@@ -285,7 +305,7 @@ class DataSyncSettingsFoundationTest extends TestCase
 
         // 61st request must return 429 Too Many Requests
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(429)
             ->assertJson([
                 'success' => false,

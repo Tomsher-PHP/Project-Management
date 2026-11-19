@@ -1,0 +1,9 @@
+{
+    "success": false,
+    "message": "Validation failed.",
+    "errors": {
+        "parent_code": [
+            "An industry cannot be its own parent."
+        ]
+    }
+}

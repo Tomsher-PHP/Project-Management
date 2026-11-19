@@ -1067,14 +1067,20 @@ class DataSyncSettingsCommonReadDeleteTest extends TestCase
     }
 
     /**
-     * 46. Existing module-specific List API works.
+     * 46. Legacy module-specific List is removed and common List works.
      */
-    public function test_46_existing_module_specific_list_works(): void
+    public function test_46_legacy_module_specific_list_is_removed_and_common_list_works(): void
     {
         Technology::create(['name' => 'Legacy List Tech', 'code' => '460001', 'sort_order' => 1, 'is_system' => false]);
 
+        $this->assertContains(
+            $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
+                ->getJson('/api/data-sync/settings/technologies')->status(),
+            [404, 405]
+        );
+
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies');
+            ->getJson('/api/data-sync/settings?module=technologies');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -1085,14 +1091,20 @@ class DataSyncSettingsCommonReadDeleteTest extends TestCase
     }
 
     /**
-     * 47. Existing module-specific Get API works.
+     * 47. Legacy module-specific Get is removed and common Get works.
      */
-    public function test_47_existing_module_specific_get_works(): void
+    public function test_47_legacy_module_specific_get_is_removed_and_common_get_works(): void
     {
         Technology::create(['name' => 'Legacy Get Tech', 'code' => '470001', 'sort_order' => 1, 'is_system' => false]);
 
+        $this->assertContains(
+            $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
+                ->getJson('/api/data-sync/settings/technologies/470001')->status(),
+            [404, 405]
+        );
+
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies/470001');
+            ->getJson('/api/data-sync/settings/470001?module=technologies');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -1106,14 +1118,20 @@ class DataSyncSettingsCommonReadDeleteTest extends TestCase
     }
 
     /**
-     * 48. Existing module-specific Delete API works.
+     * 48. Legacy module-specific Delete is removed and common Delete works.
      */
-    public function test_48_existing_module_specific_delete_works(): void
+    public function test_48_legacy_module_specific_delete_is_removed_and_common_delete_works(): void
     {
         $tech = Technology::create(['name' => 'Legacy Del Tech', 'code' => '480001', 'sort_order' => 1, 'is_system' => false]);
 
+        $this->assertContains(
+            $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+                ->deleteJson('/api/data-sync/settings/technologies/480001')->status(),
+            [404, 405]
+        );
+
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/technologies/480001');
+            ->deleteJson('/api/data-sync/settings/480001?module=technologies');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -1125,38 +1143,25 @@ class DataSyncSettingsCommonReadDeleteTest extends TestCase
     }
 
     /**
-     * 49. Existing Settings POST/PUT APIs remain unchanged.
+     * 49. Legacy Settings POST/PUT APIs are removed.
      */
-    public function test_49_existing_settings_post_put_apis_remain_unchanged(): void
+    public function test_49_legacy_settings_post_put_apis_are_removed(): void
     {
-        // POST /{module}
+        // POST /{module} is removed
         $postResp = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
             ->postJson('/api/data-sync/settings/technologies', [
                 'name' => 'Created via Legacy',
             ]);
 
-        $postResp->assertStatus(201)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Record created successfully.',
-            ]);
+        $this->assertContains($postResp->status(), [404, 405]);
 
-        $code = $postResp->json('data.code');
-
-        // PUT /{module}/{code}
+        // PUT /{module}/{code} is removed
         $putResp = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson("/api/data-sync/settings/technologies/{$code}", [
+            ->putJson('/api/data-sync/settings/technologies/500001', [
                 'name' => 'Updated via Legacy',
             ]);
 
-        $putResp->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Record updated successfully.',
-                'data' => [
-                    'name' => 'Updated via Legacy',
-                ],
-            ]);
+        $this->assertContains($putResp->status(), [404, 405]);
     }
 
     /**

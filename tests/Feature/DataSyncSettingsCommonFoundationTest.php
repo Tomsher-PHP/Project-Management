@@ -83,23 +83,15 @@ class DataSyncSettingsCommonFoundationTest extends TestCase
     }
 
     /**
-     * Requirement 2: Existing Settings routes remain registered.
+     * Requirement 2: Legacy Settings routes are removed.
      */
-    public function test_existing_settings_routes_remain_registered(): void
+    public function test_legacy_settings_routes_are_removed(): void
     {
-        $this->assertTrue(Route::has('api.data-sync.settings.index'));
-        $this->assertTrue(Route::has('api.data-sync.settings.show'));
-        $this->assertTrue(Route::has('api.data-sync.settings.store'));
-        $this->assertTrue(Route::has('api.data-sync.settings.update'));
-        $this->assertTrue(Route::has('api.data-sync.settings.destroy'));
-
-        $indexRoute = Route::getRoutes()->getByName('api.data-sync.settings.index');
-        $this->assertContains('GET', $indexRoute->methods());
-        $this->assertSame('api/data-sync/settings/{module}', $indexRoute->uri());
-
-        $storeRoute = Route::getRoutes()->getByName('api.data-sync.settings.store');
-        $this->assertSame(['POST'], $storeRoute->methods());
-        $this->assertSame('api/data-sync/settings/{module}', $storeRoute->uri());
+        $this->assertFalse(Route::has('api.data-sync.settings.index'));
+        $this->assertFalse(Route::has('api.data-sync.settings.show'));
+        $this->assertFalse(Route::has('api.data-sync.settings.store'));
+        $this->assertFalse(Route::has('api.data-sync.settings.update'));
+        $this->assertFalse(Route::has('api.data-sync.settings.destroy'));
     }
 
     /**
@@ -459,69 +451,43 @@ class DataSyncSettingsCommonFoundationTest extends TestCase
     }
 
     /**
-     * Requirement 11: Existing module-specific routes still work.
+     * Requirement 11: Legacy module-specific routes are removed and return 404 or 405.
      */
-    public function test_existing_module_specific_routes_still_work(): void
+    public function test_legacy_module_specific_routes_are_removed_and_return_404_or_405(): void
     {
-        // GET /{module}
-        $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies')
-            ->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Records retrieved successfully.',
-            ]);
+        // GET /{module} is removed
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
+            ->getJson('/api/data-sync/settings/technologies');
+        $this->assertContains($response->status(), [404, 405]);
 
-        // POST /{module}
+        // POST /{module} is removed
         $postResponse = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
             ->postJson('/api/data-sync/settings/technologies', [
                 'name' => 'Elixir',
-            ])
-            ->assertStatus(201)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Record created successfully.',
             ]);
+        $this->assertContains($postResponse->status(), [404, 405]);
 
-        $createdCode = $postResponse->json('data.code');
+        // GET /{module}/{code} is removed
+        $getResponse = $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
+            ->getJson('/api/data-sync/settings/technologies/500001');
+        $this->assertContains($getResponse->status(), [404, 405]);
 
-        // GET /{module}/{code}
-        $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson("/api/data-sync/settings/technologies/{$createdCode}")
-            ->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Record retrieved successfully.',
-            ]);
-
-        // PUT /{module}/{code}
-        $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson("/api/data-sync/settings/technologies/{$createdCode}", [
+        // PUT /{module}/{code} is removed
+        $putResponse = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+            ->putJson('/api/data-sync/settings/technologies/500001', [
                 'name' => 'Elixir Lang',
-            ])
-            ->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Record updated successfully.',
             ]);
+        $this->assertContains($putResponse->status(), [404, 405]);
 
-        // DELETE /{module}/{code}
-        $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson("/api/data-sync/settings/technologies/{$createdCode}")
-            ->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Record deleted successfully.',
-            ]);
+        // DELETE /{module}/{code} is removed
+        $deleteResponse = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+            ->deleteJson('/api/data-sync/settings/technologies/500001');
+        $this->assertContains($deleteResponse->status(), [404, 405]);
 
-        // Unsupported module returns 404 on legacy route
+        // Unsupported module also returns 404
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
             ->getJson('/api/data-sync/settings/unsupported_module')
-            ->assertStatus(404)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Invalid Data Sync module.',
-            ]);
+            ->assertStatus(404);
     }
 
     /**
@@ -580,10 +546,10 @@ class DataSyncSettingsCommonFoundationTest extends TestCase
                 'message' => 'Record not found.',
             ]);
 
-        // Word 'technologies' routes to module index (returns 200)
+        // Word 'technologies' returns 404 because legacy /{module} route is removed
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
             ->getJson('/api/data-sync/settings/technologies')
-            ->assertStatus(200);
+            ->assertStatus(404);
     }
 
     /**

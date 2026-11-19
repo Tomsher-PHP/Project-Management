@@ -436,9 +436,14 @@ function initializeApiExplorer() {
         elements.responsePills.replaceChildren();
         const successStatus = String(operation.response_success?.status || 200);
         const statuses = [
-            [successStatus, 'Success'],
-            ...Object.keys(operation.formatted_error_responses || {}).map((code) => [String(code), 'Error']),
+            [successStatus, successStatus === '201' ? 'Created' : 'Success'],
         ];
+        if (operation.formatted_updated_response) {
+            statuses.push(['200', 'Updated']);
+        }
+        Object.keys(operation.formatted_error_responses || {}).forEach((code) => {
+            statuses.push([String(code), 'Error']);
+        });
 
         statuses.forEach(([statusCode, label]) => {
             const button = document.createElement('button');
@@ -458,7 +463,7 @@ function initializeApiExplorer() {
             headers: (operation.headers || []).length,
             params: (operation.path_params || []).length + (operation.query_params || []).length,
             payload: operation.formatted_payload ? 1 : 0,
-            responses: 1 + Object.keys(operation.formatted_error_responses || {}).length,
+            responses: (operation.formatted_updated_response ? 2 : 1) + Object.keys(operation.formatted_error_responses || {}).length,
         };
 
         root.querySelectorAll('[data-tab-count]').forEach((element) => {
@@ -534,10 +539,11 @@ function initializeApiExplorer() {
 
         const successStatus = String(operation.response_success?.status || 200);
         const errors = operation.formatted_error_responses || {};
-        const isSuccess = statusCode === successStatus;
-        const response = isSuccess
+        const response = statusCode === successStatus
             ? operation.formatted_success_response
-            : errors[statusCode];
+            : (statusCode === '200' && operation.formatted_updated_response
+                ? operation.formatted_updated_response
+                : errors[statusCode]);
 
         if (!response) return;
         activeResponseCode = statusCode;

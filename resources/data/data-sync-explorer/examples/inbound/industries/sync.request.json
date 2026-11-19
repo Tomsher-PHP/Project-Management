@@ -1,0 +1,8 @@
+{
+    "module": "industries",
+    "code": "333333",
+    "name": "Information Technology",
+    "parent_code": "100011",
+    "sort_order": 2,
+    "is_active": true
+}

@@ -18,16 +18,6 @@ Route::middleware(['api.key', 'throttle:api-client'])->group(function () {
         Route::delete('/{code}', [SettingsController::class, 'commonDestroy'])
             ->where('code', '[0-9]{6}')
             ->name('common-destroy');
-
-        Route::get('/{module}', [SettingsController::class, 'index'])
-            ->where('module', '^(?!sync$)[a-zA-Z_]+$')
-            ->name('index');
-        Route::get('/{module}/{code}', [SettingsController::class, 'show'])->name('show');
-        Route::post('/{module}', [SettingsController::class, 'store'])
-            ->where('module', '^(?!sync$)[a-zA-Z_]+$')
-            ->name('store');
-        Route::put('/{module}/{code}', [SettingsController::class, 'update'])->name('update');
-        Route::delete('/{module}/{code}', [SettingsController::class, 'destroy'])->name('destroy');
     });
 
     Route::post('data-sync/projects', [ProjectSyncController::class, 'store'])->name('api.data-sync.projects.store');

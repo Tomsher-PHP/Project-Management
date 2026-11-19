@@ -8,31 +8,89 @@ return [
     'slug' => 'project_categories',
     'description' => 'Manage project categorization masters (e.g., Web Development, Mobile Apps).',
     'operations' => [
+        'sync' => [
+            'id' => 'project_categories.sync',
+            'name' => 'Sync Project Category',
+            'description' => 'Upsert a project category by unique 6-digit code. Creates if new, updates if existing.',
+            'method' => 'POST',
+            'endpoint' => '/api/data-sync/settings/sync',
+            'scope' => ApiClient::SCOPE_SETTINGS_WRITE,
+            'scope_description' => 'Allows creating, modifying, and deleting settings master records.',
+            'header_profile' => 'json_write',
+            'additional_headers' => [
+                [
+                    'name' => 'Idempotency-Key',
+                    'value' => 'unique-req-uuid-or-hash',
+                    'required' => false,
+                    'note' => 'Optional UUID or hash to ensure idempotent processing.',
+                ],
+            ],
+            'path_params' => [],
+            'query_params' => [],
+            'request_payload' => 'inbound/project-categories/sync.request.json',
+            'response_success' => [
+                'status' => 201,
+                'body' => 'inbound/project-categories/sync.response-201.json',
+                'updated_body' => 'inbound/project-categories/sync.response-200.json',
+            ],
+            'error_profile' => 'authenticated',
+            'response_errors' => [
+                409 => 'inbound/project-categories/sync.response-409.json',
+                422 => 'inbound/project-categories/sync.response-422.json',
+            ],
+        ],
         'list' => [
             'id' => 'project_categories.list',
             'name' => 'List Project Categories',
             'description' => 'Retrieve a paginated list of project categories.',
             'method' => 'GET',
-            'endpoint' => '/api/data-sync/settings/project_categories',
+            'endpoint' => '/api/data-sync/settings?module=project_categories',
             'scope' => ApiClient::SCOPE_SETTINGS_READ,
             'scope_description' => 'Allows reading settings master records.',
             'header_profile' => 'json_read',
-            'path_params' => [
-            ],
+            'path_params' => [],
             'query_params' => [
-                0 => [
+                [
                     'name' => 'page',
                     'type' => 'integer',
                     'required' => false,
                     'default' => '1',
                     'description' => 'Page number.',
                 ],
-                1 => [
+                [
                     'name' => 'per_page',
                     'type' => 'integer',
                     'required' => false,
                     'default' => '50',
                     'description' => 'Records per page.',
+                ],
+                [
+                    'name' => 'search',
+                    'type' => 'string',
+                    'required' => false,
+                    'default' => 'null',
+                    'description' => 'Search name or code.',
+                ],
+                [
+                    'name' => 'is_active',
+                    'type' => 'boolean',
+                    'required' => false,
+                    'default' => 'null',
+                    'description' => 'Filter by active status (1 or 0).',
+                ],
+                [
+                    'name' => 'sort_by',
+                    'type' => 'string',
+                    'required' => false,
+                    'default' => 'sort_order',
+                    'description' => 'Sort field.',
+                ],
+                [
+                    'name' => 'sort_direction',
+                    'type' => 'string',
+                    'required' => false,
+                    'default' => 'asc',
+                    'description' => 'asc or desc.',
                 ],
             ],
             'request_payload' => null,
@@ -40,106 +98,31 @@ return [
                 'status' => 200,
                 'body' => 'inbound/project-categories/list.response-200.json',
             ],
-            'error_profile' => 'unauthenticated',
+            'error_profile' => 'authenticated',
         ],
-        'show' => [
-            'id' => 'project_categories.show',
+        'get' => [
+            'id' => 'project_categories.get',
             'name' => 'Get Project Category',
             'description' => 'Retrieve category details by 6-digit code.',
             'method' => 'GET',
-            'endpoint' => '/api/data-sync/settings/project_categories/{code}',
+            'endpoint' => '/api/data-sync/settings/{code}?module=project_categories',
             'scope' => ApiClient::SCOPE_SETTINGS_READ,
             'scope_description' => 'Allows reading settings master records.',
-            'header_profile' => 'authorization_only',
+            'header_profile' => 'json_read',
             'path_params' => [
-                0 => [
+                [
                     'name' => 'code',
                     'type' => 'string (6 digits)',
                     'required' => true,
-                    'example' => '600001',
+                    'example' => '444444',
                     'description' => 'Category code.',
                 ],
             ],
-            'query_params' => [
-            ],
+            'query_params' => [],
             'request_payload' => null,
             'response_success' => [
                 'status' => 200,
                 'body' => 'inbound/project-categories/show.response-200.json',
-            ],
-            'error_profile' => 'record_not_found',
-        ],
-        'create' => [
-            'id' => 'project_categories.create',
-            'name' => 'Create Project Category',
-            'description' => 'Create a project category.',
-            'method' => 'POST',
-            'endpoint' => '/api/data-sync/settings/project_categories',
-            'scope' => ApiClient::SCOPE_SETTINGS_WRITE,
-            'scope_description' => 'Allows creating, modifying, and deleting settings master records.',
-            'header_profile' => 'json_write_without_accept',
-            'path_params' => [
-            ],
-            'query_params' => [
-            ],
-            'request_payload' => 'inbound/project-categories/create.request.json',
-            'response_success' => [
-                'status' => 201,
-                'body' => 'inbound/project-categories/create.response-201.json',
-            ],
-            'error_profile' => 'validation_failed',
-        ],
-        'update' => [
-            'id' => 'project_categories.update',
-            'name' => 'Update Project Category',
-            'description' => 'Update category name or sort order.',
-            'method' => 'PUT',
-            'endpoint' => '/api/data-sync/settings/project_categories/{code}',
-            'scope' => ApiClient::SCOPE_SETTINGS_WRITE,
-            'scope_description' => 'Allows creating, modifying, and deleting settings master records.',
-            'header_profile' => 'json_write_without_accept',
-            'path_params' => [
-                0 => [
-                    'name' => 'code',
-                    'type' => 'string (6 digits)',
-                    'required' => true,
-                    'example' => '600005',
-                    'description' => 'Category code.',
-                ],
-            ],
-            'query_params' => [
-            ],
-            'request_payload' => 'inbound/project-categories/update.request.json',
-            'response_success' => [
-                'status' => 200,
-                'body' => 'inbound/project-categories/update.response-200.json',
-            ],
-            'error_profile' => 'record_not_found',
-        ],
-        'toggle_status' => [
-            'id' => 'project_categories.toggle_status',
-            'name' => 'Toggle Status',
-            'description' => 'Activate or deactivate a project category record via partial PUT without altering other fields.',
-            'method' => 'PUT',
-            'endpoint' => '/api/data-sync/settings/project_categories/{code}',
-            'scope' => ApiClient::SCOPE_SETTINGS_WRITE,
-            'scope_description' => 'Allows creating, modifying, and deleting settings master records.',
-            'header_profile' => 'json_write',
-            'path_params' => [
-                0 => [
-                    'name' => 'code',
-                    'type' => 'string (6 digits)',
-                    'required' => true,
-                    'example' => '600005',
-                    'description' => 'Category code.',
-                ],
-            ],
-            'query_params' => [
-            ],
-            'request_payload' => 'shared/toggle-status.request.json',
-            'response_success' => [
-                'status' => 200,
-                'body' => 'inbound/project-categories/toggle_status.response-200.json',
             ],
             'error_profile' => 'authenticated',
             'response_errors' => [
@@ -149,29 +132,33 @@ return [
         'delete' => [
             'id' => 'project_categories.delete',
             'name' => 'Delete Project Category',
-            'description' => 'Delete a project category. Blocked if attached to any projects.',
+            'description' => 'Soft delete a category. Rejected if projects reference it.',
             'method' => 'DELETE',
-            'endpoint' => '/api/data-sync/settings/project_categories/{code}',
+            'endpoint' => '/api/data-sync/settings/{code}?module=project_categories',
             'scope' => ApiClient::SCOPE_SETTINGS_WRITE,
             'scope_description' => 'Allows creating, modifying, and deleting settings master records.',
-            'header_profile' => 'authorization_only',
+            'header_profile' => 'json_read',
             'path_params' => [
-                0 => [
+                [
                     'name' => 'code',
                     'type' => 'string (6 digits)',
                     'required' => true,
-                    'example' => '600005',
+                    'example' => '444444',
                     'description' => 'Category code.',
                 ],
             ],
-            'query_params' => [
-            ],
+            'query_params' => [],
             'request_payload' => null,
             'response_success' => [
                 'status' => 200,
                 'body' => 'shared/delete.response-200.json',
             ],
             'error_profile' => 'record_in_use',
+            'response_errors' => [
+                403 => 'shared/insufficient-permissions.response-403.json',
+                404 => 'shared/record-not-found.response-404.json',
+                409 => 'shared/record-in-use.response-409.json',
+            ],
         ],
     ],
 ];

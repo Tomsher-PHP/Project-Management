@@ -657,11 +657,15 @@ class DataSyncProjectValidationTest extends TestCase
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'Kotlin'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '555556',
+                'name' => 'Kotlin',
+            ])
             ->assertStatus(201);
     }
 

@@ -1,0 +1,14 @@
+{
+    "success": true,
+    "message": "Record updated successfully.",
+    "data": {
+        "module": "project_categories",
+        "id": 8,
+        "name": "Web Application Development",
+        "code": "444444",
+        "sort_order": 3,
+        "is_system": false,
+        "is_active": true,
+        "operation": "updated"
+    }
+}

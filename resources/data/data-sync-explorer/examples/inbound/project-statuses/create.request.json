@@ -1,9 +1,0 @@
-{
-    "name": "Under Quality Review",
-    "code": "100020",
-    "color": "#f59e0b",
-    "type": "in_progress",
-    "is_default": false,
-    "sort_order": 15,
-    "is_active": true
-}

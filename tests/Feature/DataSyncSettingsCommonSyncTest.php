@@ -944,29 +944,36 @@ class DataSyncSettingsCommonSyncTest extends TestCase
     }
 
     /**
-     * Scenario 32: Existing module-specific POST works.
+     * Scenario 32: Legacy module-specific POST is removed and common sync is used.
      */
-    public function test_32_existing_module_specific_post_works(): void
+    public function test_32_legacy_module_specific_post_is_removed_and_common_sync_is_used(): void
     {
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
             ->postJson('/api/data-sync/settings/technologies', [
                 'name' => 'Rust Language',
             ]);
 
-        $response->assertStatus(201)
+        $this->assertContains($response->status(), [404, 405]);
+
+        $syncResponse = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '777888',
+                'name' => 'Rust Language',
+            ]);
+
+        $syncResponse->assertStatus(201)
             ->assertJson([
                 'success' => true,
                 'message' => 'Record created successfully.',
             ])
-            ->assertJsonStructure(['data' => ['code', 'name']]);
-
-        $this->assertNotEmpty($response->json('data.code'));
+            ->assertJsonPath('data.code', '777888');
     }
 
     /**
-     * Scenario 33: Existing module-specific PUT works.
+     * Scenario 33: Legacy module-specific PUT is removed and common sync is used.
      */
-    public function test_33_existing_module_specific_put_works(): void
+    public function test_33_legacy_module_specific_put_is_removed_and_common_sync_is_used(): void
     {
         Technology::create([
             'code' => '334455',
@@ -974,8 +981,17 @@ class DataSyncSettingsCommonSyncTest extends TestCase
             'sort_order' => 1,
         ]);
 
-        $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
             ->putJson('/api/data-sync/settings/technologies/334455', [
+                'name' => 'New Tech Name',
+            ]);
+
+        $this->assertContains($response->status(), [404, 405]);
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '334455',
                 'name' => 'New Tech Name',
             ])
             ->assertStatus(200)
@@ -987,27 +1003,48 @@ class DataSyncSettingsCommonSyncTest extends TestCase
     }
 
     /**
-     * Scenario 34: Existing Settings List/Get/Delete remain unchanged.
+     * Scenario 34: Legacy module paths removed and common list/get/delete work.
      */
-    public function test_34_existing_settings_list_get_delete_remain_unchanged(): void
+    public function test_34_legacy_module_paths_removed_and_common_list_get_delete_work(): void
     {
         Technology::create(['code' => '112233', 'name' => 'Tech To Delete', 'sort_order' => 1]);
 
-        // GET /{module}
+        // Legacy GET /{module} is removed
+        $this->assertContains(
+            $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
+                ->getJson('/api/data-sync/settings/technologies')->status(),
+            [404, 405]
+        );
+
+        // Common GET /?module={slug} works
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200)
             ->assertJsonStructure(['data', 'pagination']);
 
-        // GET /{module}/{code}
+        // Legacy GET /{module}/{code} is removed
+        $this->assertContains(
+            $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
+                ->getJson('/api/data-sync/settings/technologies/112233')->status(),
+            [404, 405]
+        );
+
+        // Common GET /{code}?module={slug} works
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies/112233')
+            ->getJson('/api/data-sync/settings/112233?module=technologies')
             ->assertStatus(200)
             ->assertJsonPath('data.code', '112233');
 
-        // DELETE /{module}/{code}
+        // Legacy DELETE /{module}/{code} is removed
+        $this->assertContains(
+            $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+                ->deleteJson('/api/data-sync/settings/technologies/112233')->status(),
+            [404, 405]
+        );
+
+        // Common DELETE /{code}?module={slug} works
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/technologies/112233')
+            ->deleteJson('/api/data-sync/settings/112233?module=technologies')
             ->assertStatus(200)
             ->assertJson([
                 'success' => true,
