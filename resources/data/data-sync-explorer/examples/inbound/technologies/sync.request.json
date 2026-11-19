@@ -1,0 +1,7 @@
+{
+    "module": "technologies",
+    "code": "222222",
+    "name": "Laravel",
+    "sort_order": 1,
+    "is_active": true
+}

@@ -59,7 +59,7 @@ class DataSyncSettingsReadTest extends TestCase
         $deleted->delete();
 
         $listResponse = $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies');
+            ->getJson('/api/data-sync/settings?module=technologies');
 
         $listResponse->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -74,7 +74,7 @@ class DataSyncSettingsReadTest extends TestCase
         );
 
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson("/api/data-sync/settings/technologies/{$php->code}")
+            ->getJson("/api/data-sync/settings/{$php->code}?module=technologies")
             ->assertStatus(200)
             ->assertJson([
                 'success' => true,
@@ -91,7 +91,7 @@ class DataSyncSettingsReadTest extends TestCase
 
         // Soft-deleted record must return 404
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson("/api/data-sync/settings/technologies/{$deleted->code}")
+            ->getJson("/api/data-sync/settings/{$deleted->code}?module=technologies")
             ->assertStatus(404)
             ->assertJson([
                 'success' => false,
@@ -123,7 +123,7 @@ class DataSyncSettingsReadTest extends TestCase
         DB::flushQueryLog();
 
         $listResponse = $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/industries');
+            ->getJson('/api/data-sync/settings?module=industries');
 
         $queryCount = count(DB::getQueryLog());
         DB::disableQueryLog();
@@ -143,7 +143,7 @@ class DataSyncSettingsReadTest extends TestCase
         $this->assertLessThanOrEqual(6, $queryCount);
 
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson("/api/data-sync/settings/industries/{$child->code}")
+            ->getJson("/api/data-sync/settings/{$child->code}?module=industries")
             ->assertStatus(200)
             ->assertJsonPath('data.parent_code', '743813');
     }
@@ -159,7 +159,7 @@ class DataSyncSettingsReadTest extends TestCase
         ]);
 
         $listResponse = $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/project_categories');
+            ->getJson('/api/data-sync/settings?module=project_categories');
 
         $listResponse->assertStatus(200)
             ->assertJsonPath('data.0.code', '445566');
@@ -170,7 +170,7 @@ class DataSyncSettingsReadTest extends TestCase
         );
 
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson("/api/data-sync/settings/project_categories/{$category->code}")
+            ->getJson("/api/data-sync/settings/{$category->code}?module=project_categories")
             ->assertStatus(200)
             ->assertJsonPath('data.name', 'Web Development');
     }
@@ -190,7 +190,7 @@ class DataSyncSettingsReadTest extends TestCase
         ]);
 
         $listResponse = $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/project_statuses');
+            ->getJson('/api/data-sync/settings?module=project_statuses');
 
         $listResponse->assertStatus(200)
             ->assertJsonPath('data.0.code', '839533');
@@ -201,7 +201,7 @@ class DataSyncSettingsReadTest extends TestCase
         );
 
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson("/api/data-sync/settings/project_statuses/{$status->code}")
+            ->getJson("/api/data-sync/settings/{$status->code}?module=project_statuses")
             ->assertStatus(200)
             ->assertJson([
                 'success' => true,
@@ -229,7 +229,7 @@ class DataSyncSettingsReadTest extends TestCase
 
         // Filter is_active=1
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies?is_active=1')
+            ->getJson('/api/data-sync/settings?module=technologies&is_active=1')
             ->assertStatus(200)
             ->assertJsonPath('pagination.total', 2)
             ->assertJsonPath('data.0.name', 'Gamma')
@@ -237,28 +237,28 @@ class DataSyncSettingsReadTest extends TestCase
 
         // Filter is_active=0
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies?is_active=0')
+            ->getJson('/api/data-sync/settings?module=technologies&is_active=0')
             ->assertStatus(200)
             ->assertJsonPath('pagination.total', 1)
             ->assertJsonPath('data.0.name', 'Beta');
 
         // Search by name
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies?search=Alph')
+            ->getJson('/api/data-sync/settings?module=technologies&search=Alph')
             ->assertStatus(200)
             ->assertJsonPath('pagination.total', 1)
             ->assertJsonPath('data.0.code', '100001');
 
         // Search by code
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies?search=100002')
+            ->getJson('/api/data-sync/settings?module=technologies&search=100002')
             ->assertStatus(200)
             ->assertJsonPath('pagination.total', 1)
             ->assertJsonPath('data.0.name', 'Beta');
 
         // Pagination + Sorting
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies?sort_by=name&sort_direction=desc&per_page=2&page=2')
+            ->getJson('/api/data-sync/settings?module=technologies&sort_by=name&sort_direction=desc&per_page=2&page=2')
             ->assertStatus(200)
             ->assertJsonPath('pagination.current_page', 2)
             ->assertJsonPath('pagination.per_page', 2)
@@ -268,7 +268,7 @@ class DataSyncSettingsReadTest extends TestCase
 
         // Invalid query params return 422
         $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-            ->getJson('/api/data-sync/settings/technologies?per_page=500&sort_by=password&sort_direction=invalid')
+            ->getJson('/api/data-sync/settings?module=technologies&per_page=500&sort_by=password&sort_direction=invalid')
             ->assertStatus(422)
             ->assertJsonPath('success', false)
             ->assertJsonPath('message', 'Validation failed.')

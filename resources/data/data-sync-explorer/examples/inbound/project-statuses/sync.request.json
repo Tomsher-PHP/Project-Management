@@ -1,0 +1,10 @@
+{
+    "module": "project_statuses",
+    "code": "900001",
+    "name": "In Review",
+    "color": "#0d6efd",
+    "type": "in_progress",
+    "sort_order": 6,
+    "is_default": false,
+    "is_active": true
+}

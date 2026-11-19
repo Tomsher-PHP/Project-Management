@@ -32,9 +32,16 @@ class DataSyncSettingsWriteTest extends TestCase
 
     public function test_create_and_update_technology(): void
     {
-        // Auto-generated 6-digit code when omitted
+        // Legacy routes return 404/405
+        $legacyPost = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+            ->postJson('/api/data-sync/settings/technologies', ['name' => 'Legacy']);
+        $this->assertContains($legacyPost->status(), [404, 405]);
+
+        // Common sync endpoint creates new record
         $createResponse = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/technologies', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '745123',
                 'name' => 'Elixir',
                 'sort_order' => 5,
                 'is_active' => true,
@@ -50,11 +57,13 @@ class DataSyncSettingsWriteTest extends TestCase
             ->assertJsonPath('data.is_active', true);
 
         $code = $createResponse->json('data.code');
-        $this->assertMatchesRegularExpression('/^\d{6}$/', (string) $code);
+        $this->assertSame('745123', (string) $code);
 
-        // Partial update preserves unspecified fields & code
+        // Common sync endpoint updates existing record
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson("/api/data-sync/settings/technologies/{$code}", [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => $code,
                 'name' => 'Elixir OTP',
             ])
             ->assertStatus(200)
@@ -65,28 +74,17 @@ class DataSyncSettingsWriteTest extends TestCase
             ->assertJsonPath('data.sort_order', 5)
             ->assertJsonPath('data.is_active', true);
 
-        // Reject attempt to change code
-        $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson("/api/data-sync/settings/technologies/{$code}", [
-                'code' => '999999',
-            ])
-            ->assertStatus(422)
-            ->assertJsonPath('success', false)
-            ->assertJsonStructure(['errors' => ['code']]);
-
-        // Update non-existent record returns 404
-        $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson('/api/data-sync/settings/technologies/000000', [
-                'name' => 'Missing',
-            ])
-            ->assertStatus(404)
-            ->assertJsonPath('message', 'Record not found.');
+        // Legacy PUT returns 404/405
+        $legacyPut = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
+            ->putJson("/api/data-sync/settings/technologies/{$code}", ['name' => 'Legacy']);
+        $this->assertContains($legacyPut->status(), [404, 405]);
     }
 
     public function test_create_and_update_industry_with_parent_code_and_hierarchy_guards(): void
     {
         $parentResponse = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/industries', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'industries',
                 'name' => 'Automotive',
                 'code' => '845621',
                 'parent_code' => null,
@@ -109,7 +107,8 @@ class DataSyncSettingsWriteTest extends TestCase
             ]);
 
         $childResponse = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/industries', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'industries',
                 'name' => 'EV Manufacturing',
                 'code' => '845622',
                 'parent_code' => '845621',
@@ -121,7 +120,9 @@ class DataSyncSettingsWriteTest extends TestCase
 
         // Self-parenting rejected
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson('/api/data-sync/settings/industries/845621', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'industries',
+                'code' => '845621',
                 'parent_code' => '845621',
             ])
             ->assertStatus(422)
@@ -129,7 +130,9 @@ class DataSyncSettingsWriteTest extends TestCase
 
         // Circular parent (parent -> child) rejected
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson('/api/data-sync/settings/industries/845621', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'industries',
+                'code' => '845621',
                 'parent_code' => '845622',
             ])
             ->assertStatus(422)
@@ -144,7 +147,9 @@ class DataSyncSettingsWriteTest extends TestCase
         $softDeletedParent->delete();
 
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/industries', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'industries',
+                'code' => '845623',
                 'name' => 'Orphan',
                 'parent_code' => '777777',
             ])
@@ -153,7 +158,9 @@ class DataSyncSettingsWriteTest extends TestCase
 
         // Omitting parent_code preserves existing parent
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson('/api/data-sync/settings/industries/845622', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'industries',
+                'code' => '845622',
                 'name' => 'EV Manufacturing Updated',
             ])
             ->assertStatus(200)
@@ -161,7 +168,9 @@ class DataSyncSettingsWriteTest extends TestCase
 
         // Explicit parent_code: null removes parent relationship
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson('/api/data-sync/settings/industries/845622', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'industries',
+                'code' => '845622',
                 'parent_code' => null,
             ])
             ->assertStatus(200)
@@ -171,7 +180,8 @@ class DataSyncSettingsWriteTest extends TestCase
     public function test_create_and_update_project_category(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/project_categories', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'project_categories',
                 'name' => 'AI Integration',
                 'code' => '556677',
                 'sort_order' => 3,
@@ -181,7 +191,9 @@ class DataSyncSettingsWriteTest extends TestCase
             ->assertJsonPath('data.name', 'AI Integration');
 
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson('/api/data-sync/settings/project_categories/556677', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'project_categories',
+                'code' => '556677',
                 'name' => 'AI & ML Integration',
                 'is_active' => false,
             ])
@@ -194,7 +206,8 @@ class DataSyncSettingsWriteTest extends TestCase
     {
         // Create default open status
         $first = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/project_statuses', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'project_statuses',
                 'name' => 'Backlog',
                 'code' => '900001',
                 'color' => '#112233',
@@ -210,7 +223,8 @@ class DataSyncSettingsWriteTest extends TestCase
 
         // Creating a second default status clears the first atomically
         $second = $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/project_statuses', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'project_statuses',
                 'name' => 'Done',
                 'code' => '900002',
                 'type' => ProjectStatus::TYPE_COMPLETED,
@@ -226,7 +240,9 @@ class DataSyncSettingsWriteTest extends TestCase
 
         // Updating first status back to default clears second
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->putJson('/api/data-sync/settings/project_statuses/900001', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'project_statuses',
+                'code' => '900001',
                 'is_default' => true,
                 'type' => ProjectStatus::TYPE_COMPLETED,
             ])
@@ -238,7 +254,9 @@ class DataSyncSettingsWriteTest extends TestCase
 
         // Invalid status type rejected
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/project_statuses', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'project_statuses',
+                'code' => '900003',
                 'name' => 'Invalid Type',
                 'type' => 'unknown_type',
             ])
@@ -255,33 +273,38 @@ class DataSyncSettingsWriteTest extends TestCase
         ]);
         $deleted->delete();
 
-        // Explicit duplicate code (even soft-deleted) returns 409 Conflict
+        // Soft-deleted record returns 409 Conflict
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->postJson('/api/data-sync/settings/technologies', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
                 'name' => 'New Tech',
                 'code' => '654321',
             ])
             ->assertStatus(409)
             ->assertJson([
                 'success' => false,
-                'message' => 'A record with this code already exists.',
+                'message' => 'The supplied code belongs to a deleted record.',
             ]);
 
         // Idempotency-Key returns cached 201 without creating a duplicate
         $idempotencyKey = 'sync-req-001';
-        $payload = ['name' => 'GraphQL', 'code' => '123789'];
+        $payload = [
+            'module' => 'technologies',
+            'name' => 'GraphQL',
+            'code' => '123789',
+        ];
 
         $first = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->writeKey,
             'Idempotency-Key' => $idempotencyKey,
-        ])->postJson('/api/data-sync/settings/technologies', $payload);
+        ])->postJson('/api/data-sync/settings/sync', $payload);
 
         $first->assertStatus(201);
 
         $second = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->writeKey,
             'Idempotency-Key' => $idempotencyKey,
-        ])->postJson('/api/data-sync/settings/technologies', $payload);
+        ])->postJson('/api/data-sync/settings/sync', $payload);
 
         $second->assertStatus(201)
             ->assertJsonPath('data.id', $first->json('data.id'));

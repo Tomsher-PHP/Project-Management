@@ -28,9 +28,7 @@ class ModuleResolver
      */
     public function isValid(string $module): bool
     {
-        $configuredModules = $this->configuredModules();
-
-        return array_key_exists($module, $configuredModules)
+        return $this->isConfigured($module)
             && array_key_exists($module, self::MODEL_MAP);
     }
 
@@ -57,12 +55,20 @@ class ModuleResolver
      */
     public function supportedModules(): array
     {
-        $configuredModules = $this->configuredModules();
-
         return array_values(array_filter(
             array_keys(self::MODEL_MAP),
-            fn (string $slug): bool => array_key_exists($slug, $configuredModules)
+            fn (string $slug): bool => $this->isConfigured($slug)
         ));
+    }
+
+    /**
+     * Determine whether the module slug exists in configuration.
+     */
+    protected function isConfigured(string $module): bool
+    {
+        $configured = $this->configuredModules();
+
+        return array_key_exists($module, $configured) || in_array($module, $configured, true);
     }
 
     /**

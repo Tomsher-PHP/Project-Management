@@ -1,0 +1,847 @@
+{
+  "info": {
+    "_postman_id": "f7d2a1b3-5c8e-4b9a-8e21-200000000001",
+    "name": "PMS Data Sync \u2013 Settings Masters",
+    "description": "Postman Collection v2.1 covering PMS Common Data Sync Settings APIs for Technologies, Industries, Project Categories, and Project Statuses.\n\nAll endpoints require Bearer API key authentication with settings.read (for GET queries) and settings.write (for POST/DELETE operations).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "YOUR_API_KEY_HERE",
+      "type": "string"
+    },
+    {
+      "key": "module",
+      "value": "technologies",
+      "type": "string"
+    },
+    {
+      "key": "code",
+      "value": "845621",
+      "type": "string"
+    },
+    {
+      "key": "technology_code",
+      "value": "845621",
+      "type": "string"
+    },
+    {
+      "key": "industry_code",
+      "value": "743813",
+      "type": "string"
+    },
+    {
+      "key": "category_code",
+      "value": "397711",
+      "type": "string"
+    },
+    {
+      "key": "status_code",
+      "value": "900001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Technologies",
+      "description": "Manage core technology stack masters used across PMS projects.",
+      "item": [
+        {
+          "name": "Sync Technology",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "tech-sync-001",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"technologies\",\n  \"code\": \"845621\",\n  \"name\": \"Vue.js\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert a Technology master record. If code does not exist, creates record (HTTP 201). If active code exists, updates record (HTTP 200)."
+          }
+        },
+        {
+          "name": "List Technologies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings?module=technologies&is_active=1&page=1&per_page=50&sort_by=sort_order&sort_direction=asc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "technologies"
+                },
+                {
+                  "key": "is_active",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "50"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "sort_order"
+                },
+                {
+                  "key": "sort_direction",
+                  "value": "asc"
+                },
+                {
+                  "key": "search",
+                  "value": "Vue",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve a paginated list of technology records with optional search, sorting, and active status filters."
+          }
+        },
+        {
+          "name": "Get Technology by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{technology_code}}?module=technologies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{technology_code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "technologies"
+                }
+              ]
+            },
+            "description": "Retrieve a single Technology master record by its unique 6-digit numeric code."
+          }
+        },
+        {
+          "name": "Delete Technology by Code",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{technology_code}}?module=technologies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{technology_code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "technologies"
+                }
+              ]
+            },
+            "description": "Soft-delete a Technology record by 6-digit code. System records and records in use by projects are protected (HTTP 409)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Industries",
+      "description": "Manage hierarchical industry sectors for customer categorization.",
+      "item": [
+        {
+          "name": "Sync Industry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "ind-sync-001",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"industries\",\n  \"code\": \"743813\",\n  \"name\": \"Information Technology\",\n  \"parent_code\": null,\n  \"sort_order\": 1,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert an Industry record by 6-digit code. Supports hierarchy via parent_code."
+          }
+        },
+        {
+          "name": "List Industries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings?module=industries&is_active=1&page=1&per_page=50&sort_by=sort_order&sort_direction=asc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "industries"
+                },
+                {
+                  "key": "is_active",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "50"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "sort_order"
+                },
+                {
+                  "key": "sort_direction",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Retrieve a paginated list of industries with resolved parent industry codes."
+          }
+        },
+        {
+          "name": "Get Industry by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{industry_code}}?module=industries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{industry_code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "industries"
+                }
+              ]
+            },
+            "description": "Retrieve an Industry record by 6-digit code."
+          }
+        },
+        {
+          "name": "Delete Industry by Code",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{industry_code}}?module=industries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{industry_code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "industries"
+                }
+              ]
+            },
+            "description": "Soft-delete an Industry record. System records, industries with child sectors, and industries linked to customers are protected."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Project Categories",
+      "description": "Manage project classification categories.",
+      "item": [
+        {
+          "name": "Sync Project Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "cat-sync-001",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"project_categories\",\n  \"code\": \"397711\",\n  \"name\": \"Web Development\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert a Project Category record by 6-digit code."
+          }
+        },
+        {
+          "name": "List Project Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings?module=project_categories&is_active=1&page=1&per_page=50&sort_by=sort_order&sort_direction=asc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "project_categories"
+                },
+                {
+                  "key": "is_active",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "50"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "sort_order"
+                },
+                {
+                  "key": "sort_direction",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Retrieve a paginated list of project categories."
+          }
+        },
+        {
+          "name": "Get Project Category by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{category_code}}?module=project_categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{category_code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "project_categories"
+                }
+              ]
+            },
+            "description": "Retrieve a single Project Category record by 6-digit code."
+          }
+        },
+        {
+          "name": "Delete Project Category by Code",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{category_code}}?module=project_categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{category_code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "project_categories"
+                }
+              ]
+            },
+            "description": "Soft-delete a Project Category record. Categories referenced by projects cannot be deleted."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Project Statuses",
+      "description": "Manage lifecycle statuses for projects.",
+      "item": [
+        {
+          "name": "Sync Project Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "status-sync-001",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"project_statuses\",\n  \"code\": \"900001\",\n  \"name\": \"In Review\",\n  \"color\": \"#0d6efd\",\n  \"type\": \"in_progress\",\n  \"sort_order\": 6,\n  \"is_default\": false,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert a Project Status record by 6-digit code. Valid types: open, in_progress, completed, on_hold, cancelled. is_completed is automatically derived."
+          }
+        },
+        {
+          "name": "List Project Statuses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings?module=project_statuses&is_active=1&page=1&per_page=50&sort_by=sort_order&sort_direction=asc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "project_statuses"
+                },
+                {
+                  "key": "is_active",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "50"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "sort_order"
+                },
+                {
+                  "key": "sort_direction",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Retrieve project status records including color, status type, and default flag."
+          }
+        },
+        {
+          "name": "Get Project Status by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{status_code}}?module=project_statuses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{status_code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "project_statuses"
+                }
+              ]
+            },
+            "description": "Retrieve a Project Status record by 6-digit code."
+          }
+        },
+        {
+          "name": "Delete Project Status by Code",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{status_code}}?module=project_statuses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{status_code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "project_statuses"
+                }
+              ]
+            },
+            "description": "Soft-delete a Project Status record. System records, default status, and statuses referenced by projects or history are protected."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Common Settings API (Generic)",
+      "description": "Generic endpoints accepting the module name dynamically.",
+      "item": [
+        {
+          "name": "Generic Sync Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "generic-sync-001",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"{{module}}\",\n  \"code\": \"{{code}}\",\n  \"name\": \"Sample Setting\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert a record for any configured settings module."
+          }
+        },
+        {
+          "name": "Generic List Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings?module={{module}}&is_active=1&page=1&per_page=50&sort_by=sort_order&sort_direction=asc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "{{module}}"
+                },
+                {
+                  "key": "is_active",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "50"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "sort_order"
+                },
+                {
+                  "key": "sort_direction",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "List records for the configured {{module}}."
+          }
+        },
+        {
+          "name": "Generic Get Settings by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{code}}?module={{module}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "{{module}}"
+                }
+              ]
+            },
+            "description": "Retrieve a record for the configured {{module}} and {{code}}."
+          }
+        },
+        {
+          "name": "Generic Delete Settings by Code",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{code}}?module={{module}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "{{module}}"
+                }
+              ]
+            },
+            "description": "Soft-delete a record for the configured {{module}} and {{code}}."
+          }
+        }
+      ]
+    }
+  ]
+}

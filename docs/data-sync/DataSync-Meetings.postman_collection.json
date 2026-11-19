@@ -1,0 +1,196 @@
+{
+  "info": {
+    "_postman_id": "c4d5e6f7-8a9b-4c0d-9e2f-400000000003",
+    "name": "PMS External Meetings API",
+    "description": "Postman Collection v2.1 covering PMS External Meetings API for server-to-server integration.\n\nAuthenticate using a valid Bearer token having the meetings.read scope.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "YOUR_API_KEY_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Meetings",
+      "description": "Endpoints for retrieving scheduled meeting records.",
+      "item": [
+        {
+          "name": "Get Active Scheduled Meetings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/meetings/active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "meetings",
+                "active"
+              ]
+            },
+            "description": "Retrieve currently active scheduled meetings where meetingStatus is scheduled and end_at is greater than or equal to now. Ordered chronologically by start_at asc."
+          },
+          "response": [
+            {
+              "name": "200 OK - Active Meetings Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/meetings/active",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meetings",
+                    "active"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 101,\n      \"title\": \"Quarterly Strategy Review\",\n      \"description\": \"Align on Q4 deliverables and team goals.\",\n      \"start_at\": \"2026-09-14T10:00:00.000000Z\",\n      \"end_at\": \"2026-09-14T11:30:00.000000Z\",\n      \"url\": \"https://meet.google.com/abc-defg-hij\",\n      \"location_details\": \"Conference Room B\",\n      \"rescheduled_from_id\": null,\n      \"status\": {\n        \"id\": 1,\n        \"code\": \"scheduled\",\n        \"name\": \"Scheduled\",\n        \"color\": \"#10B981\"\n      },\n      \"meeting_type\": {\n        \"id\": 2,\n        \"name\": \"Strategy Review\",\n        \"color\": \"#3B82F6\"\n      },\n      \"location\": {\n        \"id\": 1,\n        \"name\": \"Google Meet\"\n      },\n      \"project\": {\n        \"id\": 45,\n        \"name\": \"Project Alpha\"\n      },\n      \"organizer\": {\n        \"id\": 12,\n        \"name\": \"Jane Organizer\",\n        \"email\": \"jane@example.com\"\n      },\n      \"participants\": [\n        {\n          \"id\": 1,\n          \"user_id\": 15,\n          \"name\": \"John Smith\",\n          \"email\": \"john@example.com\",\n          \"is_external\": false\n        },\n        {\n          \"id\": 2,\n          \"user_id\": null,\n          \"name\": \"External Consultant\",\n          \"email\": \"consultant@external.com\",\n          \"is_external\": true\n        }\n      ],\n      \"tags\": [\n        {\n          \"id\": 3,\n          \"name\": \"Executive\",\n          \"color\": \"#EF4444\"\n        }\n      ]\n    }\n  ]\n}"
+            },
+            {
+              "name": "401 Unauthorized - Missing / Invalid API Key",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/meetings/active",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meetings",
+                    "active"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Unauthenticated.\"\n}"
+            },
+            {
+              "name": "403 Forbidden - Missing meetings.read Scope",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/meetings/active",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meetings",
+                    "active"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Insufficient API permissions.\"\n}"
+            },
+            {
+              "name": "429 Too Many Requests - Rate Limit Exceeded",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/meetings/active",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meetings",
+                    "active"
+                  ]
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Too Many Requests.\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

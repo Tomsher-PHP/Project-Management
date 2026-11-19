@@ -290,12 +290,16 @@ class DataSyncSettingsApiClientTest extends TestCase
 
         // Can read settings
         $this->withHeader('Authorization', 'Bearer ' . $plainTextKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
 
         // Cannot write settings (403 Forbidden)
         $this->withHeader('Authorization', 'Bearer ' . $plainTextKey)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'PHP Scope Test'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '888001',
+                'name' => 'PHP Scope Test',
+            ])
             ->assertStatus(403);
 
         // Grant settings.write scope via settings edit
@@ -307,7 +311,9 @@ class DataSyncSettingsApiClientTest extends TestCase
 
         // Now can write settings (or passes auth check)
         $writeRes = $this->withHeader('Authorization', 'Bearer ' . $plainTextKey)
-            ->postJson('/api/data-sync/settings/technologies', [
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '888002',
                 'name' => 'PHP Scope Test ' . uniqid(),
             ]);
         // 201 Created or 422, but not 403 Insufficient permissions
@@ -323,7 +329,7 @@ class DataSyncSettingsApiClientTest extends TestCase
 
         // Authenticates when active
         $this->withHeader('Authorization', 'Bearer ' . $plainTextKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
 
         // Deactivate via status toggle
@@ -333,7 +339,7 @@ class DataSyncSettingsApiClientTest extends TestCase
 
         // Deactivated key receives 401 Unauthorized
         $this->withHeader('Authorization', 'Bearer ' . $plainTextKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(401);
 
         // Reactivate via toggle
@@ -342,7 +348,7 @@ class DataSyncSettingsApiClientTest extends TestCase
 
         // Authenticates again
         $this->withHeader('Authorization', 'Bearer ' . $plainTextKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
     }
 
@@ -355,7 +361,7 @@ class DataSyncSettingsApiClientTest extends TestCase
 
         // Old key works
         $this->withHeader('Authorization', 'Bearer ' . $oldKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
 
         // Rotate key
@@ -368,12 +374,12 @@ class DataSyncSettingsApiClientTest extends TestCase
 
         // Old key rejected with 401
         $this->withHeader('Authorization', 'Bearer ' . $oldKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(401);
 
         // New key authenticates with 200
         $this->withHeader('Authorization', 'Bearer ' . $newKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
     }
 
@@ -393,7 +399,7 @@ class DataSyncSettingsApiClientTest extends TestCase
 
         // Authentication rejected with 401
         $this->withHeader('Authorization', 'Bearer ' . $plainTextKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(401);
     }
 

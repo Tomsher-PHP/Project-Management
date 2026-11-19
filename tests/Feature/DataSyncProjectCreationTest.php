@@ -675,11 +675,15 @@ class DataSyncProjectCreationTest extends TestCase
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $key)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'Swift'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '555555',
+                'name' => 'Swift',
+            ])
             ->assertStatus(201);
     }
 }

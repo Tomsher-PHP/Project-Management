@@ -1,0 +1,15 @@
+{
+    "success": true,
+    "message": "Record updated successfully.",
+    "data": {
+        "module": "industries",
+        "id": 22,
+        "name": "Information Technology Services",
+        "code": "333333",
+        "parent_code": "100011",
+        "sort_order": 2,
+        "is_system": false,
+        "is_active": true,
+        "operation": "updated"
+    }
+}

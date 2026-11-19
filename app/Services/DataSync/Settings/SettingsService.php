@@ -13,6 +13,7 @@ use App\Models\Technology;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -112,6 +113,53 @@ class SettingsService
         }
 
         return $record;
+    }
+
+    /**
+     * Synchronize (upsert) a settings master record for the given module identified by unique code.
+     *
+     * @return array{record: Model, operation: string}
+     *
+     * @throws ValidationException
+     * @throws ConflictHttpException
+     */
+    public function sync(string $module, array $data): array
+    {
+        $modelClass = $this->moduleResolver->resolve($module);
+        $code = (string) ($data['code'] ?? '');
+
+        $model = new $modelClass();
+
+        return $model->getConnection()->transaction(function () use ($module, $modelClass, $code, $data): array {
+            $existing = $modelClass::withTrashed()
+                ->where('code', $code)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existing) {
+                if (method_exists($existing, 'trashed') && $existing->trashed()) {
+                    throw new ConflictHttpException('The supplied code belongs to a deleted record.');
+                }
+
+                $record = $this->update($module, $code, $data);
+
+                return [
+                    'record' => $record,
+                    'operation' => 'updated',
+                ];
+            }
+
+            try {
+                $record = $this->create($module, $data);
+
+                return [
+                    'record' => $record,
+                    'operation' => 'created',
+                ];
+            } catch (UniqueConstraintViolationException) {
+                throw new ConflictHttpException('A record with this code already exists.');
+            }
+        });
     }
 
     /**

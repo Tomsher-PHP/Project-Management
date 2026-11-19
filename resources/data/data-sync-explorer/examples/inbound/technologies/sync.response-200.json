@@ -1,0 +1,14 @@
+{
+    "success": true,
+    "message": "Record updated successfully.",
+    "data": {
+        "module": "technologies",
+        "id": 15,
+        "name": "Laravel Framework",
+        "code": "222222",
+        "sort_order": 1,
+        "is_system": false,
+        "is_active": true,
+        "operation": "updated"
+    }
+}

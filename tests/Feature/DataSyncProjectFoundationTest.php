@@ -189,11 +189,15 @@ class DataSyncProjectFoundationTest extends TestCase
         $settingsKey = $settingsClient['plain_text_key'];
 
         $this->withHeader('Authorization', 'Bearer ' . $settingsKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $settingsKey)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'C++'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '444444',
+                'name' => 'C++',
+            ])
             ->assertStatus(201);
 
         $projectsOnlyClient = app(ApiClientService::class)->createClient('Projects Only Client', [
@@ -203,7 +207,7 @@ class DataSyncProjectFoundationTest extends TestCase
         $projectsKey = $projectsOnlyClient['plain_text_key'];
 
         $this->withHeader('Authorization', 'Bearer ' . $projectsKey)
-            ->getJson('/api/data-sync/settings/technologies')
+            ->getJson('/api/data-sync/settings?module=technologies')
             ->assertStatus(403)
             ->assertJson([
                 'success' => false,
@@ -211,7 +215,11 @@ class DataSyncProjectFoundationTest extends TestCase
             ]);
 
         $this->withHeader('Authorization', 'Bearer ' . $projectsKey)
-            ->postJson('/api/data-sync/settings/technologies', ['name' => 'Elixir'])
+            ->postJson('/api/data-sync/settings/sync', [
+                'module' => 'technologies',
+                'code' => '444445',
+                'name' => 'Elixir',
+            ])
             ->assertStatus(403)
             ->assertJson([
                 'success' => false,
