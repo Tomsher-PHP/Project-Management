@@ -1,0 +1,953 @@
+{
+  "info": {
+    "_postman_id": "f7d2a1b3-5c8e-4b9a-8e21-200000000001",
+    "name": "Data Sync \u2013 Settings",
+    "description": "Postman Collection v2.1 covering PMS Common Data Sync Settings APIs and Legacy Module-Specific CRUD APIs.\n\nAuthenticate using an API key Bearer token with settings.read and settings.write scopes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "YOUR_API_KEY_HERE",
+      "type": "string"
+    },
+    {
+      "key": "module",
+      "value": "technologies",
+      "type": "string"
+    },
+    {
+      "key": "code",
+      "value": "845621",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Common Settings API",
+      "item": [
+        {
+          "name": "Sync \u2013 Technologies",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"technologies\",\n  \"code\": \"845621\",\n  \"name\": \"Vue.js\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert a Technology record by module and code. Creates if code does not exist, updates if active."
+          }
+        },
+        {
+          "name": "Sync \u2013 Industries",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"industries\",\n  \"code\": \"743813\",\n  \"name\": \"Information Technology\",\n  \"parent_code\": null,\n  \"sort_order\": 1,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert an Industry record by module and code with optional parent_code."
+          }
+        },
+        {
+          "name": "Sync \u2013 Project Categories",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"project_categories\",\n  \"code\": \"397711\",\n  \"name\": \"Web Development\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert a Project Category record by module and code."
+          }
+        },
+        {
+          "name": "Sync \u2013 Project Statuses",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"project_statuses\",\n  \"code\": \"900001\",\n  \"name\": \"In Review\",\n  \"color\": \"#0d6efd\",\n  \"type\": \"in_progress\",\n  \"sort_order\": 6,\n  \"is_default\": false,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/sync",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "sync"
+              ]
+            },
+            "description": "Upsert a Project Status record by module and code. is_completed is derived from type."
+          }
+        },
+        {
+          "name": "List Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings?module={{module}}&is_active=1&page=1&per_page=50&sort_by=sort_order&sort_direction=asc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "{{module}}"
+                },
+                {
+                  "key": "is_active",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "50"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "sort_order"
+                },
+                {
+                  "key": "sort_direction",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "List records for any configured settings module with pagination, search, active filter, and sorting."
+          }
+        },
+        {
+          "name": "Get Settings by Code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{code}}?module={{module}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "{{module}}"
+                }
+              ]
+            },
+            "description": "Retrieve a single master record by module and 6-digit numeric code."
+          }
+        },
+        {
+          "name": "Delete Settings by Code",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/settings/{{code}}?module={{module}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "settings",
+                "{{code}}"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "{{module}}"
+                }
+              ]
+            },
+            "description": "Soft-delete a settings record by module and code. System, referenced, and default records are protected."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Legacy Module APIs",
+      "item": [
+        {
+          "name": "Technologies",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies?is_active=1&page=1&per_page=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies"
+                  ],
+                  "query": [
+                    {
+                      "key": "is_active",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "sample-tech-create-001",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sample Technology\",\n  \"code\": \"845621\",\n  \"sort_order\": 20,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sample Technology Updated\",\n  \"sort_order\": 21,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/technologies/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "technologies",
+                    "{{code}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Industries",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries?is_active=1&page=1&per_page=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries"
+                  ],
+                  "query": [
+                    {
+                      "key": "is_active",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Automotive\",\n  \"code\": \"845622\",\n  \"parent_code\": null,\n  \"sort_order\": 15,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Automotive Industry\",\n  \"sort_order\": 16,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/industries/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "industries",
+                    "{{code}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Project Categories",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories?is_active=1&page=1&per_page=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories"
+                  ],
+                  "query": [
+                    {
+                      "key": "is_active",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"AI Integration\",\n  \"code\": \"556677\",\n  \"sort_order\": 10,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"AI & ML Integration\",\n  \"sort_order\": 11,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_categories/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_categories",
+                    "{{code}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Project Statuses",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses?is_active=1&page=1&per_page=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses"
+                  ],
+                  "query": [
+                    {
+                      "key": "is_active",
+                      "value": "1"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"In Review\",\n  \"code\": \"900001\",\n  \"color\": \"#0d6efd\",\n  \"type\": \"in_progress\",\n  \"sort_order\": 6,\n  \"is_default\": false,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Final Review\",\n  \"color\": \"#198754\",\n  \"type\": \"completed\",\n  \"is_default\": false,\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses",
+                    "{{code}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/data-sync/settings/project_statuses/{{code}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "data-sync",
+                    "settings",
+                    "project_statuses",
+                    "{{code}}"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

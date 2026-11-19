@@ -205,10 +205,213 @@ class SettingsController extends Controller
         }
     }
 
+    public function sync(Request $request): JsonResponse
+    {
+        if ($errorResponse = $this->authorizeScope($request, ApiClient::SCOPE_SETTINGS_WRITE)) {
+            return $errorResponse;
+        }
+
+        $module = $request->input('module');
+
+        if ($errorResponse = $this->validateCommonModule($module)) {
+            return $errorResponse;
+        }
+
+        $codeValidator = Validator::make($request->all(), [
+            'code' => ['required', 'string', 'digits:6'],
+        ]);
+
+        if ($codeValidator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $codeValidator->errors(),
+            ], 422);
+        }
+
+        $idempotencyKey = trim((string) $request->header('Idempotency-Key', ''));
+        $cacheKey = null;
+        $payloadHash = null;
+
+        if ($idempotencyKey !== '') {
+            /** @var ApiClient $apiClient */
+            $apiClient = $request->attributes->get('api_client');
+            $cacheKey = sprintf('data-sync:idempotency:sync:%d:%s:%s', $apiClient->id, $module, sha1($idempotencyKey));
+            $payloadHash = sha1(json_encode($request->all()));
+
+            if ($cached = Cache::get($cacheKey)) {
+                if (($cached['payload_hash'] ?? null) !== $payloadHash) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Idempotency-Key reuse with different request payload.',
+                    ], 409);
+                }
+
+                return response()->json($cached['body'], $cached['status'] ?? 200);
+            }
+        }
+
+        try {
+            $result = $this->settingsService->sync($module, $request->all());
+
+            $record = $result['record'];
+            $operation = $result['operation'];
+
+            $resourceData = (new SettingsResource($record))->resolve($request);
+
+            $data = array_merge(
+                ['module' => $module],
+                $resourceData,
+                ['operation' => $operation]
+            );
+
+            $statusCode = $operation === 'created' ? 201 : 200;
+            $body = [
+                'success' => true,
+                'message' => $operation === 'created'
+                    ? 'Record created successfully.'
+                    : 'Record updated successfully.',
+                'data' => $data,
+            ];
+
+            if ($cacheKey !== null) {
+                Cache::put($cacheKey, [
+                    'payload_hash' => $payloadHash,
+                    'body' => $body,
+                    'status' => $statusCode,
+                ], now()->addMinutes(10));
+            }
+
+            return response()->json($body, $statusCode);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (ConflictHttpException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 409);
+        }
+    }
+
+    public function commonIndex(Request $request): JsonResponse
+    {
+        if ($errorResponse = $this->authorizeScope($request, ApiClient::SCOPE_SETTINGS_READ)) {
+            return $errorResponse;
+        }
+
+        $module = $request->query('module', $request->input('module'));
+
+        if ($errorResponse = $this->validateCommonModule($module)) {
+            return $errorResponse;
+        }
+
+        $validator = Validator::make($request->query(), [
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'is_active' => ['sometimes', 'nullable', 'boolean'],
+            'sort_by' => ['sometimes', 'string', Rule::in($this->settingsService->allowedSortColumns($module))],
+            'sort_direction' => ['sometimes', 'string', Rule::in(['asc', 'desc'])],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $paginator = $this->settingsService->list($module, $validator->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Records retrieved successfully.',
+            'data' => SettingsResource::collection($paginator->getCollection())->resolve($request),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ]);
+    }
+
+    public function commonShow(Request $request, string $code): JsonResponse
+    {
+        if ($errorResponse = $this->authorizeScope($request, ApiClient::SCOPE_SETTINGS_READ)) {
+            return $errorResponse;
+        }
+
+        $module = $request->query('module', $request->input('module'));
+
+        if ($errorResponse = $this->validateCommonModule($module)) {
+            return $errorResponse;
+        }
+
+        try {
+            $record = $this->settingsService->find($module, $code);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Record retrieved successfully.',
+                'data' => (new SettingsResource($record))->resolve($request),
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Record not found.',
+            ], 404);
+        }
+    }
+
+    public function commonDestroy(Request $request, string $code): JsonResponse
+    {
+        if ($errorResponse = $this->authorizeScope($request, ApiClient::SCOPE_SETTINGS_WRITE)) {
+            return $errorResponse;
+        }
+
+        $module = $request->query('module', $request->input('module'));
+
+        if ($errorResponse = $this->validateCommonModule($module)) {
+            return $errorResponse;
+        }
+
+        try {
+            $result = $this->settingsService->delete($module, $code);
+
+            return response()->json([
+                'success' => true,
+                'message' => ($result['already_deleted'] ?? false)
+                    ? 'Record already deleted.'
+                    : 'Record deleted successfully.',
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Record not found.',
+            ], 404);
+        } catch (AccessDeniedHttpException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (ConflictHttpException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 409);
+        }
+    }
+
     /**
-     * Enforce API scope authorization and module validation.
+     * Enforce API scope authorization.
      */
-    protected function authorizeAndValidateModule(Request $request, string $module, string $requiredScope): ?JsonResponse
+    protected function authorizeScope(Request $request, string $requiredScope): ?JsonResponse
     {
         /** @var ApiClient|null $apiClient */
         $apiClient = $request->attributes->get('api_client');
@@ -218,6 +421,45 @@ class SettingsController extends Controller
                 'success' => false,
                 'message' => 'Insufficient API permissions.',
             ], 403);
+        }
+
+        return null;
+    }
+
+    /**
+     * Validate the module parameter for common settings operations.
+     */
+    protected function validateCommonModule(mixed $module): ?JsonResponse
+    {
+        $validator = Validator::make(
+            ['module' => $module],
+            [
+                'module' => [
+                    'required',
+                    'string',
+                    Rule::in($this->moduleResolver->supportedModules()),
+                ],
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        return null;
+    }
+
+    /**
+     * Enforce API scope authorization and module validation.
+     */
+    protected function authorizeAndValidateModule(Request $request, string $module, string $requiredScope): ?JsonResponse
+    {
+        if ($errorResponse = $this->authorizeScope($request, $requiredScope)) {
+            return $errorResponse;
         }
 
         if (! $this->moduleResolver->isValid($module)) {
