@@ -24,11 +24,15 @@ All Data Sync APIs follow an unversioned, direct endpoint structure. Do not incl
 
 | Module | Method | Path |
 |---|---|---|
-| **Settings Masters** | `GET`, `POST` | `/api/data-sync/settings/{module}` |
-| **Settings Masters** | `GET`, `PUT`, `DELETE` | `/api/data-sync/settings/{module}/{code}` |
+| **Common Settings Sync (Upsert)** | `POST` | `/api/data-sync/settings/sync` |
+| **Common Settings List** | `GET` | `/api/data-sync/settings?module={module}` |
+| **Common Settings Get** | `GET` | `/api/data-sync/settings/{code}?module={module}` |
+| **Common Settings Delete** | `DELETE` | `/api/data-sync/settings/{code}?module={module}` |
 | **Project & Customer Creation** | `POST` | `/api/data-sync/projects` |
 | **Project Update** | `PUT` | `/api/integrations/projects/{project_code}` |
 | **Customer Update** | `PUT` | `/api/integrations/customers/{customer_code}` |
+
+> **Note on Common Settings API:** For detailed documentation on common Settings endpoints, refer to [settings-api.md](settings-api.md).
 
 ---
 

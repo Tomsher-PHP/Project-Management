@@ -123,12 +123,14 @@ class DataSyncSettingsExplorerTest extends TestCase
         $this->assertNotNull($module);
 
         $operations = array_keys($module['operations']);
+        $this->assertContains('sync', $operations);
         $this->assertContains('list', $operations);
-        $this->assertContains('show', $operations);
-        $this->assertContains('create', $operations);
-        $this->assertContains('update', $operations);
-        $this->assertContains('toggle_status', $operations);
+        $this->assertContains('get', $operations);
         $this->assertContains('delete', $operations);
+        $this->assertNotContains('create', $operations);
+        $this->assertNotContains('update', $operations);
+        $this->assertNotContains('toggle_status', $operations);
+        $this->assertNotNull($this->registry->getOperation('technologies', 'show'));
     }
 
     /**
@@ -140,12 +142,14 @@ class DataSyncSettingsExplorerTest extends TestCase
         $this->assertNotNull($module);
 
         $operations = array_keys($module['operations']);
+        $this->assertContains('sync', $operations);
         $this->assertContains('list', $operations);
-        $this->assertContains('show', $operations);
-        $this->assertContains('create', $operations);
-        $this->assertContains('update', $operations);
-        $this->assertContains('toggle_status', $operations);
+        $this->assertContains('get', $operations);
         $this->assertContains('delete', $operations);
+        $this->assertNotContains('create', $operations);
+        $this->assertNotContains('update', $operations);
+        $this->assertNotContains('toggle_status', $operations);
+        $this->assertNotNull($this->registry->getOperation('industries', 'show'));
     }
 
     /**
@@ -157,12 +161,14 @@ class DataSyncSettingsExplorerTest extends TestCase
         $this->assertNotNull($module);
 
         $operations = array_keys($module['operations']);
+        $this->assertContains('sync', $operations);
         $this->assertContains('list', $operations);
-        $this->assertContains('show', $operations);
-        $this->assertContains('create', $operations);
-        $this->assertContains('update', $operations);
-        $this->assertContains('toggle_status', $operations);
+        $this->assertContains('get', $operations);
         $this->assertContains('delete', $operations);
+        $this->assertNotContains('create', $operations);
+        $this->assertNotContains('update', $operations);
+        $this->assertNotContains('toggle_status', $operations);
+        $this->assertNotNull($this->registry->getOperation('project_categories', 'show'));
     }
 
     /**
@@ -174,12 +180,14 @@ class DataSyncSettingsExplorerTest extends TestCase
         $this->assertNotNull($module);
 
         $operations = array_keys($module['operations']);
+        $this->assertContains('sync', $operations);
         $this->assertContains('list', $operations);
-        $this->assertContains('show', $operations);
-        $this->assertContains('create', $operations);
-        $this->assertContains('update', $operations);
-        $this->assertContains('toggle_status', $operations);
+        $this->assertContains('get', $operations);
         $this->assertContains('delete', $operations);
+        $this->assertNotContains('create', $operations);
+        $this->assertNotContains('update', $operations);
+        $this->assertNotContains('toggle_status', $operations);
+        $this->assertNotNull($this->registry->getOperation('project_statuses', 'show'));
     }
 
     /**

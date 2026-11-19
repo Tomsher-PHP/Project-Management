@@ -1,0 +1,197 @@
+{
+  "info": {
+    "_postman_id": "b3c4d5e6-7f8a-4b9c-8d1e-300000000002",
+    "name": "PMS Data Sync \u2013 Projects & Customers",
+    "description": "Postman Collection v2.1 covering PMS Inbound Project Synchronization and Customer Management APIs.\n\nAll endpoints require Bearer API key authentication with the projects.write scope.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "YOUR_API_KEY_HERE",
+      "type": "string"
+    },
+    {
+      "key": "customer_code",
+      "value": "CUS00001",
+      "type": "string"
+    },
+    {
+      "key": "project_code",
+      "value": "PRJ00001",
+      "type": "string"
+    },
+    {
+      "key": "external_customer_code",
+      "value": "CRM-CUS-1025",
+      "type": "string"
+    },
+    {
+      "key": "external_project_code",
+      "value": "CRM-PRJ-1001",
+      "type": "string"
+    },
+    {
+      "key": "industry_code",
+      "value": "743813",
+      "type": "string"
+    },
+    {
+      "key": "status_code",
+      "value": "100001",
+      "type": "string"
+    },
+    {
+      "key": "stage_code",
+      "value": "200001",
+      "type": "string"
+    },
+    {
+      "key": "technology_code",
+      "value": "500001",
+      "type": "string"
+    },
+    {
+      "key": "category_code",
+      "value": "600001",
+      "type": "string"
+    },
+    {
+      "key": "service_type_code",
+      "value": "700001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Projects",
+      "description": "Inbound project creation, synchronization, and update endpoints.",
+      "item": [
+        {
+          "name": "Create Customer & Projects",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "crm-sync-req-001",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer\": {\n    \"external_code\": \"{{external_customer_code}}\",\n    \"external_id\": \"9021\",\n    \"name\": \"ABC Technologies LLC\",\n    \"email\": \"info@abctech.ae\",\n    \"industry_code\": \"{{industry_code}}\",\n    \"website\": \"https://abctech.ae\",\n    \"country_code\": \"AE\",\n    \"emirate\": \"Dubai\",\n    \"company_address\": \"Level 14, Al Saada Tower, Dubai\",\n    \"sales_person_email\": \"sales@abctech.ae\",\n    \"contacts\": [\n      {\n        \"name\": \"Ahmed Mohammed\",\n        \"email\": \"ahmed@abctech.ae\",\n        \"mobile\": \"+971501234567\",\n        \"designation\": \"Director\",\n        \"is_primary\": true\n      },\n      {\n        \"name\": \"Sarah Jenkins\",\n        \"email\": \"sarah@abctech.ae\",\n        \"mobile\": \"+971507654321\",\n        \"designation\": \"Technical Lead\",\n        \"is_primary\": false\n      }\n    ]\n  },\n  \"projects\": [\n    {\n      \"external_code\": \"{{external_project_code}}\",\n      \"external_id\": \"PRJ-901\",\n      \"name\": \"Corporate Portal Redesign\",\n      \"project_flow\": \"agile\",\n      \"priority\": \"high\",\n      \"status_code\": \"{{status_code}}\",\n      \"stage_code\": \"{{stage_code}}\",\n      \"start_date\": \"2026-12-01\",\n      \"end_date\": \"2027-02-28\",\n      \"customer_end_date\": \"2027-03-15\",\n      \"estimated_time_minutes\": 12000,\n      \"customer_estimate_minutes\": 10800,\n      \"default_task_estimate_seconds\": 3600,\n      \"domain\": \"portal.abctech.ae\",\n      \"sales_person_email\": \"sales@abctech.ae\",\n      \"technology_codes\": [\n        \"{{technology_code}}\"\n      ],\n      \"category_codes\": [\n        \"{{category_code}}\"\n      ],\n      \"service_type_codes\": [\n        \"{{service_type_code}}\"\n      ],\n      \"default_billable\": true,\n      \"is_active\": true\n    },\n    {\n      \"external_code\": \"CRM-PRJ-1002\",\n      \"external_id\": \"PRJ-902\",\n      \"name\": \"Mobile Companion Application\",\n      \"project_flow\": \"agile\",\n      \"priority\": \"medium\",\n      \"status_code\": \"{{status_code}}\",\n      \"stage_code\": \"{{stage_code}}\",\n      \"start_date\": \"2027-01-15\",\n      \"end_date\": \"2027-04-30\",\n      \"estimated_time_minutes\": 9000,\n      \"sales_person_email\": \"sales@abctech.ae\",\n      \"technology_codes\": [\n        \"{{technology_code}}\"\n      ],\n      \"category_codes\": [\n        \"{{category_code}}\"\n      ],\n      \"default_billable\": true,\n      \"is_active\": true\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sync/projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "data-sync",
+                "projects"
+              ]
+            },
+            "description": "Atomically synchronizes one customer organization, customer contacts, and one or multiple projects (up to 50 per batch) with permanent entity mapping."
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Corporate Portal Redesign - Phase 2\",\n  \"priority\": \"urgent\",\n  \"status_code\": \"{{status_code}}\",\n  \"stage_code\": \"{{stage_code}}\",\n  \"end_date\": \"2027-03-31\",\n  \"estimated_time_minutes\": 15000,\n  \"technology_codes\": [\n    \"{{technology_code}}\"\n  ],\n  \"category_codes\": [\n    \"{{category_code}}\"\n  ],\n  \"service_type_codes\": [\n    \"{{service_type_code}}\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/integrations/projects/{{project_code}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "integrations",
+                "projects",
+                "{{project_code}}"
+              ]
+            },
+            "description": "Partially update an existing project identified by its PMS project_code. Omitted fields retain existing values."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "description": "Inbound customer synchronization and contact management endpoints.",
+      "item": [
+        {
+          "name": "Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ABC Technologies International LLC\",\n  \"email\": \"contact@abctech.ae\",\n  \"industry_code\": \"{{industry_code}}\",\n  \"country_code\": \"AE\",\n  \"emirate\": \"Dubai\",\n  \"website\": \"https://abctech.ae\",\n  \"company_address\": \"Office 402, Business Bay, Dubai\",\n  \"sales_person_email\": \"sales@abctech.ae\",\n  \"is_active\": true,\n  \"contacts\": [\n    {\n      \"id\": 1,\n      \"name\": \"Ahmed Mohammed\",\n      \"designation\": \"Managing Director\",\n      \"mobile\": \"+971501234567\",\n      \"is_primary\": true\n    },\n    {\n      \"name\": \"Fatima Al-Zahra\",\n      \"email\": \"fatima@abctech.ae\",\n      \"mobile\": \"+971509988776\",\n      \"designation\": \"Operations Lead\",\n      \"is_primary\": false\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/integrations/customers/{{customer_code}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "integrations",
+                "customers",
+                "{{customer_code}}"
+              ]
+            },
+            "description": "Update an existing customer organization and its contacts by PMS customer code."
+          }
+        }
+      ]
+    }
+  ]
+}

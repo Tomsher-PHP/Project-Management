@@ -54,13 +54,13 @@ class DataSyncSettingsDeleteTest extends TestCase
         ] as $module => $model) {
             // Read-only client cannot delete
             $this->withHeader('Authorization', 'Bearer ' . $this->readKey)
-                ->deleteJson("/api/data-sync/settings/{$module}/{$model->code}")
+                ->deleteJson("/api/data-sync/settings/{$model->code}?module={$module}")
                 ->assertStatus(403)
                 ->assertJson(['success' => false, 'message' => 'Insufficient API permissions.']);
 
             // First delete succeeds (soft delete)
             $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-                ->deleteJson("/api/data-sync/settings/{$module}/{$model->code}")
+                ->deleteJson("/api/data-sync/settings/{$model->code}?module={$module}")
                 ->assertStatus(200)
                 ->assertJson(['success' => true, 'message' => 'Record deleted successfully.']);
 
@@ -70,26 +70,26 @@ class DataSyncSettingsDeleteTest extends TestCase
 
             // Excluded from GET APIs
             $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-                ->getJson("/api/data-sync/settings/{$module}/{$model->code}")
+                ->getJson("/api/data-sync/settings/{$model->code}?module={$module}")
                 ->assertStatus(404);
 
             // Repeated DELETE returns 200 "Record already deleted."
             $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-                ->deleteJson("/api/data-sync/settings/{$module}/{$model->code}")
+                ->deleteJson("/api/data-sync/settings/{$model->code}?module={$module}")
                 ->assertStatus(200)
                 ->assertJson(['success' => true, 'message' => 'Record already deleted.']);
         }
     }
 
-    public function test_invalid_module_and_unknown_code_return_404(): void
+    public function test_invalid_module_returns_422_and_unknown_code_returns_404(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/invalid_module/123456')
-            ->assertStatus(404)
-            ->assertJson(['success' => false, 'message' => 'Invalid Data Sync module.']);
+            ->deleteJson('/api/data-sync/settings/123456?module=invalid_module')
+            ->assertStatus(422)
+            ->assertJson(['success' => false, 'message' => 'Validation failed.']);
 
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/technologies/000000')
+            ->deleteJson('/api/data-sync/settings/000000?module=technologies')
             ->assertStatus(404)
             ->assertJson(['success' => false, 'message' => 'Record not found.']);
     }
@@ -108,7 +108,7 @@ class DataSyncSettingsDeleteTest extends TestCase
             'project_statuses' => $status,
         ] as $module => $model) {
             $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-                ->deleteJson("/api/data-sync/settings/{$module}/{$model->code}")
+                ->deleteJson("/api/data-sync/settings/{$model->code}?module={$module}")
                 ->assertStatus(403)
                 ->assertJson(['success' => false, 'message' => 'System records cannot be deleted.']);
 
@@ -159,41 +159,41 @@ class DataSyncSettingsDeleteTest extends TestCase
 
         // 1. Technology referenced by project
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/technologies/222001')
+            ->deleteJson('/api/data-sync/settings/222001?module=technologies')
             ->assertStatus(409)
             ->assertJson(['success' => false, 'message' => 'This record is currently in use and cannot be deleted.']);
         $this->assertTrue(ProjectTechnology::where('technology_id', $tech->id)->exists());
 
         // 2. Industry with child industry
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/industries/222002')
+            ->deleteJson('/api/data-sync/settings/222002?module=industries')
             ->assertStatus(409);
 
         // 3. Industry with customer
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/industries/222004')
+            ->deleteJson('/api/data-sync/settings/222004?module=industries')
             ->assertStatus(409);
         $this->assertSame($indWithCustomer->id, $customer->fresh()->industry_id);
 
         // 4. ProjectCategory referenced in projects.project_category_ids JSON
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/project_categories/222005')
+            ->deleteJson('/api/data-sync/settings/222005?module=project_categories')
             ->assertStatus(409);
         $this->assertSame([$cat->id], $project->fresh()->project_category_ids);
 
         // 5. ProjectStatus referenced by project
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/project_statuses/222006')
+            ->deleteJson('/api/data-sync/settings/222006?module=project_statuses')
             ->assertStatus(409);
 
         // 6. ProjectStatus referenced by history
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/project_statuses/222007')
+            ->deleteJson('/api/data-sync/settings/222007?module=project_statuses')
             ->assertStatus(409);
 
         // 7. Default ProjectStatus
         $this->withHeader('Authorization', 'Bearer ' . $this->writeKey)
-            ->deleteJson('/api/data-sync/settings/project_statuses/222008')
+            ->deleteJson('/api/data-sync/settings/222008?module=project_statuses')
             ->assertStatus(409)
             ->assertJson(['success' => false, 'message' => 'Default project status cannot be deleted.']);
     }

@@ -152,6 +152,12 @@ class DataSyncExplorerRegistry
         $module = $this->getModule($moduleKey, $direction);
         $operation = $module['operations'][$operationKey] ?? null;
 
+        if (! $operation && $operationKey === 'show') {
+            $operation = $module['operations']['get'] ?? null;
+        } elseif (! $operation && $operationKey === 'get') {
+            $operation = $module['operations']['show'] ?? null;
+        }
+
         return is_array($operation) ? $operation : null;
     }
 
@@ -176,8 +182,8 @@ class DataSyncExplorerRegistry
 
         $fullUrl = $baseUrl.'/'.ltrim($resolvedEndpoint, '/');
 
-        // If GET and has query params, append sample query string
-        if ($method === 'GET' && ! empty($operation['query_params'])) {
+        // If GET/DELETE and has query params, append sample query string
+        if (in_array($method, ['GET', 'DELETE']) && ! empty($operation['query_params'])) {
             $sampleParams = [];
             foreach ($operation['query_params'] as $param) {
                 if (isset($param['default']) && $param['default'] !== 'null') {
@@ -185,7 +191,8 @@ class DataSyncExplorerRegistry
                 }
             }
             if (! empty($sampleParams)) {
-                $fullUrl .= '?'.http_build_query($sampleParams);
+                $separator = str_contains($fullUrl, '?') ? '&' : '?';
+                $fullUrl .= $separator.http_build_query($sampleParams);
             }
         }
 
@@ -254,6 +261,9 @@ class DataSyncExplorerRegistry
                     : null;
                 $operation['formatted_success_response'] = ! empty($operation['response_success']['body'])
                     ? json_encode($operation['response_success']['body'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+                    : null;
+                $operation['formatted_updated_response'] = ! empty($operation['response_success']['updated_body'])
+                    ? json_encode($operation['response_success']['updated_body'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
                     : null;
 
                 $formattedErrors = [];
@@ -380,6 +390,13 @@ class DataSyncExplorerRegistry
             && is_string($operation['response_success']['body'] ?? null)) {
             $operation['response_success']['body'] = $this->loadExample(
                 $operation['response_success']['body']
+            );
+        }
+
+        if (is_array($operation['response_success'] ?? null)
+            && is_string($operation['response_success']['updated_body'] ?? null)) {
+            $operation['response_success']['updated_body'] = $this->loadExample(
+                $operation['response_success']['updated_body']
             );
         }
 

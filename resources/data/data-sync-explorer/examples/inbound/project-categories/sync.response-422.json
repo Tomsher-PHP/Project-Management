@@ -3,7 +3,7 @@
     "message": "Validation failed.",
     "errors": {
         "name": [
-            "The name has already been taken."
+            "The name field is required."
         ]
     }
 }

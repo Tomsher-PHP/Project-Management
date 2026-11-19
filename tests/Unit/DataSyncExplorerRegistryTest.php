@@ -90,11 +90,11 @@ class DataSyncExplorerRegistryTest extends TestCase
         $this->assertSame(['settings', 'operations'], array_keys($this->registry->getCategories()));
         $this->assertSame($expectedModules, array_keys($modules));
         $this->assertSame($expectedModules, $this->config->get('data_sync_explorer.directions.inbound.module_order'));
-        $this->assertSame(28, array_sum(array_map(
+        $this->assertSame(20, array_sum(array_map(
             fn (array $module): int => count($module['operations']),
             $modules
         )));
-        $this->assertSame(15, array_sum(array_map(
+        $this->assertSame(7, array_sum(array_map(
             fn (array $module): int => count(array_filter(
                 $module['operations'],
                 fn (array $operation): bool => ! empty($operation['request_payload'])
@@ -127,13 +127,13 @@ class DataSyncExplorerRegistryTest extends TestCase
             }
         }
 
-        $technologyCreate = $modules['technologies']['operations']['create'];
-        $this->assertSame(ApiClient::SCOPE_SETTINGS_WRITE, $technologyCreate['scope']);
+        $technologySync = $modules['technologies']['operations']['sync'];
+        $this->assertSame(ApiClient::SCOPE_SETTINGS_WRITE, $technologySync['scope']);
         $this->assertSame(
             ['Authorization', 'Accept', 'Content-Type', 'Idempotency-Key'],
-            array_column($technologyCreate['headers'], 'name')
+            array_column($technologySync['headers'], 'name')
         );
-        $this->assertSame([401, 403, 409, 422], array_keys($technologyCreate['response_errors']));
+        $this->assertSame([401, 403, 409, 422], array_keys($technologySync['response_errors']));
     }
 
     public function test_current_explorer_output_remains_direction_agnostic(): void
@@ -143,11 +143,11 @@ class DataSyncExplorerRegistryTest extends TestCase
         $this->assertSame(['base_url', 'categories', 'modules'], array_keys($data));
         $this->assertArrayNotHasKey('directions', $data);
         $this->assertSame('https://pms.example', $data['base_url']);
-        $this->assertSame('https://pms.example/api/data-sync/settings/technologies', $data['modules']['technologies']['operations']['list']['full_url']);
+        $this->assertSame('https://pms.example/api/data-sync/settings?module=technologies', $data['modules']['technologies']['operations']['list']['full_url']);
         $this->assertNotEmpty($data['modules']['technologies']['operations']['list']['curl_command']);
         $this->assertNotEmpty($data['modules']['technologies']['operations']['list']['formatted_success_response']);
         $this->assertSame(
-            '8e5ee4ccc60a034a9434143f554e35fca16452806b36cb4117498b162ff73565',
+            '48581ca763eb7297f5f25840496f41198ede7155d65f87ef6501e1dffa1d9063',
             hash('sha256', json_encode($data, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR))
         );
     }
@@ -184,7 +184,7 @@ class DataSyncExplorerRegistryTest extends TestCase
         }
         sort($files);
 
-        $this->assertCount(52, $references);
+        $this->assertCount(47, $references);
         $this->assertSame($references, $files);
 
         foreach ($references as $reference) {
@@ -216,15 +216,15 @@ class DataSyncExplorerRegistryTest extends TestCase
             }
         }
 
-        $this->assertSame(15, $requestCount);
-        $this->assertSame(28, $successCount);
-        $this->assertSame(61, $errorCount);
+        $this->assertSame(7, $requestCount);
+        $this->assertSame(20, $successCount);
+        $this->assertSame(60, $errorCount);
     }
 
     public function test_directory_traversal_reference_is_rejected(): void
     {
         $this->config->set(
-            'data_sync_explorer.directions.inbound.modules.technologies.operations.create.request_payload',
+            'data_sync_explorer.directions.inbound.modules.technologies.operations.sync.request_payload',
             '../outside.json'
         );
 
@@ -237,7 +237,7 @@ class DataSyncExplorerRegistryTest extends TestCase
     public function test_missing_example_file_produces_a_clear_error(): void
     {
         $this->config->set(
-            'data_sync_explorer.directions.inbound.modules.technologies.operations.create.request_payload',
+            'data_sync_explorer.directions.inbound.modules.technologies.operations.sync.request_payload',
             'inbound/technologies/missing.request.json'
         );
 

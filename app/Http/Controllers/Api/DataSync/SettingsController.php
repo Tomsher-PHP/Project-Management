@@ -7,7 +7,6 @@ use App\Http\Resources\DataSync\SettingsResource;
 use App\Models\ApiClient;
 use App\Services\DataSync\Settings\ModuleResolver;
 use App\Services\DataSync\Settings\SettingsService;
-use BadMethodCallException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,9 +24,107 @@ class SettingsController extends Controller
         protected SettingsService $settingsService
     ) {}
 
-    public function index(Request $request, string $module): JsonResponse
+    public function sync(Request $request): JsonResponse
     {
-        if ($errorResponse = $this->authorizeAndValidateModule($request, $module, ApiClient::SCOPE_SETTINGS_READ)) {
+        if ($errorResponse = $this->authorizeScope($request, ApiClient::SCOPE_SETTINGS_WRITE)) {
+            return $errorResponse;
+        }
+
+        $module = $request->input('module');
+
+        if ($errorResponse = $this->validateCommonModule($module)) {
+            return $errorResponse;
+        }
+
+        $codeValidator = Validator::make($request->all(), [
+            'code' => ['required', 'string', 'digits:6'],
+        ]);
+
+        if ($codeValidator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $codeValidator->errors(),
+            ], 422);
+        }
+
+        $idempotencyKey = trim((string) $request->header('Idempotency-Key', ''));
+        $cacheKey = null;
+        $payloadHash = null;
+
+        if ($idempotencyKey !== '') {
+            /** @var ApiClient $apiClient */
+            $apiClient = $request->attributes->get('api_client');
+            $cacheKey = sprintf('data-sync:idempotency:sync:%d:%s:%s', $apiClient->id, $module, sha1($idempotencyKey));
+            $payloadHash = sha1(json_encode($request->all()));
+
+            if ($cached = Cache::get($cacheKey)) {
+                if (($cached['payload_hash'] ?? null) !== $payloadHash) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Idempotency-Key reuse with different request payload.',
+                    ], 409);
+                }
+
+                return response()->json($cached['body'], $cached['status'] ?? 200);
+            }
+        }
+
+        try {
+            $result = $this->settingsService->sync($module, $request->all());
+
+            $record = $result['record'];
+            $operation = $result['operation'];
+
+            $resourceData = (new SettingsResource($record))->resolve($request);
+
+            $data = array_merge(
+                ['module' => $module],
+                $resourceData,
+                ['operation' => $operation]
+            );
+
+            $statusCode = $operation === 'created' ? 201 : 200;
+            $body = [
+                'success' => true,
+                'message' => $operation === 'created'
+                    ? 'Record created successfully.'
+                    : 'Record updated successfully.',
+                'data' => $data,
+            ];
+
+            if ($cacheKey !== null) {
+                Cache::put($cacheKey, [
+                    'payload_hash' => $payloadHash,
+                    'body' => $body,
+                    'status' => $statusCode,
+                ], now()->addMinutes(10));
+            }
+
+            return response()->json($body, $statusCode);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (ConflictHttpException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 409);
+        }
+    }
+
+    public function commonIndex(Request $request): JsonResponse
+    {
+        if ($errorResponse = $this->authorizeScope($request, ApiClient::SCOPE_SETTINGS_READ)) {
+            return $errorResponse;
+        }
+
+        $module = $request->query('module', $request->input('module'));
+
+        if ($errorResponse = $this->validateCommonModule($module)) {
             return $errorResponse;
         }
 
@@ -63,9 +160,15 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $module, string $code): JsonResponse
+    public function commonShow(Request $request, string $code): JsonResponse
     {
-        if ($errorResponse = $this->authorizeAndValidateModule($request, $module, ApiClient::SCOPE_SETTINGS_READ)) {
+        if ($errorResponse = $this->authorizeScope($request, ApiClient::SCOPE_SETTINGS_READ)) {
+            return $errorResponse;
+        }
+
+        $module = $request->query('module', $request->input('module'));
+
+        if ($errorResponse = $this->validateCommonModule($module)) {
             return $errorResponse;
         }
 
@@ -85,96 +188,15 @@ class SettingsController extends Controller
         }
     }
 
-    public function store(Request $request, string $module): JsonResponse
+    public function commonDestroy(Request $request, string $code): JsonResponse
     {
-        if ($errorResponse = $this->authorizeAndValidateModule($request, $module, ApiClient::SCOPE_SETTINGS_WRITE)) {
+        if ($errorResponse = $this->authorizeScope($request, ApiClient::SCOPE_SETTINGS_WRITE)) {
             return $errorResponse;
         }
 
-        $idempotencyKey = trim((string) $request->header('Idempotency-Key', ''));
-        $cacheKey = null;
-        $payloadHash = null;
+        $module = $request->query('module', $request->input('module'));
 
-        if ($idempotencyKey !== '') {
-            /** @var ApiClient $apiClient */
-            $apiClient = $request->attributes->get('api_client');
-            $cacheKey = sprintf('data-sync:idempotency:%d:%s:%s', $apiClient->id, $module, sha1($idempotencyKey));
-            $payloadHash = sha1(json_encode($request->all()));
-
-            if ($cached = Cache::get($cacheKey)) {
-                if (($cached['payload_hash'] ?? null) !== $payloadHash) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Idempotency-Key reuse with different request payload.',
-                    ], 409);
-                }
-
-                return response()->json($cached['body'], 201);
-            }
-        }
-
-        try {
-            $record = $this->settingsService->create($module, $request->all());
-
-            $body = [
-                'success' => true,
-                'message' => 'Record created successfully.',
-                'data' => (new SettingsResource($record))->resolve($request),
-            ];
-
-            if ($cacheKey !== null) {
-                Cache::put($cacheKey, [
-                    'payload_hash' => $payloadHash,
-                    'body' => $body,
-                ], now()->addMinutes(10));
-            }
-
-            return response()->json($body, 201);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'errors' => $e->errors(),
-            ], 422);
-        } catch (ConflictHttpException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 409);
-        }
-    }
-
-    public function update(Request $request, string $module, string $code): JsonResponse
-    {
-        if ($errorResponse = $this->authorizeAndValidateModule($request, $module, ApiClient::SCOPE_SETTINGS_WRITE)) {
-            return $errorResponse;
-        }
-
-        try {
-            $record = $this->settingsService->update($module, $code, $request->all());
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Record updated successfully.',
-                'data' => (new SettingsResource($record))->resolve($request),
-            ]);
-        } catch (ModelNotFoundException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Record not found.',
-            ], 404);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'errors' => $e->errors(),
-            ], 422);
-        }
-    }
-
-    public function destroy(Request $request, string $module, string $code): JsonResponse
-    {
-        if ($errorResponse = $this->authorizeAndValidateModule($request, $module, ApiClient::SCOPE_SETTINGS_WRITE)) {
+        if ($errorResponse = $this->validateCommonModule($module)) {
             return $errorResponse;
         }
 
@@ -206,9 +228,9 @@ class SettingsController extends Controller
     }
 
     /**
-     * Enforce API scope authorization and module validation.
+     * Enforce API scope authorization.
      */
-    protected function authorizeAndValidateModule(Request $request, string $module, string $requiredScope): ?JsonResponse
+    protected function authorizeScope(Request $request, string $requiredScope): ?JsonResponse
     {
         /** @var ApiClient|null $apiClient */
         $apiClient = $request->attributes->get('api_client');
@@ -220,38 +242,34 @@ class SettingsController extends Controller
             ], 403);
         }
 
-        if (! $this->moduleResolver->isValid($module)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid Data Sync module.',
-            ], 404);
-        }
-
         return null;
     }
 
     /**
-     * Enforce API scope authorization and module validation before invoking SettingsService.
+     * Validate the module parameter for common settings operations.
      */
-    protected function executeOperation(Request $request, string $module, string $requiredScope, callable $operation): JsonResponse
+    protected function validateCommonModule(mixed $module): ?JsonResponse
     {
-        if ($errorResponse = $this->authorizeAndValidateModule($request, $module, $requiredScope)) {
-            return $errorResponse;
-        }
+        $validator = Validator::make(
+            ['module' => $module],
+            [
+                'module' => [
+                    'required',
+                    'string',
+                    Rule::in($this->moduleResolver->supportedModules()),
+                ],
+            ]
+        );
 
-        try {
-            $result = $operation();
-
-            return response()->json([
-                'success' => true,
-                'data' => $result,
-            ]);
-        } catch (BadMethodCallException) {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'This Data Sync operation is not implemented yet.',
-            ], 501);
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
         }
+
+        return null;
     }
 }
 

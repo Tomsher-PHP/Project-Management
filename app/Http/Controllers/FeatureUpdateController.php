@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class FeatureUpdateController extends Controller
 {
-    
+
     /**
      * Display all feature announcements.
      */
@@ -64,7 +64,7 @@ class FeatureUpdateController extends Controller
             ],
             'video_url' => ['nullable', 'url', 'max:2048'],
             'target_type' => [
-                'required',
+                'nullable',
                 Rule::in(['all', 'roles', 'users']),
             ],
             'target_roles' => ['nullable', 'array'],
@@ -156,7 +156,7 @@ class FeatureUpdateController extends Controller
             ],
             'video_url' => ['nullable', 'url', 'max:2048'],
             'target_type' => [
-                'required',
+                'nullable',
                 Rule::in(['all', 'roles', 'users']),
             ],
             'target_roles' => ['nullable', 'array'],
