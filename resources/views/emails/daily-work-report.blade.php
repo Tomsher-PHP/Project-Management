@@ -357,35 +357,15 @@
                                     $shiftEnd = data_get($employeeReport, 'shift.end');
 
                                     // Actual worked timing.
-                                    $workedStart = $timeLogs
-                                        ->pluck('started_at')
-                                        ->filter()
-                                        ->map(function ($time) {
-                                            try {
-                                                return \Carbon\Carbon::parse($time);
-                                            } catch (\Throwable $e) {
-                                                return null;
-                                            }
-                                        })
-                                        ->filter()
-                                        ->sortBy(fn($time) => $time->timestamp)
-                                        ->first();
+                                    // Actual worked timing (calculated in the service using dashboard timezone logic).
+                                    $workedStart = data_get($employeeReport, 'time_logs.start_time');
+                                    $workedEnd = data_get($employeeReport, 'time_logs.end_time');
 
-                                    $workedEnd = $timeLogs
-                                        ->pluck('ended_at')
-                                        ->filter()
-                                        ->map(function ($time) {
-                                            try {
-                                                return \Carbon\Carbon::parse($time);
-                                            } catch (\Throwable $e) {
-                                                return null;
-                                            }
-                                        })
-                                        ->filter()
-                                        ->sortByDesc(fn($time) => $time->timestamp)
-                                        ->first();
-
-                                    $totalWorkingHours = $formatDuration($totalSeconds);
+                                    $totalWorkingHours = data_get(
+                                        $employeeReport,
+                                        'time_logs.total_worked_time',
+                                        $formatDuration($totalSeconds)
+                                    );
 
                                     // Attendance information.
                                     $attendanceType = data_get($employeeReport, 'attendance.type');
