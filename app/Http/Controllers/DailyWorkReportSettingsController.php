@@ -24,7 +24,7 @@ class DailyWorkReportSettingsController extends Controller
 
     public function __construct()
     {
-        $this->pageTitle = 'General Report Settings';
+        $this->pageTitle = 'Daily Work Report Settings';
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 

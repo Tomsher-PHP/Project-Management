@@ -414,6 +414,10 @@ Route::middleware([
 
         Route::prefix('project-reports')->name('project-reports.')->controller(ProjectReportSettingsController::class)->group(function () {
             Route::get('/', 'index')->middleware('permission.type:report_settings.manage')->name('index');
+            Route::post('/settings', 'update')->middleware('permission.type:report_settings.manage')->name('settings.update');
+            Route::post('/recipients', 'storeRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.store');
+            Route::patch('/recipients/{recipient}/toggle', 'toggleRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.toggle');
+            Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.destroy');
         });
 
         // Data Sync Settings Routes

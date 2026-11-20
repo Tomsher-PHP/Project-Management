@@ -9,6 +9,7 @@ return [
             'description' => 'Employee daily activity and work summary.',
             'available' => true,
             'permission' => 'report_settings.manage',
+            'route' => 'settings.daily-work-reports.index',
             'tabs' => ['general', 'recipients', 'users', 'advanced'],
 
             // Keep your existing sections array here.
@@ -17,8 +18,10 @@ return [
         'project_report' => [
             'label' => 'Project Report',
             'description' => 'Project progress, milestones and performance.',
-            'available' => false,
-            'tabs' => ['general', 'recipients', 'advanced'],
+            'available' => true,
+            'permission' => 'report_settings.manage',
+            'route' => 'settings.project-reports.index',
+            'tabs' => ['general', 'recipients'],
             'sections' => [],
         ],
 
