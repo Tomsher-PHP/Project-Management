@@ -204,7 +204,7 @@
                                     :model="$preferenceToggleModel"
                                     route="settings.daily-work-reports.users.preference"
                                     entity="user-report-preference"
-                                    permission="daily_work_report.edit"
+                                    permission="report_settings.manage"
                                 />
                             @else
                                 <span class="rounded-full px-2.5 py-1 text-xs font-medium

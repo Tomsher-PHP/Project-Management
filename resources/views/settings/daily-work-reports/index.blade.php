@@ -33,7 +33,7 @@
 
             $enabledValue = (bool) old('enabled', $settings->enabled);
 
-            $reportPermission = $currentReport['permission'] ?? 'daily_work_report.edit';
+            $reportPermission = $currentReport['permission'] ?? 'report_settings.manage';
         @endphp
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">

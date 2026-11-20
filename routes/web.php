@@ -52,6 +52,7 @@ use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectNotificationSettingController;
 use App\Http\Controllers\ProjectPaymentController;
+use App\Http\Controllers\ProjectReportSettingsController;
 use App\Http\Controllers\ProjectRestoreController;
 use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectStageController;
@@ -400,16 +401,19 @@ Route::middleware([
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.edit')->only(['update']);
         Route::resource('vendors', CompanyExpensesSettingsController::class)->middleware('permission.type:company_expenses.delete')->only(['destroy']);
 
-
         // General Report Settings
         Route::prefix('daily-work-reports')->name('daily-work-reports.')->controller(DailyWorkReportSettingsController::class)->group(function () {
-            Route::get('/', 'index')->middleware('permission.type:daily_work_report.view')->name('index');
-            Route::post('/settings', 'update')->middleware('permission.type:daily_work_report.edit')->name('settings.update');
-            Route::post('/recipients', 'storeRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.store');
-            Route::patch('/recipients/{recipient}/toggle', 'toggleRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.toggle');
-            Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:daily_work_report.edit')->name('recipients.destroy');
-            Route::patch('/users/preference', 'updateUserPreference')->middleware('permission.type:daily_work_report.edit')->name('users.preference');
-            Route::patch('/users/preferences/bulk', 'bulkUpdateUserPreferences')->middleware('permission.type:daily_work_report.edit')->name('users.preferences.bulk');
+            Route::get('/', 'index')->middleware('permission.type:report_settings.manage')->name('index');
+            Route::post('/settings', 'update')->middleware('permission.type:report_settings.manage')->name('settings.update');
+            Route::post('/recipients', 'storeRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.store');
+            Route::patch('/recipients/{recipient}/toggle', 'toggleRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.toggle');
+            Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.destroy');
+            Route::patch('/users/preference', 'updateUserPreference')->middleware('permission.type:report_settings.manage')->name('users.preference');
+            Route::patch('/users/preferences/bulk', 'bulkUpdateUserPreferences')->middleware('permission.type:report_settings.manage')->name('users.preferences.bulk');
+        });
+
+        Route::prefix('project-reports')->name('project-reports.')->controller(ProjectReportSettingsController::class)->group(function () {
+            Route::get('/', 'index')->middleware('permission.type:report_settings.manage')->name('index');
         });
 
         // Data Sync Settings Routes

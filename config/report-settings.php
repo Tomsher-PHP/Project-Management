@@ -8,7 +8,7 @@ return [
             'label' => 'Daily Work Report',
             'description' => 'Employee daily activity and work summary.',
             'available' => true,
-            'permission' => 'daily_work_report.edit',
+            'permission' => 'report_settings.manage',
             'tabs' => ['general', 'recipients', 'users', 'advanced'],
 
             // Keep your existing sections array here.
