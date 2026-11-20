@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Holiday;
+use App\Models\LeaveRequest;
 use App\Models\Task;
 use App\Models\TaskComment;
 use App\Models\TaskDeveloperNote;
@@ -10,8 +12,7 @@ use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Models\Team;
 use App\Models\User;
-use App\Models\Holiday;
-use App\Models\LeaveRequest;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
@@ -82,10 +83,11 @@ class DailyWorkReportService
             $attendanceLabel = 'Day Off';
         }
 
-        /* Exclude Tasks Whose Current Status Is Rejected */
+        /* Exclude Tasks Whose Request Status Is Rejected */
         $excludeRejected = function ($query) {
-            $query->whereDoesntHave('status', function ($statusQuery) {
-                $statusQuery->whereRaw('LOWER(name) = ?', ['rejected']);
+            $query->where(function ($statusQuery) {
+                $statusQuery->whereNull('request_status')
+                    ->orWhereRaw('LOWER(request_status) != ?', ['rejected']);
             });
         };
 
@@ -108,10 +110,24 @@ class DailyWorkReportService
             ->get();
 
         /* Time Logs During Reporting Period */
+        $timezone = config('constants.timezone', 'UTC');
+
+        $selectedDate = Carbon::parse($reportDate, $timezone);
+
+        $dayStartLocal = $selectedDate->copy()->startOfDay();
+        $dayEndLocal = $dayStartLocal->copy()->addDay();
+
+        $dayStartUtc = $dayStartLocal->copy()->timezone('UTC');
+        $dayEndUtc = $dayEndLocal->copy()->timezone('UTC');
+
         $timeLogs = TaskTimeLog::query()
             ->with(['task.project'])
             ->where('user_id', $userId)
-            ->whereBetween('started_at', [$start, $end])
+            ->where('started_at', '<', $dayEndUtc)
+            ->where(function ($query) use ($dayStartUtc) {
+                $query->whereNull('ended_at')
+                    ->orWhere('ended_at', '>', $dayStartUtc);
+            })
             ->whereHas('task', function ($query) use ($excludeRejected) {
                 $query->whereNull('deleted_at')
                     ->whereHas('project', function ($projectQuery) {
@@ -197,9 +213,6 @@ class DailyWorkReportService
             ])
             ->where('added_by', $userId)
             ->whereBetween('added_at', [$start, $end])
-            ->whereDoesntHave('status', function ($query) {
-                $query->whereRaw('LOWER(name) = ?', ['rejected']);
-            })
             ->whereHas('task', function ($query) use ($excludeRejected) {
                 $query->whereNull('deleted_at')
                     ->whereHas('project', function ($projectQuery) {
@@ -261,10 +274,83 @@ class DailyWorkReportService
             })
             ->get();
 
-        /* Total Logged Time */
-        $totalLoggedSeconds = (int) $timeLogs->sum(
-            fn ($log) => (int) ($log->duration_seconds ?? 0)
-        );
+        /* Calculate Daily Worked Time */
+        $totalLoggedSeconds = 0;
+        $userEarliestStart = null;
+        $userLatestEnd = null;
+        $userHasRunning = false;
+        $timeLogEntries = [];
+
+        foreach ($timeLogs as $log) {
+            if (!$log->started_at) {
+                continue;
+            }
+
+            $startedAtLocal = $log->started_at->copy()->timezone($timezone);
+            $endedAtLocal = $log->ended_at
+                ? $log->ended_at->copy()->timezone($timezone)
+                : null;
+
+            $segmentStart = $startedAtLocal->greaterThan($dayStartLocal)
+                ? $startedAtLocal
+                : $dayStartLocal->copy();
+
+            $rawEnd = $endedAtLocal ?? $dayEndLocal;
+
+            $segmentEnd = $rawEnd->lessThan($dayEndLocal)
+                ? $rawEnd
+                : $dayEndLocal->copy();
+
+            if (!$segmentEnd->greaterThan($segmentStart)) {
+                continue;
+            }
+
+            $seconds = 0;
+
+            if (!$log->is_running) {
+                $seconds = (int) $segmentStart->diffInSeconds($segmentEnd);
+                $totalLoggedSeconds += $seconds;
+            }
+
+            if (
+                !$userEarliestStart ||
+                $segmentStart->lessThan($userEarliestStart)
+            ) {
+                $userEarliestStart = $segmentStart->copy();
+            }
+
+            if ($log->is_running) {
+                $userHasRunning = true;
+            } elseif (
+                !$userLatestEnd ||
+                $segmentEnd->greaterThan($userLatestEnd)
+            ) {
+                $userLatestEnd = $segmentEnd->copy();
+            }
+
+            $timeLogEntries[] = [
+                'task_name' => $log->task?->name,
+                'project_name' => $log->task?->project?->name,
+                'started_at' => $segmentStart->toIso8601String(),
+                'ended_at' => $log->is_running
+                    ? null
+                    : $segmentEnd->toIso8601String(),
+                'duration_seconds' => $seconds,
+                'note' => $log->note,
+            ];
+        }
+
+        $timeFormat = config('constants.time_format', 'H:i');
+
+        $workedStartTime = $userEarliestStart
+            ? $userEarliestStart->format($timeFormat)
+            : '--';
+
+        $workedEndTime = $userHasRunning
+            ? 'Running'
+            : ($userLatestEnd
+                ? $userLatestEnd->format($timeFormat)
+                : '--');
 
         /* Upcoming Tasks */
         $upcomingTasks = $currentTasks->filter(
@@ -359,18 +445,11 @@ class DailyWorkReportService
 
             /* Time Logs */
             'time_logs' => [
+                'start_time' => $workedStartTime,
+                'end_time' => $workedEndTime,
                 'total_seconds' => $totalLoggedSeconds,
-
-                'entries' => $timeLogs->map(function ($log) {
-                    return [
-                        'task_name' => $log->task?->name,
-                        'project_name' => $log->task?->project?->name,
-                        'started_at' => $log->report_started_at,
-                        'ended_at' => $log->report_ended_at,
-                        'duration_seconds' => (int) $log->report_duration_seconds,
-                        'note' => $log->note,
-                    ];
-                })->values()->all(),
+                'total_worked_time' => formatSecondsToHMS($totalLoggedSeconds),
+                'entries' => $timeLogEntries,
             ],
 
             /* Comments */
