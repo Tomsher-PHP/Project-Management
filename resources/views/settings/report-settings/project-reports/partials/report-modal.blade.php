@@ -30,7 +30,7 @@
 
                         <!-- SECTION 1: GENERAL SETTINGS -->
                         <div>
-                            <h4 class="mb-4 text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-300">
+                            <h4 class="mb-4 text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
                                 General Settings
                             </h4>
 
@@ -136,7 +136,7 @@
 
                         <!-- SECTION 2: PROJECT FILTERS -->
                         <div class="border-t border-bgray-200 pt-5 dark:border-darkblack-400">
-                            <h4 class="mb-4 text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-300">
+                            <h4 class="mb-4 text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
                                 Project Filters
                             </h4>
 
@@ -154,7 +154,7 @@
                                         @endforeach
                                     </select>
                                     <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="settings.filters.project_status_ids"></span>
-                                    <span class="text-xs text-bgray-500 dark:text-bgray-300 mt-1 block">Hold Ctrl (Windows) or Cmd (Mac) to select multiple statuses.</span>
+                                    <span class="text-xs text-bgray-700 dark:text-bgray-300 mt-1 block">Hold Ctrl (Windows) or Cmd (Mac) to select multiple statuses.</span>
                                 </div>
 
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -196,7 +196,7 @@
                         <div class="border-t border-bgray-200 pt-5 dark:border-darkblack-400">
                             <div class="mb-3 flex items-center justify-between">
                                 <div>
-                                    <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-300">
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
                                         Customize Columns <span class="text-error-300">*</span>
                                     </h4>
                                     <p class="text-xs text-bgray-600 dark:text-bgray-300">
@@ -208,7 +208,7 @@
                                         Select All
                                     </button>
                                     <span class="text-bgray-300 dark:text-darkblack-400">|</span>
-                                    <button type="button" id="modal-columns-clear-all" class="text-xs font-semibold text-bgray-500 hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white">
+                                    <button type="button" id="modal-columns-clear-all" class="text-xs font-semibold text-bgray-700 hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white">
                                         Clear All
                                     </button>
                                 </div>
@@ -242,4 +242,3 @@
         </div>
     </div>
 </div>
-
