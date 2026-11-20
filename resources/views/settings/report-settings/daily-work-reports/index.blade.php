@@ -7,14 +7,6 @@
     </div>
 
     <div class="space-y-6">
-        @if ($errors->any())
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Alert.error(@json($errors->first()));
-                });
-            </script>
-        @endif
-
         @php
             $availableTabs = [
                 'general' => 'General Settings',
@@ -410,7 +402,7 @@
 
                     <!-- USER SETTINGS TAB -->
                     <section id="report-panel-users" data-report-panel="users" class="report-panel hidden p-5">
-                        @include('settings.daily-work-reports.partials.user-settings', [
+                        @include('settings.report-settings.daily-work-reports.partials.user-settings', [
                             'users' => $users,
                             'teams' => $teams,
                             'reportKey' => $reportKey,

@@ -79,7 +79,7 @@ class DailyWorkReportSettingsController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('settings.daily-work-reports.index', compact(
+        return view('settings.report-settings.daily-work-reports.index', compact(
             'settings',
             'recipients',
             'teams',

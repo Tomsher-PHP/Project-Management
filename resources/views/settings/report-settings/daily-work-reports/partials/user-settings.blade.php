@@ -1,4 +1,4 @@
-{{-- resources/views/settings/daily-work-reports/partials/user-settings.blade.php --}}
+{{-- resources/views/settings/report-settings/daily-work-reports/partials/user-settings.blade.php --}}
 
 @php
     $teamIdsByUser = [];
