@@ -414,10 +414,16 @@ Route::middleware([
 
         Route::prefix('project-reports')->name('project-reports.')->controller(ProjectReportSettingsController::class)->group(function () {
             Route::get('/', 'index')->middleware('permission.type:report_settings.manage')->name('index');
+            Route::post('/', 'store')->middleware('permission.type:report_settings.manage')->name('store');
             Route::post('/settings', 'update')->middleware('permission.type:report_settings.manage')->name('settings.update');
             Route::post('/recipients', 'storeRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.store');
             Route::patch('/recipients/{recipient}/toggle', 'toggleRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.toggle');
             Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.destroy');
+
+            Route::get('/{projectReportSetting}', 'show')->whereNumber('projectReportSetting')->middleware('permission.type:report_settings.manage')->name('show');
+            Route::match(['put', 'patch'], '/{projectReportSetting}', 'update')->whereNumber('projectReportSetting')->middleware('permission.type:report_settings.manage')->name('update');
+            Route::delete('/{projectReportSetting}', 'destroy')->whereNumber('projectReportSetting')->middleware('permission.type:report_settings.manage')->name('destroy');
+            Route::patch('/{projectReportSetting}/toggle', 'toggleStatus')->whereNumber('projectReportSetting')->middleware('permission.type:report_settings.manage')->name('toggle');
         });
 
         // Data Sync Settings Routes

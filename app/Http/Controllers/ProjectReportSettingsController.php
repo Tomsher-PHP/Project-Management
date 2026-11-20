@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProjectReportSettingRequest;
 use App\Models\DailyWorkReportRecipient;
 use App\Models\DailyWorkReportSetting;
+use App\Models\ProjectStatus;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\Reports\ProjectReportService;
+use App\Services\Reports\ProjectReportSettingService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,15 +20,30 @@ use Illuminate\View\View;
 class ProjectReportSettingsController extends Controller
 {
     protected string $pageTitle;
+    protected ProjectReportSettingService $settingService;
+    protected ProjectReportService $reportService;
 
-    public function __construct()
-    {
+    public function __construct(
+        ProjectReportSettingService $settingService,
+        ProjectReportService $reportService
+    ) {
+        $this->settingService = $settingService;
+        $this->reportService = $reportService;
         $this->pageTitle = 'Project Report Settings';
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
+        $configurations = $this->settingService->listConfigurations();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $configurations,
+            ]);
+        }
+
         $reportDefinitions = config('report-settings.reports', []);
         $reportKey = 'project_report';
 
@@ -35,7 +54,7 @@ class ProjectReportSettingsController extends Controller
         );
 
         $currentReport = $reportDefinitions[$reportKey];
-        $settings = DailyWorkReportSetting::forReport($reportKey);
+        $settings = $configurations->first() ?? DailyWorkReportSetting::forReport($reportKey);
 
         $recipients = DailyWorkReportRecipient::query()
             ->where('report_key', $reportKey)
@@ -53,58 +72,107 @@ class ProjectReportSettingsController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'is_active']);
 
+        $projectStatuses = ProjectStatus::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'color']);
+
+        $availableColumns = $this->reportService->getColumnLabels();
+
         return view('settings.report-settings.project-reports.index', compact(
             'settings',
+            'configurations',
             'recipients',
             'teams',
             'users',
+            'projectStatuses',
+            'availableColumns',
             'reportKey',
             'reportDefinitions',
             'currentReport',
         ));
     }
 
-    public function update(Request $request): RedirectResponse
+    public function show(Request $request, int|string $projectReportSetting): JsonResponse
     {
-        $reportDefinitions = config('report-settings.reports', []);
-        $reportKey = 'project_report';
+        $configuration = $this->settingService->getConfiguration((int) $projectReportSetting);
 
-        abort_unless(
-            isset($reportDefinitions[$reportKey]) &&
-                ($reportDefinitions[$reportKey]['available'] ?? true),
-            404
+        return response()->json([
+            'success' => true,
+            'data' => $configuration,
+        ]);
+    }
+
+    public function store(ProjectReportSettingRequest $request): JsonResponse|RedirectResponse
+    {
+        $configuration = $this->settingService->createConfiguration(
+            $request->validated(),
+            $request->user()?->id
         );
 
-        $validated = $request->validate([
-            'enabled' => ['sometimes', 'boolean'],
-            'frequency' => ['required', Rule::in(['daily', 'weekdays', 'weekly'])],
-            'delivery_time' => [
-                'required',
-                'string',
-                function ($attribute, $value, $fail) {
-                    try {
-                        Carbon::parse($value);
-                    } catch (\Throwable $e) {
-                        $fail('The delivery time is invalid.');
-                    }
-                },
-            ],
-            'timezone' => ['required', 'timezone'],
-            'weekly_day' => ['required_if:frequency,weekly', 'nullable', 'integer', 'between:1,7'],
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Project report configuration created successfully.',
+                'data' => $configuration,
+            ], 201);
+        }
 
-        $settings = DailyWorkReportSetting::forReport($reportKey);
+        return redirect()
+            ->route('settings.project-reports.index')
+            ->with('success', 'Project report configuration created successfully.');
+    }
 
-        $settings->update([
-            'enabled' => $request->boolean('enabled'),
-            'frequency' => $validated['frequency'],
-            'delivery_time' => Carbon::parse($validated['delivery_time'])->format('H:i:s'),
-            'timezone' => $validated['timezone'],
-            'weekly_day' => $validated['weekly_day'] ?? $settings->weekly_day,
-            'updated_by' => $request->user()->id,
-        ]);
+    public function update(ProjectReportSettingRequest $request, int|string|null $projectReportSetting = null): JsonResponse|RedirectResponse
+    {
+        $targetId = $projectReportSetting ?? $request->input('id', 2);
+        $setting = $this->settingService->getConfiguration((int) $targetId);
+
+        $configuration = $this->settingService->updateConfiguration(
+            $setting,
+            $request->validated(),
+            $request->user()?->id
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Project report configuration updated successfully.',
+                'data' => $configuration,
+            ]);
+        }
 
         return back()->with('success', 'Project report settings saved successfully.');
+    }
+
+    public function destroy(Request $request, int|string $projectReportSetting): JsonResponse|RedirectResponse
+    {
+        $this->settingService->deleteConfiguration((int) $projectReportSetting);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Project report configuration deleted successfully.',
+            ]);
+        }
+
+        return back()->with('success', 'Project report configuration deleted successfully.');
+    }
+
+    public function toggleStatus(Request $request, int|string $projectReportSetting): JsonResponse
+    {
+        $enabled = $request->has('enabled')
+            ? $request->boolean('enabled')
+            : null;
+
+        $configuration = $this->settingService->toggleEnabled((int) $projectReportSetting, $enabled, $request->user()?->id);
+
+        return response()->json([
+            'success' => true,
+            'enabled' => (bool) $configuration->enabled,
+            'message' => $configuration->enabled ? 'Configuration enabled.' : 'Configuration disabled.',
+            'data' => $configuration,
+        ]);
     }
 
     public function storeRecipient(Request $request): RedirectResponse
