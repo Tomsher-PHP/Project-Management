@@ -7,21 +7,12 @@
     </div>
 
     <div class="space-y-6">
-        @if (session('success'))
-            <div class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800">
-                {{ session('success') }}
-            </div>
-        @endif
-
         @if ($errors->any())
-            <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-                <p class="font-semibold">Please correct the following:</p>
-                <ul class="mt-1 list-inside list-disc">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Alert.error(@json($errors->first()));
+                });
+            </script>
         @endif
 
         @php
@@ -428,61 +419,6 @@
                         ])
                     </section>
 
-                    <!-- EMAIL TEMPLATE TAB -->
-                    <!-- <section
-                                                                        id="report-panel-template"
-                                                                        data-report-panel="template"
-                                                                        class="report-panel hidden p-5"
-                                                                    >
-                                                                        <div class="mx-auto max-w-3xl overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-                                                                            <div class="border-b bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800">
-                                                                                <p class="font-semibold text-bgray-900 dark:text-white">
-                                                                                    Tomsher PMS
-                                                                                </p>
-                                                                                <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">
-                                                                                    Daily Work Report email preview
-                                                                                </p>
-                                                                            </div>
-
-                                                                            <div class="space-y-5 p-5">
-                                                                                <div>
-                                                                                    <h2 class="text-xl font-semibold text-bgray-900 dark:text-white">
-                                                                                        Daily Work Report — Sample Employee
-                                                                                    </h2>
-                                                                                    <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-300">
-                                                                                        Example preview. Actual report values will come from generated report data.
-                                                                                    </p>
-                                                                                </div>
-
-                                                                                <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-                                                                                    @foreach ([['label' => 'Assigned tasks', 'value' => '—'], ['label' => 'Completed', 'value' => '—'], ['label' => 'Pending', 'value' => '—'], ['label' => 'Time logged', 'value' => '—']] as $metric)
-    <div class="rounded-lg bg-blue-50 p-4 dark:bg-blue-950">
-                                                                                            <p class="text-xs text-bgray-600 dark:text-bgray-300">
-                                                                                                {{ $metric['label'] }}
-                                                                                            </p>
-                                                                                            <p class="mt-2 text-xl font-semibold text-bgray-900 dark:text-white">
-                                                                                                {{ $metric['value'] }}
-                                                                                            </p>
-                                                                                        </div>
-    @endforeach
-                                                                                </div>
-
-                                                                                <div>
-                                                                                    <h3 class="font-semibold text-bgray-900 dark:text-white">
-                                                                                        Task details
-                                                                                    </h3>
-                                                                                    <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">
-                                                                                        Project, task status, due dates, time logs, comments, and developer notes will appear here when available.
-                                                                                    </p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <p class="mt-4 text-sm text-amber-700 dark:text-amber-300">
-                                                                            This is a visual sample only; it does not send an email.
-                                                                        </p>
-                                                                    </section> -->
-
                     <!-- ADVANCED TAB -->
                     <section id="report-panel-advanced" data-report-panel="advanced" class="report-panel hidden p-5">
                         <div class="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -548,147 +484,8 @@
             </div>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabs = document.querySelectorAll('[data-report-tab]');
-            const panels = document.querySelectorAll('[data-report-panel]');
-
-            const activeClasses = [
-                'bg-success-300',
-                'text-white',
-                'shadow-sm'
-            ];
-
-            const inactiveClasses = [
-                'border',
-                'border-bgray-200',
-                'bg-bgray-50',
-                'text-bgray-700',
-                'hover:border-success-300',
-                'hover:text-success-400',
-                'dark:border-darkblack-400',
-                'dark:bg-darkblack-500',
-                'dark:text-bgray-50',
-                'dark:hover:border-success-300',
-                'dark:hover:text-success-300'
-            ];
-
-            function activateTab(name) {
-                tabs.forEach(function(tab) {
-                    const isActive = tab.dataset.reportTab === name;
-
-                    tab.classList.remove(
-                        ...(isActive ? inactiveClasses : activeClasses)
-                    );
-
-                    tab.classList.add(
-                        ...(isActive ? activeClasses : inactiveClasses)
-                    );
-
-                    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                });
-
-                panels.forEach(function(panel) {
-                    panel.classList.toggle(
-                        'hidden',
-                        panel.dataset.reportPanel !== name
-                    );
-                });
-            }
-
-            tabs.forEach(function(tab) {
-                tab.addEventListener('click', function() {
-                    activateTab(tab.dataset.reportTab);
-                });
-            });
-
-            const firstTab = document.querySelector('[data-report-tab]');
-
-            if (firstTab) {
-                activateTab(firstTab.dataset.reportTab);
-            }
-
-
-            // Enabled / Disabled label
-            const enabledCheckbox = document.getElementById('daily-work-reports-enabled');
-            const enabledLabel = document.getElementById('daily-work-reports-enabled-label');
-
-            if (enabledCheckbox && enabledLabel) {
-                enabledCheckbox.addEventListener('change', function() {
-                    enabledLabel.textContent = this.checked ? 'Enabled' : 'Disabled';
-                });
-            }
-
-            // Recipient scope filtering
-            const scope = document.getElementById('recipient-scope');
-            const targetWrapper = document.getElementById('recipient-scope-id-wrapper');
-            const targetSelect = document.getElementById('recipient-scope-id');
-            const targetLabel = document.getElementById('recipient-scope-id-label');
-
-            function updateRecipientScope() {
-                if (!scope || !targetWrapper || !targetSelect || !targetLabel) {
-                    return;
-                }
-
-                const selectedScope = scope.value;
-                const needsTarget = selectedScope !== 'global';
-
-                targetWrapper.classList.toggle('hidden', !needsTarget);
-                targetSelect.required = needsTarget;
-                targetSelect.disabled = !needsTarget;
-
-                targetLabel.textContent = selectedScope === 'team' ?
-                    'Select team' :
-                    'Select employee';
-
-                Array.from(targetSelect.options).forEach(function(option) {
-                    if (!option.value) {
-                        option.hidden = false;
-                        return;
-                    }
-
-                    option.hidden = option.dataset.scope !== selectedScope;
-                });
-
-                const selectedOption = targetSelect.selectedOptions[0];
-
-                if (
-                    selectedOption &&
-                    selectedOption.value &&
-                    selectedOption.dataset.scope !== selectedScope
-                ) {
-                    targetSelect.value = '';
-                }
-            }
-
-            if (scope && targetSelect) {
-                scope.addEventListener('change', function() {
-                    targetSelect.value = '';
-                    updateRecipientScope();
-                });
-
-                updateRecipientScope();
-            }
-
-            // Weekly delivery day visibility
-            const frequencySelect = document.getElementById('report-frequency');
-            const weeklyDayWrapper = document.getElementById('weekly-day-wrapper');
-
-            function updateWeeklyDayVisibility() {
-                if (!frequencySelect || !weeklyDayWrapper) {
-                    return;
-                }
-
-                weeklyDayWrapper.classList.toggle(
-                    'hidden',
-                    frequencySelect.value !== 'weekly'
-                );
-            }
-
-            if (frequencySelect) {
-                frequencySelect.addEventListener('change', updateWeeklyDayVisibility);
-                updateWeeklyDayVisibility();
-            }
-        });
-    </script>
 @endsection
+
+@push('scripts')
+    @vite('resources/js/settings/data-sync/report-settings/daily-report.js')
+@endpush
