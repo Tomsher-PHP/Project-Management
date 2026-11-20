@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DailyWorkReportSetting extends Model
 {
     protected $fillable = [
         'setting_key',
+        'report_name',
         'report_key',
         'enabled',
         'frequency',
@@ -17,6 +19,7 @@ class DailyWorkReportSetting extends Model
         'send_zero_activity',
         'include_inactive_users',
         'report_sections',
+        'settings',
         'weekly_day',
         'updated_by',
     ];
@@ -28,8 +31,14 @@ class DailyWorkReportSetting extends Model
             'send_zero_activity' => 'boolean',
             'include_inactive_users' => 'boolean',
             'report_sections' => 'array',
+            'settings' => 'array',
             'weekly_day' => 'integer',
         ];
+    }
+
+    public function recipients(): HasMany
+    {
+        return $this->hasMany(DailyWorkReportRecipient::class, 'report_setting_id');
     }
 
     public static function forReport(string $reportKey): self

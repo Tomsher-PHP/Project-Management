@@ -11,8 +11,6 @@ return [
             'permission' => 'report_settings.manage',
             'route' => 'settings.daily-work-reports.index',
             'tabs' => ['general', 'recipients', 'users', 'advanced'],
-
-            // Keep your existing sections array here.
         ],
 
         'project_report' => [
@@ -22,14 +20,6 @@ return [
             'permission' => 'report_settings.manage',
             'route' => 'settings.project-reports.index',
             'tabs' => ['general', 'recipients'],
-            'sections' => [],
-        ],
-
-        'task_report' => [
-            'label' => 'Task Report',
-            'description' => 'Task status, assignments and overdue tasks.',
-            'available' => false,
-            'tabs' => ['general', 'recipients', 'users', 'advanced'],
             'sections' => [],
         ],
 
