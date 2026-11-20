@@ -82,6 +82,13 @@ class DailyWorkReportService
             $attendanceLabel = 'Day Off';
         }
 
+        /* Exclude Tasks Whose Current Status Is Rejected */
+        $excludeRejected = function ($query) {
+            $query->whereDoesntHave('status', function ($statusQuery) {
+                $statusQuery->whereRaw('LOWER(name) = ?', ['rejected']);
+            });
+        };
+
         /* Currently Assigned Tasks */
         $currentTasks = Task::query()
             ->where('current_assignee_id', $userId)
@@ -95,6 +102,9 @@ class DailyWorkReportService
             ->whereHas('project', function ($query) {
                 $query->whereNull('deleted_at');
             })
+            ->where(function ($query) use ($excludeRejected) {
+                $excludeRejected($query);
+            })
             ->get();
 
         /* Time Logs During Reporting Period */
@@ -102,8 +112,13 @@ class DailyWorkReportService
             ->with(['task.project'])
             ->where('user_id', $userId)
             ->whereBetween('started_at', [$start, $end])
-            ->whereHas('task', function ($query) {
-                $query->whereNull('deleted_at');
+            ->whereHas('task', function ($query) use ($excludeRejected) {
+                $query->whereNull('deleted_at')
+                    ->whereHas('project', function ($projectQuery) {
+                        $projectQuery->whereNull('deleted_at');
+                    });
+
+                $excludeRejected($query);
             })
             ->get();
 
@@ -126,6 +141,9 @@ class DailyWorkReportService
             ->whereHas('project', function ($query) {
                 $query->whereNull('deleted_at');
             })
+            ->where(function ($query) use ($excludeRejected) {
+                $excludeRejected($query);
+            })
             ->get();
 
         /* Workload Counts */
@@ -141,14 +159,14 @@ class DailyWorkReportService
             }
         );
 
-        // Pending: tasks in pending status and due today or earlier.
+        // Pending: any non-completed status with a due date exactly on the report date.
         $pendingTasks = $currentTasks->filter(
             function ($task) use ($reportDate) {
                 $dueDate = $task->due_date_time;
 
-                return $task->status?->type === TaskStatus::TYPE_PENDING
-                    && $dueDate
-                    && $dueDate->toDateString() <= $reportDate;
+                return $dueDate
+                    && $dueDate->toDateString() === $reportDate
+                    && ! $task->status?->is_completed;
             }
         );
 
@@ -179,11 +197,16 @@ class DailyWorkReportService
             ])
             ->where('added_by', $userId)
             ->whereBetween('added_at', [$start, $end])
-            ->whereHas('task', function ($query) {
+            ->whereDoesntHave('status', function ($query) {
+                $query->whereRaw('LOWER(name) = ?', ['rejected']);
+            })
+            ->whereHas('task', function ($query) use ($excludeRejected) {
                 $query->whereNull('deleted_at')
                     ->whereHas('project', function ($projectQuery) {
                         $projectQuery->whereNull('deleted_at');
                     });
+
+                $excludeRejected($query);
             })
             ->get();
 
@@ -199,11 +222,13 @@ class DailyWorkReportService
             ->with(['task.project'])
             ->where('user_id', $userId)
             ->whereBetween('created_at', [$start, $end])
-            ->whereHas('task', function ($query) {
+            ->whereHas('task', function ($query) use ($excludeRejected) {
                 $query->whereNull('deleted_at')
                     ->whereHas('project', function ($projectQuery) {
                         $projectQuery->whereNull('deleted_at');
                     });
+
+                $excludeRejected($query);
             })
             ->get();
 
@@ -212,11 +237,13 @@ class DailyWorkReportService
             ->with(['task.project'])
             ->where('created_by', $userId)
             ->whereBetween('updated_at', [$start, $end])
-            ->whereHas('task', function ($query) {
+            ->whereHas('task', function ($query) use ($excludeRejected) {
                 $query->whereNull('deleted_at')
                     ->whereHas('project', function ($projectQuery) {
                         $projectQuery->whereNull('deleted_at');
                     });
+
+                $excludeRejected($query);
             })
             ->get();
 
@@ -224,11 +251,13 @@ class DailyWorkReportService
         $newAssignments = $employee->taskAssignmentLogs()
             ->with(['task.project'])
             ->whereBetween('assigned_to', [$start, $end])
-            ->whereHas('task', function ($query) {
+            ->whereHas('task', function ($query) use ($excludeRejected) {
                 $query->whereNull('deleted_at')
                     ->whereHas('project', function ($projectQuery) {
                         $projectQuery->whereNull('deleted_at');
                     });
+
+                $excludeRejected($query);
             })
             ->get();
 
@@ -405,7 +434,8 @@ class DailyWorkReportService
             'id' => $task->id,
             'name' => $task->name,
             'code' => $task->code,
-
+            'request_type' => $task->request_type,
+            'description' => $task->description,
             // Links
             'url' => route('tasks.edit', $task->id),
             'project_url' => $task->project_id
@@ -671,8 +701,9 @@ class DailyWorkReportService
             ]),
 
             'pending' => $buildUrl([
-                'status_id' => $pendingStatusIds,
+                'due_date_start' => $reportDate,
                 'due_date_end' => $reportDate,
+                'exclude_completed' => 1,
             ]),
 
             'in_progress' => $buildUrl([
