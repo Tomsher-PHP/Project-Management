@@ -27,12 +27,6 @@ class DailyWorkReportSettingsController extends Controller
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return View
-     */
     public function index(Request $request): View
     {
         $reportDefinitions = config('report-settings.reports', []);
@@ -40,7 +34,7 @@ class DailyWorkReportSettingsController extends Controller
 
         abort_unless(
             isset($reportDefinitions[$reportKey]) &&
-            ($reportDefinitions[$reportKey]['available'] ?? true),
+                ($reportDefinitions[$reportKey]['available'] ?? true),
             404
         );
 
@@ -196,10 +190,8 @@ class DailyWorkReportSettingsController extends Controller
         return back()->with('success', 'Recipient added successfully.');
     }
 
-    public function toggleRecipient(
-    Request $request,
-    DailyWorkReportRecipient $recipient
-    ): \Illuminate\Http\JsonResponse {
+    public function toggleRecipient(Request $request, DailyWorkReportRecipient $recipient): \Illuminate\Http\JsonResponse
+    {
         $validated = $request->validate([
             'report_key' => [
                 'required',
@@ -304,7 +296,7 @@ class DailyWorkReportSettingsController extends Controller
             $isEnabled = (bool) $validated['is_enabled'];
 
             $rows = collect($validated['user_ids'])
-                ->map(fn ($userId) => [
+                ->map(fn($userId) => [
                     'user_id' => $userId,
                     'report_key' => $validated['report_key'],
                     'is_enabled' => $isEnabled,
@@ -340,11 +332,8 @@ class DailyWorkReportSettingsController extends Controller
     /**
      * Synchronize Daily Work Report preference with User Settings.
      */
-    private function syncDailyWorkReportSetting(
-        int $userId,
-        string $reportKey,
-        bool $isEnabled
-    ): void {
+    private function syncDailyWorkReportSetting(int $userId, string $reportKey, bool $isEnabled): void
+    {
         if ($reportKey !== 'daily_work') {
             return;
         }
