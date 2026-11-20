@@ -198,6 +198,16 @@ class ProjectReportSettingsController extends Controller
             ];
         })->values()->all();
 
+        $tableHtml = view('settings.report-settings.project-reports.partials.recipient-table-rows', [
+            'recipients' => $recipients,
+            'configuration' => $configuration,
+            'reportPermission' => 'report_settings.manage',
+        ])->render();
+
+        $externalRowsHtml = view('settings.report-settings.project-reports.partials.external-recipient-rows', [
+            'externalRecipients' => $recipients->whereNull('user_id')->values(),
+        ])->render();
+
         return response()->json([
             'success' => true,
             'setting' => [
@@ -208,6 +218,10 @@ class ProjectReportSettingsController extends Controller
             'internal_user_ids' => $internalUserIds,
             'external_recipients' => $externalRecipients,
             'recipients' => $recipients,
+            'table_html' => $tableHtml,
+            'external_rows_html' => $externalRowsHtml,
+            'has_external' => $recipients->whereNull('user_id')->isNotEmpty(),
+            'count' => $recipients->count(),
         ]);
     }
 
