@@ -112,7 +112,7 @@
                                         Weekly delivery day
                                     </label>
 
-                                    <select id="weekly-day" name="weekly_day" class="w-full rounded-lg border border-bgray-200 bg-white p-3 text-sm text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                    <select id="weekly-day" name="weekly_day" class="tom-select-no-search w-full">
                                         @foreach ([1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'] as $day => $label)
                                             <option value="{{ $day }}" @selected((int) old('weekly_day', $settings->weekly_day) === $day)>
                                                 {{ $label }}
