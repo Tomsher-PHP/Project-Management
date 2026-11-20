@@ -47,56 +47,311 @@ function initReportTabs() {
     }
 }
 
-function initRecipientScopeForm() {
-    const scope = document.getElementById('recipient-scope');
-    const targetWrapper = document.getElementById('recipient-scope-id-wrapper');
-    const targetSelect = document.getElementById('recipient-scope-id');
-    const targetLabel = document.getElementById('recipient-scope-id-label');
+function initProjectReportRecipients() {
+    const configSelect = $('#select-report-recipient-config');
+    const form = $('#project-report-recipients-form');
+    if (!configSelect.length && !form.length) return;
 
-    function updateRecipientScope() {
-        if (!scope || !targetWrapper || !targetSelect || !targetLabel) {
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    const externalList = $('#external-recipients-list');
+    const noExternalNote = $('#no-external-recipients-note');
+    const tableBody = $('#project-report-recipients-tbody');
+    const countBadge = $('#recipient-count-badge');
+    let nextRowIndex = externalList.find('.external-recipient-row').length;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function renderExternalRow(index, name = '', email = '') {
+        return `
+            <div class="external-recipient-row flex flex-col sm:flex-row items-center gap-3" data-row-index="${index}">
+                <div class="w-full sm:w-1/3">
+                    <input type="text" name="external_recipients[${index}][name]" value="${escapeHtml(name)}" placeholder="Recipient Name (Optional)" maxlength="255" class="w-full rounded-lg border border-bgray-200 bg-white p-2.5 text-sm text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                </div>
+                <div class="w-full sm:w-1/2">
+                    <input type="email" name="external_recipients[${index}][email]" value="${escapeHtml(email)}" placeholder="Email Address *" required maxlength="254" class="w-full rounded-lg border border-bgray-200 bg-white p-2.5 text-sm text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                </div>
+                <div>
+                    <button type="button" class="btn-remove-external-recipient inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-600 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400 dark:hover:text-red-400" title="Remove email">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTableRow(r, configId) {
+        const isInternal = !!r.user_id;
+        const typeBadge = isInternal
+            ? '<span class="inline-flex items-center px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-500">Internal</span>'
+            : '<span class="inline-flex items-center px-2.5 py-0.5 text-xs font-semibold text-purple-700 dark:text-purple-500">External</span>';
+
+        const displayName = r.name || r.user?.name || '—';
+        const activeClass = r.is_active ? 'active' : '';
+        const toggleUrl = `/settings/project-reports/${configId}/recipients/${r.id}/toggle`;
+        const deleteUrl = `/settings/project-reports/${configId}/recipients/${r.id}`;
+
+        return `
+            <tr class="border-b border-bgray-200 hover:bg-bgray-50 dark:border-darkblack-400 dark:hover:bg-darkblack-500" data-recipient-row="${r.id}">
+                <td class="px-4 py-3 text-sm">${typeBadge}</td>
+                <td class="px-4 py-3 text-sm font-medium text-bgray-900 dark:text-white">${escapeHtml(displayName)}</td>
+                <td class="px-4 py-3 text-sm text-bgray-600 dark:text-bgray-300">${escapeHtml(r.email)}</td>
+                <td class="px-4 py-3 text-center">
+                    <button type="button"
+                        class="project-recipient-status-toggle switch-btn ${activeClass} relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent text-center transition-colors duration-200 ease-in-out focus:outline-none"
+                        data-id="${r.id}"
+                        data-config-id="${configId}"
+                        data-url="${toggleUrl}"
+                        role="switch"
+                        aria-checked="${r.is_active ? 'true' : 'false'}"
+                        title="${r.is_active ? 'Click to deactivate' : 'Click to activate'}">
+                        <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                    </button>
+                </td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                    <button type="button"
+                        class="btn-delete-project-recipient inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400 dark:hover:text-red-400"
+                        data-id="${r.id}"
+                        data-config-id="${configId}"
+                        data-url="${deleteUrl}"
+                        data-email="${escapeHtml(r.email)}"
+                        title="Delete recipient">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    function loadRecipientsForConfig(configId) {
+        if (!configId) return;
+
+        $('#recipient-config-id').val(configId);
+        form.find('[data-recipient-error]').addClass('hidden').text('');
+
+        $.ajax({
+            url: `/settings/project-reports/${configId}/recipients`,
+            type: 'GET',
+            headers: { 'Accept': 'application/json' },
+            success: function (res) {
+                if (!res.success) return;
+
+                // Sync internal user IDs
+                const internalSelect = $('#recipient-internal-users');
+                const userIds = (res.internal_user_ids || []).map(String);
+
+                if (internalSelect[0] && internalSelect[0].tomselect) {
+                    internalSelect[0].tomselect.setValue(userIds);
+                } else {
+                    internalSelect.find('option').each(function () {
+                        $(this).prop('selected', userIds.includes(String($(this).val())));
+                    });
+                }
+
+                // Render external recipients
+                externalList.empty();
+                const extList = res.external_recipients || [];
+                nextRowIndex = 0;
+
+                if (extList.length > 0) {
+                    noExternalNote.addClass('hidden');
+                    extList.forEach(item => {
+                        externalList.append(renderExternalRow(nextRowIndex, item.name || '', item.email || ''));
+                        nextRowIndex++;
+                    });
+                } else {
+                    noExternalNote.removeClass('hidden');
+                }
+
+                // Render recipients table
+                tableBody.empty();
+                const allRecipients = res.recipients || [];
+                const count = allRecipients.length;
+                countBadge.text(`${count} ${count === 1 ? 'recipient' : 'recipients'}`);
+
+                if (count > 0) {
+                    allRecipients.forEach(r => {
+                        tableBody.append(renderTableRow(r, configId));
+                    });
+                } else {
+                    tableBody.append(`
+                        <tr id="empty-recipients-row">
+                            <td colspan="5" class="px-4 py-8 text-center text-bgray-600 dark:text-bgray-300">
+                                No recipients configured for this report.
+                            </td>
+                        </tr>
+                    `);
+                }
+            },
+            error: function (xhr) {
+                Alert.error(xhr.responseJSON?.message || 'Failed to load recipients for this configuration.', 'Error');
+            }
+        });
+    }
+
+    // Config dropdown change
+    configSelect.on('change', function () {
+        loadRecipientsForConfig($(this).val());
+    });
+
+    // Add External Email
+    $('#btn-add-external-email').on('click', function () {
+        noExternalNote.addClass('hidden');
+        const row = $(renderExternalRow(nextRowIndex));
+        externalList.append(row);
+        nextRowIndex++;
+        row.find('input[type="email"]').focus();
+    });
+
+    // Remove External Email
+    externalList.on('click', '.btn-remove-external-recipient', function () {
+        $(this).closest('.external-recipient-row').remove();
+        if (!externalList.find('.external-recipient-row').length) {
+            noExternalNote.removeClass('hidden');
+        }
+    });
+
+    // Form Submit
+    form.on('submit', function (e) {
+        e.preventDefault();
+        const configId = $('#recipient-config-id').val() || configSelect.val();
+        if (!configId) {
+            Alert.error('Please select a project report configuration first.', 'Error');
             return;
         }
 
-        const selectedScope = scope.value;
-        const needsTarget = selectedScope !== 'global';
+        form.find('[data-recipient-error]').addClass('hidden').text('');
+        const saveBtn = $('#btn-save-project-report-recipients');
+        const originalText = saveBtn.text();
+        saveBtn.prop('disabled', true).addClass('opacity-70').text('Saving...');
 
-        targetWrapper.classList.toggle('hidden', !needsTarget);
-        targetSelect.required = needsTarget;
-        targetSelect.disabled = !needsTarget;
+        $.ajax({
+            url: `/settings/project-reports/${configId}/recipients/sync`,
+            type: 'POST',
+            data: form.serialize(),
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            success: function (res) {
+                saveBtn.prop('disabled', false).removeClass('opacity-70').text(originalText);
+                Alert.success(res.message || 'Recipients saved successfully.', 'Success');
+                loadRecipientsForConfig(configId);
+            },
+            error: function (xhr) {
+                saveBtn.prop('disabled', false).removeClass('opacity-70').text(originalText);
+                if (xhr.status === 422 && xhr.responseJSON?.errors) {
+                    const errors = xhr.responseJSON.errors;
+                    let firstMsg = '';
 
-        targetLabel.textContent = selectedScope === 'team'
-            ? 'Select team'
-            : 'Select employee';
+                    $.each(errors, function (key, messages) {
+                        if (!firstMsg) firstMsg = messages[0];
+                        if (key.startsWith('user_ids')) {
+                            $('[data-recipient-error="user_ids"]').text(messages[0]).removeClass('hidden');
+                        } else if (key.startsWith('external_recipients')) {
+                            $('[data-recipient-error="external_recipients"]').text(messages[0]).removeClass('hidden');
+                        }
+                    });
 
-        Array.from(targetSelect.options).forEach(function (option) {
-            if (!option.value) {
-                option.hidden = false;
-                return;
+                    Alert.error(firstMsg || 'Please correct the validation errors.', 'Validation Error');
+                } else {
+                    Alert.error(xhr.responseJSON?.message || 'Failed to save recipients.', 'Error');
+                }
             }
-
-            option.hidden = option.dataset.scope !== selectedScope;
         });
+    });
 
-        const selectedOption = targetSelect.selectedOptions[0];
+    // Toggle Recipient Active Status
+    $(document).on('click', '.project-recipient-status-toggle', function () {
+        const btn = $(this);
+        if (btn.data('processing')) return;
+        btn.data('processing', true);
 
-        if (
-            selectedOption &&
-            selectedOption.value &&
-            selectedOption.dataset.scope !== selectedScope
-        ) {
-            targetSelect.value = '';
-        }
-    }
+        const url = btn.data('url');
 
-    if (scope && targetSelect) {
-        scope.addEventListener('change', function () {
-            targetSelect.value = '';
-            updateRecipientScope();
+        $.ajax({
+            url: url,
+            type: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            success: function (res) {
+                btn.data('processing', false);
+                if (res.success) {
+                    btn.toggleClass('active', res.is_active);
+                    btn.attr('aria-checked', res.is_active ? 'true' : 'false');
+                    btn.attr('title', res.is_active ? 'Click to deactivate' : 'Click to activate');
+                    Alert.success(res.message || 'Recipient status updated.', 'Success');
+                }
+            },
+            error: function (xhr) {
+                btn.data('processing', false);
+                Alert.error(xhr.responseJSON?.message || 'Failed to update recipient status.', 'Error');
+            }
         });
+    });
 
-        updateRecipientScope();
-    }
+    // Delete Recipient
+    $(document).on('click', '.btn-delete-project-recipient', function () {
+        const btn = $(this);
+        const url = btn.data('url');
+        const email = btn.data('email') || 'this recipient';
+        const row = btn.closest('tr');
+        const configId = $('#recipient-config-id').val() || configSelect.val();
+
+        Alert.confirm({
+            title: 'Remove Recipient?',
+            text: `Are you sure you want to remove "${email}" from this report?`,
+            confirmText: 'Yes, Remove',
+            confirmColor: '#ef4444'
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                success: function (res) {
+                    Alert.success(res.message || 'Recipient removed.', 'Removed');
+                    row.fadeOut(300, function () {
+                        $(this).remove();
+                        const remaining = tableBody.find('tr[data-recipient-row]').length;
+                        countBadge.text(`${remaining} ${remaining === 1 ? 'recipient' : 'recipients'}`);
+                        if (remaining === 0) {
+                            tableBody.append(`
+                                <tr id="empty-recipients-row">
+                                    <td colspan="5" class="px-4 py-8 text-center text-bgray-600 dark:text-bgray-300">
+                                        No recipients configured for this report.
+                                    </td>
+                                </tr>
+                            `);
+                        }
+                        if (configId) {
+                            loadRecipientsForConfig(configId);
+                        }
+                    });
+                },
+                error: function (xhr) {
+                    Alert.error(xhr.responseJSON?.message || 'Failed to remove recipient.', 'Error');
+                }
+            });
+        });
+    });
 }
 
 function initProjectReportModal() {
@@ -390,7 +645,7 @@ function initProjectReportTableActions() {
 
 function initProjectReportSettings() {
     initReportTabs();
-    initRecipientScopeForm();
+    initProjectReportRecipients();
     initProjectReportModal();
     initProjectReportTableActions();
 }

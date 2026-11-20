@@ -2,9 +2,12 @@
 
 namespace App\Services\Reports;
 
+use App\Models\DailyWorkReportRecipient;
 use App\Models\DailyWorkReportSetting;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProjectReportSettingService
@@ -128,6 +131,181 @@ class ProjectReportSettingService
         $model->save();
 
         return $model;
+    }
+
+    /**
+     * Retrieve recipients for a Project Report configuration.
+     */
+    public function getRecipients(DailyWorkReportSetting|int $setting): Collection
+    {
+        $settingId = $setting instanceof DailyWorkReportSetting ? $setting->id : (int) $setting;
+
+        return DailyWorkReportRecipient::query()
+            ->where('report_key', self::REPORT_KEY)
+            ->where('report_setting_id', $settingId)
+            ->with('user:id,name,email')
+            ->orderByRaw('CASE WHEN user_id IS NOT NULL THEN 0 ELSE 1 END')
+            ->orderBy('name')
+            ->orderBy('email')
+            ->get();
+    }
+
+    /**
+     * Atomically sync internal and external recipients for a Project Report configuration.
+     * Preserves unchanged recipient IDs and created_at timestamps.
+     */
+    public function syncRecipients(
+        DailyWorkReportSetting|int $setting,
+        array $userIds = [],
+        array $externalRecipients = [],
+        ?int $authUserId = null
+    ): Collection {
+        $settingModel = $setting instanceof DailyWorkReportSetting
+            ? $setting
+            : $this->getConfiguration($setting);
+
+        abort_if($settingModel->report_key !== self::REPORT_KEY, 404, 'Configuration not found.');
+        $settingId = $settingModel->id;
+
+        return DB::transaction(function () use ($settingId, $userIds, $externalRecipients, $authUserId) {
+            // Existing recipients for this specific report configuration
+            $existingRecipients = DailyWorkReportRecipient::query()
+                ->where('report_key', self::REPORT_KEY)
+                ->where('report_setting_id', $settingId)
+                ->get();
+
+            $existingByUserId = $existingRecipients->whereNotNull('user_id')->keyBy('user_id');
+            $existingByEmail = $existingRecipients->whereNull('user_id')->keyBy(function ($r) {
+                return mb_strtolower(trim($r->email));
+            });
+
+            $keptRecipientIds = [];
+
+            // 1. Process Internal PMS Users
+            $cleanUserIds = array_values(array_unique(array_filter(array_map('intval', $userIds))));
+            $internalUsers = !empty($cleanUserIds)
+                ? User::query()->whereIn('id', $cleanUserIds)->where('is_active', true)->whereNotNull('email')->get()
+                : collect();
+
+            $internalNormalizedEmails = [];
+
+            foreach ($internalUsers as $user) {
+                $normalizedEmail = mb_strtolower(trim($user->email));
+                $internalNormalizedEmails[] = $normalizedEmail;
+
+                if ($existing = $existingByUserId->get($user->id)) {
+                    // Update existing record to preserve ID and timestamps
+                    $existing->update([
+                        'name' => $user->name,
+                        'email' => $normalizedEmail,
+                        'scope' => null,
+                        'scope_id' => null,
+                        'updated_by' => $authUserId,
+                    ]);
+                    $keptRecipientIds[] = $existing->id;
+                } else {
+                    $newRecipient = DailyWorkReportRecipient::create([
+                        'report_key' => self::REPORT_KEY,
+                        'report_setting_id' => $settingId,
+                        'user_id' => $user->id,
+                        'scope' => null,
+                        'scope_id' => null,
+                        'name' => $user->name,
+                        'email' => $normalizedEmail,
+                        'is_active' => true,
+                        'created_by' => $authUserId,
+                        'updated_by' => $authUserId,
+                    ]);
+                    $keptRecipientIds[] = $newRecipient->id;
+                }
+            }
+
+            // 2. Process External Recipients
+            $seenExternalEmails = [];
+
+            foreach ($externalRecipients as $item) {
+                $email = mb_strtolower(trim($item['email'] ?? ''));
+                if ($email === '' || in_array($email, $internalNormalizedEmails, true) || in_array($email, $seenExternalEmails, true)) {
+                    continue; // Skip invalid, collision with internal, or duplicate external
+                }
+                $seenExternalEmails[] = $email;
+
+                $name = trim((string) ($item['name'] ?? '')) ?: null;
+
+                if ($existing = $existingByEmail->get($email)) {
+                    $existing->update([
+                        'name' => $name,
+                        'scope' => null,
+                        'scope_id' => null,
+                        'updated_by' => $authUserId,
+                    ]);
+                    $keptRecipientIds[] = $existing->id;
+                } else {
+                    $newRecipient = DailyWorkReportRecipient::create([
+                        'report_key' => self::REPORT_KEY,
+                        'report_setting_id' => $settingId,
+                        'user_id' => null,
+                        'scope' => null,
+                        'scope_id' => null,
+                        'name' => $name,
+                        'email' => $email,
+                        'is_active' => true,
+                        'created_by' => $authUserId,
+                        'updated_by' => $authUserId,
+                    ]);
+                    $keptRecipientIds[] = $newRecipient->id;
+                }
+            }
+
+            // 3. Remove recipients no longer in the list for this setting
+            DailyWorkReportRecipient::query()
+                ->where('report_key', self::REPORT_KEY)
+                ->where('report_setting_id', $settingId)
+                ->whereNotIn('id', $keptRecipientIds)
+                ->delete();
+
+            return $this->getRecipients($settingId);
+        });
+    }
+
+    /**
+     * Delete a single recipient strictly scoped to a Project Report configuration.
+     */
+    public function deleteRecipient(DailyWorkReportSetting|int $setting, int $recipientId): bool
+    {
+        $settingModel = $setting instanceof DailyWorkReportSetting
+            ? $setting
+            : $this->getConfiguration($setting);
+
+        $recipient = DailyWorkReportRecipient::query()
+            ->where('report_key', self::REPORT_KEY)
+            ->where('report_setting_id', $settingModel->id)
+            ->where('id', $recipientId)
+            ->firstOrFail();
+
+        return (bool) $recipient->delete();
+    }
+
+    /**
+     * Toggle the active status of a recipient strictly scoped to a Project Report configuration.
+     */
+    public function toggleRecipient(DailyWorkReportSetting|int $setting, int $recipientId, ?int $authUserId = null): DailyWorkReportRecipient
+    {
+        $settingModel = $setting instanceof DailyWorkReportSetting
+            ? $setting
+            : $this->getConfiguration($setting);
+
+        $recipient = DailyWorkReportRecipient::query()
+            ->where('report_key', self::REPORT_KEY)
+            ->where('report_setting_id', $settingModel->id)
+            ->where('id', $recipientId)
+            ->firstOrFail();
+
+        $recipient->is_active = ! $recipient->is_active;
+        $recipient->updated_by = $authUserId;
+        $recipient->save();
+
+        return $recipient;
     }
 
     /**

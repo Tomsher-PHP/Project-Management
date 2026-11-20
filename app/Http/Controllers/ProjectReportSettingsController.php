@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProjectReportRecipientsRequest;
 use App\Http\Requests\ProjectReportSettingRequest;
 use App\Models\DailyWorkReportRecipient;
 use App\Models\DailyWorkReportSetting;
@@ -54,13 +55,18 @@ class ProjectReportSettingsController extends Controller
         );
 
         $currentReport = $reportDefinitions[$reportKey];
-        $settings = $configurations->first() ?? DailyWorkReportSetting::forReport($reportKey);
+        $selectedConfiguration = $configurations->first();
+        $settings = $selectedConfiguration ?? DailyWorkReportSetting::forReport($reportKey);
 
-        $recipients = DailyWorkReportRecipient::query()
-            ->where('report_key', $reportKey)
-            ->orderBy('scope')
-            ->orderBy('email')
-            ->get();
+        $recipients = $selectedConfiguration
+            ? $this->settingService->getRecipients($selectedConfiguration)
+            : collect();
+
+        $activeUsers = User::query()
+            ->where('is_active', true)
+            ->whereNotNull('email')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
 
         $teams = Team::query()
             ->where('is_active', true)
@@ -82,7 +88,9 @@ class ProjectReportSettingsController extends Controller
         return view('settings.report-settings.project-reports.index', compact(
             'settings',
             'configurations',
+            'selectedConfiguration',
             'recipients',
+            'activeUsers',
             'teams',
             'users',
             'projectStatuses',
@@ -175,6 +183,58 @@ class ProjectReportSettingsController extends Controller
         ]);
     }
 
+    public function recipients(Request $request, int|string $projectReportSetting): JsonResponse
+    {
+        $configuration = $this->settingService->getConfiguration((int) $projectReportSetting);
+        $recipients = $this->settingService->getRecipients($configuration);
+
+        $internalUserIds = $recipients->whereNotNull('user_id')->pluck('user_id')->values()->all();
+        $externalRecipients = $recipients->whereNull('user_id')->map(function ($r) {
+            return [
+                'id' => $r->id,
+                'name' => $r->name,
+                'email' => $r->email,
+                'is_active' => (bool) $r->is_active,
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'success' => true,
+            'setting' => [
+                'id' => $configuration->id,
+                'report_name' => $configuration->report_name,
+                'setting_key' => $configuration->setting_key,
+            ],
+            'internal_user_ids' => $internalUserIds,
+            'external_recipients' => $externalRecipients,
+            'recipients' => $recipients,
+        ]);
+    }
+
+    public function syncRecipients(ProjectReportRecipientsRequest $request, int|string $projectReportSetting): JsonResponse|RedirectResponse
+    {
+        $configuration = $this->settingService->getConfiguration((int) $projectReportSetting);
+        $userIds = (array) $request->input('user_ids', []);
+        $externalRecipients = (array) $request->input('external_recipients', []);
+
+        $recipients = $this->settingService->syncRecipients(
+            $configuration,
+            $userIds,
+            $externalRecipients,
+            $request->user()?->id
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Recipients updated successfully.',
+                'data' => $recipients,
+            ]);
+        }
+
+        return back()->with('success', 'Recipients updated successfully.');
+    }
+
     public function storeRecipient(Request $request): RedirectResponse
     {
         $reportKey = 'project_report';
@@ -218,32 +278,66 @@ class ProjectReportSettingsController extends Controller
         return back()->with('success', 'Recipient added successfully.');
     }
 
-    public function toggleRecipient(Request $request, DailyWorkReportRecipient $recipient): JsonResponse
+    public function toggleRecipient(Request $request, int|string|DailyWorkReportRecipient $projectReportSetting, ?DailyWorkReportRecipient $recipient = null): JsonResponse
     {
-        abort_unless(
-            $recipient->report_key === 'project_report',
-            404
-        );
+        if ($recipient === null) {
+            $targetRecipient = $projectReportSetting instanceof DailyWorkReportRecipient
+                ? $projectReportSetting
+                : DailyWorkReportRecipient::findOrFail((int) $projectReportSetting);
 
-        $recipient->update([
-            'is_active' => ! $recipient->is_active,
-            'updated_by' => $request->user()->id,
-        ]);
+            abort_unless($targetRecipient->report_key === 'project_report', 404);
+
+            $targetRecipient->update([
+                'is_active' => ! $targetRecipient->is_active,
+                'updated_by' => $request->user()?->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'is_active' => (bool) $targetRecipient->is_active,
+                'message' => $targetRecipient->is_active ? 'Recipient activated.' : 'Recipient deactivated.',
+            ]);
+        }
+
+        $setting = $this->settingService->getConfiguration((int) $projectReportSetting);
+        $updated = $this->settingService->toggleRecipient($setting, $recipient->id, $request->user()?->id);
 
         return response()->json([
             'success' => true,
-            'is_active' => (bool) $recipient->is_active,
+            'is_active' => (bool) $updated->is_active,
+            'message' => $updated->is_active ? 'Recipient activated.' : 'Recipient deactivated.',
         ]);
     }
 
-    public function destroyRecipient(Request $request, DailyWorkReportRecipient $recipient): RedirectResponse
+    public function destroyRecipient(Request $request, int|string|DailyWorkReportRecipient $projectReportSetting, ?DailyWorkReportRecipient $recipient = null): JsonResponse|RedirectResponse
     {
-        abort_unless(
-            $recipient->report_key === 'project_report',
-            404
-        );
+        if ($recipient === null) {
+            $targetRecipient = $projectReportSetting instanceof DailyWorkReportRecipient
+                ? $projectReportSetting
+                : DailyWorkReportRecipient::findOrFail((int) $projectReportSetting);
 
-        $recipient->delete();
+            abort_unless($targetRecipient->report_key === 'project_report', 404);
+            $targetRecipient->delete();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Recipient removed.',
+                ]);
+            }
+
+            return back()->with('success', 'Recipient removed.');
+        }
+
+        $setting = $this->settingService->getConfiguration((int) $projectReportSetting);
+        $this->settingService->deleteRecipient($setting, $recipient->id);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Recipient removed.',
+            ]);
+        }
 
         return back()->with('success', 'Recipient removed.');
     }
