@@ -10,6 +10,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\UserReportPreference;
 use App\Models\UserSetting;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -103,7 +104,17 @@ class DailyWorkReportSettingsController extends Controller
             ],
             'enabled' => ['sometimes', 'boolean'],
             'frequency' => ['required', Rule::in(['daily', 'weekdays', 'weekly'])],
-            'delivery_time' => ['required', 'date_format:H:i'],
+            'delivery_time' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    try {
+                        Carbon::parse($value);
+                    } catch (\Throwable $e) {
+                        $fail('The delivery time is invalid.');
+                    }
+                },
+            ],
             'timezone' => ['required', 'timezone'],
             'reporting_period' => [
                 'required',
@@ -133,7 +144,7 @@ class DailyWorkReportSettingsController extends Controller
         $settings->update([
             'enabled' => $request->boolean('enabled'),
             'frequency' => $validated['frequency'],
-            'delivery_time' => $validated['delivery_time'],
+            'delivery_time' => Carbon::parse($validated['delivery_time'])->format('H:i:s'),
             'timezone' => $validated['timezone'],
             'reporting_period' => $validated['reporting_period'],
             'send_zero_activity' => $request->boolean('send_zero_activity'),
