@@ -184,12 +184,8 @@
                                         $isProjectName = $colKey === 'project_name';
                                     @endphp
                                     <label class="flex items-center gap-2.5 text-sm text-bgray-700 dark:text-bgray-300 {{ $isProjectName ? 'cursor-not-allowed opacity-80' : 'cursor-pointer hover:text-bgray-900 dark:hover:text-white' }}" @if ($isProjectName) onclick="event.preventDefault();" @endif>
-                                        <input type="checkbox" name="columns[]" value="{{ $colKey }}" checked
-                                            @if ($isProjectName)
-                                                data-locked="true"
-                                                onclick="return false;"
-                                            @endif
-                                            class="modal-column-checkbox h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 {{ $isProjectName ? 'cursor-not-allowed pointer-events-none' : '' }}">
+                                        <input type="checkbox" name="columns[]" value="{{ $colKey }}" checked @if ($isProjectName) data-locked="true"
+                                                onclick="return false;" @endif class="modal-column-checkbox h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 {{ $isProjectName ? 'cursor-not-allowed pointer-events-none' : '' }}">
                                         <span>{{ $colLabel }}</span>
                                         @if ($isProjectName)
                                             <span class="text-[10px] uppercase font-semibold text-bgray-700 dark:text-bgray-300 bg-bgray-100 dark:bg-darkblack-400 px-1.5 py-0.5 rounded">Required</span>
