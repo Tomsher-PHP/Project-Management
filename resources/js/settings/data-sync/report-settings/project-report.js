@@ -1,4 +1,5 @@
 import Alert from '../../../alert';
+import { initTomSelect } from '../../../components/tom-select';
 
 function initReportTabs() {
     const tabs = document.querySelectorAll('[data-report-tab]');
@@ -257,6 +258,9 @@ function initProjectReportModal() {
     const form = $('#project-report-config-form');
     if (!modal.length || !form.length) return;
 
+    // Initialize TomSelect inside modal
+    initTomSelect(modal[0]);
+
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
     function updateFrequencyOptions(frequency) {
@@ -265,9 +269,46 @@ function initProjectReportModal() {
         $('#modal-monthly-day-wrapper').toggleClass('hidden', freq !== 'monthly');
     }
 
+    function setSelectValue(selector, value) {
+        const el = $(selector)[0];
+        if (el && el.tomselect) {
+            el.tomselect.setValue(value);
+        } else {
+            $(selector).val(value);
+        }
+    }
+
+    function setTimezoneValue(timezone) {
+        const el = $('#modal-report-timezone')[0];
+        const tz = timezone || 'Asia/Dubai';
+        if (el && el.tomselect) {
+            el.tomselect.addOption({ value: tz, text: tz });
+            el.tomselect.setValue(tz);
+        } else {
+            $('#modal-report-timezone').val(tz);
+        }
+    }
+
+    function setProjectStatuses(statusIds) {
+        const el = $('#modal-project-statuses')[0];
+        const ids = (statusIds || []).map(String);
+        if (el && el.tomselect) {
+            el.tomselect.setValue(ids);
+        } else {
+            $('#modal-project-statuses').val(ids);
+        }
+    }
+
     $('#modal-report-frequency').on('change', function () {
         updateFrequencyOptions($(this).val());
     });
+
+    const freqEl = $('#modal-report-frequency')[0];
+    if (freqEl?.tomselect) {
+        freqEl.tomselect.on('change', function (val) {
+            updateFrequencyOptions(val);
+        });
+    }
 
     // Select All / Clear All columns
     $('#modal-columns-select-all').on('click', function () {
@@ -279,7 +320,14 @@ function initProjectReportModal() {
     });
 
     // Close Modal triggers
-    $(document).on('click', '#project-report-config-modal .modal-close, #project-report-config-modal .modal-overlay', function () {
+    $(document).on('click', '#project-report-config-modal .modal-close', function () {
+        modal.addClass('hidden');
+    });
+
+    // Close modal when click outside of modal content
+    $(document).on('click', '#project-report-config-modal', function (e) {
+        if ($(e.target).closest('.modal-content').length) return;
+        if ($(e.target).closest('.ts-dropdown, .ts-selected-items-popover, .flatpickr-calendar, .swal2-container').length) return;
         modal.addClass('hidden');
     });
 
@@ -301,20 +349,22 @@ function initProjectReportModal() {
         form.find('[data-error-for]').addClass('hidden').text('');
 
         // Defaults
-        $('#modal-report-enabled').prop('checked', true);
-        $('#modal-report-frequency').val('daily');
+        setSelectValue('#modal-report-frequency', 'daily');
         $('#modal-delivery-time').val('09:00');
         if ($('#modal-delivery-time')[0]?._flatpickr) {
             $('#modal-delivery-time')[0]._flatpickr.setDate('09:00');
         }
         $('#modal-weekly-day').val('1');
         $('#modal-monthly-day').val('1');
-        $('#modal-reporting-period').val('all_time');
-        $('#modal-date-filter').val('none');
-        $('#modal-report-timezone').val('Asia/Dubai');
+        setSelectValue('#modal-reporting-period', 'all_time');
+        setSelectValue('#modal-date-filter', 'none');
+        setTimezoneValue('Asia/Dubai');
 
         // Select all statuses by default
-        $('#modal-project-statuses option').prop('selected', true);
+        const allStatusIds = $('#modal-project-statuses option').map(function () {
+            return String($(this).val());
+        }).get();
+        setProjectStatuses(allStatusIds);
 
         // Select all columns by default
         $('.modal-column-checkbox').prop('checked', true);
@@ -347,10 +397,9 @@ function initProjectReportModal() {
                 if (res.success && res.data) {
                     const data = res.data;
                     $('#modal-report-name').val(data.report_name || 'Project Report');
-                    $('#modal-report-enabled').prop('checked', !!data.enabled);
 
                     const freq = (data.frequency || 'daily').toLowerCase();
-                    $('#modal-report-frequency').val(freq);
+                    setSelectValue('#modal-report-frequency', freq);
                     updateFrequencyOptions(freq);
 
                     const deliveryTime = data.delivery_time ? data.delivery_time.substring(0, 5) : '00:00';
@@ -360,7 +409,9 @@ function initProjectReportModal() {
                     }
 
                     if (data.timezone) {
-                        $('#modal-report-timezone').val(data.timezone);
+                        setTimezoneValue(data.timezone);
+                    } else {
+                        setTimezoneValue('Asia/Dubai');
                     }
 
                     if (data.weekly_day) {
@@ -373,20 +424,21 @@ function initProjectReportModal() {
                     }
 
                     if (data.reporting_period) {
-                        $('#modal-reporting-period').val(data.reporting_period);
+                        setSelectValue('#modal-reporting-period', data.reporting_period);
                     }
 
                     const dateFilter = data.settings?.filters?.date_filter || 'none';
-                    $('#modal-date-filter').val(dateFilter);
+                    setSelectValue('#modal-date-filter', dateFilter);
 
                     // Project Statuses
                     const statusIds = (data.settings?.filters?.project_status_ids || []).map(String);
                     if (statusIds.length) {
-                        $('#modal-project-statuses option').each(function () {
-                            $(this).prop('selected', statusIds.includes(String($(this).val())));
-                        });
+                        setProjectStatuses(statusIds);
                     } else {
-                        $('#modal-project-statuses option').prop('selected', true);
+                        const allStatusIds = $('#modal-project-statuses option').map(function () {
+                            return String($(this).val());
+                        }).get();
+                        setProjectStatuses(allStatusIds);
                     }
 
                     // Columns

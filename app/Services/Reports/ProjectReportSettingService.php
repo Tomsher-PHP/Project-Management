@@ -54,7 +54,7 @@ class ProjectReportSettingService
         $setting->setting_key = $settingKey;
         $setting->report_key = self::REPORT_KEY;
         $setting->report_name = $data['report_name'];
-        $setting->enabled = (bool) ($data['enabled'] ?? false);
+        $setting->enabled = isset($data['enabled']) ? (bool) $data['enabled'] : true;
         $setting->frequency = $frequency;
         $setting->delivery_time = Carbon::parse($data['delivery_time'])->format('H:i:s');
         $setting->timezone = $data['timezone'];
