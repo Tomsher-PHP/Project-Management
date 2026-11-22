@@ -41,6 +41,11 @@ class DailyWorkReportSetting extends Model
         return $this->hasMany(DailyWorkReportRecipient::class, 'report_setting_id');
     }
 
+    public function reportLogs(): HasMany
+    {
+        return $this->hasMany(DailyWorkReportLog::class, 'report_setting_id');
+    }
+
     public static function forReport(string $reportKey): self
     {
         return static::firstOrCreate(

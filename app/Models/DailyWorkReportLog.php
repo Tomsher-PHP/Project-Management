@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DailyWorkReportLog extends Model
 {
     protected $fillable = [
+        'report_setting_id',
         'user_id',
         'report_date',
         'period_start',
@@ -27,6 +28,7 @@ class DailyWorkReportLog extends Model
     protected function casts(): array
     {
         return [
+            'report_setting_id' => 'integer',
             'report_date' => 'date',
             'period_start' => 'datetime',
             'period_end' => 'datetime',
@@ -36,6 +38,11 @@ class DailyWorkReportLog extends Model
             'generated_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
+    }
+
+    public function reportSetting(): BelongsTo
+    {
+        return $this->belongsTo(DailyWorkReportSetting::class, 'report_setting_id');
     }
 
     public function user(): BelongsTo
