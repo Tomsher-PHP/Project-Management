@@ -592,7 +592,11 @@ class ProjectReportSettingsCrudTest extends TestCase
         $response->assertSee('Project Report Configurations');
         $response->assertSee('HTML UI Render Config');
         $response->assertSee('Add Report');
+        $response->assertSee('Reporting Period');
+        $response->assertSee('Statuses');
+        $response->assertSee('Last 7 Days');
         $response->assertSee('Status changed date');
+        $response->assertDontSee('>Timezone</span>', false);
         $response->assertSee('data-locked="true"', false);
         $response->assertSee('project-report-config-modal');
     }

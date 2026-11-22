@@ -45,17 +45,56 @@ class SendProjectReportDelivery implements ShouldQueue
                 throw new RuntimeException('Project report log not found.');
             }
 
-            if (blank($delivery->recipient_email)) {
-                throw new RuntimeException('Delivery recipient email is missing.');
-            }
-
             if (empty($reportLog->report_data)) {
                 throw new RuntimeException('Report data snapshot not found in report log.');
             }
 
+            // Resolve TO and CC recipients from log snapshot or delivery sources
+            $toRecipients = data_get($reportLog->recipients_snapshot, 'to', []);
+            $ccRecipients = data_get($reportLog->recipients_snapshot, 'cc', []);
+
+            if (empty($toRecipients)) {
+                $sourcesTo = data_get($delivery->recipient_sources, 'to', []);
+                $toRecipients = ! empty($sourcesTo) ? $sourcesTo : [$delivery->recipient_email];
+            }
+            if (empty($ccRecipients)) {
+                $ccRecipients = data_get($delivery->recipient_sources, 'cc', []);
+            }
+
+            $toEmails = collect($toRecipients)
+                ->map(fn($r) => is_array($r) ? ($r['email'] ?? null) : (string) $r)
+                ->filter()
+                ->map(fn($e) => mb_strtolower(trim((string) $e)))
+                ->unique()
+                ->values()
+                ->all();
+
+            $ccEmails = collect($ccRecipients)
+                ->map(fn($r) => is_array($r) ? ($r['email'] ?? null) : (string) $r)
+                ->filter()
+                ->map(fn($e) => mb_strtolower(trim((string) $e)))
+                ->unique()
+                ->reject(fn($email) => in_array($email, $toEmails, true))
+                ->values()
+                ->all();
+
+            if (empty($toEmails)) {
+                $fallbackTo = config('mail.from.address');
+                if (blank($fallbackTo)) {
+                    throw new RuntimeException('Delivery recipient email is missing.');
+                }
+                $toEmails = [mb_strtolower(trim((string) $fallbackTo))];
+                $ccEmails = array_values(array_diff($ccEmails, $toEmails));
+            }
+
             // Send Project Report email with HTML table directly in body using the report snapshot.
-            Mail::to($delivery->recipient_email)
-                ->send(new ProjectReportMail($reportLog));
+            $mail = Mail::to($toEmails);
+
+            if (! empty($ccEmails)) {
+                $mail->cc($ccEmails);
+            }
+
+            $mail->send(new ProjectReportMail($reportLog));
 
             $delivery->update([
                 'status' => 'sent',

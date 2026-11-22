@@ -29,16 +29,37 @@
                         <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                             <th class="px-4 py-4 whitespace-nowrap min-w-[200px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Report Name</span></th>
                             <th class="px-4 py-4 whitespace-nowrap min-w-[130px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Frequency</span></th>
-                            <th class="px-4 py-4 whitespace-nowrap min-w-[130px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Delivery Time</span></th>
-                            <th class="px-4 py-4 whitespace-nowrap min-w-[150px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Timezone</span></th>
-                            <th class="px-4 py-4 whitespace-nowrap min-w-[110px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span></th>
+                            <th class="px-4 py-4 whitespace-nowrap min-w-[120px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Delivery Time</span></th>
+                            <th class="px-4 py-4 whitespace-nowrap min-w-[140px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reporting Period</span></th>
+                            <th class="px-4 py-4 whitespace-nowrap min-w-[180px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Statuses</span></th>
+                            <th class="px-4 py-4 whitespace-nowrap min-w-[90px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span></th>
                             @can($reportPermission)
                                 <th class="px-4 py-4 whitespace-nowrap min-w-[120px] text-right"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span></th>
                             @endcan
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-bgray-200 dark:divide-darkblack-400">
+                        @php
+                            $periodLabels = config('report-settings.project_report.reporting_periods', []);
+                            $statusMap = isset($projectStatuses) ? $projectStatuses->keyBy('id') : collect();
+                        @endphp
                         @forelse ($configurations as $config)
+                            @php
+                                $statusIds = (array) ($config->settings['filters']['project_status_ids']
+                                    ?? $config->settings['project_statuses']
+                                    ?? $config->settings['project_status_ids']
+                                    ?? []);
+                                $rowStatuses = collect($statusIds)->map(function ($id) use ($statusMap) {
+                                    $found = $statusMap->get((int) $id);
+                                    return [
+                                        'id' => $id,
+                                        'name' => $found ? $found->name : 'Status #' . $id,
+                                        'color' => $found ? ($found->color ?: '#94A3B8') : '#94A3B8',
+                                    ];
+                                });
+                                $periodLabel = $periodLabels[$config->reporting_period]
+                                    ?? ucwords(str_replace('_', ' ', $config->reporting_period ?: 'all_time'));
+                            @endphp
                             <tr class="border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-100 dark:hover:bg-darkblack-500" data-config-row="{{ $config->id }}">
                                 <td class="px-4 py-4">
                                     <span class="block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -62,11 +83,27 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-4 text-sm text-bgray-700 dark:text-bgray-300 font-medium">
+                                <td class="px-4 py-4 text-sm text-bgray-700 dark:text-bgray-300 font-medium whitespace-nowrap">
                                     {{ $config->delivery_time ? \Carbon\Carbon::parse($config->delivery_time)->format($globalTimeFormat ?? config('constants.time_format', 'H:i')) : '—' }}
                                 </td>
-                                <td class="px-4 py-4 text-sm text-bgray-700 dark:text-bgray-300">
-                                    {{ $config->timezone }}
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center rounded-md bg-bgray-100 px-2.5 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
+                                        {{ $periodLabel }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    @if ($rowStatuses->isNotEmpty())
+                                        <div class="flex flex-wrap gap-1.5 max-w-[280px]">
+                                            @foreach ($rowStatuses as $st)
+                                                <span class="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
+                                                    <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background-color: {{ $st['color'] }};"></span>
+                                                    <span>{{ $st['name'] }}</span>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-bgray-500 dark:text-bgray-400">All</span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-4">
                                     @can($reportPermission)
@@ -98,7 +135,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="@can($reportPermission) 6 @else 5 @endcan" class="px-4 py-8 text-center text-bgray-600 dark:text-bgray-300">
+                                <td colspan="@can($reportPermission) 7 @else 6 @endcan" class="px-4 py-8 text-center text-bgray-600 dark:text-bgray-300">
                                     No project report configurations found. Click "+ Add Report" to create one.
                                 </td>
                             </tr>

@@ -47,6 +47,13 @@ class GenerateProjectReportsCommandTest extends TestCase
             'email' => 'subscriber@example.com',
             'is_active' => true,
         ]);
+
+        Project::create([
+            'name' => 'Command Test Project',
+            'project_code' => 'PRJ-CMD-TEST',
+            'status_id' => $this->status->id,
+            'project_flow' => 'agile',
+        ]);
     }
 
     public function test_command_is_registered_in_scheduler_every_minute_without_overlapping(): void

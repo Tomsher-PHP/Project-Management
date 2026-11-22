@@ -126,13 +126,9 @@
                                         Reporting Period <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-reporting-period" name="reporting_period" required class="tom-select-no-search w-full">
-                                        <option value="all_time">All Time</option>
-                                        <option value="previous_day">Previous Day</option>
-                                        <option value="last_7_days">Last 7 Days</option>
-                                        <option value="last_30_days">Last 30 Days</option>
-                                        <option value="last_90_days">Last 90 Days</option>
-                                        <option value="last_6_months">Last 6 Months</option>
-                                        <option value="last_1_year">Last 1 Year</option>
+                                        @foreach (config('report-settings.project_report.reporting_periods', []) as $periodKey => $periodLabel)
+                                            <option value="{{ $periodKey }}">{{ $periodLabel }}</option>
+                                        @endforeach
                                     </select>
                                     <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="reporting_period"></span>
                                 </div>
@@ -143,10 +139,9 @@
                                         Date Filter <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-date-filter" name="date_filter" required class="tom-select-no-search w-full">
-                                        <option value="status_changed_date" selected>Status changed date</option>
-                                        <option value="created_at">Project Created Date within Period</option>
-                                        <option value="start_date">Project Start Date within Period</option>
-                                        <option value="end_date">Project End Date within Period</option>
+                                        @foreach (config('report-settings.project_report.date_filters', []) as $filterKey => $filterLabel)
+                                            <option value="{{ $filterKey }}" @selected($loop->first)>{{ $filterLabel }}</option>
+                                        @endforeach
                                     </select>
                                     <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="settings.filters.date_filter"></span>
                                 </div>

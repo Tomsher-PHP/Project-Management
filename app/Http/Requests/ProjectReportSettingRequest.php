@@ -102,15 +102,10 @@ class ProjectReportSettingRequest extends FormRequest
             'reporting_period' => [
                 'required',
                 'string',
-                Rule::in([
-                    'all_time',
-                    'previous_day',
-                    'last_7_days',
-                    'last_30_days',
-                    'last_90_days',
-                    'last_6_months',
-                    'last_1_year',
-                ]),
+                Rule::in(array_merge(
+                    array_keys(config('report-settings.project_report.reporting_periods', [])),
+                    ['last_180_days']
+                )),
             ],
             'weekly_day' => [
                 'required_if:frequency,weekly',
@@ -143,7 +138,10 @@ class ProjectReportSettingRequest extends FormRequest
             'settings.filters.date_filter' => [
                 'required',
                 'string',
-                Rule::in(['status_changed_date', 'status_change_date', 'created_at', 'start_date', 'end_date']),
+                Rule::in(array_merge(
+                    array_keys(config('report-settings.project_report.date_filters', [])),
+                    ['status_change_date']
+                )),
             ],
             'settings.columns' => ['required', 'array', 'min:1'],
             'settings.columns.*' => [

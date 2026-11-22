@@ -52,13 +52,14 @@ class ProjectReportAutomationService
             ?? $settingModel->settings['date_filter']
             ?? 'status_changed_date');
 
-        $dateFilterLabel = match ($dateFilter) {
-            'status_changed_date', 'status_change_date' => 'Status Changed Date within Period',
-            'start_date' => 'Project Start Date within Period',
-            'end_date' => 'Project End Date within Period',
-            'created_at' => 'Project Created Date within Period',
-            default => 'Status Changed Date within Period',
-        };
+        $dateFilterLabel = config("report-settings.project_report.date_filters.{$dateFilter}")
+            ?? match ($dateFilter) {
+                'status_change_date' => config('report-settings.project_report.date_filters.status_changed_date', 'Status Changed Date within Period'),
+                'start_date' => 'Project Start Date within Period',
+                'end_date' => 'Project End Date within Period',
+                'created_at' => 'Project Created Date within Period',
+                default => config('report-settings.project_report.date_filters.status_changed_date', 'Status Changed Date within Period'),
+            };
 
         $statusIds = $settingModel->settings['filters']['project_status_ids']
             ?? $settingModel->settings['project_statuses']
@@ -542,7 +543,7 @@ class ProjectReportAutomationService
      * - Excludes inactive or deleted internal users.
      * - Excludes invalid email formats.
      * - Respects effective_from and effective_until dates.
-     * - Prevents duplicate recipient email addresses.
+     * - Prevents duplicate recipient email addresses (internal users prioritized).
      */
     public function resolveRecipients(DailyWorkReportSetting|int $setting, ?string $effectiveDate = null): Collection
     {
@@ -559,7 +560,10 @@ class ProjectReportAutomationService
         $resolved = collect();
         $seenEmails = [];
 
-        foreach ($recipientRecords as $recipient) {
+        // Sort internal recipients first to prioritize their current email over external duplicates
+        $sortedRecords = $recipientRecords->sortByDesc(fn($r) => $r->user_id ? 1 : 0);
+
+        foreach ($sortedRecords as $recipient) {
             $email = null;
             $name = null;
             $type = 'external';
@@ -587,7 +591,7 @@ class ProjectReportAutomationService
                 continue;
             }
 
-            // Prevent duplicate recipient email addresses
+            // Prevent duplicate recipient email addresses (internal prioritized)
             if (isset($seenEmails[$email])) {
                 continue;
             }
@@ -607,30 +611,140 @@ class ProjectReportAutomationService
     }
 
     /**
-     * Create delivery records for a parent report log based on resolved recipients.
+     * Partition resolved recipients into normalized, deduplicated TO and CC recipient lists.
+     *
+     * Rules:
+     * - Internal recipients -> TO (using current email from users table).
+     * - External recipients -> CC (using configured email).
+     * - Normalized (lowercase, trimmed) and deduplicated.
+     * - An address must not appear in both TO and CC. Prioritize TO.
+     * - If external recipients exist but no internal recipients, use config('mail.from.address') as TO, and keep external in CC.
+     *
+     * @param Collection $recipients
+     * @return array{
+     *     to: \Illuminate\Support\Collection,
+     *     cc: \Illuminate\Support\Collection,
+     *     to_emails: array<string>,
+     *     cc_emails: array<string>,
+     *     internal: \Illuminate\Support\Collection,
+     *     external: \Illuminate\Support\Collection,
+     *     fallback_to_used: bool,
+     *     has_recipients: bool
+     * }
      */
-    public function createDeliveriesForLog(DailyWorkReportLog $log, Collection $recipients): Collection
+    public function partitionRecipients(Collection $recipients): array
     {
-        $deliveries = collect();
+        $to = collect();
+        $cc = collect();
+        $seenTo = [];
+        $seenCc = [];
 
+        // 1. Process Internal recipients -> TO
         foreach ($recipients as $recipient) {
-            $delivery = DailyWorkReportDelivery::firstOrCreate(
-                [
-                    'daily_work_report_log_id' => $log->id,
-                    'recipient_email' => $recipient['email'],
-                ],
-                [
-                    'recipient_name' => $recipient['name'] ?? null,
-                    'recipient_type' => $recipient['type'] ?? 'external',
-                    'recipient_sources' => $recipient['sources'] ?? [],
-                    'status' => 'pending',
-                ]
-            );
-
-            $deliveries->push($delivery);
+            if (($recipient['type'] ?? '') === 'internal') {
+                $email = mb_strtolower(trim((string) ($recipient['email'] ?? '')));
+                if (! empty($email) && ! isset($seenTo[$email])) {
+                    $seenTo[$email] = true;
+                    $to->push([
+                        'email' => $email,
+                        'name' => trim((string) ($recipient['name'] ?? '')) ?: null,
+                        'type' => 'internal',
+                        'user_id' => $recipient['user_id'] ?? null,
+                    ]);
+                }
+            }
         }
 
-        return $deliveries;
+        // 2. Process External recipients -> CC
+        // Must exclude any address already in TO (Prioritize TO)
+        foreach ($recipients as $recipient) {
+            if (($recipient['type'] ?? '') === 'external') {
+                $email = mb_strtolower(trim((string) ($recipient['email'] ?? '')));
+                if (! empty($email) && ! isset($seenTo[$email]) && ! isset($seenCc[$email])) {
+                    $seenCc[$email] = true;
+                    $cc->push([
+                        'email' => $email,
+                        'name' => trim((string) ($recipient['name'] ?? '')) ?: null,
+                        'type' => 'external',
+                        'user_id' => null,
+                    ]);
+                }
+            }
+        }
+
+        // 3. Fallback when external recipients exist but no internal recipients
+        $fallbackToUsed = false;
+        if ($to->isEmpty() && $cc->isNotEmpty()) {
+            $fromAddress = mb_strtolower(trim((string) config('mail.from.address', 'noreply@example.com')));
+            $fromName = config('mail.from.name', 'Project Management');
+
+            $to->push([
+                'email' => $fromAddress,
+                'name' => $fromName,
+                'type' => 'from_address_fallback',
+                'user_id' => null,
+            ]);
+
+            // Ensure fallback address is not also in CC
+            $cc = $cc->reject(fn($r) => $r['email'] === $fromAddress)->values();
+            $fallbackToUsed = true;
+        }
+
+        return [
+            'to' => $to,
+            'cc' => $cc,
+            'to_emails' => $to->pluck('email')->all(),
+            'cc_emails' => $cc->pluck('email')->all(),
+            'internal' => $recipients->where('type', 'internal')->values(),
+            'external' => $recipients->where('type', 'external')->values(),
+            'fallback_to_used' => $fallbackToUsed,
+            'has_recipients' => $recipients->isNotEmpty(),
+        ];
+    }
+
+    /**
+     * Create a single delivery record for a parent report log based on resolved recipients.
+     */
+    public function createDeliveryForLog(DailyWorkReportLog $log, array|Collection $recipients): DailyWorkReportDelivery
+    {
+        $partitioned = is_array($recipients) && isset($recipients['to'])
+            ? $recipients
+            : $this->partitionRecipients(collect($recipients));
+
+        $toEmails = collect($partitioned['to'])->pluck('email')->filter()->values()->all();
+        $ccEmails = collect($partitioned['cc'])->pluck('email')->filter()->values()->all();
+
+        $primaryTo = $toEmails[0] ?? (string) config('mail.from.address', 'noreply@example.com');
+        $toCount = count($toEmails);
+        $recipientName = $toCount > 1
+            ? 'Project Report Recipients (' . $toCount . ')'
+            : (collect($partitioned['to'])->first()['name'] ?? 'Project Report Recipient');
+
+        return DailyWorkReportDelivery::firstOrCreate(
+            [
+                'daily_work_report_log_id' => $log->id,
+                'recipient_email' => $primaryTo,
+            ],
+            [
+                'recipient_name' => $recipientName,
+                'recipient_type' => 'project_report',
+                'recipient_sources' => [
+                    'to' => $toEmails,
+                    'cc' => $ccEmails,
+                    'fallback_to_used' => $partitioned['fallback_to_used'] ?? false,
+                ],
+                'status' => 'pending',
+            ]
+        );
+    }
+
+    /**
+     * Create delivery records for a parent report log based on resolved recipients (returns single delivery in collection).
+     */
+    public function createDeliveriesForLog(DailyWorkReportLog $log, Collection|array $recipients): Collection
+    {
+        $delivery = $this->createDeliveryForLog($log, $recipients);
+        return collect([$delivery]);
     }
 
     /**
@@ -756,11 +870,65 @@ class ProjectReportAutomationService
                 return $existing;
             }
 
-            $reportData = $this->prepareReportData($settingModel, $referenceDate);
+            // 1. Condition 1: Check Eligible Recipients
             $recipients = $this->resolveRecipients($settingModel, $reportDate);
+            if ($recipients->isEmpty()) {
+                return DailyWorkReportLog::create([
+                    'report_setting_id' => $settingModel->id,
+                    'user_id' => null,
+                    'report_date' => $reportDate,
+                    'period_start' => $now->copy()->startOfDay(),
+                    'period_end' => $now->copy()->endOfDay(),
+                    'report_type' => $frequency,
+                    'report_key' => 'project_report',
+                    'status' => 'skipped',
+                    'report_data' => null,
+                    'recipients_snapshot' => [
+                        'to' => [],
+                        'cc' => [],
+                        'internal' => [],
+                        'external' => [],
+                        'fallback_to_used' => false,
+                    ],
+                    'generated_at' => $now->copy(),
+                    'completed_at' => $now->copy(),
+                    'last_error' => 'Skipped: No eligible recipients configured.',
+                ]);
+            }
 
-            $status = $recipients->isEmpty() ? 'skipped' : 'pending';
-            $completedAt = $recipients->isEmpty() ? $now->copy() : null;
+            // 2. Prepare Report Data
+            $reportData = $this->prepareReportData($settingModel, $referenceDate);
+
+            // 3. Condition 2: Check Matching Projects
+            $totalProjects = (int) data_get($reportData, 'metadata.total_projects', count($reportData['projects'] ?? []));
+            $isEmpty = (bool) data_get($reportData, 'metadata.is_empty', $totalProjects === 0);
+
+            $partitioned = $this->partitionRecipients($recipients);
+            $recipientsSnapshot = [
+                'to' => $partitioned['to']->values()->all(),
+                'cc' => $partitioned['cc']->values()->all(),
+                'internal' => $partitioned['internal']->values()->all(),
+                'external' => $partitioned['external']->values()->all(),
+                'fallback_to_used' => $partitioned['fallback_to_used'],
+            ];
+
+            if ($isEmpty || $totalProjects === 0) {
+                return DailyWorkReportLog::create([
+                    'report_setting_id' => $settingModel->id,
+                    'user_id' => null,
+                    'report_date' => $reportDate,
+                    'period_start' => $reportData['metadata']['period_start'] ?? $now->copy()->startOfDay(),
+                    'period_end' => $reportData['metadata']['period_end'] ?? $now->copy()->endOfDay(),
+                    'report_type' => $frequency,
+                    'report_key' => 'project_report',
+                    'status' => 'skipped',
+                    'report_data' => $reportData,
+                    'recipients_snapshot' => $recipientsSnapshot,
+                    'generated_at' => $now->copy(),
+                    'completed_at' => $now->copy(),
+                    'last_error' => 'Skipped: No matching projects found for the configured period and filters.',
+                ]);
+            }
 
             try {
                 $log = DailyWorkReportLog::create([
@@ -771,17 +939,16 @@ class ProjectReportAutomationService
                     'period_end' => $reportData['metadata']['period_end'] ?? $now->copy()->endOfDay(),
                     'report_type' => $frequency,
                     'report_key' => 'project_report',
-                    'status' => $status,
+                    'status' => 'pending',
                     'report_data' => $reportData,
-                    'recipients_snapshot' => $recipients->all(),
+                    'recipients_snapshot' => $recipientsSnapshot,
                     'generated_at' => $now->copy(),
-                    'completed_at' => $completedAt,
+                    'completed_at' => null,
                 ]);
 
-                if (! $recipients->isEmpty()) {
-                    $this->createDeliveriesForLog($log, $recipients);
-                    $this->dispatchDeliveries($log);
-                }
+                // Create exactly one delivery record for this report occurrence
+                $this->createDeliveryForLog($log, $partitioned);
+                $this->dispatchDeliveries($log);
 
                 return $log;
             } catch (\Illuminate\Database\QueryException $e) {

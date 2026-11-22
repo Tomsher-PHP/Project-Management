@@ -239,7 +239,7 @@ class ProjectReportMultipleTimelinesTest extends TestCase
         $this->assertSame(array_search('end_date', $columnKeys, true) + 1, array_search('customer_end_date', $columnKeys, true));
         $this->assertSame(array_search('estimated_hours', $columnKeys, true) + 1, array_search('customer_estimated_hours', $columnKeys, true));
         $this->assertSame(array_search('progress', $columnKeys, true) + 1, array_search('customer_progress', $columnKeys, true));
-        $this->assertSame('Customer End Date', $columns['customer_end_date']);
+        $this->assertSame('Cust End Date', $columns['customer_end_date']);
         $this->assertSame('Cust Estimate', $columns['customer_estimated_hours']);
         $this->assertSame('Cust Progress', $columns['customer_progress']);
 
