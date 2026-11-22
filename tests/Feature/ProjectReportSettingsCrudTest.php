@@ -417,6 +417,15 @@ class ProjectReportSettingsCrudTest extends TestCase
         $resCreatedAt = $this->actingAs($this->adminUser)
             ->postJson(route('settings.project-reports.store'), $payloadValidCreatedAt);
         $resCreatedAt->assertCreated();
+
+        // Valid status_changed_date date filter
+        $payloadValidStatusDate = $basePayload;
+        $payloadValidStatusDate['reporting_period'] = 'last_30_days';
+        $payloadValidStatusDate['settings']['filters']['date_filter'] = 'status_changed_date';
+
+        $resStatusDate = $this->actingAs($this->adminUser)
+            ->postJson(route('settings.project-reports.store'), $payloadValidStatusDate);
+        $resStatusDate->assertCreated();
     }
 
     public function test_columns_validation_and_order_preservation(): void
@@ -583,6 +592,7 @@ class ProjectReportSettingsCrudTest extends TestCase
         $response->assertSee('Project Report Configurations');
         $response->assertSee('HTML UI Render Config');
         $response->assertSee('Add Report');
+        $response->assertSee('Status changed date');
         $response->assertSee('data-locked="true"', false);
         $response->assertSee('project-report-config-modal');
     }

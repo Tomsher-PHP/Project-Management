@@ -33,18 +33,14 @@ class ProjectReportAutomationService
      * @param bool|null $allowCustomerColumns
      * @return array
      */
-    public function prepareReportData(
-        DailyWorkReportSetting|int $setting,
-        ?Carbon $referenceDate = null,
-        ?User $user = null,
-        ?bool $allowCustomerColumns = null
-    ): array {
+    public function prepareReportData(DailyWorkReportSetting|int $setting, ?Carbon $referenceDate = null, ?User $user = null, ?bool $allowCustomerColumns = null): array
+    {
         $settingModel = $setting instanceof DailyWorkReportSetting
             ? $setting
             : DailyWorkReportSetting::query()
-                ->where('report_key', 'project_report')
-                ->where('id', $setting)
-                ->firstOrFail();
+            ->where('report_key', 'project_report')
+            ->where('id', $setting)
+            ->firstOrFail();
 
         $timezone = $settingModel->timezone ?: config('constants.timezone', config('app.timezone'));
         $now = ($referenceDate ? $referenceDate->copy() : Carbon::now($timezone))->setTimezone($timezone);
@@ -54,12 +50,14 @@ class ProjectReportAutomationService
 
         $dateFilter = (string) ($settingModel->settings['filters']['date_filter']
             ?? $settingModel->settings['date_filter']
-            ?? 'created_at');
+            ?? 'status_changed_date');
 
         $dateFilterLabel = match ($dateFilter) {
+            'status_changed_date', 'status_change_date' => 'Status Changed Date within Period',
             'start_date' => 'Project Start Date within Period',
             'end_date' => 'Project End Date within Period',
-            default => 'Project Created Date within Period',
+            'created_at' => 'Project Created Date within Period',
+            default => 'Status Changed Date within Period',
         };
 
         $statusIds = $settingModel->settings['filters']['project_status_ids']
@@ -217,12 +215,8 @@ class ProjectReportAutomationService
     /**
      * Retrieve projects according to the configuration filters and access policy.
      */
-    public function getProjectsForConfiguration(
-        DailyWorkReportSetting $setting,
-        ?Carbon $periodStart = null,
-        ?Carbon $periodEnd = null,
-        ?User $user = null
-    ): Collection {
+    public function getProjectsForConfiguration(DailyWorkReportSetting $setting, ?Carbon $periodStart = null, ?Carbon $periodEnd = null, ?User $user = null): Collection
+    {
         $query = $this->baseProjectQuery($user);
 
         // 1. Status Filter
@@ -239,9 +233,9 @@ class ProjectReportAutomationService
         // 2. Date Filter
         $dateFilter = (string) ($setting->settings['filters']['date_filter']
             ?? $setting->settings['date_filter']
-            ?? 'created_at');
+            ?? 'status_changed_date');
 
-        $this->applyDateFilter($query, $dateFilter, $periodStart, $periodEnd);
+        $this->applyDateFilter($query, $dateFilter, $periodStart, $periodEnd, $statusIds);
 
         // 3. Eager Loading & Milestones count
         $query->with([
@@ -267,12 +261,12 @@ class ProjectReportAutomationService
                 ->eligibleForProjectReport()
                 ->orderForProjectReport(),
         ])
-        ->withCount([
-            'projectMilestones as total_milestones',
-            'projectMilestones as completed_milestones' => function ($q) {
-                $q->where('status_id', ProjectMilestone::STATUS_COMPLETED);
-            },
-        ]);
+            ->withCount([
+                'projectMilestones as total_milestones',
+                'projectMilestones as completed_milestones' => function ($q) {
+                    $q->where('status_id', ProjectMilestone::STATUS_COMPLETED);
+                },
+            ]);
 
         $query->orderBy('projects.name', 'asc')->orderByDesc('projects.id');
 
@@ -312,13 +306,29 @@ class ProjectReportAutomationService
     /**
      * Apply the configured date filter to the query.
      */
-    protected function applyDateFilter(
-        Builder $query,
-        string $dateFilter,
-        ?Carbon $periodStart,
-        ?Carbon $periodEnd
-    ): void {
+    protected function applyDateFilter(Builder $query, string $dateFilter, ?Carbon $periodStart, ?Carbon $periodEnd, array $statusIds = []): void
+    {
         if ($periodStart === null || $periodEnd === null) {
+            return;
+        }
+
+        if ($dateFilter === 'status_changed_date' || $dateFilter === 'status_change_date') {
+            $utcStart = $periodStart->copy()->utc()->toDateTimeString();
+            $utcEnd = $periodEnd->copy()->utc()->toDateTimeString();
+
+            $query->whereExists(function ($sub) use ($utcStart, $utcEnd, $statusIds) {
+                $sub->select(DB::raw(1))
+                    ->from('project_status_histories')
+                    ->whereColumn('project_status_histories.project_id', 'projects.id')
+                    ->whereBetween(
+                        DB::raw('COALESCE(project_status_histories.added_at, project_status_histories.created_at)'),
+                        [$utcStart, $utcEnd]
+                    );
+
+                if (! empty($statusIds)) {
+                    $sub->whereIn('project_status_histories.status_id', $statusIds);
+                }
+            });
             return;
         }
 
@@ -372,11 +382,8 @@ class ProjectReportAutomationService
     /**
      * Calculate period boundaries in the configuration timezone.
      */
-    public function calculatePeriodBounds(
-        string $reportingPeriod,
-        string $timezone,
-        ?Carbon $referenceDate = null
-    ): array {
+    public function calculatePeriodBounds(string $reportingPeriod, string $timezone, ?Carbon $referenceDate = null): array
+    {
         $ref = ($referenceDate ? $referenceDate->copy() : Carbon::now($timezone))->setTimezone($timezone);
 
         switch ($reportingPeriod) {
@@ -720,16 +727,14 @@ class ProjectReportAutomationService
     /**
      * Orchestrate report data preparation, log creation, delivery records, and dispatching.
      */
-    public function generateAndDeliver(
-        DailyWorkReportSetting|int $setting,
-        ?Carbon $referenceDate = null
-    ): ?DailyWorkReportLog {
+    public function generateAndDeliver(DailyWorkReportSetting|int $setting, ?Carbon $referenceDate = null): ?DailyWorkReportLog
+    {
         $settingModel = $setting instanceof DailyWorkReportSetting
             ? $setting
             : DailyWorkReportSetting::query()
-                ->where('report_key', 'project_report')
-                ->where('id', $setting)
-                ->firstOrFail();
+            ->where('report_key', 'project_report')
+            ->where('id', $setting)
+            ->firstOrFail();
 
         $timezone = $settingModel->timezone ?: config('constants.timezone', config('app.timezone'));
         $now = ($referenceDate ? $referenceDate->copy() : Carbon::now($timezone))->setTimezone($timezone);
@@ -791,4 +796,3 @@ class ProjectReportAutomationService
         });
     }
 }
-

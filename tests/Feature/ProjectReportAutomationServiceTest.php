@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\DailyWorkReportSetting;
 use App\Models\Project;
 use App\Models\ProjectStatus;
+use App\Models\ProjectStatusHistory;
 use App\Models\ProjectTimeline;
 use App\Models\User;
 use App\Services\Reports\ProjectReportAutomationService;
@@ -504,6 +505,59 @@ class ProjectReportAutomationServiceTest extends TestCase
         $names = collect($report['projects'])->pluck('name')->all();
         $this->assertContains('In Range End Date Project', $names);
         $this->assertNotContains('Out of Range End Date Project', $names);
+    }
+
+    public function test_date_filtering_status_changed_date(): void
+    {
+        $setting = DailyWorkReportSetting::create([
+            'setting_key' => 'project_report_status_changed_date_filter_test',
+            'report_name' => 'Status Changed Date Filter Test',
+            'report_key' => 'project_report',
+            'enabled' => true,
+            'frequency' => 'daily',
+            'delivery_time' => '08:00:00',
+            'timezone' => 'Asia/Dubai',
+            'reporting_period' => 'previous_day',
+            'settings' => [
+                'filters' => [
+                    'project_status_ids' => [$this->statusActive->id],
+                    'date_filter' => 'status_changed_date',
+                ],
+                'columns' => ['project_name', 'status'],
+            ],
+        ]);
+
+        $referenceDate = Carbon::parse('2026-11-22 10:00:00', 'Asia/Dubai');
+
+        $matchingProject = Project::create([
+            'name' => 'Status Changed Yesterday In Dubai',
+            'project_code' => 'PRJ-STATUS-YEST',
+            'status_id' => $this->statusActive->id,
+            'project_flow' => 'agile',
+        ]);
+        ProjectStatusHistory::create([
+            'project_id' => $matchingProject->id,
+            'status_id' => $this->statusActive->id,
+            'added_at' => Carbon::parse('2026-11-21 15:30:00', 'Asia/Dubai')->utc(),
+        ]);
+
+        $olderProject = Project::create([
+            'name' => 'Status Changed 10 Days Ago',
+            'project_code' => 'PRJ-STATUS-OLD',
+            'status_id' => $this->statusActive->id,
+            'project_flow' => 'agile',
+        ]);
+        ProjectStatusHistory::create([
+            'project_id' => $olderProject->id,
+            'status_id' => $this->statusActive->id,
+            'added_at' => Carbon::parse('2026-11-12 10:00:00', 'Asia/Dubai')->utc(),
+        ]);
+
+        $report = $this->service->prepareReportData($setting, $referenceDate);
+
+        $names = collect($report['projects'])->pluck('name')->all();
+        $this->assertContains('Status Changed Yesterday In Dubai', $names);
+        $this->assertNotContains('Status Changed 10 Days Ago', $names);
     }
 
     public function test_handles_configurations_with_no_matching_projects(): void

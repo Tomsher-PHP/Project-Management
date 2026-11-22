@@ -350,7 +350,7 @@ class ProjectReportSettingService
 
         $dateFilter = $data['settings']['filters']['date_filter']
             ?? $data['date_filter']
-            ?? ($existingSettings['filters']['date_filter'] ?? 'created_at');
+            ?? ($existingSettings['filters']['date_filter'] ?? 'status_changed_date');
 
         $columns = $data['settings']['columns']
             ?? $data['columns']

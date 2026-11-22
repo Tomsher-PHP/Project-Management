@@ -362,7 +362,7 @@ function initProjectReportModal() {
         setSelectValue('#modal-weekly-day', '1');
         setSelectValue('#modal-monthly-day', '1');
         setSelectValue('#modal-reporting-period', 'all_time');
-        setSelectValue('#modal-date-filter', 'created_at');
+        setSelectValue('#modal-date-filter', 'status_changed_date');
         setTimezoneValue('Asia/Dubai');
 
         // Select statuses with is_completed = 1 by default
@@ -438,7 +438,7 @@ function initProjectReportModal() {
                         setSelectValue('#modal-reporting-period', data.reporting_period);
                     }
 
-                    const dateFilter = data.settings?.filters?.date_filter || 'created_at';
+                    const dateFilter = data.settings?.filters?.date_filter || 'status_changed_date';
                     setSelectValue('#modal-date-filter', dateFilter);
 
                     // Project Statuses

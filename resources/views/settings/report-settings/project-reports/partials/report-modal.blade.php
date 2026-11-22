@@ -143,7 +143,8 @@
                                         Date Filter <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-date-filter" name="date_filter" required class="tom-select-no-search w-full">
-                                        <option value="created_at" selected>Project Created Date within Period</option>
+                                        <option value="status_changed_date" selected>Status changed date</option>
+                                        <option value="created_at">Project Created Date within Period</option>
                                         <option value="start_date">Project Start Date within Period</option>
                                         <option value="end_date">Project End Date within Period</option>
                                     </select>

@@ -65,7 +65,7 @@ class ProjectReportSettingRequest extends FormRequest
                     $statusIds = $firstStatusId ? [$firstStatusId] : [1];
                 }
                 $settings['filters']['project_status_ids'] = $statusIds;
-                $settings['filters']['date_filter'] = $currentSetting?->settings['filters']['date_filter'] ?? 'created_at';
+                $settings['filters']['date_filter'] = $currentSetting?->settings['filters']['date_filter'] ?? 'status_changed_date';
                 $settings['columns'] = $currentSetting?->settings['columns'] ?? ['project_name', 'status'];
                 $this->merge(['settings' => $settings]);
             }
@@ -143,7 +143,7 @@ class ProjectReportSettingRequest extends FormRequest
             'settings.filters.date_filter' => [
                 'required',
                 'string',
-                Rule::in(['created_at', 'start_date', 'end_date']),
+                Rule::in(['status_changed_date', 'status_change_date', 'created_at', 'start_date', 'end_date']),
             ],
             'settings.columns' => ['required', 'array', 'min:1'],
             'settings.columns.*' => [
