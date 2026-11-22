@@ -5,14 +5,11 @@
         <div class="modal-content relative z-10 w-full max-w-3xl">
             <div class="overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-darkblack-600">
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
+                <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                     <div>
                         <h3 id="modal-report-title" class="text-xl font-bold text-bgray-900 dark:text-white">
                             Add Project Report
                         </h3>
-                        <p class="text-xs text-bgray-600 dark:text-bgray-300 mt-0.5">
-                            Configure schedule, project filters, and report columns.
-                        </p>
                     </div>
 
                     <button type="button" class="modal-close inline-flex h-9 w-9 items-center justify-center rounded-lg bg-bgray-100 text-bgray-700 transition hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">

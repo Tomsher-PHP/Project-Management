@@ -1,11 +1,6 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <!-- Page starts -->
-    <div class="mb-6 flex flex-wrap items-center gap-3">
-        <x-back-button :url="route('settings.index')" label="Back" />
-    </div>
-
     <div class="space-y-6">
         @php
             $availableTabs = [
