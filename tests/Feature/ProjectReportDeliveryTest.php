@@ -57,7 +57,7 @@ class ProjectReportDeliveryTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],

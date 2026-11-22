@@ -126,7 +126,7 @@ class ProjectReportMailTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -169,7 +169,7 @@ class ProjectReportMailTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 // Custom column order: priority, status, project_name (project_name preserved)
                 'columns' => ['priority', 'status'],
@@ -215,7 +215,7 @@ class ProjectReportMailTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => [
                     'project_name',
@@ -267,7 +267,7 @@ class ProjectReportMailTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => [
                     'project_name',
@@ -337,7 +337,7 @@ class ProjectReportMailTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [999999], // non-existent
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -368,7 +368,7 @@ class ProjectReportMailTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],

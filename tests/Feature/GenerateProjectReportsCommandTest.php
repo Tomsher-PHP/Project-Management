@@ -79,7 +79,7 @@ class GenerateProjectReportsCommandTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -109,7 +109,7 @@ class GenerateProjectReportsCommandTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -135,7 +135,7 @@ class GenerateProjectReportsCommandTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -172,7 +172,7 @@ class GenerateProjectReportsCommandTest extends TestCase
                 'schedule' => ['monthly_day' => 15],
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -198,7 +198,7 @@ class GenerateProjectReportsCommandTest extends TestCase
                 'schedule' => ['monthly_day' => 'last'],
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -229,7 +229,7 @@ class GenerateProjectReportsCommandTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -260,7 +260,7 @@ class GenerateProjectReportsCommandTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -318,7 +318,7 @@ class GenerateProjectReportsCommandTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->status->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],

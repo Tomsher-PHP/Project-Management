@@ -71,7 +71,7 @@ class ProjectReportAutomationServiceTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status', 'priority'],
             ],
@@ -120,7 +120,7 @@ class ProjectReportAutomationServiceTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name'],
             ],
@@ -145,7 +145,7 @@ class ProjectReportAutomationServiceTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusClosed->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -186,7 +186,7 @@ class ProjectReportAutomationServiceTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 // deliberately omit project_name
                 'columns' => ['status', 'priority'],
@@ -218,7 +218,7 @@ class ProjectReportAutomationServiceTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => [
                     'project_name',
@@ -263,7 +263,7 @@ class ProjectReportAutomationServiceTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -306,7 +306,7 @@ class ProjectReportAutomationServiceTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusActive->id],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => [
                     'project_name',
@@ -459,6 +459,51 @@ class ProjectReportAutomationServiceTest extends TestCase
         $names = collect($report['projects'])->pluck('name')->all();
         $this->assertContains('In Range Start Date Project', $names);
         $this->assertNotContains('Out of Range Start Date Project', $names);
+    }
+
+    public function test_date_filtering_end_date(): void
+    {
+        $setting = DailyWorkReportSetting::create([
+            'setting_key' => 'project_report_end_date_filter_test',
+            'report_name' => 'End Date Filter Test',
+            'report_key' => 'project_report',
+            'enabled' => true,
+            'frequency' => 'daily',
+            'delivery_time' => '08:00:00',
+            'timezone' => 'UTC',
+            'reporting_period' => 'last_7_days',
+            'settings' => [
+                'filters' => [
+                    'project_status_ids' => [$this->statusActive->id],
+                    'date_filter' => 'end_date',
+                ],
+                'columns' => ['project_name', 'status'],
+            ],
+        ]);
+
+        $referenceDate = Carbon::parse('2026-11-22 10:00:00', 'UTC');
+
+        Project::create([
+            'name' => 'In Range End Date Project',
+            'project_code' => 'PRJ-END-IN-01',
+            'status_id' => $this->statusActive->id,
+            'project_flow' => 'agile',
+            'end_date' => '2026-11-20',
+        ]);
+
+        Project::create([
+            'name' => 'Out of Range End Date Project',
+            'project_code' => 'PRJ-END-OUT-01',
+            'status_id' => $this->statusActive->id,
+            'project_flow' => 'agile',
+            'end_date' => '2026-10-01',
+        ]);
+
+        $report = $this->service->prepareReportData($setting, $referenceDate);
+
+        $names = collect($report['projects'])->pluck('name')->all();
+        $this->assertContains('In Range End Date Project', $names);
+        $this->assertNotContains('Out of Range End Date Project', $names);
     }
 
     public function test_handles_configurations_with_no_matching_projects(): void

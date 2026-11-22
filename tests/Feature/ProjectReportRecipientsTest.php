@@ -40,7 +40,7 @@ class ProjectReportRecipientsTest extends TestCase
             'reporting_period' => 'all_time',
             'settings' => [
                 'schedule' => ['monthly_day' => null],
-                'filters' => ['project_status_ids' => [], 'date_filter' => 'none'],
+                'filters' => ['project_status_ids' => [], 'date_filter' => 'created_at'],
                 'columns' => ['project_name', 'progress'],
             ],
         ]);

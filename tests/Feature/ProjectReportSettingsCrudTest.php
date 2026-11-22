@@ -140,7 +140,7 @@ class ProjectReportSettingsCrudTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusId],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
@@ -174,7 +174,7 @@ class ProjectReportSettingsCrudTest extends TestCase
             'timezone' => 'Asia/Dubai',
             'reporting_period' => 'previous_day',
             'settings' => [
-                'filters' => ['project_status_ids' => [$this->statusId], 'date_filter' => 'none'],
+                'filters' => ['project_status_ids' => [$this->statusId], 'date_filter' => 'created_at'],
                 'columns' => ['project_name'],
             ],
         ]);
@@ -209,7 +209,7 @@ class ProjectReportSettingsCrudTest extends TestCase
             'timezone' => 'Asia/Dubai',
             'reporting_period' => 'last_7_days',
             'settings' => [
-                'filters' => ['project_status_ids' => [$this->statusId], 'date_filter' => 'none'],
+                'filters' => ['project_status_ids' => [$this->statusId], 'date_filter' => 'created_at'],
                 'columns' => ['project_name'],
             ],
         ]);
@@ -227,7 +227,7 @@ class ProjectReportSettingsCrudTest extends TestCase
                 'schedule' => ['monthly_day' => 'last'],
                 'filters' => [
                     'project_status_ids' => [$this->statusId],
-                    'date_filter' => 'updated_at',
+                    'date_filter' => 'end_date',
                 ],
                 'columns' => ['project_name', 'priority', 'status'],
             ],
@@ -245,7 +245,7 @@ class ProjectReportSettingsCrudTest extends TestCase
         $this->assertTrue($setting->enabled);
         $this->assertSame('monthly', $setting->frequency);
         $this->assertSame('last', $setting->settings['schedule']['monthly_day']);
-        $this->assertSame('updated_at', $setting->settings['filters']['date_filter']);
+        $this->assertSame('end_date', $setting->settings['filters']['date_filter']);
         $this->assertSame(['project_name', 'priority', 'status'], $setting->settings['columns']);
     }
 
@@ -261,7 +261,7 @@ class ProjectReportSettingsCrudTest extends TestCase
                 'timezone' => 'Asia/Dubai',
                 'reporting_period' => 'all_time',
                 'settings' => [
-                    'filters' => ['project_status_ids' => [$this->statusId], 'date_filter' => 'none'],
+                    'filters' => ['project_status_ids' => [$this->statusId], 'date_filter' => 'created_at'],
                     'columns' => ['project_name'],
                 ],
             ]);
@@ -340,7 +340,7 @@ class ProjectReportSettingsCrudTest extends TestCase
             'reporting_period' => 'all_time',
             'settings' => [
                 'filters' => [
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name'],
             ],
@@ -379,7 +379,7 @@ class ProjectReportSettingsCrudTest extends TestCase
         // Invalid reporting period
         $payloadInvalidPeriod = $basePayload;
         $payloadInvalidPeriod['reporting_period'] = 'invalid_period';
-        $payloadInvalidPeriod['settings']['filters']['date_filter'] = 'none';
+        $payloadInvalidPeriod['settings']['filters']['date_filter'] = 'created_at';
 
         $resPeriod = $this->actingAs($this->adminUser)
             ->postJson(route('settings.project-reports.store'), $payloadInvalidPeriod);
@@ -393,6 +393,21 @@ class ProjectReportSettingsCrudTest extends TestCase
         $resDate = $this->actingAs($this->adminUser)
             ->postJson(route('settings.project-reports.store'), $payloadInvalidDateFilter);
         $resDate->assertJsonValidationErrors(['settings.filters.date_filter']);
+
+        // Rejected date filters: 'none' and 'updated_at'
+        $payloadNone = $basePayload;
+        $payloadNone['reporting_period'] = 'last_30_days';
+        $payloadNone['settings']['filters']['date_filter'] = 'none';
+        $resNone = $this->actingAs($this->adminUser)
+            ->postJson(route('settings.project-reports.store'), $payloadNone);
+        $resNone->assertJsonValidationErrors(['settings.filters.date_filter']);
+
+        $payloadUpdatedAt = $basePayload;
+        $payloadUpdatedAt['reporting_period'] = 'last_30_days';
+        $payloadUpdatedAt['settings']['filters']['date_filter'] = 'updated_at';
+        $resUpdatedAt = $this->actingAs($this->adminUser)
+            ->postJson(route('settings.project-reports.store'), $payloadUpdatedAt);
+        $resUpdatedAt->assertJsonValidationErrors(['settings.filters.date_filter']);
 
         // Valid created_at date filter
         $payloadValidCreatedAt = $basePayload;
@@ -415,7 +430,7 @@ class ProjectReportSettingsCrudTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusId],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
             ],
         ];
@@ -456,7 +471,7 @@ class ProjectReportSettingsCrudTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusId],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'customer_end_date'],
             ],
@@ -488,7 +503,7 @@ class ProjectReportSettingsCrudTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusId],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name'],
             ],
@@ -550,7 +565,7 @@ class ProjectReportSettingsCrudTest extends TestCase
             'settings' => [
                 'filters' => [
                     'project_status_ids' => [$this->statusId],
-                    'date_filter' => 'none',
+                    'date_filter' => 'created_at',
                 ],
                 'columns' => ['project_name', 'status'],
             ],
