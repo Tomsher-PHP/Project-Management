@@ -81,7 +81,7 @@ class ProjectReportSettingsController extends Controller
         $projectStatuses = ProjectStatus::query()
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get(['id', 'name', 'color']);
+            ->get(['id', 'name', 'color', 'is_completed']);
 
         $availableColumns = $this->reportService->getColumnLabels();
 
