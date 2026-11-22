@@ -316,7 +316,12 @@ function initProjectReportModal() {
     });
 
     $('#modal-columns-clear-all').on('click', function () {
-        $('.modal-column-checkbox').prop('checked', false);
+        $('.modal-column-checkbox:not([data-locked])').prop('checked', false);
+        $('.modal-column-checkbox[data-locked]').prop('checked', true);
+    });
+
+    $(document).on('click change', '.modal-column-checkbox[data-locked], .modal-column-checkbox[value="project_name"]', function () {
+        $(this).prop('checked', true);
     });
 
     // Close Modal triggers
@@ -453,7 +458,12 @@ function initProjectReportModal() {
                     const cols = data.settings?.columns || [];
                     if (cols.length) {
                         $('.modal-column-checkbox').each(function () {
-                            $(this).prop('checked', cols.includes($(this).val()));
+                            const isLocked = $(this).data('locked') || $(this).val() === 'project_name';
+                            if (isLocked) {
+                                $(this).prop('checked', true);
+                            } else {
+                                $(this).prop('checked', cols.includes($(this).val()));
+                            }
                         });
                     } else {
                         $('.modal-column-checkbox').prop('checked', true);

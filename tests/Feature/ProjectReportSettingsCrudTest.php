@@ -568,6 +568,7 @@ class ProjectReportSettingsCrudTest extends TestCase
         $response->assertSee('Project Report Configurations');
         $response->assertSee('HTML UI Render Config');
         $response->assertSee('Add Report');
+        $response->assertSee('data-locked="true"', false);
         $response->assertSee('project-report-config-modal');
     }
 }
