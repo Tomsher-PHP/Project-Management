@@ -29,7 +29,7 @@
                         <div class="space-y-4">
                             <!-- Report Name -->
                             <div>
-                                <label for="modal-report-name" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                     Report Name <span class="text-error-300">*</span>
                                 </label>
                                 <input type="text" id="modal-report-name" name="report_name" required maxlength="255" placeholder="e.g., Executive Project Summary, Weekly Progress" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
@@ -39,7 +39,7 @@
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <!-- Frequency -->
                                 <div>
-                                    <label for="modal-report-frequency" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                    <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Frequency <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-report-frequency" name="frequency" required class="tom-select-no-search w-full">
@@ -52,7 +52,7 @@
 
                                 <!-- Delivery Time -->
                                 <div>
-                                    <label for="modal-delivery-time" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                    <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Delivery Time <span class="text-error-300">*</span>
                                     </label>
                                     <input id="modal-delivery-time" type="text" name="delivery_time" required class="timepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" autocomplete="off" placeholder="Select delivery time">
@@ -64,7 +64,7 @@
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <!-- Weekly Day (Show only for Weekly) -->
                                 <div id="modal-weekly-day-wrapper" class="hidden">
-                                    <label for="modal-weekly-day" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                    <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Weekly Delivery Day <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-weekly-day" name="weekly_day" class="tom-select-no-search w-full">
@@ -77,7 +77,7 @@
 
                                 <!-- Monthly Day (Show only for Monthly) -->
                                 <div id="modal-monthly-day-wrapper" class="hidden">
-                                    <label for="modal-monthly-day" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                    <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Monthly Delivery Day <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-monthly-day" name="monthly_day" class="tom-select-no-search w-full">
@@ -91,7 +91,7 @@
 
                                 <!-- Timezone -->
                                 <div>
-                                    <label for="modal-report-timezone" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                    <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Timezone <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-report-timezone" name="timezone" required class="tom-select-lazy w-full" data-route="{{ route('timezones.search') }}" data-placeholder="Start typing to search timezone...">
@@ -106,7 +106,7 @@
                         <div class="border-t border-bgray-200 pt-5 dark:border-darkblack-400 space-y-4">
                             <!-- Project Statuses -->
                             <div>
-                                <label for="modal-project-statuses" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                     Project Statuses <span class="text-error-300">*</span>
                                 </label>
                                 <select id="modal-project-statuses" name="project_status_ids[]" multiple required class="tom-select-multiple w-full" data-placeholder="Select project statuses...">
@@ -122,7 +122,7 @@
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <!-- Reporting Period -->
                                 <div>
-                                    <label for="modal-reporting-period" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                    <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Reporting Period <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-reporting-period" name="reporting_period" required class="tom-select-no-search w-full">
@@ -139,7 +139,7 @@
 
                                 <!-- Date Filter -->
                                 <div>
-                                    <label for="modal-date-filter" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                    <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Date Filter <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-date-filter" name="date_filter" required class="tom-select-no-search w-full">
