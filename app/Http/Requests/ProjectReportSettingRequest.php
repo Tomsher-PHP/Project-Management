@@ -143,7 +143,7 @@ class ProjectReportSettingRequest extends FormRequest
             'settings.filters.date_filter' => [
                 'required',
                 'string',
-                Rule::in(['none', 'start_date', 'end_date', 'updated_at']),
+                Rule::in(['none', 'created_at', 'start_date', 'end_date', 'updated_at']),
             ],
             'settings.columns' => ['required', 'array', 'min:1'],
             'settings.columns.*' => [

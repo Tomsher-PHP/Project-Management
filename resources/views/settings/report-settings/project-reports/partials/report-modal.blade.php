@@ -2,7 +2,7 @@
     <div class="modal-overlay fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"></div>
 
     <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
-        <div class="modal-content relative z-10 w-full max-w-3xl">
+        <div class="modal-content relative z-10 w-full max-w-5xl">
             <div class="overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-darkblack-600">
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
@@ -67,7 +67,7 @@
                                     <label for="modal-weekly-day" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Weekly Delivery Day <span class="text-error-300">*</span>
                                     </label>
-                                    <select id="modal-weekly-day" name="weekly_day" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm text-bgray-900 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                    <select id="modal-weekly-day" name="weekly_day" class="tom-select-no-search w-full">
                                         @foreach ([1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'] as $day => $label)
                                             <option value="{{ $day }}">{{ $label }}</option>
                                         @endforeach
@@ -80,7 +80,7 @@
                                     <label for="modal-monthly-day" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                         Monthly Delivery Day <span class="text-error-300">*</span>
                                     </label>
-                                    <select id="modal-monthly-day" name="monthly_day" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm text-bgray-900 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                    <select id="modal-monthly-day" name="monthly_day" class="tom-select-no-search w-full">
                                         @for ($d = 1; $d <= 28; $d++)
                                             <option value="{{ $d }}">Day {{ $d }} of month</option>
                                         @endfor
@@ -111,7 +111,7 @@
                                 </label>
                                 <select id="modal-project-statuses" name="project_status_ids[]" multiple required class="tom-select-multiple w-full" data-placeholder="Select project statuses...">
                                     @foreach ($projectStatuses as $status)
-                                        <option value="{{ $status->id }}" selected>
+                                        <option value="{{ $status->id }}" @selected((bool) $status->is_completed) data-is-completed="{{ $status->is_completed ? 1 : 0 }}">
                                             {{ $status->name }}
                                         </option>
                                     @endforeach
@@ -143,6 +143,7 @@
                                         Date Filter <span class="text-error-300">*</span>
                                     </label>
                                     <select id="modal-date-filter" name="date_filter" required class="tom-select-no-search w-full">
+                                        <option value="created_at" selected>Project Created Date within Period</option>
                                         <option value="none">None (All Matching Projects)</option>
                                         <option value="start_date">Project Start Date within Period</option>
                                         <option value="end_date">Project End Date within Period</option>

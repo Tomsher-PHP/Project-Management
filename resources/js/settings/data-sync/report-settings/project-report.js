@@ -354,17 +354,19 @@ function initProjectReportModal() {
         if ($('#modal-delivery-time')[0]?._flatpickr) {
             $('#modal-delivery-time')[0]._flatpickr.setDate('09:00');
         }
-        $('#modal-weekly-day').val('1');
-        $('#modal-monthly-day').val('1');
+        setSelectValue('#modal-weekly-day', '1');
+        setSelectValue('#modal-monthly-day', '1');
         setSelectValue('#modal-reporting-period', 'all_time');
-        setSelectValue('#modal-date-filter', 'none');
+        setSelectValue('#modal-date-filter', 'created_at');
         setTimezoneValue('Asia/Dubai');
 
-        // Select all statuses by default
-        const allStatusIds = $('#modal-project-statuses option').map(function () {
+        // Select statuses with is_completed = 1 by default
+        const completedStatusIds = $('#modal-project-statuses option').filter(function () {
+            return $(this).data('is-completed') == 1 || $(this).attr('data-is-completed') === '1';
+        }).map(function () {
             return String($(this).val());
         }).get();
-        setProjectStatuses(allStatusIds);
+        setProjectStatuses(completedStatusIds.length ? completedStatusIds : [$('#modal-project-statuses option').first().val()]);
 
         // Select all columns by default
         $('.modal-column-checkbox').prop('checked', true);
@@ -415,19 +417,23 @@ function initProjectReportModal() {
                     }
 
                     if (data.weekly_day) {
-                        $('#modal-weekly-day').val(data.weekly_day);
+                        setSelectValue('#modal-weekly-day', String(data.weekly_day));
+                    } else {
+                        setSelectValue('#modal-weekly-day', '1');
                     }
 
                     const monthlyDay = data.settings?.schedule?.monthly_day;
                     if (monthlyDay !== undefined && monthlyDay !== null) {
-                        $('#modal-monthly-day').val(String(monthlyDay));
+                        setSelectValue('#modal-monthly-day', String(monthlyDay));
+                    } else {
+                        setSelectValue('#modal-monthly-day', '1');
                     }
 
                     if (data.reporting_period) {
                         setSelectValue('#modal-reporting-period', data.reporting_period);
                     }
 
-                    const dateFilter = data.settings?.filters?.date_filter || 'none';
+                    const dateFilter = data.settings?.filters?.date_filter || 'created_at';
                     setSelectValue('#modal-date-filter', dateFilter);
 
                     // Project Statuses
@@ -435,10 +441,12 @@ function initProjectReportModal() {
                     if (statusIds.length) {
                         setProjectStatuses(statusIds);
                     } else {
-                        const allStatusIds = $('#modal-project-statuses option').map(function () {
+                        const completedStatusIds = $('#modal-project-statuses option').filter(function () {
+                            return $(this).data('is-completed') == 1 || $(this).attr('data-is-completed') === '1';
+                        }).map(function () {
                             return String($(this).val());
                         }).get();
-                        setProjectStatuses(allStatusIds);
+                        setProjectStatuses(completedStatusIds);
                     }
 
                     // Columns

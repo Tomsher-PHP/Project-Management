@@ -393,6 +393,15 @@ class ProjectReportSettingsCrudTest extends TestCase
         $resDate = $this->actingAs($this->adminUser)
             ->postJson(route('settings.project-reports.store'), $payloadInvalidDateFilter);
         $resDate->assertJsonValidationErrors(['settings.filters.date_filter']);
+
+        // Valid created_at date filter
+        $payloadValidCreatedAt = $basePayload;
+        $payloadValidCreatedAt['reporting_period'] = 'last_30_days';
+        $payloadValidCreatedAt['settings']['filters']['date_filter'] = 'created_at';
+
+        $resCreatedAt = $this->actingAs($this->adminUser)
+            ->postJson(route('settings.project-reports.store'), $payloadValidCreatedAt);
+        $resCreatedAt->assertCreated();
     }
 
     public function test_columns_validation_and_order_preservation(): void
