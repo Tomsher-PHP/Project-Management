@@ -12,7 +12,7 @@
     @php
         $reportName = data_get($metadata, 'report_name', 'Project Report');
         $reportingPeriod = data_get($metadata, 'reporting_period_label', 'All Time');
-        $dateFilter = data_get($metadata, 'date_filter_label', 'None (All Matching Projects)');
+        $dateFilter = data_get($metadata, 'date_filter_label', 'Project Created Date within Period');
         $selectedStatuses = data_get($metadata, 'selected_statuses_text', 'All');
         $generatedAt = data_get($metadata, 'generated_at_display', now()->format('d M Y, h:i A'));
         $totalProjects = (int) data_get($metadata, 'total_projects', count($projects ?? []));

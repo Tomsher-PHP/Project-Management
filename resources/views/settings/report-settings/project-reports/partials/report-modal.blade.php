@@ -144,10 +144,8 @@
                                     </label>
                                     <select id="modal-date-filter" name="date_filter" required class="tom-select-no-search w-full">
                                         <option value="created_at" selected>Project Created Date within Period</option>
-                                        <option value="none">None (All Matching Projects)</option>
                                         <option value="start_date">Project Start Date within Period</option>
                                         <option value="end_date">Project End Date within Period</option>
-                                        <option value="updated_at">Last Updated within Period</option>
                                     </select>
                                     <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="settings.filters.date_filter"></span>
                                 </div>

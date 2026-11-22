@@ -54,14 +54,12 @@ class ProjectReportAutomationService
 
         $dateFilter = (string) ($settingModel->settings['filters']['date_filter']
             ?? $settingModel->settings['date_filter']
-            ?? 'none');
+            ?? 'created_at');
 
         $dateFilterLabel = match ($dateFilter) {
-            'created_at' => 'Project Created Date within Period',
             'start_date' => 'Project Start Date within Period',
             'end_date' => 'Project End Date within Period',
-            'updated_at' => 'Last Updated within Period',
-            default => 'None (All Matching Projects)',
+            default => 'Project Created Date within Period',
         };
 
         $statusIds = $settingModel->settings['filters']['project_status_ids']
@@ -241,7 +239,7 @@ class ProjectReportAutomationService
         // 2. Date Filter
         $dateFilter = (string) ($setting->settings['filters']['date_filter']
             ?? $setting->settings['date_filter']
-            ?? 'none');
+            ?? 'created_at');
 
         $this->applyDateFilter($query, $dateFilter, $periodStart, $periodEnd);
 
@@ -320,20 +318,12 @@ class ProjectReportAutomationService
         ?Carbon $periodStart,
         ?Carbon $periodEnd
     ): void {
-        if ($dateFilter === 'none' || $periodStart === null || $periodEnd === null) {
+        if ($periodStart === null || $periodEnd === null) {
             return;
         }
 
         if ($dateFilter === 'created_at') {
             $query->whereBetween('projects.created_at', [
-                $periodStart->copy()->utc()->toDateTimeString(),
-                $periodEnd->copy()->utc()->toDateTimeString(),
-            ]);
-            return;
-        }
-
-        if ($dateFilter === 'updated_at') {
-            $query->whereBetween('projects.updated_at', [
                 $periodStart->copy()->utc()->toDateTimeString(),
                 $periodEnd->copy()->utc()->toDateTimeString(),
             ]);
