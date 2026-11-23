@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DLbqhCk1.css",
+    "file": "assets/app-DKrO1Yv9.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -739,5 +739,22 @@
     "name": "data-sync-settings",
     "src": "resources/js/settings/data-sync/data-sync-settings.js",
     "isEntry": true
+  },
+  "resources/js/settings/data-sync/report-settings/daily-report.js": {
+    "file": "assets/daily-report-S1c2NoJS.js",
+    "name": "daily-report",
+    "src": "resources/js/settings/data-sync/report-settings/daily-report.js",
+    "isEntry": true
+  },
+  "resources/js/settings/data-sync/report-settings/project-report.js": {
+    "file": "assets/project-report-TWYSCaTB.js",
+    "name": "project-report",
+    "src": "resources/js/settings/data-sync/report-settings/project-report.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_tom-select-0sN9vRSW.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   }
 }
