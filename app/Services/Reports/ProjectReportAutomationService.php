@@ -856,7 +856,10 @@ class ProjectReportAutomationService
         $frequency = $settingModel->frequency ?: 'daily';
         $reportDate = $now->toDateString();
 
-        return DB::transaction(function () use ($settingModel, $frequency, $reportDate, $now, $referenceDate) {
+        $appTimezone = config('app.timezone', 'UTC');
+        $generatedAt = ($referenceDate ? $referenceDate->copy() : Carbon::now())->setTimezone($appTimezone);
+
+        return DB::transaction(function () use ($settingModel, $frequency, $reportDate, $now, $referenceDate, $generatedAt) {
             // Lock and check for existing log to prevent concurrent duplicate execution
             $existing = DailyWorkReportLog::query()
                 ->where('report_setting_id', $settingModel->id)
@@ -890,8 +893,8 @@ class ProjectReportAutomationService
                         'external' => [],
                         'fallback_to_used' => false,
                     ],
-                    'generated_at' => $now->copy(),
-                    'completed_at' => $now->copy(),
+                    'generated_at' => $generatedAt,
+                    'completed_at' => $generatedAt->copy(),
                     'last_error' => 'Skipped: No eligible recipients configured.',
                 ]);
             }
@@ -924,8 +927,8 @@ class ProjectReportAutomationService
                     'status' => 'skipped',
                     'report_data' => $reportData,
                     'recipients_snapshot' => $recipientsSnapshot,
-                    'generated_at' => $now->copy(),
-                    'completed_at' => $now->copy(),
+                    'generated_at' => $generatedAt,
+                    'completed_at' => $generatedAt->copy(),
                     'last_error' => 'Skipped: No matching projects found for the configured period and filters.',
                 ]);
             }
@@ -942,7 +945,7 @@ class ProjectReportAutomationService
                     'status' => 'pending',
                     'report_data' => $reportData,
                     'recipients_snapshot' => $recipientsSnapshot,
-                    'generated_at' => $now->copy(),
+                    'generated_at' => $generatedAt,
                     'completed_at' => null,
                 ]);
 

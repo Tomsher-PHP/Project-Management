@@ -282,6 +282,9 @@ class GenerateDailyWorkReports extends Command
                     $recipients,
                     $now
                 ) {
+                    $appTimezone = config('app.timezone', 'UTC');
+                    $generatedAt = Carbon::now($appTimezone);
+
                     $log = DailyWorkReportLog::firstOrCreate(
                         [
                             'user_id' => $reportOwner->id,
@@ -297,9 +300,9 @@ class GenerateDailyWorkReports extends Command
                                 : 'pending',
                             'report_data' => $report,
                             'recipients_snapshot' => $recipientSnapshot,
-                            'generated_at' => $now->copy(),
+                            'generated_at' => $generatedAt,
                             'completed_at' => $recipients->isEmpty()
-                                ? $now->copy()
+                                ? $generatedAt->copy()
                                 : null,
                         ]
                     );
@@ -685,16 +688,18 @@ class GenerateDailyWorkReports extends Command
         $status = 'queued';
         $completedAt = null;
 
+        $appTimezone = config('app.timezone', 'UTC');
+
         if ($total > 0 && $sent === $total) {
             $status = 'sent';
-            $completedAt = Carbon::now($timezone);
+            $completedAt = Carbon::now($appTimezone);
 
         } elseif ($total > 0 && ($sent + $failed) === $total) {
             $status = $sent > 0
                 ? 'partial'
                 : 'failed';
 
-            $completedAt = Carbon::now($timezone);
+            $completedAt = Carbon::now($appTimezone);
         }
 
         $log->update([

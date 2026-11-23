@@ -774,4 +774,42 @@ class ProjectReportDeliveryTest extends TestCase
 
         $this->assertEquals(1, DailyWorkReportDelivery::where('daily_work_report_log_id', $log->id)->count());
     }
+
+    public function test_daily_work_report_log_stores_generated_at_in_app_timezone(): void
+    {
+        // 1. Setting generated_at using a non-UTC Carbon instance
+        $dubaiTime = Carbon::parse('2026-11-23 15:30:00', 'Asia/Dubai'); // 11:30:00 UTC
+        $log = DailyWorkReportLog::create([
+            'report_key' => 'project_report',
+            'report_type' => 'daily',
+            'report_date' => '2026-11-23',
+            'period_start' => Carbon::now()->startOfDay(),
+            'period_end' => Carbon::now()->endOfDay(),
+            'status' => 'pending',
+            'generated_at' => $dubaiTime,
+            'completed_at' => $dubaiTime,
+        ]);
+
+        $this->assertEquals('2026-11-23 11:30:00', $log->getRawOriginal('generated_at'));
+        $this->assertEquals('2026-11-23 11:30:00', $log->getRawOriginal('completed_at'));
+
+        // 2. ProjectReportAutomationService generateAndDeliver stores in app.timezone
+        $automationService = app(ProjectReportAutomationService::class);
+        $setting = DailyWorkReportSetting::create([
+            'setting_key' => 'tz_test_' . uniqid(),
+            'report_name' => 'TZ Test Report',
+            'report_key' => 'project_report',
+            'timezone' => 'Asia/Dubai',
+            'enabled' => true,
+            'frequency' => 'daily',
+            'delivery_time' => '08:00:00',
+            'reporting_period' => 'all_time',
+        ]);
+
+        $referenceDate = Carbon::parse('2026-11-23 14:00:00', 'Asia/Dubai'); // 10:00:00 UTC
+        $generatedLog = $automationService->generateAndDeliver($setting, $referenceDate);
+
+        $this->assertNotNull($generatedLog);
+        $this->assertEquals('2026-11-23 10:00:00', $generatedLog->getRawOriginal('generated_at'));
+    }
 }
