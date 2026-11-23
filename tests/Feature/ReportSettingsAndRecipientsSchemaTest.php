@@ -7,6 +7,7 @@ use App\Models\DailyWorkReportSetting;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class ReportSettingsAndRecipientsSchemaTest extends TestCase
@@ -174,6 +175,23 @@ class ReportSettingsAndRecipientsSchemaTest extends TestCase
         $this->assertSame('global', $recipient->scope);
         $this->assertTrue(DailyWorkReportRecipient::global()->where('id', $recipient->id)->exists());
         $this->assertTrue(DailyWorkReportRecipient::effective()->where('id', $recipient->id)->exists());
+    }
+
+    public function test_daily_work_report_settings_renders_history_tab_instead_of_advanced(): void
+    {
+        Permission::findOrCreate('report_settings.manage', 'web');
+
+        $user = User::factory()->create();
+        $user->givePermissionTo('report_settings.manage');
+
+        $response = $this->actingAs($user)->get(route('settings.daily-work-reports.index'));
+
+        $response->assertOk();
+        $response->assertSee('History');
+        $response->assertSee('data-report-tab="history"', false);
+        $response->assertSee('id="report-panel-history"', false);
+        $response->assertDontSee('data-report-tab="advanced"', false);
+        $response->assertDontSee('id="report-panel-advanced"', false);
     }
 }
 

@@ -7,7 +7,7 @@
                 'general' => 'General Settings',
                 'recipients' => 'Recipients',
                 'users' => 'User Settings',
-                'advanced' => 'Advanced',
+                'history' => 'History',
             ];
 
             $reportTabs = $currentReport['tabs'] ?? array_keys($availableTabs);
@@ -366,8 +366,8 @@
                         ])
                     </section>
 
-                    <!-- ADVANCED TAB -->
-                    <section id="report-panel-advanced" data-report-panel="advanced" class="report-panel hidden p-5">
+                    <!-- HISTORY TAB -->
+                    <section id="report-panel-history" data-report-panel="history" class="report-panel hidden p-5">
                         <div class="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                             @foreach (['queued', 'sent', 'failed', 'partial'] as $status)
                                 <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">

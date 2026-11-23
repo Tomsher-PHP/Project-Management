@@ -10,7 +10,7 @@ return [
             'available' => true,
             'permission' => 'report_settings.manage',
             'route' => 'settings.daily-work-reports.index',
-            'tabs' => ['general', 'recipients', 'users', 'advanced'],
+            'tabs' => ['general', 'recipients', 'users', 'history'],
         ],
 
         'project_report' => [

@@ -34,7 +34,7 @@
                     <tr>
                         <td class="px-4 py-3 text-bgray-900 dark:text-white">
                             <span class="font-medium">
-                                {{ $report->reportSetting?->report_name ?? $report->report_data['metadata']['report_name'] ?? 'Project Report' }}
+                                {{ $report->reportSetting?->report_name ?? ($report->report_data['metadata']['report_name'] ?? 'Project Report') }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-bgray-900 dark:text-white">
@@ -65,7 +65,7 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-bgray-900 dark:text-white">
-                            {{ $report->generated_at?->format('d M Y H:i') ?? $report->created_at?->format('d M Y H:i') ?? '—' }}
+                            {{ $report->generated_at?->format('d M Y H:i') ?? ($report->created_at?->format('d M Y H:i') ?? '—') }}
                         </td>
                     </tr>
                 @empty
@@ -83,4 +83,3 @@
         Manual generation, test sending, and retry actions must be connected to their dedicated endpoints before use.
     </p>
 </section>
-
