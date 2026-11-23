@@ -17,7 +17,7 @@ use Throwable;
 
 class GenerateDailyWorkReports extends Command
 {
-    protected $signature = 'app:generate-daily-work-reports';
+    protected $signature = 'app:generate-daily-work-reports {--date= : Generate the report for a specific date (Y-m-d)}';
 
     protected $description = 'Generate and send scheduled daily work reports';
 
@@ -34,20 +34,71 @@ class GenerateDailyWorkReports extends Command
         }
 
         $timezone = $settings->timezone ?: config('app.timezone');
-
         $now = Carbon::now($timezone);
 
-        if (! $this->isDeliveryDue($settings, $now)) {
-            $this->line('Daily work report delivery is not due yet.');
+        /*
+        |--------------------------------------------------------------------------
+        | Determine Reporting Period
+        |--------------------------------------------------------------------------
+        |
+        | Manual date:
+        | Generate the report for the exact date supplied.
+        |
+        | Automatic daily execution:
+        | Generate the report for the previous calendar day.
+        | Weekends are included.
+        |
+        */
 
-            return self::SUCCESS;
+        $dateOption = $this->option('date');
+
+        if ($dateOption !== null) {
+            try {
+                $reportDateOverride = Carbon::createFromFormat(
+                    '!Y-m-d',
+                    $dateOption,
+                    $timezone
+                );
+
+                if (
+                    ! $reportDateOverride ||
+                    $reportDateOverride->format('Y-m-d') !== $dateOption
+                ) {
+                    throw new \InvalidArgumentException('Invalid date.');
+                }
+            } catch (Throwable $exception) {
+                $this->error('Invalid date. Use YYYY-MM-DD.');
+
+                return self::FAILURE;
+            }
+
+            if ($settings->frequency === 'weekly') {
+                $this->error('Date override is not supported for weekly reports.');
+
+                return self::FAILURE;
+            }
+
+            $start = $reportDateOverride->copy()->startOfDay();
+            $end = $reportDateOverride->copy()->endOfDay();
+            $reportDate = $reportDateOverride->toDateString();
+
+            $this->info("Manual report generation requested for: {$reportDate}");
+        } else {
+            if (! $this->isDeliveryDue($settings, $now)) {
+                $this->line('Daily work report delivery is not due yet.');
+
+                return self::SUCCESS;
+            }
+
+            [$start, $end, $reportDate] = $this->getReportingPeriod(
+                $settings->reporting_period,
+                $settings->frequency,
+                $now
+            );
         }
 
-        [$start, $end, $reportDate] = $this->getReportingPeriod(
-            $settings->reporting_period,
-            $settings->frequency,
-            $now
-        );
+        $this->info("Reporting period: {$start->toDateTimeString()} to {$end->toDateTimeString()}");
+        $this->info("Report date: {$reportDate}");
 
         $reportType = $settings->frequency === 'weekly'
             ? 'weekly'
@@ -213,11 +264,11 @@ class GenerateDailyWorkReports extends Command
                 */
 
                 $report['employees'] = collect($report['employees'] ?? [])
-                    ->map(function ($employeeReport) use ($sections, $now) {
+                    ->map(function ($employeeReport) use ($sections, $reportDate) {
                         return $this->applySections(
                             $employeeReport,
                             $sections,
-                            $now->toDateString()
+                            $reportDate
                         );
                     })
                     ->values()
@@ -515,17 +566,14 @@ class GenerateDailyWorkReports extends Command
     |--------------------------------------------------------------------------
     | Delivery Schedule
     |--------------------------------------------------------------------------
+    |
+    | Daily reports are allowed on every day of the week.
+    | No Saturday or Sunday exclusion is applied.
+    |
     */
 
     private function isDeliveryDue($settings, Carbon $now): bool
     {
-        if (
-            $settings->frequency === 'weekdays'
-            && $now->isWeekend()
-        ) {
-            return false;
-        }
-
         if (
             $settings->frequency === 'weekly'
             && (int) $now->dayOfWeekIso !== (int) $settings->weekly_day
@@ -546,6 +594,13 @@ class GenerateDailyWorkReports extends Command
     |--------------------------------------------------------------------------
     | Reporting Period
     |--------------------------------------------------------------------------
+    |
+    | Weekly:
+    | Previous Monday to Sunday.
+    |
+    | Daily:
+    | Previous calendar day, including Saturday and Sunday.
+    |
     */
 
     private function getReportingPeriod(
@@ -554,7 +609,6 @@ class GenerateDailyWorkReports extends Command
         Carbon $now
     ): array {
         if ($frequency === 'weekly') {
-            // Previous completed Monday to Sunday.
             $start = $now->copy()
                 ->subWeek()
                 ->startOfWeek(Carbon::MONDAY);
@@ -569,15 +623,8 @@ class GenerateDailyWorkReports extends Command
             ];
         }
 
-        if ($reportingPeriod === 'previous_working_day') {
-            $date = $now->copy()->subDay();
-
-            while ($date->isWeekend()) {
-                $date->subDay();
-            }
-        } else {
-            $date = $now->copy();
-        }
+        // Always use the previous calendar day for daily reports.
+        $date = $now->copy()->subDay();
 
         return [
             $date->copy()->startOfDay(),
