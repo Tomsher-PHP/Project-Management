@@ -333,6 +333,9 @@ class GenerateDailyWorkReports extends Command
                     $recipients,
                     $now
                 ) {
+                    $appTimezone = config('app.timezone', 'UTC');
+                    $generatedAt = Carbon::now($appTimezone);
+
                     $log = DailyWorkReportLog::firstOrCreate(
                         [
                             'user_id' => $reportOwner->id,
@@ -348,9 +351,9 @@ class GenerateDailyWorkReports extends Command
                                 : 'pending',
                             'report_data' => $report,
                             'recipients_snapshot' => $recipientSnapshot,
-                            'generated_at' => $now->copy(),
+                            'generated_at' => $generatedAt,
                             'completed_at' => $recipients->isEmpty()
-                                ? $now->copy()
+                                ? $generatedAt->copy()
                                 : null,
                         ]
                     );
@@ -361,15 +364,30 @@ class GenerateDailyWorkReports extends Command
                         return null;
                     }
 
-                    foreach ($recipients as $recipient) {
-                        DailyWorkReportDelivery::create([
-                            'daily_work_report_log_id' => $log->id,
-                            'recipient_email' => $recipient['email'],
-                            'recipient_name' => $recipient['name'] ?? null,
-                            'recipient_type' => $recipient['sources'][0] ?? null,
-                            'recipient_sources' => $recipient['sources'] ?? [],
-                            'status' => 'pending',
-                        ]);
+                    $uniqueRecipients = collect($recipients)
+                        ->map(function ($recipient) {
+                            $recipient = (array) $recipient;
+                            $recipient['email'] = mb_strtolower(trim((string) ($recipient['email'] ?? '')));
+
+                            return $recipient;
+                        })
+                        ->filter(fn ($r) => filter_var($r['email'], FILTER_VALIDATE_EMAIL))
+                        ->unique('email')
+                        ->values();
+
+                    foreach ($uniqueRecipients as $recipient) {
+                        DailyWorkReportDelivery::firstOrCreate(
+                            [
+                                'daily_work_report_log_id' => $log->id,
+                                'recipient_email' => $recipient['email'],
+                            ],
+                            [
+                                'recipient_name' => $recipient['name'] ?? null,
+                                'recipient_type' => $recipient['sources'][0] ?? null,
+                                'recipient_sources' => $recipient['sources'] ?? [],
+                                'status' => 'pending',
+                            ]
+                        );
                     }
 
                     return $log;
@@ -717,16 +735,18 @@ class GenerateDailyWorkReports extends Command
         $status = 'queued';
         $completedAt = null;
 
+        $appTimezone = config('app.timezone', 'UTC');
+
         if ($total > 0 && $sent === $total) {
             $status = 'sent';
-            $completedAt = Carbon::now($timezone);
+            $completedAt = Carbon::now($appTimezone);
 
         } elseif ($total > 0 && ($sent + $failed) === $total) {
             $status = $sent > 0
                 ? 'partial'
                 : 'failed';
 
-            $completedAt = Carbon::now($timezone);
+            $completedAt = Carbon::now($appTimezone);
         }
 
         $log->update([

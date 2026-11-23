@@ -10,6 +10,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\UserReportPreference;
 use App\Models\UserSetting;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,16 +24,10 @@ class DailyWorkReportSettingsController extends Controller
 
     public function __construct()
     {
-        $this->pageTitle = 'General Report Settings';
+        $this->pageTitle = 'Daily Work Report Settings';
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return View
-     */
     public function index(Request $request): View
     {
         $reportDefinitions = config('report-settings.reports', []);
@@ -40,7 +35,7 @@ class DailyWorkReportSettingsController extends Controller
 
         abort_unless(
             isset($reportDefinitions[$reportKey]) &&
-            ($reportDefinitions[$reportKey]['available'] ?? true),
+                ($reportDefinitions[$reportKey]['available'] ?? true),
             404
         );
 
@@ -84,7 +79,7 @@ class DailyWorkReportSettingsController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('settings.daily-work-reports.index', compact(
+        return view('settings.report-settings.daily-work-reports.index', compact(
             'settings',
             'recipients',
             'teams',
@@ -109,7 +104,17 @@ class DailyWorkReportSettingsController extends Controller
             ],
             'enabled' => ['sometimes', 'boolean'],
             'frequency' => ['required', Rule::in(['daily', 'weekdays', 'weekly'])],
-            'delivery_time' => ['required', 'date_format:H:i'],
+            'delivery_time' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    try {
+                        Carbon::parse($value);
+                    } catch (\Throwable $e) {
+                        $fail('The delivery time is invalid.');
+                    }
+                },
+            ],
             'timezone' => ['required', 'timezone'],
             'reporting_period' => [
                 'required',
@@ -139,7 +144,7 @@ class DailyWorkReportSettingsController extends Controller
         $settings->update([
             'enabled' => $request->boolean('enabled'),
             'frequency' => $validated['frequency'],
-            'delivery_time' => $validated['delivery_time'],
+            'delivery_time' => Carbon::parse($validated['delivery_time'])->format('H:i:s'),
             'timezone' => $validated['timezone'],
             'reporting_period' => $validated['reporting_period'],
             'send_zero_activity' => $request->boolean('send_zero_activity'),
@@ -196,10 +201,8 @@ class DailyWorkReportSettingsController extends Controller
         return back()->with('success', 'Recipient added successfully.');
     }
 
-    public function toggleRecipient(
-    Request $request,
-    DailyWorkReportRecipient $recipient
-    ): \Illuminate\Http\JsonResponse {
+    public function toggleRecipient(Request $request, DailyWorkReportRecipient $recipient): \Illuminate\Http\JsonResponse
+    {
         $validated = $request->validate([
             'report_key' => [
                 'required',
@@ -304,7 +307,7 @@ class DailyWorkReportSettingsController extends Controller
             $isEnabled = (bool) $validated['is_enabled'];
 
             $rows = collect($validated['user_ids'])
-                ->map(fn ($userId) => [
+                ->map(fn($userId) => [
                     'user_id' => $userId,
                     'report_key' => $validated['report_key'],
                     'is_enabled' => $isEnabled,
@@ -340,11 +343,8 @@ class DailyWorkReportSettingsController extends Controller
     /**
      * Synchronize Daily Work Report preference with User Settings.
      */
-    private function syncDailyWorkReportSetting(
-        int $userId,
-        string $reportKey,
-        bool $isEnabled
-    ): void {
+    private function syncDailyWorkReportSetting(int $userId, string $reportKey, bool $isEnabled): void
+    {
         if ($reportKey !== 'daily_work') {
             return;
         }

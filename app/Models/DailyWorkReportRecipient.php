@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DailyWorkReportRecipient extends Model
 {
     protected $fillable = [
+        'report_setting_id',
+        'user_id',
         'report_key',
         'scope',
         'scope_id',
@@ -23,11 +26,23 @@ class DailyWorkReportRecipient extends Model
     protected function casts(): array
     {
         return [
+            'report_setting_id' => 'integer',
+            'user_id' => 'integer',
             'scope_id' => 'integer',
             'is_active' => 'boolean',
             'effective_from' => 'date',
             'effective_until' => 'date',
         ];
+    }
+
+    public function reportSetting(): BelongsTo
+    {
+        return $this->belongsTo(DailyWorkReportSetting::class, 'report_setting_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function scopeEffective(Builder $query, ?string $date = null): Builder

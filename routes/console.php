@@ -23,6 +23,6 @@ Schedule::command('project:timeline-ending-soon-notifications')->dailyAt('08:00'
 Schedule::command('project:hosting-expiry-notifications')->dailyAt('08:00')->withoutOverlapping();
 
 
-Schedule::command('app:generate-daily-work-reports')
-    ->everyMinute()
-    ->withoutOverlapping();
+Schedule::command('app:generate-daily-work-reports')->everyMinute()->withoutOverlapping();
+
+Schedule::command('app:generate-project-reports')->everyMinute()->withoutOverlapping();

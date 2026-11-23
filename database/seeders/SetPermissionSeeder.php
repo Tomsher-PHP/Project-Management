@@ -46,6 +46,12 @@ class SetPermissionSeeder extends Seeder
             'sprint_group.create',
             'sprint_group.edit',
             'sprint_group.delete',
+
+            'daily_work_report.view',
+            'daily_work_report.edit',
+            'daily_work_report.generate',
+            'daily_work_report.send_test',
+            'daily_work_report.retry',
         ];
         foreach ($permissionsToRemove as $permissionName) {
             Permission::where('name', $permissionName)
