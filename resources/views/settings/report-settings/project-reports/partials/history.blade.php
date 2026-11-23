@@ -49,12 +49,12 @@
                                     @php
                                         $status = strtolower($report->status ?? 'pending');
                                         $badgeClass = match ($status) {
-                                            'sent' => 'bg-success-50 text-success-500 border border-success-200 dark:bg-darkblack-500 dark:text-success-400',
-                                            'queued', 'pending' => 'bg-blue-50 text-blue-600 border border-blue-200 dark:bg-darkblack-500 dark:text-blue-400',
-                                            'failed' => 'bg-red-50 text-red-500 border border-red-200 dark:bg-darkblack-500 dark:text-red-400',
-                                            'partial' => 'bg-amber-50 text-amber-600 border border-amber-200 dark:bg-darkblack-500 dark:text-amber-400',
-                                            'skipped' => 'bg-gray-100 text-gray-600 border border-gray-200 dark:bg-darkblack-500 dark:text-gray-400',
-                                            default => 'bg-gray-50 text-gray-600 border border-gray-200 dark:bg-darkblack-500 dark:text-gray-400',
+                                            'sent' => 'bg-success-50 text-success-300 dark:bg-darkblack-500 dark:text-success-400',
+                                            'queued', 'pending' => 'bg-blue-50 text-blue-300 dark:bg-darkblack-500 dark:text-blue-400',
+                                            'failed' => 'bg-red-50 text-error-300 dark:bg-darkblack-500 dark:text-error-400',
+                                            'partial' => 'bg-amber-50 text-warning-300 dark:bg-darkblack-500 dark:text-warning-400',
+                                            'skipped' => 'bg-gray-100 text-gray-300 dark:bg-darkblack-500 dark:text-gray-400',
+                                            default => 'bg-gray-50 text-gray-300 dark:bg-darkblack-500 dark:text-gray-400',
                                         };
                                     @endphp
                                     <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $badgeClass }}">
@@ -67,7 +67,7 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-4 text-sm text-bgray-700 dark:text-bgray-300 font-medium whitespace-nowrap">
-                                    {{ $report->generated_at?->format('d M Y H:i') ?? ($report->created_at?->format('d M Y H:i') ?? '—') }}
+                                    @appDateTime($report->generated_at)
                                 </td>
                             </tr>
                         @empty

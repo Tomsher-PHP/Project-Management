@@ -415,7 +415,7 @@
                                                         </span>
                                                     </td>
                                                     <td class="px-4 py-4 text-sm text-bgray-700 dark:text-bgray-300 font-medium whitespace-nowrap">
-                                                        {{ $report->generated_at?->format('d M Y H:i') ?? '—' }}
+                                                        @appDateTime($report->generated_at)
                                                     </td>
                                                 </tr>
                                             @empty
