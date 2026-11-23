@@ -12,7 +12,7 @@
                 <label for="select-report-recipient-config" class="text-sm font-semibold text-bgray-900 dark:text-white whitespace-nowrap">
                     Select Report:
                 </label>
-                <select id="select-report-recipient-config" class="rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-900 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white min-w-[240px]">
+                <select id="select-report-recipient-config" class="tom-select w-full">
                     @foreach ($configurations as $cfg)
                         <option value="{{ $cfg->id }}" @selected($selectedConfiguration && $selectedConfiguration->id === $cfg->id)>
                             {{ $cfg->report_name ?: 'Project Report (#' . $cfg->id . ')' }}
@@ -20,7 +20,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="text-xs text-bgray-500 dark:text-bgray-400">
+            <div class="text-xs text-bgray-600 dark:text-bgray-300">
                 Recipients are configured independently for each project report configuration.
             </div>
         </div>
@@ -118,4 +118,3 @@
         </div>
     @endif
 </section>
-

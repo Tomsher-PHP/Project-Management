@@ -35,7 +35,6 @@
                         @endforeach
                     </div>
 
-
                     <!-- GENERAL SETTINGS TAB -->
                     <section id="report-panel-general" data-report-panel="general" class="report-panel p-5">
                         <form method="POST" action="{{ route('settings.daily-work-reports.settings.update') }}">

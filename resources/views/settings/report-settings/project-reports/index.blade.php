@@ -6,6 +6,7 @@
             $availableTabs = [
                 'general' => 'Report Configurations',
                 'recipients' => 'Recipients',
+                'history' => 'History',
             ];
 
             $reportTabs = $currentReport['tabs'] ?? array_keys($availableTabs);
@@ -34,6 +35,9 @@
 
                     <!-- RECIPIENTS TAB -->
                     @include('settings.report-settings.project-reports.partials.recipients')
+
+                    <!-- HISTORY TAB -->
+                    @include('settings.report-settings.project-reports.partials.history')
                 </div>
             </div>
         </div>

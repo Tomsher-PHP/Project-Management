@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectReportRecipientsRequest;
 use App\Http\Requests\ProjectReportSettingRequest;
+use App\Models\DailyWorkReportDelivery;
+use App\Models\DailyWorkReportLog;
 use App\Models\DailyWorkReportRecipient;
 use App\Models\DailyWorkReportSetting;
 use App\Models\ProjectStatus;
@@ -85,6 +87,22 @@ class ProjectReportSettingsController extends Controller
 
         $availableColumns = $this->reportService->getColumnLabels();
 
+        $reports = DailyWorkReportLog::query()
+            ->where('report_key', $reportKey)
+            ->with('reportSetting:id,report_name,frequency,delivery_time,timezone')
+            ->latest('report_date')
+            ->latest('id')
+            ->limit(50)
+            ->get();
+
+        $deliveryCounts = DailyWorkReportDelivery::query()
+            ->whereHas('reportLog', function ($query) use ($reportKey) {
+                $query->where('report_key', $reportKey);
+            })
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         return view('settings.report-settings.project-reports.index', compact(
             'settings',
             'configurations',
@@ -95,6 +113,8 @@ class ProjectReportSettingsController extends Controller
             'users',
             'projectStatuses',
             'availableColumns',
+            'reports',
+            'deliveryCounts',
             'reportKey',
             'reportDefinitions',
             'currentReport',

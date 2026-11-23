@@ -19,7 +19,7 @@ return [
             'available' => true,
             'permission' => 'report_settings.manage',
             'route' => 'settings.project-reports.index',
-            'tabs' => ['general', 'recipients'],
+            'tabs' => ['general', 'recipients', 'history'],
             'sections' => [],
             'reporting_periods' => [
                 'all_time' => 'All Time',

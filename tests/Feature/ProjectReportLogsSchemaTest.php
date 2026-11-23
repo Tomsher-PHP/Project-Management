@@ -236,5 +236,13 @@ class ProjectReportLogsSchemaTest extends TestCase
         $this->assertEquals($log->id, $delivery->reportLog->id);
         $this->assertTrue($log->deliveries->contains('id', $delivery->id));
     }
+
+    public function test_schema_has_report_key_indexes_for_efficient_sorting(): void
+    {
+        $indexes = collect(Schema::getIndexes('daily_work_report_logs'))->pluck('name')->all();
+
+        $this->assertContains('dwrl_report_key_date_id_idx', $indexes);
+        $this->assertContains('dwrl_report_key_id_idx', $indexes);
+    }
 }
 

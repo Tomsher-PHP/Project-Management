@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\DailyWorkReportDelivery;
+use App\Models\DailyWorkReportLog;
 use App\Models\DailyWorkReportSetting;
 use App\Models\ProjectStatus;
 use App\Models\User;
 use App\Services\Reports\ProjectReportService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -599,6 +602,110 @@ class ProjectReportSettingsCrudTest extends TestCase
         $response->assertDontSee('>Timezone</span>', false);
         $response->assertSee('data-locked="true"', false);
         $response->assertSee('project-report-config-modal');
+        $response->assertSee('History');
+        $response->assertSee('data-report-tab="history"', false);
+        $response->assertSee('id="report-panel-history"', false);
+        $response->assertViewHas('reports');
+        $response->assertViewHas('deliveryCounts');
+    }
+
+    public function test_history_tab_displays_last_50_project_report_logs_and_delivery_counts(): void
+    {
+        $setting = DailyWorkReportSetting::create([
+            'setting_key' => 'history_test_config_' . uniqid(),
+            'report_name' => 'History Audit Project Report',
+            'report_key' => 'project_report',
+            'enabled' => true,
+            'frequency' => 'daily',
+            'delivery_time' => '08:00:00',
+            'timezone' => 'Asia/Dubai',
+            'reporting_period' => 'all_time',
+        ]);
+
+        $baseDate = Carbon::now()->subDays(60);
+
+        // 1. Create 55 project report logs
+        for ($i = 1; $i <= 55; $i++) {
+            $log = DailyWorkReportLog::create([
+                'report_setting_id' => $setting->id,
+                'user_id' => null,
+                'report_date' => $baseDate->copy()->addDays($i)->toDateString(),
+                'period_start' => Carbon::now()->startOfDay(),
+                'period_end' => Carbon::now()->endOfDay(),
+                'report_type' => 'daily',
+                'report_key' => 'project_report',
+                'status' => $i % 2 === 0 ? 'sent' : 'queued',
+                'report_data' => [
+                    'metadata' => [
+                        'report_name' => 'History Audit Project Report',
+                        'total_projects' => 5,
+                    ],
+                ],
+                'generated_at' => Carbon::now()->subMinutes(60 - $i),
+                'completed_at' => Carbon::now()->subMinutes(60 - $i),
+            ]);
+
+            if ($i <= 10) {
+                DailyWorkReportDelivery::create([
+                    'daily_work_report_log_id' => $log->id,
+                    'recipient_email' => "user{$i}@example.com",
+                    'status' => 'sent',
+                ]);
+            }
+        }
+
+        // 2. Create unrelated daily_work report logs
+        $dwrSetting = DailyWorkReportSetting::forReport('daily_work');
+        $dwrLog = DailyWorkReportLog::create([
+            'report_setting_id' => $dwrSetting->id,
+            'user_id' => $this->adminUser->id,
+            'report_date' => Carbon::now()->toDateString(),
+            'period_start' => Carbon::now()->startOfDay(),
+            'period_end' => Carbon::now()->endOfDay(),
+            'report_type' => 'daily',
+            'report_key' => 'daily_work',
+            'status' => 'sent',
+            'report_data' => ['dwr' => true],
+        ]);
+
+        DailyWorkReportDelivery::create([
+            'daily_work_report_log_id' => $dwrLog->id,
+            'recipient_email' => 'dwr.recipient@example.com',
+            'status' => 'sent',
+        ]);
+
+        // Request index
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('settings.project-reports.index'));
+
+        $response->assertOk();
+        $response->assertViewHas('reports');
+        $response->assertViewHas('deliveryCounts');
+
+        $reports = $response->viewData('reports');
+
+        // Only list last 50 logs
+        $this->assertCount(50, $reports);
+
+        // All logs must be project_report, never daily_work
+        foreach ($reports as $r) {
+            $this->assertEquals('project_report', $r->report_key);
+            $this->assertNotEquals('daily_work', $r->report_key);
+        }
+
+        // Delivery counts for project_report only
+        $deliveryCounts = $response->viewData('deliveryCounts');
+        $this->assertArrayHasKey('sent', $deliveryCounts);
+        $this->assertEquals(10, $deliveryCounts['sent']);
+
+        // Check HTML renders table headers and history tab contents
+        $response->assertSee('History');
+        $response->assertSee('Recent Project Report History');
+        $response->assertSee('Configuration');
+        $response->assertSee('Report date');
+        $response->assertSee('Projects');
+        $response->assertSee('History Audit Project Report');
+        $response->assertSee('deliveries');
     }
 }
 
