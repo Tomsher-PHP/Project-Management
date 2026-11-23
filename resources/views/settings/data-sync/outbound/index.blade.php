@@ -25,10 +25,6 @@
             <!-- RIGHT SETTINGS PANEL -->
             <div class="col-span-9 lg:col-span-9 min-w-0">
                 <div class="w-full rounded-lg bg-white px-6 py-5 dark:bg-darkblack-600">
-                    <div class="mb-4">
-                        <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Outbound</h3>
-                        <p class="text-xs text-bgray-600 dark:text-bgray-400">Send data to external systems.</p>
-                    </div>
 
                     <!-- TABS & ACTIONS -->
                     <div class="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-bgray-300 pb-4 dark:border-darkblack-400">
@@ -101,11 +97,30 @@
 @push('scripts')
     @vite('resources/js/settings/data-sync/data-sync-settings.js')
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
+            // Close modal when clicking outside modal-content (backdrop / overlay)
+            $(document).on('click', '.modal', function(e) {
+                if (!$(e.target).closest('.modal-content').length) {
+                    $(this).addClass('hidden');
+                }
+            });
+
+            // Close modal on modal-close button
+            $(document).on('click', '.modal-close', function() {
+                $(this).closest('.modal').addClass('hidden');
+            });
+
+            // Close modal on Escape key
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    $('.modal:not(.hidden)').addClass('hidden');
+                }
+            });
+
             // Open Create Connection Modal
-            $('#open-create-connection-btn').on('click', function () {
+            $('#open-create-connection-btn').on('click', function() {
                 const modal = $('#create-connection-modal');
                 modal.find('form')[0].reset();
                 modal.find('[data-error-for]').addClass('hidden').text('');
@@ -116,7 +131,7 @@
             });
 
             // Switch Auth Type in Create Connection Modal
-            $(document).on('change', 'input[name="auth_type"]', function () {
+            $(document).on('change', 'input[name="auth_type"]', function() {
                 const val = $(this).val();
                 const container = $(this).closest('form');
                 container.find('.auth-credential-group').addClass('hidden');
@@ -124,7 +139,7 @@
             });
 
             // Submit Create Connection Form via AJAX
-            $('#create-connection-form').on('submit', function (e) {
+            $('#create-connection-form').on('submit', function(e) {
                 e.preventDefault();
                 const form = $(this);
                 const submitBtn = $('#create-connection-submit-btn');
@@ -136,8 +151,11 @@
                     url: form.attr('action'),
                     type: 'POST',
                     data: form.serialize(),
-                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                    success: function (response) {
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    success: function(response) {
                         submitBtn.prop('disabled', false).removeClass('opacity-70');
                         if (response.success) {
                             $('#create-connection-modal').addClass('hidden');
@@ -156,11 +174,11 @@
                             }
                         }
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         submitBtn.prop('disabled', false).removeClass('opacity-70');
                         if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                             const errors = xhr.responseJSON.errors;
-                            $.each(errors, function (key, messages) {
+                            $.each(errors, function(key, messages) {
                                 const errorSpan = form.find(`[data-error-for="${key}"]`);
                                 if (errorSpan.length) {
                                     errorSpan.text(messages[0]).removeClass('hidden');
@@ -179,18 +197,21 @@
             });
 
             // Delete Connection with Confirmation
-            $(document).on('click', '.delete-connection-btn', function (e) {
+            $(document).on('click', '.delete-connection-btn', function(e) {
                 e.preventDefault();
                 const btn = $(this);
                 const name = btn.data('name');
                 const url = btn.data('url');
 
-                const performDelete = function () {
+                const performDelete = function() {
                     $.ajax({
                         url: url,
                         type: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                        success: function (response) {
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        success: function(response) {
                             if (window.Swal) {
                                 window.Swal.fire({
                                     icon: 'success',
@@ -203,7 +224,7 @@
                                 window.location.reload();
                             }
                         },
-                        error: function (xhr) {
+                        error: function(xhr) {
                             const msg = xhr.responseJSON?.message || 'Failed to delete connection.';
                             if (window.Swal) {
                                 window.Swal.fire('Delete Failed', msg, 'error');
@@ -234,7 +255,7 @@
             });
 
             // View History Details via AJAX
-            $(document).on('click', '.view-history-btn', function () {
+            $(document).on('click', '.view-history-btn', function() {
                 const url = $(this).data('url');
                 const modal = $('#history-details-modal');
 
@@ -259,8 +280,10 @@
                 $.ajax({
                     url: url,
                     type: 'GET',
-                    headers: { 'Accept': 'application/json' },
-                    success: function (res) {
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    success: function(res) {
                         if (res.success && res.history) {
                             const h = res.history;
                             $('#history-modal-connection').text(h.connection_name);
@@ -305,7 +328,7 @@
                             }
                         }
                     },
-                    error: function () {
+                    error: function() {
                         $('#history-modal-payload').text('Failed to load history details.');
                         $('#history-modal-response-body').text('Failed to load history details.');
                     }
@@ -313,7 +336,7 @@
             });
 
             // Copy Payload
-            $('#copy-history-payload-btn').on('click', function () {
+            $('#copy-history-payload-btn').on('click', function() {
                 const text = $('#history-modal-payload').text();
                 navigator.clipboard.writeText(text).then(() => {
                     const btn = $(this);
@@ -324,7 +347,7 @@
             });
 
             // Copy Response
-            $('#copy-history-response-btn').on('click', function () {
+            $('#copy-history-response-btn').on('click', function() {
                 const text = $('#history-modal-response-body').text();
                 navigator.clipboard.writeText(text).then(() => {
                     const btn = $(this);

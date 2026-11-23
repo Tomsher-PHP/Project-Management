@@ -41,16 +41,14 @@ document.addEventListener('click', function (event) {
     }
 
     // Generic Modal Outside / Overlay Click
-    if (target.classList.contains('modal-overlay')) {
-        const modal = target.closest('.modal');
-        if (modal) {
-            if (modal.id === 'one-time-key-modal') {
-                closeOneTimeKeyModal();
-            } else {
-                modal.classList.add('hidden');
-            }
-            return;
+    const openModal = target.closest('.modal:not(.hidden)');
+    if (openModal && !target.closest('.modal-content')) {
+        if (openModal.id === 'one-time-key-modal') {
+            closeOneTimeKeyModal();
+        } else {
+            openModal.classList.add('hidden');
         }
+        return;
     }
 
     // Modal Close Buttons (Cancel / x buttons)

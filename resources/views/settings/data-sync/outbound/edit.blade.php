@@ -269,6 +269,25 @@
         $(document).ready(function () {
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
+            // Close modal when clicking outside modal-content (backdrop / overlay)
+            $(document).on('click', '.modal', function (e) {
+                if (!$(e.target).closest('.modal-content').length) {
+                    $(this).addClass('hidden');
+                }
+            });
+
+            // Close modal on modal-close button
+            $(document).on('click', '.modal-close', function () {
+                $(this).closest('.modal').addClass('hidden');
+            });
+
+            // Close modal on Escape key
+            $(document).on('keydown', function (e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    $('.modal:not(.hidden)').addClass('hidden');
+                }
+            });
+
             // Switch Auth Type in Edit Connection Form
             $(document).on('change', 'input[name="auth_type"]', function () {
                 const val = $(this).val();

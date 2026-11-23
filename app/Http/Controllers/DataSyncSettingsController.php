@@ -28,7 +28,7 @@ class DataSyncSettingsController extends Controller
 
     public function __construct()
     {
-        $this->pageTitle = 'Data Sync';
+        $this->pageTitle = 'Data Sync Settings';
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 

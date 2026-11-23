@@ -114,7 +114,6 @@
                                     </svg>
                                 </div>
                                 <h4 class="text-base font-semibold text-bgray-900 dark:text-white">No Outbound Connections</h4>
-                                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-400">Get started by creating your first external application connection.</p>
                                 @can('data_sync_settings.create')
                                     <button type="button" onclick="$('#open-create-connection-btn').click()" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400">
                                         + Add Connection

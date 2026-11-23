@@ -3,10 +3,9 @@
     <div class="mb-4 flex items-center gap-3">
         <x-back-button :url="route('settings.index')" />
         <h2 class="text-sm font-semibold uppercase tracking-wide text-bgray-800 dark:text-bgray-300">
-            Data Sync
+            Data Sync {{ '- ' . $currentSection ?? 'inbound' }}
         </h2>
     </div>
-
     <div class="space-y-2">
         @php
             $syncSections = [
@@ -43,4 +42,3 @@
         @endforeach
     </div>
 </aside>
-
