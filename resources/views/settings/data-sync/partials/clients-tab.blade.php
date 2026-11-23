@@ -1,9 +1,4 @@
 <div class="flex flex-col space-y-5">
-    <!-- Subtitle Description -->
-    <p class="text-xs text-bgray-600 dark:text-bgray-400 -mt-2">
-        Manage API credentials and permissions for connected external applications. Manage API clients, explore endpoints, and view external record mappings.
-    </p>
-
     <!-- Table Content -->
     <div class="table-content w-full overflow-x-auto">
         <table class="w-full relative">
@@ -98,7 +93,7 @@
                             @can('data_sync_settings.edit')
                                 <x-edit-button action="javascript:void(0)" class="edit-client-btn" data-client-id="{{ $client->id }}" title="Edit API Client" />
 
-                                <a href="javascript:void(0)" class="rotate-client-btn inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-amber-400 dark:hover:bg-darkblack-400 dark:hover:text-amber-400 group" data-client-id="{{ $client->id }}" data-client-name="{{ $client->name }}" data-url="{{ route('settings.data-sync.clients.rotate', $client->id) }}" title="Rotate Secret Key">
+                                <a href="javascript:void(0)" class="rotate-client-btn inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-amber-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-amber-400 dark:hover:bg-darkblack-400 dark:hover:text-amber-400 group" data-client-id="{{ $client->id }}" data-client-name="{{ $client->name }}" data-url="{{ route('settings.data-sync.clients.rotate', $client->id) }}" title="Rotate Secret Key">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>

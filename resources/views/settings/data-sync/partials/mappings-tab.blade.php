@@ -1,8 +1,4 @@
 <div class="flex flex-col space-y-5">
-    <!-- Subtitle Description -->
-    <p class="text-xs text-bgray-600 dark:text-bgray-400 -mt-2">
-        View relationships between external system records and PMS customers or projects.
-    </p>
 
     <!-- Table Content -->
     <div class="table-content w-full overflow-x-auto">
@@ -43,7 +39,7 @@
                     <td class="px-6 py-5 whitespace-nowrap">
                         <div class="flex items-center gap-2">
                             <span class="text-base font-semibold text-bgray-900 dark:text-white">{{ $mapping->client_name }}</span>
-                            @if($mapping->is_client_deleted)
+                            @if ($mapping->is_client_deleted)
                                 <span class="rounded bg-error-50 px-1.5 py-0.5 text-[10px] font-bold text-error-400 dark:bg-error-900/30">
                                     Deleted Client
                                 </span>
@@ -55,7 +51,7 @@
                         </div>
                     </td>
                     <td class="px-6 py-5 whitespace-nowrap">
-                        @if($mapping->entity_type === 'customer')
+                        @if ($mapping->entity_type === 'customer')
                             <span class="inline-flex items-center text-[12px] font-semibold text-blue-700 dark:text-blue-500">
                                 Customer
                             </span>
@@ -76,7 +72,7 @@
                         {{ $mapping->external_id ?? '-' }}
                     </td>
                     <td class="px-6 py-5 whitespace-nowrap">
-                        @if($mapping->is_pms_missing)
+                        @if ($mapping->is_pms_missing)
                             <div class="flex items-center gap-2">
                                 <span class="rounded bg-error-50 px-2 py-0.5 text-[10px] font-bold text-error-400 dark:bg-error-900/30">
                                     Missing Record
@@ -91,13 +87,13 @@
                                     <span class="font-mono text-sm font-bold text-bgray-900 dark:text-white">
                                         {{ $mapping->pms_code }}
                                     </span>
-                                    @if($mapping->is_pms_deleted)
+                                    @if ($mapping->is_pms_deleted)
                                         <span class="rounded bg-amber-50 px-1.5 py-0.2 text-[10px] font-bold text-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
                                             Deleted
                                         </span>
                                     @endif
                                 </div>
-                                @if($mapping->pms_name)
+                                @if ($mapping->pms_name)
                                     <span class="text-xs text-bgray-500 dark:text-bgray-400 truncate max-w-xs" title="{{ $mapping->pms_name }}">
                                         {{ $mapping->pms_name }}
                                     </span>

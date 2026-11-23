@@ -180,64 +180,6 @@
                 });
             });
 
-            // Delete Connection with Confirmation
-            $(document).on('click', '.delete-connection-btn', function(e) {
-                e.preventDefault();
-                const btn = $(this);
-                const name = btn.data('name');
-                const url = btn.data('url');
-
-                const performDelete = function() {
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json'
-                        },
-                        success: function(response) {
-                            if (window.Swal) {
-                                window.Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted',
-                                    text: response.message || 'Connection deleted successfully.',
-                                    timer: 1500,
-                                    showConfirmButton: false,
-                                }).then(() => window.location.reload());
-                            } else {
-                                window.location.reload();
-                            }
-                        },
-                        error: function(xhr) {
-                            const msg = xhr.responseJSON?.message || 'Failed to delete connection.';
-                            if (window.Swal) {
-                                window.Swal.fire('Delete Failed', msg, 'error');
-                            } else {
-                                alert(msg);
-                            }
-                        }
-                    });
-                };
-
-                if (window.Swal) {
-                    window.Swal.fire({
-                        title: 'Delete Outbound Connection?',
-                        text: `Are you sure you want to delete "${name}"? This connection will be soft deleted.`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, Delete',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#ef4444',
-                    }).then(result => {
-                        if (result.isConfirmed) {
-                            performDelete();
-                        }
-                    });
-                } else if (confirm(`Are you sure you want to delete "${name}"?`)) {
-                    performDelete();
-                }
-            });
-
             // View History Details via AJAX
             $(document).on('click', '.view-history-btn', function() {
                 const url = $(this).data('url');

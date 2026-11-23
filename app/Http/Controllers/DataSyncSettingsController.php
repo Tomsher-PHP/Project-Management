@@ -474,6 +474,7 @@ class DataSyncSettingsController extends Controller
         if (request()->wantsJson() || request()->ajax()) {
             return response()->json([
                 'success' => true,
+                'status' => true,
                 'message' => "Outbound connection [{$connection->name}] deleted successfully.",
             ]);
         }

@@ -73,18 +73,16 @@ class DataSyncSettingsNavigationTest extends TestCase
         $response = $this->actingAs($this->authorizedUser)->get('/settings/data-sync');
         $response->assertStatus(200);
         $response->assertSee('Data Sync');
-        $response->assertSee('Manage API clients, explore endpoints, and view external record mappings.');
         $response->assertSee('API Clients');
         $response->assertSee('API Explorer');
         $response->assertSee('Record Mappings');
-        $response->assertSee('Manage API credentials and permissions for connected external applications.');
     }
 
     public function test_authorized_user_can_access_clients_tab(): void
     {
         $response = $this->actingAs($this->authorizedUser)->get('/settings/data-sync/clients');
         $response->assertStatus(200);
-        $response->assertSee('Manage API credentials and permissions for connected external applications.');
+        $response->assertSee('API Clients');
         $response->assertSee(route('settings.index'));
         // Check active tab styling
         $response->assertSee('bg-success-300 text-white shadow-sm', false);
@@ -94,7 +92,7 @@ class DataSyncSettingsNavigationTest extends TestCase
     {
         $response = $this->actingAs($this->authorizedUser)->get('/settings/data-sync/explorer');
         $response->assertStatus(200);
-        $response->assertSee('Browse available Data Sync modules, endpoints, and request examples.');
+        $response->assertSee('API Explorer');
         $response->assertSee(route('settings.index'));
     }
 
@@ -102,7 +100,7 @@ class DataSyncSettingsNavigationTest extends TestCase
     {
         $response = $this->actingAs($this->authorizedUser)->get('/settings/data-sync/mappings');
         $response->assertStatus(200);
-        $response->assertSee('View relationships between external system records and PMS customers or projects.');
+        $response->assertSee('Record Mappings');
         $response->assertSee(route('settings.index'));
     }
 
