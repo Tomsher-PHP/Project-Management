@@ -1,4 +1,8 @@
 <div class="flex flex-col space-y-5">
+    <!-- Subtitle Description -->
+    <p class="text-xs text-bgray-600 dark:text-bgray-400 -mt-2">
+        View relationships between external system records and PMS customers or projects.
+    </p>
 
     <!-- Table Content -->
     <div class="table-content w-full overflow-x-auto">

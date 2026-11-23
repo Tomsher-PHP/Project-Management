@@ -54,6 +54,15 @@ class DataSyncSettingsNavigationTest extends TestCase
         $responseMappings = $this->actingAs($this->unauthorizedUser)->getJson('/settings/data-sync/mappings');
         $responseMappings->assertStatus(403);
 
+        $responseOutbound = $this->actingAs($this->unauthorizedUser)->getJson('/settings/data-sync/outbound');
+        $responseOutbound->assertStatus(403);
+
+        $responseOutboundConnections = $this->actingAs($this->unauthorizedUser)->getJson('/settings/data-sync/outbound/connections');
+        $responseOutboundConnections->assertStatus(403);
+
+        $responseOutboundHistory = $this->actingAs($this->unauthorizedUser)->getJson('/settings/data-sync/outbound/history');
+        $responseOutboundHistory->assertStatus(403);
+
         // Standard browser GET redirects back with error message
         $webResponse = $this->actingAs($this->unauthorizedUser)->get('/settings/data-sync');
         $webResponse->assertRedirect();
@@ -95,6 +104,38 @@ class DataSyncSettingsNavigationTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('View relationships between external system records and PMS customers or projects.');
         $response->assertSee(route('settings.index'));
+    }
+
+    public function test_authorized_user_can_access_outbound_index_and_connections_tab(): void
+    {
+        $response = $this->actingAs($this->authorizedUser)->get('/settings/data-sync/outbound');
+        $response->assertStatus(200);
+        $response->assertSee('Data Sync');
+        $response->assertSee('Outbound');
+        $response->assertSee('Send data to external systems.');
+        $response->assertSee('Connections');
+        $response->assertSee('History');
+        $response->assertSee('bg-success-300 text-white shadow-sm', false);
+    }
+
+    public function test_authorized_user_can_access_outbound_connections_tab(): void
+    {
+        $response = $this->actingAs($this->authorizedUser)->get('/settings/data-sync/outbound/connections');
+        $response->assertStatus(200);
+        $response->assertSee('Connections');
+        $response->assertSee('History');
+        $response->assertSee(route('settings.index'));
+        $response->assertSee('bg-success-300 text-white shadow-sm', false);
+    }
+
+    public function test_authorized_user_can_access_outbound_history_tab(): void
+    {
+        $response = $this->actingAs($this->authorizedUser)->get('/settings/data-sync/outbound/history');
+        $response->assertStatus(200);
+        $response->assertSee('Connections');
+        $response->assertSee('History');
+        $response->assertSee(route('settings.index'));
+        $response->assertSee('bg-success-300 text-white shadow-sm', false);
     }
 
     public function test_settings_index_shows_card_only_for_authorized_user(): void

@@ -40,6 +40,19 @@ document.addEventListener('click', function (event) {
         }
     }
 
+    // Generic Modal Outside / Overlay Click
+    if (target.classList.contains('modal-overlay')) {
+        const modal = target.closest('.modal');
+        if (modal) {
+            if (modal.id === 'one-time-key-modal') {
+                closeOneTimeKeyModal();
+            } else {
+                modal.classList.add('hidden');
+            }
+            return;
+        }
+    }
+
     // Modal Close Buttons (Cancel / x buttons)
     const closeButton = target.closest('.modal-close');
     if (closeButton) {
@@ -64,20 +77,12 @@ document.addEventListener('keydown', function (event) {
     if (!document.querySelector('[data-data-sync-settings]')) return;
     if (event.key !== 'Escape' && event.keyCode !== 27) return;
 
-    const oneTimeModal = document.getElementById('one-time-key-modal');
-    if (oneTimeModal && !oneTimeModal.classList.contains('hidden')) {
-        closeOneTimeKeyModal();
-        return;
-    }
-
-    const createModal = document.getElementById('create-client-modal');
-    if (createModal && !createModal.classList.contains('hidden')) {
-        createModal.classList.add('hidden');
-        return;
-    }
-
-    const editModal = document.getElementById('edit-client-modal');
-    if (editModal && !editModal.classList.contains('hidden')) {
-        editModal.classList.add('hidden');
-    }
+    const visibleModals = document.querySelectorAll('.modal:not(.hidden)');
+    visibleModals.forEach(modal => {
+        if (modal.id === 'one-time-key-modal') {
+            closeOneTimeKeyModal();
+        } else {
+            modal.classList.add('hidden');
+        }
+    });
 });

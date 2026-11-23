@@ -1,4 +1,8 @@
 <div id="api-explorer-root" class="flex flex-col space-y-5">
+    <!-- Subtitle Description -->
+    <p class="text-xs text-bgray-600 dark:text-bgray-400 -mt-2">
+        Browse available Data Sync modules, endpoints, and request examples.
+    </p>
 
     <!-- Explorer Two-Column Layout -->
     <div class="flex flex-col lg:flex-row gap-6 items-start w-full">
