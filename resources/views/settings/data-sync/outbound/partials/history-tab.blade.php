@@ -1,8 +1,4 @@
 <div class="flex flex-col space-y-5">
-    <!-- Subtitle Description -->
-    <p class="text-xs text-bgray-600 dark:text-bgray-400 -mt-2">
-        Monitor outbound sync execution logs, payloads, HTTP responses, and delivery status.
-    </p>
 
     <!-- Table Content -->
     <div class="table-content w-full overflow-x-auto">
@@ -43,8 +39,8 @@
                     @php
                         $api = $history->outboundApi;
                         $connection = $api?->connection;
-                        $moduleName = $api ? ($modules[$api->module] ?? ucfirst($api->module)) : '—';
-                        $operationName = $api ? ($operations[$api->operation] ?? ucfirst($api->operation)) : '—';
+                        $moduleName = $api ? $modules[$api->module] ?? ucfirst($api->module) : '—';
+                        $operationName = $api ? $operations[$api->operation] ?? ucfirst($api->operation) : '—';
                     @endphp
                     <tr data-history-id="{{ $history->id }}" class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
                         <td class="pr-4 py-5 whitespace-nowrap">

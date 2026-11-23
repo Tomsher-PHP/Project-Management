@@ -1,8 +1,4 @@
 <div class="flex flex-col space-y-5">
-    <!-- Subtitle Description -->
-    <p class="text-xs text-bgray-600 dark:text-bgray-400 -mt-2">
-        Manage external application connections, base URLs, and authentication credentials for outbound data sync.
-    </p>
 
     <!-- Table Content -->
     <div class="table-content w-full overflow-x-auto">
@@ -58,19 +54,19 @@
                         </td>
                         <td class="px-6 py-5 whitespace-nowrap">
                             @if ($connection->auth_type === 'bearer')
-                                <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
                                     Bearer Token
                                 </span>
                             @elseif ($connection->auth_type === 'api_key')
-                                <span class="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-purple-600 dark:text-purple-300">
                                     API Key ({{ $connection->auth_config['header_name'] ?? 'X-API-Key' }})
                                 </span>
                             @elseif ($connection->auth_type === 'basic')
-                                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-300">
                                     Basic Auth
                                 </span>
                             @else
-                                <span class="inline-flex items-center rounded-full bg-bgray-100 px-2.5 py-0.5 text-xs font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-400">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-bgray-600 dark:text-bgray-400">
                                     None
                                 </span>
                             @endif
