@@ -267,7 +267,8 @@ class DailyWorkReportRecipientService
             return;
         }
 
-        $key = mb_strtolower($email);
+        $email = mb_strtolower($email);
+        $key = $email;
 
         if (! $recipients->has($key)) {
             $recipients->put($key, [

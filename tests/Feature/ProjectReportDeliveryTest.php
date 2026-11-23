@@ -693,4 +693,85 @@ class ProjectReportDeliveryTest extends TestCase
         // Attempt count unchanged
         $this->assertEquals(1, $delivery->fresh()->attempt_count);
     }
+
+    public function test_daily_work_report_handles_duplicate_recipient_safely(): void
+    {
+        $log = DailyWorkReportLog::create([
+            'user_id' => null,
+            'report_key' => 'daily_work',
+            'report_type' => 'daily',
+            'report_date' => '2026-11-23',
+            'period_start' => Carbon::now()->startOfDay(),
+            'period_end' => Carbon::now()->endOfDay(),
+            'status' => 'pending',
+            'report_data' => ['dwr' => true],
+        ]);
+
+        $recipientService = app(\App\Services\DailyWorkReportRecipientService::class);
+        $user = User::factory()->create([
+            'email' => 'swethavprasannan.tomsher@gmail.com',
+        ]);
+
+        // Create global recipient with same email in different case
+        DailyWorkReportRecipient::create([
+            'report_key' => 'daily_work',
+            'scope' => 'global',
+            'name' => 'Swetha',
+            'email' => 'Swethavprasannan.tomsher@gmail.com',
+            'is_active' => true,
+        ]);
+
+        $recipients = $recipientService->resolveForHierarchy(
+            $user,
+            collect(),
+            '2026-11-23',
+            'daily_work'
+        );
+
+        $this->assertCount(1, $recipients);
+
+        $uniqueRecipients = collect($recipients)
+            ->map(function ($recipient) {
+                $recipient = (array) $recipient;
+                $recipient['email'] = mb_strtolower(trim((string) ($recipient['email'] ?? '')));
+
+                return $recipient;
+            })
+            ->filter(fn ($r) => filter_var($r['email'], FILTER_VALIDATE_EMAIL))
+            ->unique('email')
+            ->values();
+
+        foreach ($uniqueRecipients as $recipient) {
+            DailyWorkReportDelivery::firstOrCreate(
+                [
+                    'daily_work_report_log_id' => $log->id,
+                    'recipient_email' => $recipient['email'],
+                ],
+                [
+                    'recipient_name' => $recipient['name'] ?? null,
+                    'recipient_type' => $recipient['sources'][0] ?? null,
+                    'recipient_sources' => $recipient['sources'] ?? [],
+                    'status' => 'pending',
+                ]
+            );
+        }
+
+        // Running insertion again with duplicates does not throw unique constraint violation
+        foreach ($uniqueRecipients as $recipient) {
+            DailyWorkReportDelivery::firstOrCreate(
+                [
+                    'daily_work_report_log_id' => $log->id,
+                    'recipient_email' => $recipient['email'],
+                ],
+                [
+                    'recipient_name' => $recipient['name'] ?? null,
+                    'recipient_type' => $recipient['sources'][0] ?? null,
+                    'recipient_sources' => $recipient['sources'] ?? [],
+                    'status' => 'pending',
+                ]
+            );
+        }
+
+        $this->assertEquals(1, DailyWorkReportDelivery::where('daily_work_report_log_id', $log->id)->count());
+    }
 }

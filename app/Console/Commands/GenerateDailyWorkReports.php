@@ -310,15 +310,30 @@ class GenerateDailyWorkReports extends Command
                         return null;
                     }
 
-                    foreach ($recipients as $recipient) {
-                        DailyWorkReportDelivery::create([
-                            'daily_work_report_log_id' => $log->id,
-                            'recipient_email' => $recipient['email'],
-                            'recipient_name' => $recipient['name'] ?? null,
-                            'recipient_type' => $recipient['sources'][0] ?? null,
-                            'recipient_sources' => $recipient['sources'] ?? [],
-                            'status' => 'pending',
-                        ]);
+                    $uniqueRecipients = collect($recipients)
+                        ->map(function ($recipient) {
+                            $recipient = (array) $recipient;
+                            $recipient['email'] = mb_strtolower(trim((string) ($recipient['email'] ?? '')));
+
+                            return $recipient;
+                        })
+                        ->filter(fn ($r) => filter_var($r['email'], FILTER_VALIDATE_EMAIL))
+                        ->unique('email')
+                        ->values();
+
+                    foreach ($uniqueRecipients as $recipient) {
+                        DailyWorkReportDelivery::firstOrCreate(
+                            [
+                                'daily_work_report_log_id' => $log->id,
+                                'recipient_email' => $recipient['email'],
+                            ],
+                            [
+                                'recipient_name' => $recipient['name'] ?? null,
+                                'recipient_type' => $recipient['sources'][0] ?? null,
+                                'recipient_sources' => $recipient['sources'] ?? [],
+                                'status' => 'pending',
+                            ]
+                        );
                     }
 
                     return $log;
