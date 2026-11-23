@@ -50,80 +50,16 @@
                             </div>
                         </div>
 
-                        <!-- Authentication Type -->
+                        <input type="hidden" name="auth_type" value="bearer">
+
+                        <!-- Bearer Token -->
                         <div>
-                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-2">
-                                Authentication Type <span class="text-error-300">*</span>
+                            <label for="edit-connection-token" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                Bearer Token
                             </label>
-                            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                                @foreach ($supportedAuthTypes as $typeKey => $typeLabel)
-                                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-bgray-300 p-3 hover:border-success-300 dark:border-darkblack-400 dark:hover:border-success-300">
-                                        <input type="radio" name="auth_type" value="{{ $typeKey }}" {{ old('auth_type', $connection->auth_type) === $typeKey ? 'checked' : '' }} class="h-4 w-4 border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500">
-                                        <span class="text-xs font-semibold text-bgray-800 dark:text-bgray-200">{{ $typeLabel }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                            <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="auth_type"></span>
-                        </div>
-
-                        <!-- Credentials: Bearer Token -->
-                        <div class="auth-credential-group auth-fields-bearer {{ old('auth_type', $connection->auth_type) === 'bearer' ? '' : 'hidden' }} space-y-3 rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40">
-                            <div>
-                                <label for="edit-connection-token" class="block text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 mb-1.5">
-                                    Bearer Token
-                                    @if ($connection->auth_type === 'bearer' && !empty($connection->auth_config))
-                                        <span class="text-xs font-normal text-bgray-500 lowercase">(saved — leave empty to keep unchanged)</span>
-                                    @endif
-                                </label>
-                                <input type="password" id="edit-connection-token" name="token" placeholder="{{ $connection->auth_type === 'bearer' && !empty($connection->auth_config) ? '••••••••••••••••••••••••' : 'Enter bearer token' }}" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="token"></span>
-                            </div>
-                        </div>
-
-                        <!-- Credentials: API Key -->
-                        <div class="auth-credential-group auth-fields-api_key {{ old('auth_type', $connection->auth_type) === 'api_key' ? '' : 'hidden' }} space-y-3 rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label for="edit-connection-header-name" class="block text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 mb-1.5">
-                                        Header Name
-                                    </label>
-                                    <input type="text" id="edit-connection-header-name" name="header_name" value="{{ old('header_name', $connection->auth_config['header_name'] ?? 'X-API-Key') }}" placeholder="e.g., X-API-Key, Authorization" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                    <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="header_name"></span>
-                                </div>
-                                <div>
-                                    <label for="edit-connection-api-key" class="block text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 mb-1.5">
-                                        API Key Value
-                                        @if ($connection->auth_type === 'api_key' && !empty($connection->auth_config))
-                                            <span class="text-xs font-normal text-bgray-500 lowercase">(saved — leave empty to keep unchanged)</span>
-                                        @endif
-                                    </label>
-                                    <input type="password" id="edit-connection-api-key" name="api_key" placeholder="{{ $connection->auth_type === 'api_key' && !empty($connection->auth_config) ? '••••••••••••••••••••••••' : 'Enter API secret value' }}" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                    <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="api_key"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Credentials: Basic Auth -->
-                        <div class="auth-credential-group auth-fields-basic {{ old('auth_type', $connection->auth_type) === 'basic' ? '' : 'hidden' }} space-y-3 rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label for="edit-connection-username" class="block text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 mb-1.5">
-                                        Username
-                                    </label>
-                                    <input type="text" id="edit-connection-username" name="username" value="{{ old('username', $connection->auth_config['username'] ?? '') }}" placeholder="Username" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                    <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="username"></span>
-                                </div>
-                                <div>
-                                    <label for="edit-connection-password" class="block text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 mb-1.5">
-                                        Password
-                                        @if ($connection->auth_type === 'basic' && !empty($connection->auth_config))
-                                            <span class="text-xs font-normal text-bgray-500 lowercase">(saved — leave empty to keep unchanged)</span>
-                                        @endif
-                                    </label>
-                                    <input type="password" id="edit-connection-password" name="password" placeholder="{{ $connection->auth_type === 'basic' && !empty($connection->auth_config) ? '••••••••••••••••••••••••' : 'Enter password' }}" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                    <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="password"></span>
-                                </div>
-                            </div>
+                            <input type="password" id="edit-connection-token" name="token" placeholder="••••••••••••••••••••••••" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                            <p class="text-xs text-bgray-500 dark:text-bgray-400 mt-1">Leave blank to keep the existing token.</p>
+                            <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="token"></span>
                         </div>
 
                         <!-- Active Toggle & Submit -->
@@ -286,14 +222,6 @@
                 if (e.key === 'Escape' || e.keyCode === 27) {
                     $('.modal:not(.hidden)').addClass('hidden');
                 }
-            });
-
-            // Switch Auth Type in Edit Connection Form
-            $(document).on('change', 'input[name="auth_type"]', function () {
-                const val = $(this).val();
-                const container = $('#edit-connection-form');
-                container.find('.auth-credential-group').addClass('hidden');
-                container.find(`.auth-fields-${val}`).removeClass('hidden');
             });
 
             // Submit Edit Connection Form via AJAX

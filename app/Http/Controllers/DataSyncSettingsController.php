@@ -368,9 +368,6 @@ class DataSyncSettingsController extends Controller
             'perPage' => $perPage,
             'supportedAuthTypes' => [
                 DataSyncOutboundConnection::AUTH_TYPE_BEARER => 'Bearer Token',
-                DataSyncOutboundConnection::AUTH_TYPE_API_KEY => 'API Key',
-                DataSyncOutboundConnection::AUTH_TYPE_BASIC => 'Basic Authentication',
-                DataSyncOutboundConnection::AUTH_TYPE_NONE => 'None',
             ],
         ]);
     }
@@ -388,9 +385,7 @@ class DataSyncSettingsController extends Controller
                 'base_url' => $connection->base_url,
                 'auth_type' => $connection->auth_type,
                 'is_active' => (bool) $connection->is_active,
-                'has_credentials' => ! empty($connection->auth_config),
-                'header_name' => $connection->auth_config['header_name'] ?? 'X-API-Key',
-                'username' => $connection->auth_config['username'] ?? '',
+                'has_credentials' => ! empty($connection->auth_config['token'] ?? null),
                 'apis_count' => $connection->apis()->count(),
                 'created_at' => $connection->created_at?->format('M d, Y H:i:s'),
             ],
@@ -411,9 +406,6 @@ class DataSyncSettingsController extends Controller
             'apis' => $apis,
             'supportedAuthTypes' => [
                 DataSyncOutboundConnection::AUTH_TYPE_BEARER => 'Bearer Token',
-                DataSyncOutboundConnection::AUTH_TYPE_API_KEY => 'API Key',
-                DataSyncOutboundConnection::AUTH_TYPE_BASIC => 'Basic Authentication',
-                DataSyncOutboundConnection::AUTH_TYPE_NONE => 'None',
             ],
             'availableModules' => OutboundConnectionService::AVAILABLE_MODULES,
             'availableOperations' => OutboundConnectionService::AVAILABLE_OPERATIONS,

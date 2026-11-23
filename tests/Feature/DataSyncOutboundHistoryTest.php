@@ -103,7 +103,8 @@ class DataSyncOutboundHistoryTest extends TestCase
         $otherConn = DataSyncOutboundConnection::create([
             'name' => 'Other HR System',
             'base_url' => 'https://hr.example.com',
-            'auth_type' => 'none',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'sample-hr-token'],
             'is_active' => true,
         ]);
 

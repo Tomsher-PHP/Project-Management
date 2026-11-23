@@ -11,9 +11,10 @@ class DataSyncOutboundConnection extends Model
     use SoftDeletes;
 
     public const AUTH_TYPE_BEARER = 'bearer';
-    public const AUTH_TYPE_API_KEY = 'api_key';
-    public const AUTH_TYPE_BASIC = 'basic';
-    public const AUTH_TYPE_NONE = 'none';
+
+    public const SUPPORTED_AUTH_TYPES = [
+        self::AUTH_TYPE_BEARER,
+    ];
 
     protected $table = 'data_sync_outbound_connections';
 

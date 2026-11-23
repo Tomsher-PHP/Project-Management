@@ -92,23 +92,19 @@ class OutboundConnectionService
 
     /**
      * Build auth_config array based on auth_type and provided inputs.
+     * Only Bearer Token authentication is supported.
      */
-    public function buildAuthConfig(string $authType, array $input, ?array $existingConfig = null): ?array
+    public function buildAuthConfig(string $authType, array $input, ?array $existingConfig = null): array
     {
-        return match ($authType) {
-            DataSyncOutboundConnection::AUTH_TYPE_BEARER => [
-                'token' => ! empty($input['token']) ? trim($input['token']) : ($existingConfig['token'] ?? ''),
-            ],
-            DataSyncOutboundConnection::AUTH_TYPE_API_KEY => [
-                'api_key' => ! empty($input['api_key']) ? trim($input['api_key']) : ($existingConfig['api_key'] ?? ''),
-                'header_name' => ! empty($input['header_name']) ? trim($input['header_name']) : ($existingConfig['header_name'] ?? 'X-API-Key'),
-            ],
-            DataSyncOutboundConnection::AUTH_TYPE_BASIC => [
-                'username' => ! empty($input['username']) ? trim($input['username']) : ($existingConfig['username'] ?? ''),
-                'password' => ! empty($input['password']) ? $input['password'] : ($existingConfig['password'] ?? ''),
-            ],
-            default => null,
-        };
+        if ($authType !== DataSyncOutboundConnection::AUTH_TYPE_BEARER) {
+            throw new \InvalidArgumentException("Unsupported authentication type [{$authType}]. Only Bearer Token authentication is supported.");
+        }
+
+        $token = ! empty($input['token']) ? trim($input['token']) : ($existingConfig['token'] ?? '');
+
+        return [
+            'token' => $token,
+        ];
     }
 
     /**
@@ -116,7 +112,7 @@ class OutboundConnectionService
      */
     public function createConnection(array $data): DataSyncOutboundConnection
     {
-        $authType = $data['auth_type'] ?? DataSyncOutboundConnection::AUTH_TYPE_NONE;
+        $authType = DataSyncOutboundConnection::AUTH_TYPE_BEARER;
         $authConfig = $this->buildAuthConfig($authType, $data);
 
         return DataSyncOutboundConnection::create([
@@ -133,7 +129,7 @@ class OutboundConnectionService
      */
     public function updateConnection(DataSyncOutboundConnection $connection, array $data): DataSyncOutboundConnection
     {
-        $authType = $data['auth_type'] ?? $connection->auth_type;
+        $authType = DataSyncOutboundConnection::AUTH_TYPE_BEARER;
         $existingConfig = $connection->auth_config;
         $authConfig = $this->buildAuthConfig($authType, $data, $existingConfig);
 

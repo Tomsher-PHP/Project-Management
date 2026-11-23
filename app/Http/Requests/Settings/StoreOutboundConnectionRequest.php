@@ -22,6 +22,10 @@ class StoreOutboundConnectionRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $this->merge([
+            'auth_type' => $this->input('auth_type') ?: DataSyncOutboundConnection::AUTH_TYPE_BEARER,
+        ]);
+
         if ($this->has('is_active')) {
             $this->merge([
                 'is_active' => filter_var($this->input('is_active'), FILTER_VALIDATE_BOOLEAN),
@@ -52,18 +56,9 @@ class StoreOutboundConnectionRequest extends FormRequest
             'auth_type' => [
                 'required',
                 'string',
-                Rule::in([
-                    DataSyncOutboundConnection::AUTH_TYPE_BEARER,
-                    DataSyncOutboundConnection::AUTH_TYPE_API_KEY,
-                    DataSyncOutboundConnection::AUTH_TYPE_BASIC,
-                    DataSyncOutboundConnection::AUTH_TYPE_NONE,
-                ]),
+                Rule::in([DataSyncOutboundConnection::AUTH_TYPE_BEARER]),
             ],
-            'token' => ['nullable', 'required_if:auth_type,' . DataSyncOutboundConnection::AUTH_TYPE_BEARER, 'string'],
-            'api_key' => ['nullable', 'required_if:auth_type,' . DataSyncOutboundConnection::AUTH_TYPE_API_KEY, 'string'],
-            'header_name' => ['nullable', 'string', 'max:100'],
-            'username' => ['nullable', 'required_if:auth_type,' . DataSyncOutboundConnection::AUTH_TYPE_BASIC, 'string', 'max:255'],
-            'password' => ['nullable', 'required_if:auth_type,' . DataSyncOutboundConnection::AUTH_TYPE_BASIC, 'string'],
+            'token' => ['required', 'string'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }
@@ -78,11 +73,9 @@ class StoreOutboundConnectionRequest extends FormRequest
         return [
             'name.required' => 'The connection name is required.',
             'base_url.required' => 'The base URL is required.',
-            'auth_type.required' => 'Please select an authentication type.',
-            'token.required_if' => 'The bearer token is required for Bearer Token authentication.',
-            'api_key.required_if' => 'The API key is required for API Key authentication.',
-            'username.required_if' => 'The username is required for Basic Authentication.',
-            'password.required_if' => 'The password is required for Basic Authentication.',
+            'auth_type.required' => 'The authentication type is required.',
+            'auth_type.in' => 'Only Bearer Token authentication is supported.',
+            'token.required' => 'The Bearer Token is required.',
         ];
     }
 }

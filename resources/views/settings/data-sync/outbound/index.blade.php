@@ -70,12 +70,6 @@
 
         <x-filters.drawer>
             <x-filters.input-search name="search" label="Connection Name or Base URL" />
-            <x-filters.select name="auth_type" label="Authentication Type" :options="[
-                'bearer' => 'Bearer Token',
-                'api_key' => 'API Key',
-                'basic' => 'Basic Authentication',
-                'none' => 'None',
-            ]" />
             <x-filters.select name="status" label="Status" :options="[
                 'active' => 'Active',
                 'inactive' => 'Inactive',
@@ -124,18 +118,8 @@
                 const modal = $('#create-connection-modal');
                 modal.find('form')[0].reset();
                 modal.find('[data-error-for]').addClass('hidden').text('');
-                modal.find('.auth-credential-group').addClass('hidden');
-                modal.find('input[name="auth_type"][value="none"]').prop('checked', true);
                 modal.removeClass('hidden');
                 $('#create-connection-name').focus();
-            });
-
-            // Switch Auth Type in Create Connection Modal
-            $(document).on('change', 'input[name="auth_type"]', function() {
-                const val = $(this).val();
-                const container = $(this).closest('form');
-                container.find('.auth-credential-group').addClass('hidden');
-                container.find(`.auth-fields-${val}`).removeClass('hidden');
             });
 
             // Submit Create Connection Form via AJAX

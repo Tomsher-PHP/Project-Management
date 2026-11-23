@@ -84,52 +84,75 @@ class DataSyncOutboundConnectionTest extends TestCase
         $this->assertStringNotContainsString('my-bearer-secret-token', $raw);
     }
 
-    public function test_can_create_connection_with_api_key_auth(): void
+    public function test_creation_requires_bearer_token(): void
     {
         $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
-            'name' => 'Partner API',
-            'base_url' => 'https://partner.example.com',
-            'auth_type' => 'api_key',
-            'header_name' => 'X-Custom-API-Key',
-            'api_key' => 'partner_secret_123',
-            'is_active' => 1,
+            'name' => 'No Token Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
         ]);
 
-        $response->assertStatus(201);
-        $conn = DataSyncOutboundConnection::where('name', 'Partner API')->firstOrFail();
-        $this->assertSame('partner_secret_123', $conn->auth_config['api_key']);
-        $this->assertSame('X-Custom-API-Key', $conn->auth_config['header_name']);
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('token');
     }
 
-    public function test_can_create_connection_with_basic_auth(): void
+    public function test_unsupported_auth_types_are_rejected_on_create(): void
     {
-        $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
-            'name' => 'Legacy Service',
-            'base_url' => 'https://legacy.example.com',
-            'auth_type' => 'basic',
-            'username' => 'api_user',
-            'password' => 'super_secret_pw',
-            'is_active' => 1,
-        ]);
+        foreach (['api_key', 'basic', 'none', 'oauth2'] as $badType) {
+            $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
+                'name' => "Bad Type {$badType}",
+                'base_url' => 'https://api.example.com',
+                'auth_type' => $badType,
+                'token' => 'dummy-token',
+            ]);
 
-        $response->assertStatus(201);
-        $conn = DataSyncOutboundConnection::where('name', 'Legacy Service')->firstOrFail();
-        $this->assertSame('api_user', $conn->auth_config['username']);
-        $this->assertSame('super_secret_pw', $conn->auth_config['password']);
+            $response->assertStatus(422);
+            $response->assertJsonValidationErrors('auth_type');
+        }
     }
 
-    public function test_can_create_connection_with_none_auth(): void
+    public function test_unsupported_auth_types_are_rejected_on_update(): void
     {
-        $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
-            'name' => 'Public Webhook',
-            'base_url' => 'https://webhook.example.com',
-            'auth_type' => 'none',
-            'is_active' => 1,
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Existing Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'existing-token'],
+            'is_active' => true,
         ]);
 
-        $response->assertStatus(201);
-        $conn = DataSyncOutboundConnection::where('name', 'Public Webhook')->firstOrFail();
-        $this->assertNull($conn->auth_config);
+        foreach (['api_key', 'basic', 'none'] as $badType) {
+            $response = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+                'name' => 'Existing Conn',
+                'base_url' => 'https://api.example.com',
+                'auth_type' => $badType,
+            ]);
+
+            $response->assertStatus(422);
+            $response->assertJsonValidationErrors('auth_type');
+        }
+    }
+
+    public function test_update_connection_with_new_token_replaces_previous_token(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Initial Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'initial-token'],
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+            'name' => 'Initial Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'token' => 'brand-new-token',
+        ]);
+
+        $response->assertStatus(200);
+        $conn->refresh();
+        $this->assertSame('brand-new-token', $conn->auth_config['token']);
     }
 
     public function test_ssrf_prevention_rejects_internal_and_loopback_hosts(): void
@@ -150,7 +173,8 @@ class DataSyncOutboundConnectionTest extends TestCase
             $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
                 'name' => 'Invalid Connection',
                 'base_url' => $badUrl,
-                'auth_type' => 'none',
+                'auth_type' => 'bearer',
+                'token' => 'test-bearer-token',
             ]);
 
             $response->assertStatus(422);

@@ -22,6 +22,10 @@ class UpdateOutboundConnectionRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $this->merge([
+            'auth_type' => $this->input('auth_type') ?: DataSyncOutboundConnection::AUTH_TYPE_BEARER,
+        ]);
+
         if ($this->has('is_active')) {
             $this->merge([
                 'is_active' => filter_var($this->input('is_active'), FILTER_VALIDATE_BOOLEAN),
@@ -52,18 +56,9 @@ class UpdateOutboundConnectionRequest extends FormRequest
             'auth_type' => [
                 'required',
                 'string',
-                Rule::in([
-                    DataSyncOutboundConnection::AUTH_TYPE_BEARER,
-                    DataSyncOutboundConnection::AUTH_TYPE_API_KEY,
-                    DataSyncOutboundConnection::AUTH_TYPE_BASIC,
-                    DataSyncOutboundConnection::AUTH_TYPE_NONE,
-                ]),
+                Rule::in([DataSyncOutboundConnection::AUTH_TYPE_BEARER]),
             ],
             'token' => ['nullable', 'string'],
-            'api_key' => ['nullable', 'string'],
-            'header_name' => ['nullable', 'string', 'max:100'],
-            'username' => ['nullable', 'string', 'max:255'],
-            'password' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }
@@ -78,7 +73,8 @@ class UpdateOutboundConnectionRequest extends FormRequest
         return [
             'name.required' => 'The connection name is required.',
             'base_url.required' => 'The base URL is required.',
-            'auth_type.required' => 'Please select an authentication type.',
+            'auth_type.required' => 'The authentication type is required.',
+            'auth_type.in' => 'Only Bearer Token authentication is supported.',
         ];
     }
 }
