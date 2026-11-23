@@ -135,9 +135,9 @@ class GenerateDailyWorkReports extends Command
         |
         | No preference row means the report is enabled.
         |
-        | A disabled personal report preference prevents an employee from
-        | receiving their own hierarchy report, but does not exclude their
-        | work from their manager's consolidated report.
+        | Disabled users:
+        | - Cannot own their own report.
+        | - Must not appear in another employee's consolidated report.
         |
         */
 
@@ -146,14 +146,18 @@ class GenerateDailyWorkReports extends Command
             ->whereIn('user_id', $employees->pluck('id'))
             ->pluck('is_enabled', 'user_id');
 
-        $eligibleReportOwners = $employees
+        $enabledEmployees = $employees
             ->filter(fn ($employee) => (bool) $dailyReportPreferences->get(
                 $employee->id,
                 true
             ))
             ->values();
 
-        // All employees remain eligible for subordinate inclusion.
+        $eligibleReportOwners = $enabledEmployees;
+
+        // Keep all employee IDs for hierarchy traversal.
+        // This allows us to find enabled indirect subordinates even when
+        // an intermediate employee is disabled.
         $employeeIds = $employees
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
@@ -210,7 +214,7 @@ class GenerateDailyWorkReports extends Command
                     continue;
                 }
 
-                $subordinates = $employees
+                $subordinates = $enabledEmployees
                     ->whereIn('id', $subordinateIds)
                     ->unique('id')
                     ->values();
