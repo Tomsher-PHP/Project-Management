@@ -131,7 +131,7 @@ class OutboundDataSyncService
             ->latest('id')
             ->first();
 
-        if ($existingPending && $existingPending->request_payload === $payload) {
+        if ($existingPending && $existingPending->request_payload == $payload) {
             return $existingPending;
         }
 
@@ -217,15 +217,6 @@ class OutboundDataSyncService
         }
 
         if ($operation === 'update') {
-            // For projects, if only status_id was changed and a status_update API exists, select it
-            if ($module === 'projects' && $model instanceof \App\Models\Project && array_key_exists('status_id', $model->getChanges())) {
-                $statusUpdateApi = $apis->firstWhere('operation', 'status_update');
-                $changedKeys = array_diff(array_keys($model->getChanges()), ['updated_at', 'updated_by']);
-                if ($statusUpdateApi && count($changedKeys) === 1) {
-                    return $statusUpdateApi;
-                }
-            }
-
             return $apis->firstWhere('operation', 'update')
                 ?? $apis->firstWhere('operation', 'sync');
         }

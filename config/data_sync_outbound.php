@@ -106,6 +106,15 @@ return [
             'is_active',
             'sales_person_id',
         ],
+        'project_details' => [
+            'name',
+            'start_date',
+            'end_date',
+            'customer_end_date',
+            'estimated_time_seconds',
+            'customer_estimate_seconds',
+            'project_category_ids',
+        ],
         'customers' => [
             'customer_code',
             'name',

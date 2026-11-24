@@ -45,7 +45,7 @@ class OutboundPayloadService
             'project_categories' => $this->buildProjectCategoryPayload($model),
             'project_statuses' => $this->buildProjectStatusPayload($model),
             'customers' => $this->buildCustomerPayload($model, $connection),
-            'projects' => $this->buildProjectPayload($model, $connection),
+            'projects' => $this->buildProjectOperationPayload($operation, $model, $connection),
             'meetings' => $this->buildMeetingPayload($model),
             default => throw new InvalidArgumentException("Unsupported module [{$module}] for outbound payload generation."),
         };
@@ -263,6 +263,86 @@ class OutboundPayloadService
         }
 
         return $payload;
+    }
+
+    /**
+     * Dispatch project payload generation based on operation.
+     */
+    protected function buildProjectOperationPayload(string $operation, Project|Model $project, ?DataSyncOutboundConnection $connection = null): array
+    {
+        return match ($operation) {
+            'status_update' => $this->buildProjectStatusUpdatePayload($project),
+            'update' => $this->buildProjectUpdatePayload($project),
+            default => $this->buildProjectPayload($project, $connection),
+        };
+    }
+
+    /**
+     * Build status update payload for Project.
+     *
+     * @param  Project|Model  $project
+     * @return array{project_code: string, status_code: string}
+     */
+    public function buildProjectStatusUpdatePayload(Project|Model $project): array
+    {
+        $statusCode = null;
+        if ($project->relationLoaded('projectStatus') && $project->projectStatus) {
+            $statusCode = $project->projectStatus->code;
+        } elseif (! empty($project->status_id)) {
+            $statusCode = ProjectStatus::withTrashed()->where('id', $project->status_id)->value('code');
+        }
+
+        return [
+            'project_code' => (string) ($project->project_code ?? ''),
+            'status_code' => (string) ($statusCode ?? ''),
+        ];
+    }
+
+    /**
+     * Build details update payload for Project.
+     *
+     * @param  Project|Model  $project
+     * @return array<string, mixed>
+     */
+    public function buildProjectUpdatePayload(Project|Model $project): array
+    {
+        $categoryCodes = [];
+        if (! empty($project->project_category_ids) && is_array($project->project_category_ids)) {
+            $categoryCodes = ProjectCategory::withTrashed()
+                ->whereIn('id', $project->project_category_ids)
+                ->pluck('code')
+                ->filter()
+                ->values()
+                ->all();
+        }
+
+        $technologyCodes = [];
+        $technologiesRelation = $project->relationLoaded('technologies') ? $project->technologies : $project->technologies()->get();
+        if ($technologiesRelation->isNotEmpty()) {
+            $technologyCodes = $technologiesRelation->pluck('code')->filter()->values()->all();
+        }
+
+        $internalSeconds = $project->estimated_time_seconds !== null ? (int) $project->estimated_time_seconds : null;
+        $internalHours = $internalSeconds !== null ? intdiv($internalSeconds, 3600) : 0;
+        $internalMinutes = $internalSeconds !== null ? intdiv($internalSeconds % 3600, 60) : 0;
+
+        $clientSeconds = $project->customer_estimate_seconds !== null ? (int) $project->customer_estimate_seconds : null;
+        $clientHours = $clientSeconds !== null ? intdiv($clientSeconds, 3600) : 0;
+        $clientMinutes = $clientSeconds !== null ? intdiv($clientSeconds % 3600, 60) : 0;
+
+        return [
+            'pms_project_id' => (string) ($project->project_code ?? ''),
+            'project_name' => (string) ($project->name ?? ''),
+            'start_date' => $project->start_date ? Carbon::parse($project->start_date)->format('Y-m-d') : null,
+            'internal_deadline' => $project->end_date ? Carbon::parse($project->end_date)->format('Y-m-d') : null,
+            'client_deadline' => $project->customer_end_date ? Carbon::parse($project->customer_end_date)->format('Y-m-d') : null,
+            'internal_hours' => $internalHours,
+            'internal_minutes' => $internalMinutes,
+            'client_hours' => $clientHours,
+            'client_minutes' => $clientMinutes,
+            'technologies' => $technologyCodes,
+            'project_types' => $categoryCodes,
+        ];
     }
 
     /**
