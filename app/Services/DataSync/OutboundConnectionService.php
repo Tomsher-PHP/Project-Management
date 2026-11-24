@@ -14,8 +14,6 @@ class OutboundConnectionService
 {
     public const AVAILABLE_MODULES = [
         'projects' => 'Projects',
-        'customers' => 'Customers',
-        'meetings' => 'Meetings',
         'technologies' => 'Technologies',
         'industries' => 'Industries',
         'project_categories' => 'Project Categories',
