@@ -32,7 +32,7 @@ class ProjectReportSettingsController extends Controller
     ) {
         $this->settingService = $settingService;
         $this->reportService = $reportService;
-        $this->pageTitle = 'Project Report Settings';
+        $this->pageTitle = 'Report Settings';
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 

@@ -53,5 +53,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/settings/data-sync/report-settings/daily-report.js')
+    @vite('resources/js/settings/report-settings/daily-report.js')
 @endpush

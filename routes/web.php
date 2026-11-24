@@ -410,6 +410,7 @@ Route::middleware([
             Route::delete('/recipients/{recipient}', 'destroyRecipient')->middleware('permission.type:report_settings.manage')->name('recipients.destroy');
             Route::patch('/users/preference', 'updateUserPreference')->middleware('permission.type:report_settings.manage')->name('users.preference');
             Route::patch('/users/preferences/bulk', 'bulkUpdateUserPreferences')->middleware('permission.type:report_settings.manage')->name('users.preferences.bulk');
+            Route::patch('/users/individual-preference', 'updateUserPreference')->middleware('permission.type:report_settings.manage')->name('users.individual-preference');
         });
 
         Route::prefix('project-reports')->name('project-reports.')->controller(ProjectReportSettingsController::class)->group(function () {
