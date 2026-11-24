@@ -22,7 +22,7 @@ class OutboundConnectionService
 
     public const AVAILABLE_OPERATIONS = [
         'update' => 'Update',
-        'status_update' => 'Status Change',
+        'status_update' => 'Status Update',
         'delete' => 'Delete',
         'sync' => 'Sync / Upsert',
     ];
