@@ -1,3 +1,4 @@
+import Alert from '../../alert';
 import { initTomSelect } from '../../components/tom-select';
 
 $(document).ready(function () {
@@ -49,15 +50,7 @@ $(document).ready(function () {
             success: function (response) {
                 submitBtn.prop('disabled', false).removeClass('opacity-70');
                 if (response.success) {
-                    if (window.Swal) {
-                        window.Swal.fire({
-                            icon: 'success',
-                            title: 'Saved',
-                            text: response.message || 'Connection updated successfully.',
-                            timer: 1500,
-                            showConfirmButton: false,
-                        });
-                    }
+                    Alert.success(response.message || 'Connection updated successfully.');
                 }
             },
             error: function (xhr) {
@@ -72,11 +65,7 @@ $(document).ready(function () {
                     });
                 } else {
                     const msg = xhr.responseJSON?.message || 'Failed to update connection.';
-                    if (window.Swal) {
-                        window.Swal.fire('Error', msg, 'error');
-                    } else {
-                        alert(msg);
-                    }
+                    Alert.error(msg, 'Error');
                 }
             }
         });
@@ -327,19 +316,10 @@ $(document).ready(function () {
                 apiSubmitBtn.prop('disabled', false).removeClass('opacity-70');
                 if (response.success) {
                     apiModal.addClass('hidden');
-                    const title = isEdit ? 'Updated' : 'Added';
-                    const defaultMsg = isEdit ? 'API configuration updated.' : 'API configuration created.';
-                    if (window.Swal) {
-                        window.Swal.fire({
-                            icon: 'success',
-                            title: title,
-                            text: response.message || defaultMsg,
-                            timer: 1500,
-                            showConfirmButton: false,
-                        }).then(() => window.location.reload());
-                    } else {
+                    const defaultMsg = isEdit ? 'API configuration updated successfully.' : 'API configuration created successfully.';
+                    Alert.success(response.message || defaultMsg).then(() => {
                         window.location.reload();
-                    }
+                    });
                 }
             },
             error: function (xhr) {
@@ -354,11 +334,7 @@ $(document).ready(function () {
                     });
                 } else {
                     const msg = xhr.responseJSON?.message || (isEdit ? 'Failed to update API.' : 'Failed to add API.');
-                    if (window.Swal) {
-                        window.Swal.fire('Error', msg, 'error');
-                    } else {
-                        alert(msg);
-                    }
+                    Alert.error(msg, 'Error');
                 }
             }
         });

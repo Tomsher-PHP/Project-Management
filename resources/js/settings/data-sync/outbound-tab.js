@@ -1,3 +1,5 @@
+import Alert from '../../alert';
+
 $(document).ready(function () {
     // Only run if we are on the Outbound Data Sync page
     if (!$('#create-connection-modal').length && !$('#history-details-modal').length) {
@@ -90,19 +92,9 @@ $(document).ready(function () {
                 submitBtn.prop('disabled', false).removeClass('opacity-70');
                 if (response.success) {
                     $('#create-connection-modal').addClass('hidden');
-                    if (window.Swal) {
-                        window.Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message || 'Outbound connection created successfully.',
-                            timer: 1500,
-                            showConfirmButton: false,
-                        }).then(() => {
-                            window.location.href = response.redirect_url || window.location.href;
-                        });
-                    } else {
+                    Alert.success(response.message || 'Outbound connection created successfully.').then(() => {
                         window.location.href = response.redirect_url || window.location.href;
-                    }
+                    });
                 }
             },
             error: function (xhr) {
@@ -117,11 +109,7 @@ $(document).ready(function () {
                     });
                 } else {
                     const msg = xhr.responseJSON?.message || 'Failed to create connection.';
-                    if (window.Swal) {
-                        window.Swal.fire('Error', msg, 'error');
-                    } else {
-                        alert(msg);
-                    }
+                    Alert.error(msg, 'Error');
                 }
             }
         });
@@ -206,6 +194,7 @@ $(document).ready(function () {
             error: function () {
                 $('#history-modal-payload').text('Failed to load history details.');
                 $('#history-modal-response-body').text('Failed to load history details.');
+                Alert.error('Failed to load history details.', 'Error');
             }
         });
     });
