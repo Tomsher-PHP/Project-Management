@@ -250,33 +250,45 @@ class DailyWorkReportSettingsController extends Controller
             'report_key' => ['required', Rule::in($reportKeys)],
             'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
             'is_enabled' => ['sometimes', 'required', 'boolean'],
+            'receive_individual_report' => ['sometimes', 'required', 'boolean'],
         ]);
 
-        DB::transaction(function () use ($request, $validated, &$newStatus) {
+        $field = array_key_exists('receive_individual_report', $validated)
+            ? 'receive_individual_report'
+            : 'is_enabled';
+
+        DB::transaction(function () use ($request, $validated, $field, &$newStatus) {
             $preference = UserReportPreference::firstOrNew([
                 'user_id' => $validated['user_id'],
                 'report_key' => $validated['report_key'],
             ]);
 
             // Missing preference means enabled by default.
-            $newStatus = array_key_exists('is_enabled', $validated)
-                ? (bool) $validated['is_enabled']
-                : !($preference->exists ? (bool) $preference->is_enabled : true);
+            $currentStatus = $preference->exists
+                ? (bool) $preference->{$field}
+                : true;
 
-            $preference->is_enabled = $newStatus;
+            $newStatus = array_key_exists($field, $validated)
+                ? (bool) $validated[$field]
+                : ! $currentStatus;
+
+            $preference->{$field} = $newStatus;
             $preference->updated_by = $request->user()->id;
             $preference->save();
 
-            $this->syncDailyWorkReportSetting(
-                (int) $validated['user_id'],
-                $validated['report_key'],
-                $newStatus
-            );
+            if ($field === 'receive_individual_report') {
+                $this->syncDailyWorkReportSetting(
+                    (int) $validated['user_id'],
+                    $validated['report_key'],
+                    $newStatus
+                );
+            }
         });
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
+                'field' => $field,
                 'is_active' => $newStatus,
                 'message' => 'User report preference updated.',
             ]);

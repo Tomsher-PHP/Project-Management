@@ -106,7 +106,8 @@
                                 <th class="px-4 py-4 whitespace-nowrap min-w-[200px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Employee</span></th>
                                 <th class="px-4 py-4 whitespace-nowrap min-w-[180px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Email</span></th>
                                 <th class="px-4 py-4 whitespace-nowrap min-w-[160px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Teams</span></th>
-                                <th class="px-4 py-4 whitespace-nowrap min-w-[130px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Report status</span></th>
+                                <th class="px-4 py-4 whitespace-nowrap min-w-[130px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Consolidated Report Details</span></th>
+                                <th class="px-4 py-4 whitespace-nowrap min-w-[160px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Individual Report Email</span></th>
                             </tr>
                         </thead>
 
@@ -125,6 +126,7 @@
 
                                     $userTeamIds = $teamIdsByUser[$user->id] ?? [];
                                     $userTeamNames = $teams->whereIn('id', $userTeamIds)->pluck('name')->implode(', ');
+                                    $isIndividualReportEnabled = $preference?->receive_individual_report ?? true;
                                 @endphp
 
                                 <tr class="report-user-row border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-100 dark:hover:bg-darkblack-500" data-user-name="{{ strtolower($user->name) }}" data-user-email="{{ strtolower($user->email ?? '') }}" data-team-ids="{{ implode(',', $userTeamIds) }}">
@@ -158,10 +160,33 @@
                                             </span>
                                         @endcan
                                     </td>
+                                    <td class="px-4 py-4 whitespace-nowrap">
+                                        @can($reportPermission)
+                                            @php
+                                                $individualPreferenceToggleModel = (object) [
+                                                    'id' => $user->id,
+                                                    'is_active' => (bool) $isIndividualReportEnabled,
+                                                ];
+                                            @endphp
+
+                                            <x-status-toggle
+                                                :model="$individualPreferenceToggleModel"
+                                                route="settings.daily-work-reports.users.individual-preference"
+                                                entity="user-individual-report-preference"
+                                                permission="report_settings.manage"
+                                            />
+                                        @else
+                                            <span class="rounded-full px-2.5 py-1 text-xs font-medium
+                                                {{ $isIndividualReportEnabled ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-bgray-600 dark:bg-gray-800 dark:text-bgray-300' }}">
+                                                {{ $isIndividualReportEnabled ? 'Enabled' : 'Disabled' }}
+                                            </span>
+                                        @endcan
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="@can($reportPermission) 5 @else 4 @endcan" class="px-4 py-8 text-center text-bgray-600 dark:text-bgray-300">
+                                    <td colspan="@can($reportPermission) 6 @else 5 @endcan"
+                                        class="px-4 py-8 text-center text-bgray-600 dark:text-bgray-300">
                                         No employees found.
                                     </td>
                                 </tr>

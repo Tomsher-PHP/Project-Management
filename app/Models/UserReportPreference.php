@@ -12,6 +12,7 @@ class UserReportPreference extends Model
         'report_key',
         'is_enabled',
         'updated_by',
+        'receive_individual_report',
     ];
 
     protected function casts(): array
@@ -19,6 +20,7 @@ class UserReportPreference extends Model
         return [
             'user_id' => 'integer',
             'is_enabled' => 'boolean',
+            'receive_individual_report' => 'boolean',
             'updated_by' => 'integer',
         ];
     }
