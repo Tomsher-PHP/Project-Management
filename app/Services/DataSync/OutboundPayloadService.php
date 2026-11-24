@@ -2,16 +2,24 @@
 
 namespace App\Services\DataSync;
 
+use App\Models\ApiClient;
+use App\Models\Country;
 use App\Models\Customer;
 use App\Models\DataSyncEntityMapping;
 use App\Models\DataSyncOutboundConnection;
 use App\Models\Industry;
 use App\Models\Meeting;
+use App\Models\MeetingLocation;
+use App\Models\MeetingStatus;
+use App\Models\MeetingType;
 use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 class OutboundPayloadService
@@ -25,12 +33,8 @@ class OutboundPayloadService
      * @param  DataSyncOutboundConnection|null  $connection
      * @return array<string, mixed>
      */
-    public function buildPayload(
-        string $module,
-        string $operation,
-        Model $model,
-        ?DataSyncOutboundConnection $connection = null
-    ): array {
+    public function buildPayload(string $module, string $operation, Model $model, ?DataSyncOutboundConnection $connection = null): array
+    {
         if ($operation === 'delete') {
             return $this->buildDeletePayload($module, $model, $connection);
         }
@@ -55,11 +59,8 @@ class OutboundPayloadService
      * @param  DataSyncOutboundConnection|null  $connection
      * @return array<string, mixed>
      */
-    public function buildDeletePayload(
-        string $module,
-        Model $model,
-        ?DataSyncOutboundConnection $connection = null
-    ): array {
+    public function buildDeletePayload(string $module, Model $model, ?DataSyncOutboundConnection $connection = null): array
+    {
         return match ($module) {
             'technologies', 'industries', 'project_categories', 'project_statuses' => [
                 'code' => (string) $model->code,
@@ -80,10 +81,10 @@ class OutboundPayloadService
     protected function buildTechnologyPayload(Technology|Model $technology): array
     {
         return [
+            'module' => 'technologies',
             'code' => (string) $technology->code,
             'name' => (string) $technology->name,
             'sort_order' => (int) $technology->sort_order,
-            'is_system' => (bool) $technology->is_system,
             'is_active' => (bool) $technology->is_active,
         ];
     }
@@ -95,18 +96,18 @@ class OutboundPayloadService
     {
         $parentCode = null;
         if ($industry->relationLoaded('parent') && $industry->parent) {
-            $parentCode = $industry->parent->code;
+            $parentCode = $industry->parent->code ? (string) $industry->parent->code : null;
         } elseif (! empty($industry->parent_id)) {
             $parent = Industry::withTrashed()->find($industry->parent_id);
-            $parentCode = $parent?->code;
+            $parentCode = $parent?->code ? (string) $parent->code : null;
         }
 
         return [
+            'module' => 'industries',
             'code' => (string) $industry->code,
             'name' => (string) $industry->name,
             'parent_code' => $parentCode,
             'sort_order' => (int) $industry->sort_order,
-            'is_system' => (bool) $industry->is_system,
             'is_active' => (bool) $industry->is_active,
         ];
     }
@@ -117,10 +118,10 @@ class OutboundPayloadService
     protected function buildProjectCategoryPayload(ProjectCategory|Model $category): array
     {
         return [
+            'module' => 'project_categories',
             'code' => (string) $category->code,
             'name' => (string) $category->name,
             'sort_order' => (int) $category->sort_order,
-            'is_system' => (bool) $category->is_system,
             'is_active' => (bool) $category->is_active,
         ];
     }
@@ -131,14 +132,13 @@ class OutboundPayloadService
     protected function buildProjectStatusPayload(ProjectStatus|Model $status): array
     {
         return [
+            'module' => 'project_statuses',
             'code' => (string) $status->code,
             'name' => (string) $status->name,
             'color' => $status->color,
             'type' => $status->type,
             'sort_order' => (int) $status->sort_order,
             'is_default' => (bool) $status->is_default,
-            'is_completed' => (bool) $status->is_completed,
-            'is_system' => (bool) $status->is_system,
             'is_active' => (bool) $status->is_active,
         ];
     }
@@ -159,7 +159,7 @@ class OutboundPayloadService
         if ($customer->relationLoaded('country') && $customer->country) {
             $countryCode = $customer->country->code;
         } elseif (! empty($customer->registered_country_id)) {
-            $country = \App\Models\Country::find($customer->registered_country_id);
+            $country = Country::find($customer->registered_country_id);
             $countryCode = $country?->code;
         }
 
@@ -167,7 +167,7 @@ class OutboundPayloadService
         if ($customer->relationLoaded('salesPerson') && $customer->salesPerson) {
             $salesPersonEmail = $customer->salesPerson->email;
         } elseif (! empty($customer->sales_person_id)) {
-            $salesPersonEmail = \App\Models\User::withTrashed()->where('id', $customer->sales_person_id)->value('email');
+            $salesPersonEmail = User::withTrashed()->where('id', $customer->sales_person_id)->value('email');
         }
 
         $payload = [
@@ -259,14 +259,14 @@ class OutboundPayloadService
         if ($project->relationLoaded('projectStage') && $project->projectStage) {
             $stageCode = $project->projectStage->code;
         } elseif (! empty($project->project_stage_id)) {
-            $stageCode = \App\Models\ProjectStage::withTrashed()->where('id', $project->project_stage_id)->value('code');
+            $stageCode = ProjectStage::withTrashed()->where('id', $project->project_stage_id)->value('code');
         }
 
         $salesPersonEmail = null;
         if ($project->relationLoaded('salesPerson') && $project->salesPerson) {
             $salesPersonEmail = $project->salesPerson->email;
         } elseif (! empty($project->sales_person_id)) {
-            $salesPersonEmail = \App\Models\User::withTrashed()->where('id', $project->sales_person_id)->value('email');
+            $salesPersonEmail = User::withTrashed()->where('id', $project->sales_person_id)->value('email');
         }
 
         $parentProjectCode = null;
@@ -308,9 +308,9 @@ class OutboundPayloadService
             'priority' => $project->priority,
             'status_code' => $statusCode,
             'stage_code' => $stageCode,
-            'start_date' => $project->start_date ? \Illuminate\Support\Carbon::parse($project->start_date)->format('Y-m-d') : null,
-            'end_date' => $project->end_date ? \Illuminate\Support\Carbon::parse($project->end_date)->format('Y-m-d') : null,
-            'customer_end_date' => $project->customer_end_date ? \Illuminate\Support\Carbon::parse($project->customer_end_date)->format('Y-m-d') : null,
+            'start_date' => $project->start_date ? Carbon::parse($project->start_date)->format('Y-m-d') : null,
+            'end_date' => $project->end_date ? Carbon::parse($project->end_date)->format('Y-m-d') : null,
+            'customer_end_date' => $project->customer_end_date ? Carbon::parse($project->customer_end_date)->format('Y-m-d') : null,
             'estimated_time_minutes' => $estimatedMinutes,
             'customer_estimate_minutes' => $customerEstimateMinutes,
             'default_task_estimate_seconds' => $project->default_task_estimate_seconds,
@@ -374,7 +374,7 @@ class OutboundPayloadService
         $statusData = null;
         $statusModel = $meeting->relationLoaded('meetingStatus') ? $meeting->meetingStatus : null;
         if (! $statusModel && ! empty($meeting->meeting_status_id)) {
-            $statusModel = \App\Models\MeetingStatus::find($meeting->meeting_status_id);
+            $statusModel = MeetingStatus::find($meeting->meeting_status_id);
         }
         if ($statusModel) {
             $statusData = [
@@ -386,7 +386,7 @@ class OutboundPayloadService
         $meetingTypeName = null;
         $typeModel = $meeting->relationLoaded('meetingType') ? $meeting->meetingType : null;
         if (! $typeModel && ! empty($meeting->meeting_type_id)) {
-            $typeModel = \App\Models\MeetingType::find($meeting->meeting_type_id);
+            $typeModel = MeetingType::find($meeting->meeting_type_id);
         }
         if ($typeModel) {
             $meetingTypeName = $typeModel->name ?? null;
@@ -395,7 +395,7 @@ class OutboundPayloadService
         $locationName = null;
         $locationModel = $meeting->relationLoaded('meetingLocation') ? $meeting->meetingLocation : null;
         if (! $locationModel && ! empty($meeting->meeting_location_id)) {
-            $locationModel = \App\Models\MeetingLocation::find($meeting->meeting_location_id);
+            $locationModel = MeetingLocation::find($meeting->meeting_location_id);
         }
         if ($locationModel) {
             $locationName = $locationModel->name ?? null;
@@ -405,15 +405,15 @@ class OutboundPayloadService
         if ($meeting->relationLoaded('organizer') && $meeting->organizer) {
             $organizerEmail = $meeting->organizer->email;
         } elseif (! empty($meeting->organizer_id)) {
-            $organizerEmail = \App\Models\User::withTrashed()->where('id', $meeting->organizer_id)->value('email');
+            $organizerEmail = User::withTrashed()->where('id', $meeting->organizer_id)->value('email');
         }
 
         return [
             'id' => (int) $meeting->id,
             'title' => (string) $meeting->title,
             'description' => $meeting->description,
-            'start_at' => $meeting->start_at ? \Illuminate\Support\Carbon::parse($meeting->start_at)->toIso8601String() : null,
-            'end_at' => $meeting->end_at ? \Illuminate\Support\Carbon::parse($meeting->end_at)->toIso8601String() : null,
+            'start_at' => $meeting->start_at ? Carbon::parse($meeting->start_at)->toIso8601String() : null,
+            'end_at' => $meeting->end_at ? Carbon::parse($meeting->end_at)->toIso8601String() : null,
             'url' => $meeting->url,
             'location_details' => $meeting->location_details,
             'project_code' => $projectCode,
@@ -427,18 +427,15 @@ class OutboundPayloadService
     /**
      * Resolve existing entity mapping for a given entity type and local ID.
      */
-    protected function resolveEntityMapping(
-        string $entityType,
-        int $localId,
-        ?DataSyncOutboundConnection $connection = null
-    ): ?DataSyncEntityMapping {
+    protected function resolveEntityMapping(string $entityType, int $localId, ?DataSyncOutboundConnection $connection = null): ?DataSyncEntityMapping
+    {
         $query = DataSyncEntityMapping::query()
             ->where('entity_type', $entityType)
             ->where('local_id', $localId);
 
         // If connection name matches an ApiClient, prioritize that mapping
         if ($connection) {
-            $matchingClient = \App\Models\ApiClient::where('name', $connection->name)->first();
+            $matchingClient = ApiClient::where('name', $connection->name)->first();
             if ($matchingClient) {
                 $mappedForClient = (clone $query)->where('api_client_id', $matchingClient->id)->first();
                 if ($mappedForClient) {
@@ -450,4 +447,3 @@ class OutboundPayloadService
         return $query->first();
     }
 }
-

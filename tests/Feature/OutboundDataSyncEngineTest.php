@@ -6,23 +6,19 @@ use App\Jobs\DataSync\SendOutboundApiJob;
 use App\Models\ApiClient;
 use App\Models\Customer;
 use App\Models\DataSyncEntityMapping;
-use App\Models\DataSyncOutboundApi;
 use App\Models\DataSyncOutboundConnection;
 use App\Models\DataSyncOutboundHistory;
 use App\Models\Industry;
 use App\Models\Meeting;
-use App\Models\MeetingLocation;
 use App\Models\MeetingStatus;
 use App\Models\MeetingType;
 use App\Models\Project;
 use App\Models\ProjectCategory;
-use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
 use App\Models\User;
 use App\Services\DataSync\OutboundDataSyncService;
 use App\Services\DataSync\OutboundHttpService;
-use App\Services\DataSync\OutboundPayloadService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -86,11 +82,14 @@ class OutboundDataSyncEngineTest extends TestCase
         $this->assertNotNull($history);
         $this->assertSame(DataSyncOutboundHistory::STATUS_PENDING, $history->status);
         $this->assertSame('https://api.external-system.com/api/v1/technologies', $history->request_url);
+        $this->assertSame('technologies', $history->request_payload['module']);
         $this->assertSame('990001', $history->request_payload['code']);
         $this->assertSame('RustLang Engine', $history->request_payload['name']);
         $this->assertSame(10, $history->request_payload['sort_order']);
+        $this->assertTrue($history->request_payload['is_active']);
+        $this->assertArrayNotHasKey('is_system', $history->request_payload);
 
-        Queue::assertPushed(SendOutboundApiJob::class, fn ($j) => $j->historyId === $history->id);
+        Queue::assertPushed(SendOutboundApiJob::class, fn($j) => $j->historyId === $history->id);
     }
 
     /**
@@ -123,7 +122,7 @@ class OutboundDataSyncEngineTest extends TestCase
         $this->assertNotNull($history);
         $this->assertSame('https://api.external-system.com/api/v1/technologies/sync', $history->request_url);
         $this->assertSame('990002', $history->request_payload['code']);
-        Queue::assertPushed(SendOutboundApiJob::class, fn ($j) => $j->historyId === $history->id);
+        Queue::assertPushed(SendOutboundApiJob::class, fn($j) => $j->historyId === $history->id);
     }
 
     /**
@@ -158,7 +157,7 @@ class OutboundDataSyncEngineTest extends TestCase
         $this->assertNotNull($history);
         $this->assertSame('https://api.external-system.com/api/v1/technologies/990003', $history->request_url);
         $this->assertSame('Updated Tech Name', $history->request_payload['name']);
-        Queue::assertPushed(SendOutboundApiJob::class, fn ($j) => $j->historyId === $history->id);
+        Queue::assertPushed(SendOutboundApiJob::class, fn($j) => $j->historyId === $history->id);
     }
 
     /**
@@ -192,7 +191,7 @@ class OutboundDataSyncEngineTest extends TestCase
 
         $this->assertNotNull($history);
         $this->assertSame('Updated via Sync API', $history->request_payload['name']);
-        Queue::assertPushed(SendOutboundApiJob::class, fn ($j) => $j->historyId === $history->id);
+        Queue::assertPushed(SendOutboundApiJob::class, fn($j) => $j->historyId === $history->id);
     }
 
     /**
@@ -227,7 +226,7 @@ class OutboundDataSyncEngineTest extends TestCase
         $this->assertNotNull($history);
         $this->assertSame('https://api.external-system.com/api/v1/technologies/990005', $history->request_url);
         $this->assertSame('990005', $history->request_payload['code']);
-        Queue::assertPushed(SendOutboundApiJob::class, fn ($j) => $j->historyId === $history->id);
+        Queue::assertPushed(SendOutboundApiJob::class, fn($j) => $j->historyId === $history->id);
     }
 
     /**
@@ -267,8 +266,13 @@ class OutboundDataSyncEngineTest extends TestCase
             ->first();
 
         $this->assertNotNull($history);
+        $this->assertSame('industries', $history->request_payload['module']);
+        $this->assertSame('990102', $history->request_payload['code']);
         $this->assertSame('Child Industry', $history->request_payload['name']);
         $this->assertSame('990101', $history->request_payload['parent_code']);
+        $this->assertSame(2, $history->request_payload['sort_order']);
+        $this->assertTrue($history->request_payload['is_active']);
+        $this->assertArrayNotHasKey('is_system', $history->request_payload);
     }
 
     /**
@@ -312,7 +316,12 @@ class OutboundDataSyncEngineTest extends TestCase
             ->where('entity_id', $category->id)
             ->first();
         $this->assertNotNull($createHistory);
+        $this->assertSame('project_categories', $createHistory->request_payload['module']);
+        $this->assertSame('990201', $createHistory->request_payload['code']);
         $this->assertSame('Cloud Infrastructure', $createHistory->request_payload['name']);
+        $this->assertSame(1, $createHistory->request_payload['sort_order']);
+        $this->assertTrue($createHistory->request_payload['is_active']);
+        $this->assertArrayNotHasKey('is_system', $createHistory->request_payload);
 
         // Update
         $category->update(['name' => 'Cloud & DevOps Infrastructure']);
@@ -364,10 +373,16 @@ class OutboundDataSyncEngineTest extends TestCase
             ->first();
 
         $this->assertNotNull($history);
+        $this->assertSame('project_statuses', $history->request_payload['module']);
+        $this->assertSame('990301', $history->request_payload['code']);
         $this->assertSame('In Code Review', $history->request_payload['name']);
         $this->assertSame('#3b82f6', $history->request_payload['color']);
         $this->assertSame('in_progress', $history->request_payload['type']);
-        $this->assertFalse($history->request_payload['is_completed']);
+        $this->assertSame(3, $history->request_payload['sort_order']);
+        $this->assertFalse($history->request_payload['is_default']);
+        $this->assertTrue($history->request_payload['is_active']);
+        $this->assertArrayNotHasKey('is_completed', $history->request_payload);
+        $this->assertArrayNotHasKey('is_system', $history->request_payload);
     }
 
     /**
@@ -1030,7 +1045,7 @@ class OutboundDataSyncEngineTest extends TestCase
         $this->assertSame(0, $exitCode);
 
         // Verify the job was pushed to the queue
-        Queue::assertPushed(SendOutboundApiJob::class, fn ($j) => $j->historyId === $history->id);
+        Queue::assertPushed(SendOutboundApiJob::class, fn($j) => $j->historyId === $history->id);
 
         // Verify updated_at timestamp was refreshed
         $history->refresh();
