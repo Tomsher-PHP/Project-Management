@@ -127,7 +127,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-C18J7-um.js",
+    "file": "assets/app-B7MDeP5T.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -740,16 +740,16 @@
     "src": "resources/js/settings/data-sync/data-sync-settings.js",
     "isEntry": true
   },
-  "resources/js/settings/data-sync/report-settings/daily-report.js": {
+  "resources/js/settings/report-settings/daily-report.js": {
     "file": "assets/daily-report-S1c2NoJS.js",
     "name": "daily-report",
-    "src": "resources/js/settings/data-sync/report-settings/daily-report.js",
+    "src": "resources/js/settings/report-settings/daily-report.js",
     "isEntry": true
   },
-  "resources/js/settings/data-sync/report-settings/project-report.js": {
+  "resources/js/settings/report-settings/project-report.js": {
     "file": "assets/project-report-TWYSCaTB.js",
     "name": "project-report",
-    "src": "resources/js/settings/data-sync/report-settings/project-report.js",
+    "src": "resources/js/settings/report-settings/project-report.js",
     "isEntry": true,
     "imports": [
       "_alert-kNjqpuwD.js",
