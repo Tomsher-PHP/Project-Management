@@ -49,6 +49,7 @@ class UpdateOutboundApiRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
+                Rule::in(array_keys(OutboundConnectionService::AVAILABLE_OPERATIONS)),
                 Rule::unique('data_sync_outbound_apis', 'operation')
                     ->where(fn ($query) => $query->where('connection_id', $connectionId)->where('module', $module))
                     ->ignore($apiId),
@@ -57,6 +58,30 @@ class UpdateOutboundApiRequest extends FormRequest
             'endpoint' => ['required', 'string', 'max:500'],
             'is_active' => ['sometimes', 'boolean'],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->has('operation') || $validator->errors()->has('module')) {
+                return;
+            }
+
+            $connection = $this->route('connection');
+            $connectionId = $connection instanceof DataSyncOutboundConnection ? $connection->id : (int) $connection;
+            $api = $this->route('api');
+            $apiId = $api instanceof DataSyncOutboundApi ? $api->id : (int) $api;
+            $module = trim((string) $this->input('module'));
+            $operation = trim((string) $this->input('operation'));
+
+            $conflictError = OutboundConnectionService::getOperationConflictError($connectionId, $module, $operation, $apiId);
+            if ($conflictError) {
+                $validator->errors()->add('operation', $conflictError);
+            }
+        });
     }
 
     /**
@@ -69,10 +94,10 @@ class UpdateOutboundApiRequest extends FormRequest
         return [
             'module.required' => 'The module is required.',
             'operation.required' => 'The operation is required.',
-            'operation.unique' => 'An API configuration for this module and operation already exists for this connection.',
+            'operation.in' => 'The selected operation is invalid.',
+            'operation.unique' => 'This operation is already configured for the selected module.',
             'method.required' => 'The HTTP method is required.',
             'endpoint.required' => 'The API endpoint is required.',
         ];
     }
 }
-

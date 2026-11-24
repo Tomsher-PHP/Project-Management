@@ -11,19 +11,16 @@ $(document).ready(function () {
     // -------------------------------------------------------------------------
     // Modal Backdrop & Dismiss Handlers
     // -------------------------------------------------------------------------
-    // Close modal when clicking outside modal-content (backdrop / overlay)
     $(document).on('click', '.modal', function (e) {
         if (!$(e.target).closest('.modal-content').length) {
             $(this).addClass('hidden');
         }
     });
 
-    // Close modal on modal-close button
     $(document).on('click', '.modal-close', function () {
         $(this).closest('.modal').addClass('hidden');
     });
 
-    // Close modal on Escape key
     $(document).on('keydown', function (e) {
         if (e.key === 'Escape' || e.keyCode === 27) {
             $('.modal:not(.hidden)').addClass('hidden');
@@ -86,7 +83,7 @@ $(document).ready(function () {
     });
 
     // -------------------------------------------------------------------------
-    // API Modal (Unified Create & Edit with TomSelect)
+    // API Modal (Unified Create & Edit with TomSelect & Operation Conflict Rules)
     // -------------------------------------------------------------------------
     const apiModal = $('#api-modal');
     const apiForm = $('#api-form');
@@ -96,6 +93,21 @@ $(document).ready(function () {
     if (apiModal.length) {
         initTomSelect(apiModal[0]);
     }
+
+    const rawExistingApis = apiModal.data('existingApis');
+    const existingApis = Array.isArray(rawExistingApis)
+        ? rawExistingApis
+        : (typeof rawExistingApis === 'string' ? JSON.parse(rawExistingApis || '[]') : []);
+
+    const rawAvailableOps = apiModal.data('availableOperations');
+    const availableOperations = (typeof rawAvailableOps === 'object' && rawAvailableOps !== null)
+        ? rawAvailableOps
+        : (typeof rawAvailableOps === 'string' ? JSON.parse(rawAvailableOps || '{}') : {
+            'create': 'Create',
+            'update': 'Update',
+            'sync': 'Sync / Upsert',
+            'delete': 'Delete'
+        });
 
     function setSelectValue(selector, value) {
         const el = $(selector)[0];
@@ -119,6 +131,132 @@ $(document).ready(function () {
         }
     }
 
+    /**
+     * Dynamically update Operation dropdown options based on module and conflict rules.
+     */
+    function refreshOperationOptions(selectedModule, currentApiId, targetOperation = null) {
+        const opSelect = $('#api-modal-operation');
+        const opTs = opSelect[0]?.tomselect;
+        const hintEl = $('#api-modal-operation-hint');
+
+        if (!selectedModule) {
+            hintEl.text('').addClass('hidden');
+            if (opTs) {
+                opTs.clearOptions();
+                opTs.addOption({ value: '', text: '-- Select Operation --' });
+                Object.entries(availableOperations).forEach(([opKey, opLabel]) => {
+                    opTs.addOption({ value: opKey, text: opLabel, disabled: false });
+                });
+                opTs.refreshOptions(false);
+            }
+            return;
+        }
+
+        // Get configured operations for this module, excluding the record being edited
+        const configuredOps = existingApis
+            .filter(api => api.module === selectedModule && (!currentApiId || api.id != currentApiId))
+            .map(api => api.operation);
+
+        const hasSync = configuredOps.includes('sync');
+        const hasCreate = configuredOps.includes('create');
+        const hasUpdate = configuredOps.includes('update');
+
+        // Formulate explanation text for the hint area
+        let hintMessage = '';
+        if (hasSync) {
+            hintMessage = 'Sync / Upsert is already configured for this module. Create and Update operations cannot be added.';
+        } else if (hasCreate || hasUpdate) {
+            hintMessage = 'Create or Update is already configured for this module. Sync / Upsert cannot be added.';
+        }
+
+        if (hintMessage) {
+            hintEl.text(hintMessage).removeClass('hidden');
+        } else {
+            hintEl.text('').addClass('hidden');
+        }
+
+        // Native select options update
+        opSelect.find('option').each(function () {
+            const val = $(this).val();
+            if (!val) return;
+            const baseLabel = availableOperations[val] || val;
+
+            let disabled = false;
+            let reason = '';
+
+            if (configuredOps.includes(val)) {
+                disabled = true;
+                reason = 'Disabled — Already configured';
+            } else if (hasSync && (val === 'create' || val === 'update')) {
+                disabled = true;
+                reason = 'Disabled — Conflicts with Sync / Upsert';
+            } else if (val === 'sync' && (hasCreate || hasUpdate)) {
+                disabled = true;
+                const conflictWith = hasCreate && hasUpdate ? 'Create & Update' : (hasCreate ? 'Create' : 'Update');
+                reason = `Disabled — Conflicts with ${conflictWith}`;
+            }
+
+            $(this).prop('disabled', disabled);
+            $(this).text(disabled ? `${baseLabel} (${reason})` : baseLabel);
+        });
+
+        // TomSelect options update
+        if (opTs) {
+            const currentSelected = targetOperation !== null ? targetOperation : opTs.getValue();
+
+            opTs.clearOptions();
+            opTs.addOption({ value: '', text: '-- Select Operation --' });
+
+            Object.entries(availableOperations).forEach(([opKey, opLabel]) => {
+                let disabled = false;
+                let reason = '';
+
+                if (configuredOps.includes(opKey)) {
+                    disabled = true;
+                    reason = 'Disabled — Already configured';
+                } else if (hasSync && (opKey === 'create' || opKey === 'update')) {
+                    disabled = true;
+                    reason = 'Disabled — Conflicts with Sync / Upsert';
+                } else if (opKey === 'sync' && (hasCreate || hasUpdate)) {
+                    disabled = true;
+                    const conflictWith = hasCreate && hasUpdate ? 'Create & Update' : (hasCreate ? 'Create' : 'Update');
+                    reason = `Disabled — Conflicts with ${conflictWith}`;
+                }
+
+                opTs.addOption({
+                    value: opKey,
+                    text: disabled ? `${opLabel} (${reason})` : opLabel,
+                    disabled: disabled
+                });
+            });
+
+            opTs.refreshOptions(false);
+
+            if (currentSelected && opTs.options[currentSelected] && !opTs.options[currentSelected].disabled) {
+                opTs.setValue(currentSelected);
+            } else if (targetOperation && opTs.options[targetOperation]) {
+                opTs.setValue(targetOperation);
+            } else {
+                opTs.clear();
+            }
+        }
+    }
+
+    // React to Module selection changes
+    $(document).on('change', '#api-modal-module', function () {
+        const selectedModule = $(this).val();
+        const currentApiId = $('#api-modal-id').val();
+        refreshOperationOptions(selectedModule, currentApiId);
+    });
+
+    const moduleSelectEl = $('#api-modal-module')[0];
+    if (moduleSelectEl?.tomselect) {
+        moduleSelectEl.tomselect.on('change', function (val) {
+            const currentApiId = $('#api-modal-id').val();
+            refreshOperationOptions(val, currentApiId);
+        });
+    }
+
     // Open Modal in Create Mode
     $('#open-create-api-btn').on('click', function () {
         apiForm[0].reset();
@@ -132,10 +270,10 @@ $(document).ready(function () {
         apiSubmitBtn.text('Add API');
 
         clearSelectValue('#api-modal-module', '');
-        clearSelectValue('#api-modal-operation', '');
         clearSelectValue('#api-modal-method', 'POST');
         $('#api-modal-is-active').prop('checked', true);
 
+        refreshOperationOptions('', null);
         apiModal.removeClass('hidden');
     });
 
@@ -146,16 +284,21 @@ $(document).ready(function () {
         apiForm.find('[data-error-for]').addClass('hidden').text('');
 
         const updateUrl = btn.data('updateUrl');
+        const apiId = btn.data('id');
+        const moduleVal = btn.data('module');
+        const operationVal = btn.data('operation');
+
         apiForm.attr('action', updateUrl);
         $('#api-modal-method-input').val('PUT');
-        $('#api-modal-id').val(btn.data('id'));
+        $('#api-modal-id').val(apiId);
 
         $('#api-modal-title').text('Edit API Configuration');
         $('#api-modal-subtitle').text('Update outbound API endpoint, operation, or HTTP method.');
         apiSubmitBtn.text('Save Changes');
 
-        setSelectValue('#api-modal-module', btn.data('module'));
-        setSelectValue('#api-modal-operation', btn.data('operation'));
+        setSelectValue('#api-modal-module', moduleVal);
+        refreshOperationOptions(moduleVal, apiId, operationVal);
+
         setSelectValue('#api-modal-method', btn.data('method'));
         $('#api-modal-endpoint').val(btn.data('endpoint'));
         $('#api-modal-is-active').prop('checked', btn.data('isActive') == 1);

@@ -7,15 +7,17 @@ use App\Models\DataSyncOutboundConnection;
 use App\Models\DataSyncOutboundHistory;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OutboundConnectionService
 {
     public const AVAILABLE_MODULES = [
         'projects' => 'Projects',
         'customers' => 'Customers',
-        'tasks' => 'Tasks',
+        // 'tasks' => 'Tasks',
         'meetings' => 'Meetings',
-        'employees' => 'Employees',
+        // 'employees' => 'Employees',
         'technologies' => 'Technologies',
         'industries' => 'Industries',
         'project_categories' => 'Project Categories',
@@ -27,7 +29,6 @@ class OutboundConnectionService
         'update' => 'Update',
         'sync' => 'Sync / Upsert',
         'delete' => 'Delete',
-        'export' => 'Export',
     ];
 
     public const AVAILABLE_METHODS = [
@@ -72,11 +73,13 @@ class OutboundConnectionService
             'instance-data',
         ];
 
-        if (in_array($host, $blockedHosts, true) ||
+        if (
+            in_array($host, $blockedHosts, true) ||
             str_ends_with($host, '.localhost') ||
             str_ends_with($host, '.local') ||
             str_ends_with($host, '.internal') ||
-            str_ends_with($host, '.lan')) {
+            str_ends_with($host, '.lan')
+        ) {
             return 'The destination host is restricted and cannot be a local or internal address.';
         }
 
@@ -164,22 +167,83 @@ class OutboundConnectionService
     }
 
     /**
+     * Check for conflicting operations for a given connection and module.
+     * Returns null if valid, or a validation error message string if conflicting.
+     */
+    public static function getOperationConflictError(
+        int $connectionId,
+        string $module,
+        string $operation,
+        ?int $ignoreApiId = null,
+        bool $lock = false
+    ): ?string {
+        $module = trim($module);
+        $operation = trim($operation);
+
+        $query = DataSyncOutboundApi::query()
+            ->where('connection_id', $connectionId)
+            ->where('module', $module);
+
+        if ($ignoreApiId !== null) {
+            $query->where('id', '!=', $ignoreApiId);
+        }
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        $existingOperations = $query->pluck('operation')->all();
+
+        // 1. Duplicate check
+        if (in_array($operation, $existingOperations, true)) {
+            return 'This operation is already configured for the selected module.';
+        }
+
+        // 2. If 'sync' already exists, 'create' and 'update' are disallowed
+        if (in_array('sync', $existingOperations, true) && in_array($operation, ['create', 'update'], true)) {
+            return 'Sync / Upsert is already configured for this module. Create and Update operations cannot be added.';
+        }
+
+        // 3. If 'create' or 'update' already exists, 'sync' is disallowed
+        if ($operation === 'sync' && (in_array('create', $existingOperations, true) || in_array('update', $existingOperations, true))) {
+            return 'Create or Update is already configured for this module. Sync / Upsert cannot be added.';
+        }
+
+        return null;
+    }
+
+    /**
      * Create an API configuration for a connection.
      */
     public function createApi(DataSyncOutboundConnection $connection, array $data): DataSyncOutboundApi
     {
-        $endpoint = trim($data['endpoint']);
-        if (! str_starts_with($endpoint, '/')) {
-            $endpoint = '/' . $endpoint;
-        }
+        return DB::transaction(function () use ($connection, $data) {
+            // Lock connection record to prevent concurrent creation conflicts for the same connection
+            DataSyncOutboundConnection::query()->where('id', $connection->id)->lockForUpdate()->first();
 
-        return $connection->apis()->create([
-            'module' => trim($data['module']),
-            'operation' => trim($data['operation']),
-            'method' => strtoupper(trim($data['method'])),
-            'endpoint' => $endpoint,
-            'is_active' => isset($data['is_active']) ? (bool) $data['is_active'] : true,
-        ]);
+            $module = trim($data['module']);
+            $operation = trim($data['operation']);
+
+            $conflictError = self::getOperationConflictError($connection->id, $module, $operation, null, true);
+            if ($conflictError) {
+                throw ValidationException::withMessages([
+                    'operation' => [$conflictError],
+                ]);
+            }
+
+            $endpoint = trim($data['endpoint']);
+            if (! str_starts_with($endpoint, '/')) {
+                $endpoint = '/' . $endpoint;
+            }
+
+            return $connection->apis()->create([
+                'module' => $module,
+                'operation' => $operation,
+                'method' => strtoupper(trim($data['method'])),
+                'endpoint' => $endpoint,
+                'is_active' => isset($data['is_active']) ? (bool) $data['is_active'] : true,
+            ]);
+        });
     }
 
     /**
@@ -187,20 +251,35 @@ class OutboundConnectionService
      */
     public function updateApi(DataSyncOutboundApi $api, array $data): DataSyncOutboundApi
     {
-        $endpoint = trim($data['endpoint']);
-        if (! str_starts_with($endpoint, '/')) {
-            $endpoint = '/' . $endpoint;
-        }
+        return DB::transaction(function () use ($api, $data) {
+            // Lock connection record to prevent concurrent update conflicts for the same connection
+            DataSyncOutboundConnection::query()->where('id', $api->connection_id)->lockForUpdate()->first();
 
-        $api->update([
-            'module' => trim($data['module']),
-            'operation' => trim($data['operation']),
-            'method' => strtoupper(trim($data['method'])),
-            'endpoint' => $endpoint,
-            'is_active' => isset($data['is_active']) ? (bool) $data['is_active'] : $api->is_active,
-        ]);
+            $module = trim($data['module']);
+            $operation = trim($data['operation']);
 
-        return $api;
+            $conflictError = self::getOperationConflictError($api->connection_id, $module, $operation, $api->id, true);
+            if ($conflictError) {
+                throw ValidationException::withMessages([
+                    'operation' => [$conflictError],
+                ]);
+            }
+
+            $endpoint = trim($data['endpoint']);
+            if (! str_starts_with($endpoint, '/')) {
+                $endpoint = '/' . $endpoint;
+            }
+
+            $api->update([
+                'module' => $module,
+                'operation' => $operation,
+                'method' => strtoupper(trim($data['method'])),
+                'endpoint' => $endpoint,
+                'is_active' => isset($data['is_active']) ? (bool) $data['is_active'] : $api->is_active,
+            ]);
+
+            return $api;
+        });
     }
 
     /**
@@ -387,4 +466,3 @@ class OutboundConnectionService
         ];
     }
 }
-

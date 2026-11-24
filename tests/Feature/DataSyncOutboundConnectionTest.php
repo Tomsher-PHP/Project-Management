@@ -55,6 +55,32 @@ class DataSyncOutboundConnectionTest extends TestCase
         $response->assertDontSee('secret-test-token');
     }
 
+    public function test_authorized_user_can_view_edit_connection_page(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Edit CRM System',
+            'base_url' => 'https://api.crm.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'secret-test-token'],
+            'is_active' => true,
+        ]);
+
+        $conn->apis()->create([
+            'module' => 'projects',
+            'operation' => 'create',
+            'method' => 'POST',
+            'endpoint' => '/api/projects',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->authorizedUser)->get("/settings/data-sync/outbound/connections/{$conn->id}/edit");
+        $response->assertStatus(200);
+        $response->assertSee('Edit CRM System');
+        $response->assertSee('https://api.crm.example.com');
+        $response->assertSee('projects');
+        $response->assertSee('data-existing-apis', false);
+    }
+
     public function test_can_create_connection_with_bearer_auth(): void
     {
         $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [

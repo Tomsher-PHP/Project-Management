@@ -1,4 +1,17 @@
-<div id="api-modal" class="modal fixed inset-0 z-50 hidden overflow-y-auto">
+@php
+    $modalExistingApis = ($apis ?? collect())->map(function ($a) {
+        return [
+            'id' => $a->id,
+            'module' => $a->module,
+            'operation' => $a->operation,
+            'is_active' => (bool) $a->is_active,
+        ];
+    })->values();
+@endphp
+
+<div id="api-modal" class="modal fixed inset-0 z-50 hidden overflow-y-auto"
+    data-existing-apis="{{ json_encode($modalExistingApis) }}"
+    data-available-operations="{{ json_encode($availableOperations ?? []) }}">
     <div class="modal-overlay fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"></div>
 
     <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
@@ -49,6 +62,7 @@
                                     <option value="{{ $opKey }}">{{ $opLabel }}</option>
                                 @endforeach
                             </select>
+                            <p id="api-modal-operation-hint" class="text-xs text-amber-600 dark:text-amber-400 mt-1.5 hidden"></p>
                             <p class="text-[11px] text-bgray-600 dark:text-bgray-300 mt-1">Combination of Module + Operation must be unique for this connection.</p>
                             <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="operation"></span>
                         </div>
