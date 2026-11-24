@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DTmaBDoh.css",
+    "file": "assets/app-LCjAdU0D.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -741,7 +741,7 @@
     "isEntry": true
   },
   "resources/js/settings/report-settings/daily-report.js": {
-    "file": "assets/daily-report-S1c2NoJS.js",
+    "file": "assets/daily-report-DVurWOeu.js",
     "name": "daily-report",
     "src": "resources/js/settings/report-settings/daily-report.js",
     "isEntry": true
