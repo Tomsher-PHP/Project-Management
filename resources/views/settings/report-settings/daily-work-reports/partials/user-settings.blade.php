@@ -61,34 +61,57 @@
             </div>
         </div>
 
-        {{-- Bulk update --}}
+        
+        {{-- Compact bulk employee actions --}}
         @can($reportPermission)
-            <form id="bulk-user-preferences-form" method="POST" action="{{ route('settings.daily-work-reports.users.preferences.bulk') }}" class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-darkblack-500 sm:flex-row sm:items-center sm:justify-between">
+            <form id="bulk-user-preferences-form" method="POST" action="{{ route('settings.daily-work-reports.users.preferences.bulk') }}" class="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-darkblack-500">
                 @csrf
                 @method('PATCH')
 
                 <input type="hidden" name="report_key" value="{{ $reportKey }}">
 
-                <div>
-                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">
-                        Bulk employee settings
-                    </p>
-                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
-                        Select employees below and apply one action.
-                    </p>
+                <div class="mr-2 flex items-center gap-2">
+                    <span class="text-xs font-semibold text-bgray-700 dark:text-bgray-300">
+                        Bulk actions
+                    </span>
+                    <span
+                        id="report-selected-count"
+                        class="rounded-md bg-white px-2 py-1 text-xs text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300"
+                    >
+                        0 selected
+                    </span>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <button type="submit" name="is_enabled" value="1" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white hover:bg-success-400">
-                        Enable selected
-                    </button>
+                {{-- Report type --}}
+                <select
+                    name="preference_type"
+                    aria-label="Report preference type"
+                    class="tom-select min-w-[170px]"
+                >
+                    <option value="consolidated">Consolidated report</option>
+                    <option value="individual">Individual report</option>
+                </select>
 
-                    <button type="submit" name="is_enabled" value="0" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-bgray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-bgray-300 dark:hover:bg-darkblack-400">
-                        Disable selected
-                    </button>
-                </div>
+                {{-- Action --}}
+                <select
+                    name="is_enabled"
+                    aria-label="Action"
+                    class="tom-select min-w-[110px]"
+                >
+                    <option value="1">Enable</option>
+                    <option value="0">Disable</option>
+                </select>
+
+                {{-- Apply --}}
+                <button type="submit" id="apply-report-bulk-action" disabled class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    Apply
+                </button>
             </form>
         @endcan
+
+
+
 
         {{-- Employee table --}}
         <div class="w-full rounded-lg border border-bgray-200 bg-white px-[24px] py-[20px] shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">

@@ -226,3 +226,47 @@ if (document.readyState === 'loading') {
 } else {
     initDailyReportSettings();
 }
+
+
+const bulkForm = document.getElementById(
+    'bulk-user-preferences-form'
+);
+
+if (bulkForm) {
+    const countElement = document.getElementById(
+        'report-selected-count'
+    );
+
+    const applyButton = document.getElementById(
+        'apply-report-bulk-action'
+    );
+
+    function updateBulkSelectionCount() {
+        const selectedCount = document.querySelectorAll(
+            '.report-user-checkbox:checked'
+        ).length;
+
+        countElement.textContent = `${selectedCount} selected`;
+        applyButton.disabled = selectedCount === 0;
+    }
+
+    document.addEventListener('change', function (event) {
+        if (
+            event.target.matches('.report-user-checkbox') ||
+            event.target.matches('#select-all-report-users')
+        ) {
+            updateBulkSelectionCount();
+        }
+    });
+
+    bulkForm.addEventListener('submit', function (event) {
+        updateBulkSelectionCount();
+
+        if (applyButton.disabled) {
+            event.preventDefault();
+        }
+    });
+
+    updateBulkSelectionCount();
+}
+
