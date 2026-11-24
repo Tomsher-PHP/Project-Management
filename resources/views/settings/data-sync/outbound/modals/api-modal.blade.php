@@ -1,17 +1,17 @@
 @php
-    $modalExistingApis = ($apis ?? collect())->map(function ($a) {
-        return [
-            'id' => $a->id,
-            'module' => $a->module,
-            'operation' => $a->operation,
-            'is_active' => (bool) $a->is_active,
-        ];
-    })->values();
+    $modalExistingApis = ($apis ?? collect())
+        ->map(function ($a) {
+            return [
+                'id' => $a->id,
+                'module' => $a->module,
+                'operation' => $a->operation,
+                'is_active' => (bool) $a->is_active,
+            ];
+        })
+        ->values();
 @endphp
 
-<div id="api-modal" class="modal fixed inset-0 z-50 hidden overflow-y-auto"
-    data-existing-apis="{{ json_encode($modalExistingApis) }}"
-    data-available-operations="{{ json_encode($availableOperations ?? []) }}">
+<div id="api-modal" class="modal fixed inset-0 z-50 hidden overflow-y-auto" data-existing-apis="{{ json_encode($modalExistingApis) }}" data-available-operations="{{ json_encode($availableOperations ?? []) }}">
     <div class="modal-overlay fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"></div>
 
     <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
@@ -39,7 +39,7 @@
                     <div class="max-h-[75vh] overflow-y-auto px-6 py-6 sm:px-7 space-y-5">
                         <!-- Module -->
                         <div>
-                            <label for="api-modal-module" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 Module <span class="text-error-300">*</span>
                             </label>
                             <select id="api-modal-module" name="module" required class="tom-select w-full">
@@ -53,7 +53,7 @@
 
                         <!-- Operation -->
                         <div>
-                            <label for="api-modal-operation" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 Operation <span class="text-error-300">*</span>
                             </label>
                             <select id="api-modal-operation" name="operation" required class="tom-select-no-search w-full">
@@ -69,7 +69,7 @@
 
                         <!-- Method -->
                         <div>
-                            <label for="api-modal-method" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 HTTP Method <span class="text-error-300">*</span>
                             </label>
                             <select id="api-modal-method" name="method" required class="tom-select-no-search w-full font-mono">
@@ -82,10 +82,10 @@
 
                         <!-- Endpoint -->
                         <div>
-                            <label for="api-modal-endpoint" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 Endpoint Path <span class="text-error-300">*</span>
                             </label>
-                            <input type="text" id="api-modal-endpoint" name="endpoint" required maxlength="500" placeholder="/api/v1/projects" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                            <input type="text" id="api-modal-endpoint" name="endpoint" required maxlength="500" placeholder="/api/v1/projects" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-500 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                             <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="endpoint"></span>
                         </div>
 
