@@ -5,14 +5,11 @@
         <div class="modal-content relative z-10 w-full max-w-xl">
             <div class="overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-darkblack-600">
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
+                <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-3 dark:border-darkblack-400 sm:px-7">
                     <div>
                         <h3 id="api-modal-title" class="text-xl font-bold text-bgray-900 dark:text-white">
                             Add API Configuration
                         </h3>
-                        <p id="api-modal-subtitle" class="text-xs text-bgray-600 dark:text-bgray-400 mt-0.5">
-                            Define an outbound endpoint for this connection.
-                        </p>
                     </div>
 
                     <button type="button" class="modal-close inline-flex h-9 w-9 items-center justify-center rounded-lg bg-bgray-100 text-bgray-700 transition hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">
@@ -32,7 +29,7 @@
                             <label for="api-modal-module" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 Module <span class="text-error-300">*</span>
                             </label>
-                            <select id="api-modal-module" name="module" required class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                            <select id="api-modal-module" name="module" required class="tom-select w-full">
                                 <option value="">-- Select Module --</option>
                                 @foreach ($availableModules ?? [] as $modKey => $modLabel)
                                     <option value="{{ $modKey }}">{{ $modLabel }}</option>
@@ -46,13 +43,13 @@
                             <label for="api-modal-operation" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 Operation <span class="text-error-300">*</span>
                             </label>
-                            <select id="api-modal-operation" name="operation" required class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                            <select id="api-modal-operation" name="operation" required class="tom-select-no-search w-full">
                                 <option value="">-- Select Operation --</option>
                                 @foreach ($availableOperations ?? [] as $opKey => $opLabel)
                                     <option value="{{ $opKey }}">{{ $opLabel }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-[11px] text-bgray-500 dark:text-bgray-400 mt-1">Combination of Module + Operation must be unique for this connection.</p>
+                            <p class="text-[11px] text-bgray-600 dark:text-bgray-300 mt-1">Combination of Module + Operation must be unique for this connection.</p>
                             <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="operation"></span>
                         </div>
 
@@ -61,7 +58,7 @@
                             <label for="api-modal-method" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 HTTP Method <span class="text-error-300">*</span>
                             </label>
-                            <select id="api-modal-method" name="method" required class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-mono text-bgray-900 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                            <select id="api-modal-method" name="method" required class="tom-select-no-search w-full font-mono">
                                 @foreach ($availableMethods ?? [] as $mKey => $mLabel)
                                     <option value="{{ $mKey }}" {{ $mKey === 'POST' ? 'selected' : '' }}>{{ $mLabel }}</option>
                                 @endforeach
@@ -102,4 +99,3 @@
         </div>
     </div>
 </div>
-

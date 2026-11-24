@@ -1,3 +1,5 @@
+import { initTomSelect } from '../../components/tom-select';
+
 $(document).ready(function () {
     // Only run if we are on the Outbound Edit Connection page
     if (!$('#edit-connection-form').length && !$('#api-modal').length) {
@@ -84,12 +86,38 @@ $(document).ready(function () {
     });
 
     // -------------------------------------------------------------------------
-    // API Modal (Unified Create & Edit)
+    // API Modal (Unified Create & Edit with TomSelect)
     // -------------------------------------------------------------------------
     const apiModal = $('#api-modal');
     const apiForm = $('#api-form');
     const apiSubmitBtn = $('#api-modal-submit-btn');
     const storeUrl = apiForm.data('storeUrl');
+
+    if (apiModal.length) {
+        initTomSelect(apiModal[0]);
+    }
+
+    function setSelectValue(selector, value) {
+        const el = $(selector)[0];
+        if (el && el.tomselect) {
+            el.tomselect.setValue(value);
+        } else {
+            $(selector).val(value);
+        }
+    }
+
+    function clearSelectValue(selector, defaultValue = '') {
+        const el = $(selector)[0];
+        if (el && el.tomselect) {
+            if (defaultValue) {
+                el.tomselect.setValue(defaultValue);
+            } else {
+                el.tomselect.clear();
+            }
+        } else {
+            $(selector).val(defaultValue);
+        }
+    }
 
     // Open Modal in Create Mode
     $('#open-create-api-btn').on('click', function () {
@@ -102,7 +130,10 @@ $(document).ready(function () {
         $('#api-modal-title').text('Add API Configuration');
         $('#api-modal-subtitle').text('Define an outbound endpoint for this connection.');
         apiSubmitBtn.text('Add API');
-        $('#api-modal-method').val('POST');
+
+        clearSelectValue('#api-modal-module', '');
+        clearSelectValue('#api-modal-operation', '');
+        clearSelectValue('#api-modal-method', 'POST');
         $('#api-modal-is-active').prop('checked', true);
 
         apiModal.removeClass('hidden');
@@ -123,9 +154,9 @@ $(document).ready(function () {
         $('#api-modal-subtitle').text('Update outbound API endpoint, operation, or HTTP method.');
         apiSubmitBtn.text('Save Changes');
 
-        $('#api-modal-module').val(btn.data('module'));
-        $('#api-modal-operation').val(btn.data('operation'));
-        $('#api-modal-method').val(btn.data('method'));
+        setSelectValue('#api-modal-module', btn.data('module'));
+        setSelectValue('#api-modal-operation', btn.data('operation'));
+        setSelectValue('#api-modal-method', btn.data('method'));
         $('#api-modal-endpoint').val(btn.data('endpoint'));
         $('#api-modal-is-active').prop('checked', btn.data('isActive') == 1);
 
