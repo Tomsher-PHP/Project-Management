@@ -24,6 +24,10 @@ class DataSyncOutboundObserver
      */
     public function created(Model $model): void
     {
+        if ($model->exists) {
+            $model->refresh();
+        }
+
         $this->handleEvent('create', $model);
     }
 

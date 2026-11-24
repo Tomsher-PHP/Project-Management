@@ -93,12 +93,16 @@ class OutboundPayloadService
      */
     protected function buildTechnologyPayload(Technology|Model $technology): array
     {
+        if ($technology->exists && $technology->is_active === null) {
+            $technology->refresh();
+        }
+
         return [
             'module' => 'technologies',
             'code' => (string) $technology->code,
             'name' => (string) $technology->name,
             'sort_order' => (int) $technology->sort_order,
-            'is_active' => (bool) $technology->is_active,
+            'is_active' => $technology->is_active !== null ? (bool) $technology->is_active : true,
         ];
     }
 
@@ -107,6 +111,10 @@ class OutboundPayloadService
      */
     protected function buildIndustryPayload(Industry|Model $industry): array
     {
+        if ($industry->exists && $industry->is_active === null) {
+            $industry->refresh();
+        }
+
         $parentCode = null;
         if ($industry->relationLoaded('parent') && $industry->parent) {
             $parentCode = $industry->parent->code ? (string) $industry->parent->code : null;
@@ -121,7 +129,7 @@ class OutboundPayloadService
             'name' => (string) $industry->name,
             'parent_code' => $parentCode,
             'sort_order' => (int) $industry->sort_order,
-            'is_active' => (bool) $industry->is_active,
+            'is_active' => $industry->is_active !== null ? (bool) $industry->is_active : true,
         ];
     }
 
@@ -130,12 +138,16 @@ class OutboundPayloadService
      */
     protected function buildProjectCategoryPayload(ProjectCategory|Model $category): array
     {
+        if ($category->exists && $category->is_active === null) {
+            $category->refresh();
+        }
+
         return [
             'module' => 'project_categories',
             'code' => (string) $category->code,
             'name' => (string) $category->name,
             'sort_order' => (int) $category->sort_order,
-            'is_active' => (bool) $category->is_active,
+            'is_active' => $category->is_active !== null ? (bool) $category->is_active : true,
         ];
     }
 
@@ -144,6 +156,10 @@ class OutboundPayloadService
      */
     protected function buildProjectStatusPayload(ProjectStatus|Model $status): array
     {
+        if ($status->exists && $status->is_active === null) {
+            $status->refresh();
+        }
+
         return [
             'module' => 'project_statuses',
             'code' => (string) $status->code,
@@ -152,7 +168,7 @@ class OutboundPayloadService
             'type' => $status->type,
             'sort_order' => (int) $status->sort_order,
             'is_default' => (bool) $status->is_default,
-            'is_active' => (bool) $status->is_active,
+            'is_active' => $status->is_active !== null ? (bool) $status->is_active : true,
         ];
     }
 
@@ -193,7 +209,7 @@ class OutboundPayloadService
             'emirate' => $customer->emirate,
             'company_address' => $customer->company_address,
             'sales_person_email' => $salesPersonEmail,
-            'is_active' => (bool) $customer->is_active,
+            'is_active' => $customer->is_active !== null ? (bool) $customer->is_active : true,
         ];
 
         // Include external mapping identifiers if established
