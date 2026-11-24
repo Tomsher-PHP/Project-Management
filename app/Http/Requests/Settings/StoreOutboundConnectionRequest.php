@@ -59,6 +59,7 @@ class StoreOutboundConnectionRequest extends FormRequest
                 Rule::in([DataSyncOutboundConnection::AUTH_TYPE_BEARER]),
             ],
             'token' => ['required', 'string'],
+            'api_client_id' => ['nullable', 'integer', 'exists:api_clients,id'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

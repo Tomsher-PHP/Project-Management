@@ -398,5 +398,54 @@ class DataSyncOutboundConnectionTest extends TestCase
             ->deleteJson("/settings/data-sync/outbound/connections/{$conn->id}")
             ->assertStatus(403);
     }
+
+    public function test_can_create_and_update_connection_with_linked_api_client(): void
+    {
+        $client = \App\Models\ApiClient::create([
+            'name' => 'Inbound CRM Partner',
+            'key_id' => 'pms_test_' . uniqid(),
+            'secret_hash' => hash('sha256', 'secret'),
+            'scopes' => ['settings.read'],
+            'is_active' => true,
+        ]);
+
+        // Create with linked client
+        $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
+            'name' => 'Outbound CRM Pipe',
+            'base_url' => 'https://crm.partner.example.com/api',
+            'auth_type' => 'bearer',
+            'token' => 'partner-bearer-token',
+            'api_client_id' => $client->id,
+            'is_active' => 1,
+        ]);
+
+        $response->assertStatus(201);
+        $connId = $response->json('connection.id');
+
+        $conn = DataSyncOutboundConnection::findOrFail($connId);
+        $this->assertSame($client->id, $conn->api_client_id);
+        $this->assertSame($client->name, $conn->apiClient->name);
+
+        // Update to remove linked client (set to null)
+        $updateRes = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+            'name' => 'Outbound CRM Pipe (Standalone)',
+            'base_url' => 'https://crm.partner.example.com/api',
+            'api_client_id' => '',
+            'is_active' => 1,
+        ]);
+
+        $updateRes->assertStatus(200);
+        $conn->refresh();
+        $this->assertNull($conn->api_client_id);
+
+        // Non-existent api_client_id is rejected
+        $badRes = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+            'name' => 'Outbound CRM Pipe',
+            'base_url' => 'https://crm.partner.example.com/api',
+            'api_client_id' => 99999999,
+        ]);
+        $badRes->assertStatus(422);
+        $badRes->assertJsonValidationErrors('api_client_id');
+    }
 }
 

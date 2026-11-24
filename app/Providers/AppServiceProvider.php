@@ -14,7 +14,12 @@ use App\Observers\TaskObserver;
 use App\Observers\TaskTimeLogObserver;
 use App\Models\Appraisal;
 use App\Models\Customer;
+use App\Models\Industry;
+use App\Models\Meeting;
+use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Models\ProjectStatus;
+use App\Observers\DataSyncOutboundObserver;
 use App\Policies\AppraisalPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\TaskPolicy;
@@ -179,6 +184,15 @@ class AppServiceProvider extends ServiceProvider
         Task::observe(TaskObserver::class);
         TaskTimeLog::observe(TaskTimeLogObserver::class);
         ProjectSprint::observe(ProjectSprintObserver::class);
+
+        // Outbound Data Sync Observers
+        Project::observe(DataSyncOutboundObserver::class);
+        Customer::observe(DataSyncOutboundObserver::class);
+        Meeting::observe(DataSyncOutboundObserver::class);
+        Technology::observe(DataSyncOutboundObserver::class);
+        Industry::observe(DataSyncOutboundObserver::class);
+        ProjectCategory::observe(DataSyncOutboundObserver::class);
+        ProjectStatus::observe(DataSyncOutboundObserver::class);
 
         Gate::before(function ($user, $ability) {
             return $user->is_super_admin ? true : null;

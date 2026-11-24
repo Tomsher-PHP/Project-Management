@@ -26,3 +26,11 @@ Schedule::command('project:hosting-expiry-notifications')->dailyAt('08:00')->wit
 Schedule::command('app:generate-daily-work-reports')->everyMinute()->withoutOverlapping();
 
 Schedule::command('app:generate-project-reports')->everyMinute()->withoutOverlapping();
+
+Artisan::command('data-sync:recover-outbound-deliveries', function (\App\Services\DataSync\OutboundDataSyncService $service) {
+    $this->info('Starting recovery of abandoned/interrupted outbound data sync deliveries...');
+    $recovered = $service->recoverPendingDeliveries();
+    $this->info("Recovered and re-dispatched {$recovered} pending delivery/deliveries.");
+})->purpose('Recover and re-dispatch abandoned pending outbound data sync deliveries');
+
+Schedule::command('data-sync:recover-outbound-deliveries')->everyFiveMinutes()->withoutOverlapping();

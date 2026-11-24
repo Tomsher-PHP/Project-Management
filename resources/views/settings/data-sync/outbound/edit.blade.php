@@ -59,6 +59,23 @@
                             <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="token"></span>
                         </div>
 
+                        <!-- Linked Inbound API Client (Optional) -->
+                        <div>
+                            <label for="edit-connection-api-client" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                Linked Inbound API Client <span class="text-xs font-normal text-bgray-500">(Optional)</span>
+                            </label>
+                            <select id="edit-connection-api-client" name="api_client_id" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                <option value="">None (Standalone Outbound System)</option>
+                                @foreach ($apiClients ?? [] as $client)
+                                    <option value="{{ $client->id }}" {{ (string) old('api_client_id', $connection->api_client_id) === (string) $client->id ? 'selected' : '' }}>
+                                        {{ $client->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-bgray-700 dark:text-bgray-300 mt-1">Links this outbound destination to its inbound API credentials to prevent bidirectional loops.</p>
+                            <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="api_client_id"></span>
+                        </div>
+
                         <!-- Active Toggle & Submit -->
                         <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-bgray-200 dark:border-darkblack-400">
                             <div class="flex items-center gap-3">

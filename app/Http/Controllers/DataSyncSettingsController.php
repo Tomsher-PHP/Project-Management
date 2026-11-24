@@ -360,11 +360,13 @@ class DataSyncSettingsController extends Controller
         }
 
         $connections = $query->latest('id')->paginate($perPage)->withQueryString();
+        $apiClients = ApiClient::active()->orderBy('name')->get(['id', 'name']);
 
         return view('settings.data-sync.outbound.index', [
             'currentSection' => 'outbound',
             'currentTab' => 'connections',
             'connections' => $connections,
+            'apiClients' => $apiClients,
             'perPage' => $perPage,
             'supportedAuthTypes' => [
                 DataSyncOutboundConnection::AUTH_TYPE_BEARER => 'Bearer Token',
@@ -381,6 +383,7 @@ class DataSyncSettingsController extends Controller
             'success' => true,
             'connection' => [
                 'id' => $connection->id,
+                'api_client_id' => $connection->api_client_id,
                 'name' => $connection->name,
                 'base_url' => $connection->base_url,
                 'auth_type' => $connection->auth_type,
@@ -398,12 +401,14 @@ class DataSyncSettingsController extends Controller
     public function editConnection(DataSyncOutboundConnection $connection): View
     {
         $apis = $connection->apis()->latest('id')->get();
+        $apiClients = ApiClient::active()->orderBy('name')->get(['id', 'name']);
 
         return view('settings.data-sync.outbound.edit', [
             'currentSection' => 'outbound',
             'currentTab' => 'connections',
             'connection' => $connection,
             'apis' => $apis,
+            'apiClients' => $apiClients,
             'supportedAuthTypes' => [
                 DataSyncOutboundConnection::AUTH_TYPE_BEARER => 'Bearer Token',
             ],
@@ -426,6 +431,7 @@ class DataSyncSettingsController extends Controller
                 'message' => "Outbound connection [{$connection->name}] created successfully.",
                 'connection' => [
                     'id' => $connection->id,
+                    'api_client_id' => $connection->api_client_id,
                     'name' => $connection->name,
                     'base_url' => $connection->base_url,
                     'auth_type' => $connection->auth_type,
@@ -452,6 +458,7 @@ class DataSyncSettingsController extends Controller
                 'message' => "Outbound connection [{$connection->name}] updated successfully.",
                 'connection' => [
                     'id' => $connection->id,
+                    'api_client_id' => $connection->api_client_id,
                     'name' => $connection->name,
                     'base_url' => $connection->base_url,
                     'auth_type' => $connection->auth_type,

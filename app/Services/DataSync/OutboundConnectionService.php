@@ -117,6 +117,7 @@ class OutboundConnectionService
         $authConfig = $this->buildAuthConfig($authType, $data);
 
         return DataSyncOutboundConnection::create([
+            'api_client_id' => ! empty($data['api_client_id']) ? (int) $data['api_client_id'] : null,
             'name' => trim($data['name']),
             'base_url' => rtrim(trim($data['base_url']), '/'),
             'auth_type' => $authType,
@@ -134,13 +135,19 @@ class OutboundConnectionService
         $existingConfig = $connection->auth_config;
         $authConfig = $this->buildAuthConfig($authType, $data, $existingConfig);
 
-        $connection->update([
+        $updateData = [
             'name' => trim($data['name']),
             'base_url' => rtrim(trim($data['base_url']), '/'),
             'auth_type' => $authType,
             'auth_config' => $authConfig,
             'is_active' => isset($data['is_active']) ? (bool) $data['is_active'] : $connection->is_active,
-        ]);
+        ];
+
+        if (array_key_exists('api_client_id', $data)) {
+            $updateData['api_client_id'] = ! empty($data['api_client_id']) ? (int) $data['api_client_id'] : null;
+        }
+
+        $connection->update($updateData);
 
         return $connection;
     }
