@@ -1,5 +1,5 @@
-import Alert from '../../../alert';
-import { initTomSelect } from '../../../components/tom-select';
+import Alert from '../../alert';
+import { initTomSelect } from '../../components/tom-select';
 
 function initReportTabs() {
     const tabs = document.querySelectorAll('[data-report-tab]');
