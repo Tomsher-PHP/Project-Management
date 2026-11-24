@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/js/settings/data-sync/client-tab.js',
                 'resources/js/settings/data-sync/api-explorer-tab.js',
                 'resources/js/settings/data-sync/outbound-tab.js',
+                'resources/js/settings/data-sync/outbound-edit.js',
                 'resources/js/settings/report-settings/daily-report.js',
                 'resources/js/settings/report-settings/project-report.js',
 
