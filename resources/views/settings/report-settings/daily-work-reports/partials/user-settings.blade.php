@@ -61,34 +61,57 @@
             </div>
         </div>
 
-        {{-- Bulk update --}}
+        
+        {{-- Compact bulk employee actions --}}
         @can($reportPermission)
-            <form id="bulk-user-preferences-form" method="POST" action="{{ route('settings.daily-work-reports.users.preferences.bulk') }}" class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-darkblack-500 sm:flex-row sm:items-center sm:justify-between">
+            <form id="bulk-user-preferences-form" method="POST" action="{{ route('settings.daily-work-reports.users.preferences.bulk') }}" class="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-darkblack-500">
                 @csrf
                 @method('PATCH')
 
                 <input type="hidden" name="report_key" value="{{ $reportKey }}">
 
-                <div>
-                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">
-                        Bulk employee settings
-                    </p>
-                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
-                        Select employees below and apply one action.
-                    </p>
+                <div class="mr-2 flex items-center gap-2">
+                    <span class="text-xs font-semibold text-bgray-700 dark:text-bgray-300">
+                        Bulk actions
+                    </span>
+                    <span
+                        id="report-selected-count"
+                        class="rounded-md bg-white px-2 py-1 text-xs text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300"
+                    >
+                        0 selected
+                    </span>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <button type="submit" name="is_enabled" value="1" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white hover:bg-success-400">
-                        Enable selected
-                    </button>
+                {{-- Report type --}}
+                <select
+                    name="preference_type"
+                    aria-label="Report preference type"
+                    class="tom-select min-w-[170px]"
+                >
+                    <option value="consolidated">Consolidated report</option>
+                    <option value="individual">Individual report</option>
+                </select>
 
-                    <button type="submit" name="is_enabled" value="0" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-bgray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-bgray-300 dark:hover:bg-darkblack-400">
-                        Disable selected
-                    </button>
-                </div>
+                {{-- Action --}}
+                <select
+                    name="is_enabled"
+                    aria-label="Action"
+                    class="tom-select min-w-[110px]"
+                >
+                    <option value="1">Enable</option>
+                    <option value="0">Disable</option>
+                </select>
+
+                {{-- Apply --}}
+                <button type="submit" id="apply-report-bulk-action" disabled class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    Apply
+                </button>
             </form>
         @endcan
+
+
+
 
         {{-- Employee table --}}
         <div class="w-full rounded-lg border border-bgray-200 bg-white px-[24px] py-[20px] shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -106,7 +129,8 @@
                                 <th class="px-4 py-4 whitespace-nowrap min-w-[200px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Employee</span></th>
                                 <th class="px-4 py-4 whitespace-nowrap min-w-[180px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Email</span></th>
                                 <th class="px-4 py-4 whitespace-nowrap min-w-[160px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Teams</span></th>
-                                <th class="px-4 py-4 whitespace-nowrap min-w-[130px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Report status</span></th>
+                                <th class="px-4 py-4 whitespace-nowrap min-w-[130px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Consolidated Report Details</span></th>
+                                <th class="px-4 py-4 whitespace-nowrap min-w-[160px]"><span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Individual Report Email</span></th>
                             </tr>
                         </thead>
 
@@ -125,6 +149,7 @@
 
                                     $userTeamIds = $teamIdsByUser[$user->id] ?? [];
                                     $userTeamNames = $teams->whereIn('id', $userTeamIds)->pluck('name')->implode(', ');
+                                    $isIndividualReportEnabled = $preference?->receive_individual_report ?? true;
                                 @endphp
 
                                 <tr class="report-user-row border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-100 dark:hover:bg-darkblack-500" data-user-name="{{ strtolower($user->name) }}" data-user-email="{{ strtolower($user->email ?? '') }}" data-team-ids="{{ implode(',', $userTeamIds) }}">
@@ -158,10 +183,33 @@
                                             </span>
                                         @endcan
                                     </td>
+                                    <td class="px-4 py-4 whitespace-nowrap">
+                                        @can($reportPermission)
+                                            @php
+                                                $individualPreferenceToggleModel = (object) [
+                                                    'id' => $user->id,
+                                                    'is_active' => (bool) $isIndividualReportEnabled,
+                                                ];
+                                            @endphp
+
+                                            <x-status-toggle
+                                                :model="$individualPreferenceToggleModel"
+                                                route="settings.daily-work-reports.users.individual-preference"
+                                                entity="user-individual-report-preference"
+                                                permission="report_settings.manage"
+                                            />
+                                        @else
+                                            <span class="rounded-full px-2.5 py-1 text-xs font-medium
+                                                {{ $isIndividualReportEnabled ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-bgray-600 dark:bg-gray-800 dark:text-bgray-300' }}">
+                                                {{ $isIndividualReportEnabled ? 'Enabled' : 'Disabled' }}
+                                            </span>
+                                        @endcan
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="@can($reportPermission) 5 @else 4 @endcan" class="px-4 py-8 text-center text-bgray-600 dark:text-bgray-300">
+                                    <td colspan="@can($reportPermission) 6 @else 5 @endcan"
+                                        class="px-4 py-8 text-center text-bgray-600 dark:text-bgray-300">
                                         No employees found.
                                     </td>
                                 </tr>

@@ -1,3 +1,4 @@
+
 import Alert from './alert';
 
 $(document).on('click', '.status-toggle', function () {
@@ -13,6 +14,7 @@ $(document).on('click', '.status-toggle', function () {
 
     let isActive = btn.attr('aria-checked') === 'true';
     let actionText = isActive ? 'deactivate' : 'activate';
+    let newStatus = !isActive;
 
     Alert.confirm({
         title: 'Are you sure?',
@@ -26,24 +28,34 @@ $(document).on('click', '.status-toggle', function () {
             return;
         }
 
-        // Common request data for all status toggles
         let requestData = {
             _token: $('meta[name="csrf-token"]').attr('content'),
             id: id
         };
 
-
         // Additional data for report-related toggles
         if (
             entity === 'daily-work-report-recipient' ||
-            entity === 'user-report-preference'
+            entity === 'user-report-preference' ||
+            entity === 'user-individual-report-preference'
         ) {
             requestData.report_key =
                 new URLSearchParams(window.location.search).get('report_key') || 'daily_work';
         }
 
-        if (entity === 'user-report-preference') {
+        if (
+            entity === 'user-report-preference' ||
+            entity === 'user-individual-report-preference'
+        ) {
             requestData.user_id = id;
+        }
+
+        if (entity === 'user-report-preference') {
+            requestData.is_enabled = newStatus ? 1 : 0;
+        }
+
+        if (entity === 'user-individual-report-preference') {
+            requestData.receive_individual_report = newStatus ? 1 : 0;
         }
 
         $.ajax({
@@ -55,18 +67,17 @@ $(document).on('click', '.status-toggle', function () {
 
                 if (response.success) {
 
-                    let newStatus = (response.is_active ?? response.status) == 1;
+                    let updatedStatus = (response.is_active ?? response.status) == 1;
 
-                    // Update switch UI
-                    btn.attr('aria-checked', newStatus);
-                    btn.toggleClass('active', newStatus);
+                    btn.attr('aria-checked', updatedStatus);
+                    btn.toggleClass('active', updatedStatus);
 
                     const statusBadge = btn.closest('tr').find('[data-status-badge]');
 
                     if (statusBadge.length) {
-                        statusBadge.text(newStatus ? 'Active' : 'Inactive');
-                        statusBadge.toggleClass('bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-300', newStatus);
-                        statusBadge.toggleClass('bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300', !newStatus);
+                        statusBadge.text(updatedStatus ? 'Active' : 'Inactive');
+                        statusBadge.toggleClass('bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-300', updatedStatus);
+                        statusBadge.toggleClass('bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300', !updatedStatus);
                     }
 
                     let capitalizedEntity = entity.charAt(0).toUpperCase() + entity.slice(1);
