@@ -1,9 +1,13 @@
 <!-- REPORT NAVIGATION -->
 <aside class="col-span-3 lg:col-span-3 h-fit rounded-lg bg-white p-4 dark:bg-darkblack-600">
+    @php
+        $activeReportTitle = $currentReport['label'] ?? ($reportDefinitions[$reportKey ?? 'daily_work']['label'] ?? (config('report-settings.reports.' . ($reportKey ?? 'daily_work') . '.label') ?? 'Reports'));
+    @endphp
+
     <div class="mb-4 flex items-center gap-3">
         <x-back-button :url="route('settings.index')" />
         <h2 class="text-sm font-semibold uppercase tracking-wide text-bgray-800 dark:text-bgray-300">
-            Reports
+            {{ $activeReportTitle }}
         </h2>
     </div>
 
