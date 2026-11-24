@@ -181,8 +181,7 @@
     </div>
 
     <!-- Modals -->
-    @include('settings.data-sync.outbound.modals.create-api-modal')
-    @include('settings.data-sync.outbound.modals.edit-api-modal')
+    @include('settings.data-sync.outbound.modals.api-modal')
 @endsection
 
 @push('scripts')
