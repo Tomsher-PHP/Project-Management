@@ -286,7 +286,8 @@ class DataSyncOutboundConnectionTest extends TestCase
         $conn = DataSyncOutboundConnection::create([
             'name' => 'Duplicate Test',
             'base_url' => 'https://api.example.com',
-            'auth_type' => 'none',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'dup-token'],
             'is_active' => true,
         ]);
 
@@ -316,7 +317,8 @@ class DataSyncOutboundConnectionTest extends TestCase
         $conn = DataSyncOutboundConnection::create([
             'name' => 'API CRUD Test',
             'base_url' => 'https://api.example.com',
-            'auth_type' => 'none',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'crud-token'],
             'is_active' => true,
         ]);
 

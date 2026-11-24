@@ -21,9 +21,6 @@
                         <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
                             Connection Details: {{ $connection->name }}
                         </h3>
-                        <p class="text-xs text-bgray-600 dark:text-bgray-400 mt-0.5">
-                            Configure base URL and authentication credentials for this external application.
-                        </p>
                     </div>
 
                     <form id="edit-connection-form" action="{{ route('settings.data-sync.outbound.connections.update', $connection) }}" method="POST" class="space-y-5">
@@ -58,7 +55,7 @@
                                 Bearer Token
                             </label>
                             <input type="password" id="edit-connection-token" name="token" placeholder="••••••••••••••••••••••••" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                            <p class="text-xs text-bgray-500 dark:text-bgray-400 mt-1">Leave blank to keep the existing token.</p>
+                            <p class="text-xs text-bgray-700 dark:text-bgray-300 mt-1">Leave blank to keep the existing token.</p>
                             <span class="text-xs text-error-300 hidden font-medium mt-1" data-error-for="token"></span>
                         </div>
 
@@ -88,9 +85,6 @@
                             <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
                                 Configured APIs
                             </h3>
-                            <p class="text-xs text-bgray-600 dark:text-bgray-400 mt-0.5">
-                                Outbound module operations and endpoints mapped for this connection.
-                            </p>
                         </div>
 
                         @can('data_sync_settings.create')
@@ -124,7 +118,7 @@
                                             <span class="text-sm font-medium text-bgray-600 dark:text-bgray-50">{{ $loop->iteration }}</span>
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="inline-flex rounded-lg bg-bgray-100 px-2.5 py-1 text-xs font-bold text-bgray-800 capitalize dark:bg-darkblack-500 dark:text-bgray-200">
+                                            <span class="inline-flex rounded-lg bg-bgray-100 px-2.5 py-1 text-xs font-bold text-bgray-800 capitalize dark:bg-darkblack-500 dark:text-bgray-300">
                                                 {{ $availableModules[$api->module] ?? $api->module }}
                                             </span>
                                         </td>
@@ -135,17 +129,17 @@
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             @if ($api->method === 'POST')
-                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">POST</span>
+                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300">POST</span>
                                             @elseif ($api->method === 'GET')
-                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300">GET</span>
+                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-green-700 dark:text-green-300">GET</span>
                                             @elseif ($api->method === 'PUT')
-                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">PUT</span>
+                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">PUT</span>
                                             @elseif ($api->method === 'PATCH')
-                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">PATCH</span>
+                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-purple-700 dark:text-purple-300">PATCH</span>
                                             @elseif ($api->method === 'DELETE')
-                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300">DELETE</span>
+                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-error-200">DELETE</span>
                                             @else
-                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">{{ $api->method }}</span>
+                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-bgray-700 dark:text-bgray-300">{{ $api->method }}</span>
                                             @endif
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
@@ -159,19 +153,11 @@
                                         <td class="pl-4 py-4 whitespace-nowrap text-right">
                                             <div class="flex items-center justify-end gap-2">
                                                 @can('data_sync_settings.edit')
-                                                    <button type="button" class="edit-api-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-300 text-bgray-600 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:text-bgray-300 dark:hover:border-success-300" data-id="{{ $api->id }}" data-module="{{ $api->module }}" data-operation="{{ $api->operation }}" data-method="{{ $api->method }}" data-endpoint="{{ $api->endpoint }}" data-is-active="{{ $api->is_active ? '1' : '0' }}" data-update-url="{{ route('settings.data-sync.outbound.apis.update', ['connection' => $connection->id, 'api' => $api->id]) }}" title="Edit API">
-                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                        </svg>
-                                                    </button>
+                                                    <x-edit-button action="javascript:void(0)" class="edit-api-btn" data-id="{{ $api->id }}" data-module="{{ $api->module }}" data-operation="{{ $api->operation }}" data-method="{{ $api->method }}" data-endpoint="{{ $api->endpoint }}" data-is-active="{{ $api->is_active ? '1' : '0' }}" data-update-url="{{ route('settings.data-sync.outbound.apis.update', ['connection' => $connection->id, 'api' => $api->id]) }}" title="Edit API" />
                                                 @endcan
 
                                                 @can('data_sync_settings.delete')
-                                                    <button type="button" class="delete-api-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-300 text-bgray-600 transition hover:border-error-300 hover:text-error-400 dark:border-darkblack-400 dark:text-bgray-300 dark:hover:border-error-300" data-id="{{ $api->id }}" data-label="{{ $api->module }} - {{ $api->operation }}" data-url="{{ route('settings.data-sync.outbound.apis.destroy', ['connection' => $connection->id, 'api' => $api->id]) }}" title="Delete API">
-                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    </button>
+                                                    <x-delete-form :action="route('settings.data-sync.outbound.apis.destroy', ['connection' => $connection->id, 'api' => $api->id])" confirm-title="Delete API Configuration?" confirm-message="Are you sure you want to remove configuration for “{{ $api->module }} - {{ $api->operation }}”?" title="Delete API" />
                                                 @endcan
                                             </div>
                                         </td>
@@ -202,30 +188,30 @@
 @push('scripts')
     @vite('resources/js/settings/data-sync/data-sync-settings.js')
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
             // Close modal when clicking outside modal-content (backdrop / overlay)
-            $(document).on('click', '.modal', function (e) {
+            $(document).on('click', '.modal', function(e) {
                 if (!$(e.target).closest('.modal-content').length) {
                     $(this).addClass('hidden');
                 }
             });
 
             // Close modal on modal-close button
-            $(document).on('click', '.modal-close', function () {
+            $(document).on('click', '.modal-close', function() {
                 $(this).closest('.modal').addClass('hidden');
             });
 
             // Close modal on Escape key
-            $(document).on('keydown', function (e) {
+            $(document).on('keydown', function(e) {
                 if (e.key === 'Escape' || e.keyCode === 27) {
                     $('.modal:not(.hidden)').addClass('hidden');
                 }
             });
 
             // Submit Edit Connection Form via AJAX
-            $('#edit-connection-form').on('submit', function (e) {
+            $('#edit-connection-form').on('submit', function(e) {
                 e.preventDefault();
                 const form = $(this);
                 const submitBtn = $('#edit-connection-submit-btn');
@@ -237,8 +223,11 @@
                     url: form.attr('action'),
                     type: 'POST',
                     data: form.serialize(),
-                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                    success: function (response) {
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    success: function(response) {
                         submitBtn.prop('disabled', false).removeClass('opacity-70');
                         if (response.success) {
                             if (window.Swal) {
@@ -252,11 +241,11 @@
                             }
                         }
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         submitBtn.prop('disabled', false).removeClass('opacity-70');
                         if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                             const errors = xhr.responseJSON.errors;
-                            $.each(errors, function (key, messages) {
+                            $.each(errors, function(key, messages) {
                                 const errorSpan = form.find(`[data-error-for="${key}"]`);
                                 if (errorSpan.length) {
                                     errorSpan.text(messages[0]).removeClass('hidden');
@@ -275,7 +264,7 @@
             });
 
             // Open Create API Modal
-            $('#open-create-api-btn').on('click', function () {
+            $('#open-create-api-btn').on('click', function() {
                 const modal = $('#create-api-modal');
                 modal.find('form')[0].reset();
                 modal.find('[data-error-for]').addClass('hidden').text('');
@@ -284,7 +273,7 @@
             });
 
             // Submit Create API Form
-            $('#create-api-form').on('submit', function (e) {
+            $('#create-api-form').on('submit', function(e) {
                 e.preventDefault();
                 const form = $(this);
                 const submitBtn = $('#create-api-submit-btn');
@@ -296,8 +285,11 @@
                     url: form.attr('action'),
                     type: 'POST',
                     data: form.serialize(),
-                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                    success: function (response) {
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    success: function(response) {
                         submitBtn.prop('disabled', false).removeClass('opacity-70');
                         if (response.success) {
                             $('#create-api-modal').addClass('hidden');
@@ -314,11 +306,11 @@
                             }
                         }
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         submitBtn.prop('disabled', false).removeClass('opacity-70');
                         if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                             const errors = xhr.responseJSON.errors;
-                            $.each(errors, function (key, messages) {
+                            $.each(errors, function(key, messages) {
                                 const errorSpan = form.find(`[data-error-for="${key}"]`);
                                 if (errorSpan.length) {
                                     errorSpan.text(messages[0]).removeClass('hidden');
@@ -337,7 +329,7 @@
             });
 
             // Open Edit API Modal
-            $(document).on('click', '.edit-api-btn', function () {
+            $(document).on('click', '.edit-api-btn', function() {
                 const btn = $(this);
                 const modal = $('#edit-api-modal');
                 const form = $('#edit-api-form');
@@ -356,7 +348,7 @@
             });
 
             // Submit Edit API Form
-            $('#edit-api-form').on('submit', function (e) {
+            $('#edit-api-form').on('submit', function(e) {
                 e.preventDefault();
                 const form = $(this);
                 const submitBtn = $('#edit-api-submit-btn');
@@ -368,8 +360,11 @@
                     url: form.attr('action'),
                     type: 'POST',
                     data: form.serialize(),
-                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                    success: function (response) {
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    success: function(response) {
                         submitBtn.prop('disabled', false).removeClass('opacity-70');
                         if (response.success) {
                             $('#edit-api-modal').addClass('hidden');
@@ -386,11 +381,11 @@
                             }
                         }
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         submitBtn.prop('disabled', false).removeClass('opacity-70');
                         if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                             const errors = xhr.responseJSON.errors;
-                            $.each(errors, function (key, messages) {
+                            $.each(errors, function(key, messages) {
                                 const errorSpan = form.find(`[data-error-for="${key}"]`);
                                 if (errorSpan.length) {
                                     errorSpan.text(messages[0]).removeClass('hidden');
@@ -407,61 +402,6 @@
                     }
                 });
             });
-
-            // Delete API with Confirmation
-            $(document).on('click', '.delete-api-btn', function () {
-                const btn = $(this);
-                const label = btn.data('label');
-                const url = btn.data('url');
-
-                const performDelete = function () {
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                        success: function (response) {
-                            if (window.Swal) {
-                                window.Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted',
-                                    text: response.message || 'API configuration deleted.',
-                                    timer: 1500,
-                                    showConfirmButton: false,
-                                }).then(() => window.location.reload());
-                            } else {
-                                window.location.reload();
-                            }
-                        },
-                        error: function (xhr) {
-                            const msg = xhr.responseJSON?.message || 'Failed to delete API configuration.';
-                            if (window.Swal) {
-                                window.Swal.fire('Delete Failed', msg, 'error');
-                            } else {
-                                alert(msg);
-                            }
-                        }
-                    });
-                };
-
-                if (window.Swal) {
-                    window.Swal.fire({
-                        title: 'Delete API Configuration?',
-                        text: `Are you sure you want to remove configuration for "${label}"?`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, Delete',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#ef4444',
-                    }).then(result => {
-                        if (result.isConfirmed) {
-                            performDelete();
-                        }
-                    });
-                } else if (confirm(`Are you sure you want to remove "${label}"?`)) {
-                    performDelete();
-                }
-            });
         });
     </script>
 @endpush
-

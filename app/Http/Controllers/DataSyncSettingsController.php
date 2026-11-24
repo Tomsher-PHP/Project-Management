@@ -581,6 +581,7 @@ class DataSyncSettingsController extends Controller
         if (request()->wantsJson() || request()->ajax()) {
             return response()->json([
                 'success' => true,
+                'status' => true,
                 'message' => "API configuration [{$api->module} - {$api->operation}] deleted successfully.",
             ]);
         }
