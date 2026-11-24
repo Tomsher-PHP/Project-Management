@@ -25,6 +25,7 @@ class DailyWorkReportLog extends Model
         'generated_at',
         'completed_at',
         'report_key',
+        'report_variant',
     ];
 
     protected function casts(): array
