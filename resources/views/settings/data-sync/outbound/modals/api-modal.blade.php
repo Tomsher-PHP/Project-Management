@@ -11,7 +11,7 @@
         ->values();
 @endphp
 
-<div id="api-modal" class="modal fixed inset-0 z-50 hidden overflow-y-auto" data-existing-apis="{{ json_encode($modalExistingApis) }}" data-available-operations="{{ json_encode($availableOperations ?? []) }}">
+<div id="api-modal" class="modal fixed inset-0 z-50 hidden overflow-y-auto" data-existing-apis="{{ json_encode($modalExistingApis) }}" data-available-operations="{{ json_encode($availableOperations ?? []) }}" data-module-operations="{{ json_encode($moduleOperations ?? \App\Services\DataSync\OutboundConnectionService::MODULE_OPERATIONS) }}">
     <div class="modal-overlay fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70"></div>
 
     <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">

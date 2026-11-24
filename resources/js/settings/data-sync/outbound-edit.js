@@ -92,10 +92,21 @@ $(document).ready(function () {
     const availableOperations = (typeof rawAvailableOps === 'object' && rawAvailableOps !== null)
         ? rawAvailableOps
         : (typeof rawAvailableOps === 'string' ? JSON.parse(rawAvailableOps || '{}') : {
-            'create': 'Create',
             'update': 'Update',
-            'sync': 'Sync / Upsert',
-            'delete': 'Delete'
+            'status_update': 'Status Update',
+            'delete': 'Delete',
+            'sync': 'Sync / Upsert'
+        });
+
+    const rawModuleOperations = apiModal.data('moduleOperations');
+    const moduleOperations = (typeof rawModuleOperations === 'object' && rawModuleOperations !== null)
+        ? rawModuleOperations
+        : (typeof rawModuleOperations === 'string' ? JSON.parse(rawModuleOperations || '{}') : {
+            'technologies': ['sync', 'delete'],
+            'industries': ['sync', 'delete'],
+            'project_categories': ['sync', 'delete'],
+            'project_statuses': ['sync', 'delete'],
+            'projects': ['status_update', 'update']
         });
 
     function setSelectValue(selector, value) {
@@ -122,6 +133,7 @@ $(document).ready(function () {
 
     /**
      * Dynamically update Operation dropdown options based on module and conflict rules.
+     * Only displays operations supported by the selected module.
      */
     function refreshOperationOptions(selectedModule, currentApiId, targetOperation = null) {
         const opSelect = $('#api-modal-operation');
@@ -130,32 +142,44 @@ $(document).ready(function () {
 
         if (!selectedModule) {
             hintEl.text('').addClass('hidden');
+            opSelect.empty().append('<option value="">-- Select Module First --</option>');
             if (opTs) {
                 opTs.clearOptions();
-                opTs.addOption({ value: '', text: '-- Select Operation --' });
-                Object.entries(availableOperations).forEach(([opKey, opLabel]) => {
-                    opTs.addOption({ value: opKey, text: opLabel, disabled: false });
-                });
+                opTs.addOption({ value: '', text: '-- Select Module First --' });
+                opTs.clear();
                 opTs.refreshOptions(false);
             }
             return;
         }
 
-        // Get configured operations for this module, excluding the record being edited
+        const supportedOps = moduleOperations[selectedModule] || [];
+
+        if (supportedOps.length === 0) {
+            hintEl.text('No operations are available for the selected module.').removeClass('hidden');
+            opSelect.empty().append('<option value="">-- No Operations Available --</option>');
+            if (opTs) {
+                opTs.clearOptions();
+                opTs.addOption({ value: '', text: '-- No Operations Available --' });
+                opTs.clear();
+                opTs.refreshOptions(false);
+            }
+            return;
+        }
+
+        // Get configured operations for this module on this connection, excluding currentApiId
         const configuredOps = existingApis
             .filter(api => api.module === selectedModule && (!currentApiId || api.id != currentApiId))
             .map(api => api.operation);
 
         const hasSync = configuredOps.includes('sync');
-        const hasCreate = configuredOps.includes('create');
         const hasUpdate = configuredOps.includes('update');
 
-        // Formulate explanation text for the hint area
+        // Formulate explanation text for conflict states
         let hintMessage = '';
-        if (hasSync) {
-            hintMessage = 'Sync / Upsert is already configured for this module. Create and Update operations cannot be added.';
-        } else if (hasCreate || hasUpdate) {
-            hintMessage = 'Create or Update is already configured for this module. Sync / Upsert cannot be added.';
+        if (hasSync && supportedOps.includes('update')) {
+            hintMessage = 'Sync / Upsert is already configured for this module. Update operations cannot be added.';
+        } else if (hasUpdate && supportedOps.includes('sync')) {
+            hintMessage = 'Update is already configured for this module. Sync / Upsert cannot be added.';
         }
 
         if (hintMessage) {
@@ -164,85 +188,78 @@ $(document).ready(function () {
             hintEl.text('').addClass('hidden');
         }
 
-        // Native select options update
-        opSelect.find('option').each(function () {
-            const val = $(this).val();
-            if (!val) return;
-            const baseLabel = availableOperations[val] || val;
-
+        // Build supported options list
+        const optionsList = [];
+        supportedOps.forEach(opKey => {
+            const baseLabel = availableOperations[opKey] || opKey;
             let disabled = false;
             let reason = '';
 
-            if (configuredOps.includes(val)) {
+            if (configuredOps.includes(opKey)) {
                 disabled = true;
                 reason = 'Disabled — Already configured';
-            } else if (hasSync && (val === 'create' || val === 'update')) {
+            } else if (hasSync && opKey === 'update') {
                 disabled = true;
                 reason = 'Disabled — Conflicts with Sync / Upsert';
-            } else if (val === 'sync' && (hasCreate || hasUpdate)) {
+            } else if (opKey === 'sync' && hasUpdate) {
                 disabled = true;
-                const conflictWith = hasCreate && hasUpdate ? 'Create & Update' : (hasCreate ? 'Create' : 'Update');
-                reason = `Disabled — Conflicts with ${conflictWith}`;
+                reason = 'Disabled — Conflicts with Update';
             }
 
-            $(this).prop('disabled', disabled);
-            $(this).text(disabled ? `${baseLabel} (${reason})` : baseLabel);
+            optionsList.push({
+                value: opKey,
+                text: disabled ? `${baseLabel} (${reason})` : baseLabel,
+                disabled: disabled
+            });
         });
 
-        // TomSelect options update
-        if (opTs) {
-            const currentSelected = targetOperation !== null ? targetOperation : opTs.getValue();
+        // Update native select
+        opSelect.empty().append('<option value="">-- Select Operation --</option>');
+        optionsList.forEach(opt => {
+            const optEl = $('<option></option>')
+                .val(opt.value)
+                .text(opt.text)
+                .prop('disabled', opt.disabled);
+            opSelect.append(optEl);
+        });
 
+        // Update TomSelect
+        if (opTs) {
             opTs.clearOptions();
             opTs.addOption({ value: '', text: '-- Select Operation --' });
-
-            Object.entries(availableOperations).forEach(([opKey, opLabel]) => {
-                let disabled = false;
-                let reason = '';
-
-                if (configuredOps.includes(opKey)) {
-                    disabled = true;
-                    reason = 'Disabled — Already configured';
-                } else if (hasSync && (opKey === 'create' || opKey === 'update')) {
-                    disabled = true;
-                    reason = 'Disabled — Conflicts with Sync / Upsert';
-                } else if (opKey === 'sync' && (hasCreate || hasUpdate)) {
-                    disabled = true;
-                    const conflictWith = hasCreate && hasUpdate ? 'Create & Update' : (hasCreate ? 'Create' : 'Update');
-                    reason = `Disabled — Conflicts with ${conflictWith}`;
-                }
-
-                opTs.addOption({
-                    value: opKey,
-                    text: disabled ? `${opLabel} (${reason})` : opLabel,
-                    disabled: disabled
-                });
+            optionsList.forEach(opt => {
+                opTs.addOption(opt);
             });
-
             opTs.refreshOptions(false);
 
-            if (currentSelected && opTs.options[currentSelected] && !opTs.options[currentSelected].disabled) {
-                opTs.setValue(currentSelected);
-            } else if (targetOperation && opTs.options[targetOperation]) {
+            if (targetOperation && supportedOps.includes(targetOperation)) {
                 opTs.setValue(targetOperation);
+                opSelect.val(targetOperation);
             } else {
                 opTs.clear();
+                opSelect.val('');
+            }
+        } else {
+            if (targetOperation && supportedOps.includes(targetOperation)) {
+                opSelect.val(targetOperation);
+            } else {
+                opSelect.val('');
             }
         }
     }
 
-    // React to Module selection changes
+    // React to Module selection changes (resets Operation selection)
     $(document).on('change', '#api-modal-module', function () {
         const selectedModule = $(this).val();
         const currentApiId = $('#api-modal-id').val();
-        refreshOperationOptions(selectedModule, currentApiId);
+        refreshOperationOptions(selectedModule, currentApiId, null);
     });
 
     const moduleSelectEl = $('#api-modal-module')[0];
     if (moduleSelectEl?.tomselect) {
         moduleSelectEl.tomselect.on('change', function (val) {
             const currentApiId = $('#api-modal-id').val();
-            refreshOperationOptions(val, currentApiId);
+            refreshOperationOptions(val, currentApiId, null);
         });
     }
 
@@ -262,7 +279,7 @@ $(document).ready(function () {
         clearSelectValue('#api-modal-method', 'POST');
         $('#api-modal-is-active').prop('checked', true);
 
-        refreshOperationOptions('', null);
+        refreshOperationOptions('', null, null);
         apiModal.removeClass('hidden');
     });
 

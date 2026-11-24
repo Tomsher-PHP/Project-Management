@@ -27,6 +27,7 @@ return [
     'operations' => [
         'create',
         'update',
+        'status_update',
         'delete',
         'sync',
     ],

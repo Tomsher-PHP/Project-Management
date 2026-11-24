@@ -274,12 +274,12 @@ class DataSyncOutboundConnectionTest extends TestCase
             'is_active' => true,
         ]);
 
-        // Add API 1: Projects Create
+        // Add API 1: Projects Status Update
         $response1 = $this->actingAs($this->authorizedUser)->postJson("/settings/data-sync/outbound/connections/{$conn->id}/apis", [
             'module' => 'projects',
-            'operation' => 'create',
+            'operation' => 'status_update',
             'method' => 'POST',
-            'endpoint' => '/api/projects',
+            'endpoint' => '/api/projects/status-update',
             'is_active' => 1,
         ]);
         $response1->assertStatus(201);
@@ -294,12 +294,12 @@ class DataSyncOutboundConnectionTest extends TestCase
         ]);
         $response2->assertStatus(201);
 
-        // Add API 3: Customers Create
+        // Add API 3: Technologies Sync
         $response3 = $this->actingAs($this->authorizedUser)->postJson("/settings/data-sync/outbound/connections/{$conn->id}/apis", [
-            'module' => 'customers',
-            'operation' => 'create',
+            'module' => 'technologies',
+            'operation' => 'sync',
             'method' => 'POST',
-            'endpoint' => '/api/customers',
+            'endpoint' => '/api/technologies/sync',
             'is_active' => 1,
         ]);
         $response3->assertStatus(201);
@@ -319,16 +319,16 @@ class DataSyncOutboundConnectionTest extends TestCase
 
         $conn->apis()->create([
             'module' => 'projects',
-            'operation' => 'create',
+            'operation' => 'status_update',
             'method' => 'POST',
-            'endpoint' => '/projects',
+            'endpoint' => '/projects/status',
             'is_active' => true,
         ]);
 
-        // Attempt to create duplicate (projects + create) under the same connection
+        // Attempt to create duplicate (projects + status_update) under the same connection
         $response = $this->actingAs($this->authorizedUser)->postJson("/settings/data-sync/outbound/connections/{$conn->id}/apis", [
             'module' => 'projects',
-            'operation' => 'create',
+            'operation' => 'status_update',
             'method' => 'POST',
             'endpoint' => '/projects/duplicate',
             'is_active' => 1,
@@ -349,25 +349,26 @@ class DataSyncOutboundConnectionTest extends TestCase
         ]);
 
         $api = $conn->apis()->create([
-            'module' => 'tasks',
-            'operation' => 'create',
-            'method' => 'POST',
-            'endpoint' => '/tasks',
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'PUT',
+            'endpoint' => '/projects',
             'is_active' => true,
         ]);
 
         // Update API
         $updateResp = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}/apis/{$api->id}", [
-            'module' => 'tasks',
-            'operation' => 'create',
-            'method' => 'POST',
-            'endpoint' => '/api/v2/tasks/create',
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'PATCH',
+            'endpoint' => '/api/v2/projects/update',
             'is_active' => 0,
         ]);
         $updateResp->assertStatus(200);
 
         $api->refresh();
-        $this->assertSame('/api/v2/tasks/create', $api->endpoint);
+        $this->assertSame('/api/v2/projects/update', $api->endpoint);
+        $this->assertSame('PATCH', $api->method);
         $this->assertFalse($api->is_active);
 
         // Delete API

@@ -21,10 +21,18 @@ class OutboundConnectionService
     ];
 
     public const AVAILABLE_OPERATIONS = [
-        'create' => 'Create',
         'update' => 'Update',
-        'sync' => 'Sync / Upsert',
+        'status_update' => 'Status Update',
         'delete' => 'Delete',
+        'sync' => 'Sync / Upsert',
+    ];
+
+    public const MODULE_OPERATIONS = [
+        'technologies' => ['sync', 'delete'],
+        'industries' => ['sync', 'delete'],
+        'project_categories' => ['sync', 'delete'],
+        'project_statuses' => ['sync', 'delete'],
+        'projects' => ['status_update', 'update'],
     ];
 
     public const AVAILABLE_METHODS = [
@@ -34,6 +42,19 @@ class OutboundConnectionService
         'PATCH' => 'PATCH',
         'DELETE' => 'DELETE',
     ];
+
+    /**
+     * Get the allowed operations for a specific module.
+     *
+     * @return array<string, string>
+     */
+    public static function getOperationsForModule(string $module): array
+    {
+        return array_intersect_key(
+            self::AVAILABLE_OPERATIONS,
+            array_flip(self::MODULE_OPERATIONS[$module] ?? [])
+        );
+    }
 
     /**
      * Validate destination URL to prevent SSRF.
@@ -227,6 +248,13 @@ class OutboundConnectionService
             $module = trim($data['module']);
             $operation = trim($data['operation']);
 
+            $allowedOperations = self::getOperationsForModule($module);
+            if (! array_key_exists($operation, $allowedOperations)) {
+                throw ValidationException::withMessages([
+                    'operation' => ["The operation [{$operation}] is not supported for module [{$module}]."],
+                ]);
+            }
+
             $conflictError = self::getOperationConflictError($connection->id, $module, $operation, null, true);
             if ($conflictError) {
                 throw ValidationException::withMessages([
@@ -260,6 +288,13 @@ class OutboundConnectionService
 
             $module = trim($data['module']);
             $operation = trim($data['operation']);
+
+            $allowedOperations = self::getOperationsForModule($module);
+            if (! array_key_exists($operation, $allowedOperations)) {
+                throw ValidationException::withMessages([
+                    'operation' => ["The operation [{$operation}] is not supported for module [{$module}]."],
+                ]);
+            }
 
             $conflictError = self::getOperationConflictError($api->connection_id, $module, $operation, $api->id, true);
             if ($conflictError) {

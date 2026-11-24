@@ -146,7 +146,7 @@
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             @if ($api->method === 'POST')
-                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300">POST</span>
+                                                <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-400">POST</span>
                                             @elseif ($api->method === 'GET')
                                                 <span class="inline-flex rounded px-2 py-0.5 text-xs font-bold text-green-700 dark:text-green-300">GET</span>
                                             @elseif ($api->method === 'PUT')

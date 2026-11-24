@@ -412,8 +412,12 @@ class DataSyncSettingsController extends Controller
             'supportedAuthTypes' => [
                 DataSyncOutboundConnection::AUTH_TYPE_BEARER => 'Bearer Token',
             ],
-            'availableModules' => OutboundConnectionService::AVAILABLE_MODULES,
+            'availableModules' => array_intersect_key(
+                OutboundConnectionService::AVAILABLE_MODULES,
+                OutboundConnectionService::MODULE_OPERATIONS
+            ),
             'availableOperations' => OutboundConnectionService::AVAILABLE_OPERATIONS,
+            'moduleOperations' => OutboundConnectionService::MODULE_OPERATIONS,
             'availableMethods' => OutboundConnectionService::AVAILABLE_METHODS,
         ]);
     }

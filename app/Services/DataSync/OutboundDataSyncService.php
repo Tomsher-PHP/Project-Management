@@ -94,7 +94,7 @@ class OutboundDataSyncService
             }
 
             // 3. Resolve the matching outbound operation and API for this connection
-            $matchingApi = $this->resolveMatchingApi($connection, $operation);
+            $matchingApi = $this->resolveMatchingApi($connection, $operation, $module, $model);
             if (! $matchingApi) {
                 // If no active matching API exists, skip without creating history
                 continue;
@@ -199,20 +199,46 @@ class OutboundDataSyncService
      *   If Delete API exists -> Delete
      *   Else -> Skip (null)
      */
-    public function resolveMatchingApi(DataSyncOutboundConnection $connection, string $operation): ?DataSyncOutboundApi
-    {
+    public function resolveMatchingApi(
+        DataSyncOutboundConnection $connection,
+        string $operation,
+        ?string $module = null,
+        ?Model $model = null
+    ): ?DataSyncOutboundApi {
         $apis = $connection->apis->where('is_active', true);
+
+        // Recognize status_update as a Projects-only operation
+        if ($operation === 'status_update') {
+            if ($module !== null && $module !== 'projects') {
+                return null;
+            }
+
+            return $apis->firstWhere('operation', 'status_update');
+        }
+
+        if ($operation === 'update') {
+            // For projects, if only status_id was changed and a status_update API exists, select it
+            if ($module === 'projects' && $model instanceof \App\Models\Project && array_key_exists('status_id', $model->getChanges())) {
+                $statusUpdateApi = $apis->firstWhere('operation', 'status_update');
+                $changedKeys = array_diff(array_keys($model->getChanges()), ['updated_at', 'updated_by']);
+                if ($statusUpdateApi && count($changedKeys) === 1) {
+                    return $statusUpdateApi;
+                }
+            }
+
+            return $apis->firstWhere('operation', 'update')
+                ?? $apis->firstWhere('operation', 'sync');
+        }
 
         return match ($operation) {
             'create' => $apis->firstWhere('operation', 'create')
                 ?? $apis->firstWhere('operation', 'sync'),
 
-            'update' => $apis->firstWhere('operation', 'update')
-                ?? $apis->firstWhere('operation', 'sync'),
-
             'delete' => $apis->firstWhere('operation', 'delete'),
 
-            default => null,
+            'sync' => $apis->firstWhere('operation', 'sync'),
+
+            default => $apis->firstWhere('operation', $operation),
         };
     }
 

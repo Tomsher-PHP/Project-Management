@@ -44,7 +44,12 @@ class UpdateOutboundApiRequest extends FormRequest
         $module = trim((string) $this->input('module'));
 
         return [
-            'module' => ['required', 'string', 'max:100'],
+            'module' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::in(array_keys(OutboundConnectionService::MODULE_OPERATIONS)),
+            ],
             'operation' => [
                 'required',
                 'string',
@@ -76,6 +81,12 @@ class UpdateOutboundApiRequest extends FormRequest
             $apiId = $api instanceof DataSyncOutboundApi ? $api->id : (int) $api;
             $module = trim((string) $this->input('module'));
             $operation = trim((string) $this->input('operation'));
+
+            $allowedOperations = OutboundConnectionService::getOperationsForModule($module);
+            if (! array_key_exists($operation, $allowedOperations)) {
+                $validator->errors()->add('operation', "The operation [{$operation}] is not supported for module [{$module}].");
+                return;
+            }
 
             $conflictError = OutboundConnectionService::getOperationConflictError($connectionId, $module, $operation, $apiId);
             if ($conflictError) {

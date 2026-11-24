@@ -45,20 +45,20 @@ class DataSyncOutboundApiConflictTest extends TestCase
     }
 
     /**
-     * Scenario 1: Create + Update → Allowed.
+     * Scenario 1: Projects Status Update + Update → Allowed together.
      */
-    public function test_scenario_1_create_and_update_are_allowed_together(): void
+    public function test_scenario_1_status_update_and_update_are_allowed_together(): void
     {
-        // Add Create
-        $resCreate = $this->actingAs($this->authorizedUser)
+        // Add Status Update
+        $resStatus = $this->actingAs($this->authorizedUser)
             ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
                 'module' => 'projects',
-                'operation' => 'create',
+                'operation' => 'status_update',
                 'method' => 'POST',
-                'endpoint' => '/api/projects',
+                'endpoint' => '/api/projects/status-update',
                 'is_active' => 1,
             ]);
-        $resCreate->assertStatus(201);
+        $resStatus->assertStatus(201);
 
         // Add Update
         $resUpdate = $this->actingAs($this->authorizedUser)
@@ -75,45 +75,11 @@ class DataSyncOutboundApiConflictTest extends TestCase
     }
 
     /**
-     * Scenario 2: Create + Sync → Rejected.
+     * Scenario 2: Technologies Sync + Delete → Allowed together.
      */
-    public function test_scenario_2_create_plus_sync_is_rejected(): void
+    public function test_scenario_2_sync_and_delete_are_allowed_together(): void
     {
-        $this->connection->apis()->create([
-            'module' => 'projects',
-            'operation' => 'create',
-            'method' => 'POST',
-            'endpoint' => '/api/projects',
-            'is_active' => true,
-        ]);
-
-        $resSync = $this->actingAs($this->authorizedUser)
-            ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
-                'module' => 'projects',
-                'operation' => 'sync',
-                'method' => 'POST',
-                'endpoint' => '/api/projects/sync',
-                'is_active' => 1,
-            ]);
-
-        $resSync->assertStatus(422);
-        $resSync->assertJsonValidationErrors('operation');
-        $this->assertStringContainsString('Create or Update is already configured for this module', $resSync->json('errors.operation.0'));
-    }
-
-    /**
-     * Scenario 3: Update + Sync → Rejected.
-     */
-    public function test_scenario_3_update_plus_sync_is_rejected(): void
-    {
-        $this->connection->apis()->create([
-            'module' => 'technologies',
-            'operation' => 'update',
-            'method' => 'PUT',
-            'endpoint' => '/api/technologies',
-            'is_active' => true,
-        ]);
-
+        // Add Sync
         $resSync = $this->actingAs($this->authorizedUser)
             ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
                 'module' => 'technologies',
@@ -122,147 +88,73 @@ class DataSyncOutboundApiConflictTest extends TestCase
                 'endpoint' => '/api/technologies/sync',
                 'is_active' => 1,
             ]);
+        $resSync->assertStatus(201);
 
-        $resSync->assertStatus(422);
-        $resSync->assertJsonValidationErrors('operation');
-        $this->assertStringContainsString('Create or Update is already configured for this module', $resSync->json('errors.operation.0'));
-    }
-
-    /**
-     * Scenario 4: Sync + Create → Rejected.
-     */
-    public function test_scenario_4_sync_plus_create_is_rejected(): void
-    {
-        $this->connection->apis()->create([
-            'module' => 'customers',
-            'operation' => 'sync',
-            'method' => 'POST',
-            'endpoint' => '/api/customers/sync',
-            'is_active' => true,
-        ]);
-
-        $resCreate = $this->actingAs($this->authorizedUser)
-            ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
-                'module' => 'customers',
-                'operation' => 'create',
-                'method' => 'POST',
-                'endpoint' => '/api/customers',
-                'is_active' => 1,
-            ]);
-
-        $resCreate->assertStatus(422);
-        $resCreate->assertJsonValidationErrors('operation');
-        $this->assertStringContainsString('Sync / Upsert is already configured for this module', $resCreate->json('errors.operation.0'));
-    }
-
-    /**
-     * Scenario 5: Sync + Update → Rejected.
-     */
-    public function test_scenario_5_sync_plus_update_is_rejected(): void
-    {
-        $this->connection->apis()->create([
-            'module' => 'customers',
-            'operation' => 'sync',
-            'method' => 'POST',
-            'endpoint' => '/api/customers/sync',
-            'is_active' => true,
-        ]);
-
-        $resUpdate = $this->actingAs($this->authorizedUser)
-            ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
-                'module' => 'customers',
-                'operation' => 'update',
-                'method' => 'PUT',
-                'endpoint' => '/api/customers/{id}',
-                'is_active' => 1,
-            ]);
-
-        $resUpdate->assertStatus(422);
-        $resUpdate->assertJsonValidationErrors('operation');
-        $this->assertStringContainsString('Sync / Upsert is already configured for this module', $resUpdate->json('errors.operation.0'));
-    }
-
-    /**
-     * Scenario 6: Sync + Delete → Allowed.
-     */
-    public function test_scenario_6_sync_and_delete_are_allowed_together(): void
-    {
-        $this->connection->apis()->create([
-            'module' => 'industries',
-            'operation' => 'sync',
-            'method' => 'POST',
-            'endpoint' => '/api/industries/sync',
-            'is_active' => true,
-        ]);
-
+        // Add Delete
         $resDelete = $this->actingAs($this->authorizedUser)
             ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
-                'module' => 'industries',
+                'module' => 'technologies',
                 'operation' => 'delete',
                 'method' => 'DELETE',
-                'endpoint' => '/api/industries/{id}',
+                'endpoint' => '/api/technologies/{code}',
+                'is_active' => 1,
+            ]);
+        $resDelete->assertStatus(201);
+
+        $this->assertSame(2, $this->connection->apis()->where('module', 'technologies')->count());
+    }
+
+    /**
+     * Scenario 3: Unsupported operations are rejected.
+     */
+    public function test_scenario_3_unsupported_operations_are_rejected(): void
+    {
+        // Technologies does not support update
+        $resBad = $this->actingAs($this->authorizedUser)
+            ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
+                'module' => 'technologies',
+                'operation' => 'update',
+                'method' => 'PUT',
+                'endpoint' => '/api/technologies/{id}',
                 'is_active' => 1,
             ]);
 
-        $resDelete->assertStatus(201);
-        $this->assertSame(2, $this->connection->apis()->where('module', 'industries')->count());
+        $resBad->assertStatus(422);
+        $resBad->assertJsonValidationErrors('operation');
+        $this->assertStringContainsString('not supported for module [technologies]', $resBad->json('errors.operation.0'));
     }
 
     /**
-     * Scenario 7: Create + Update + Delete → Allowed.
+     * Scenario 4: Duplicate operation → Rejected.
      */
-    public function test_scenario_7_create_update_and_delete_are_allowed_together(): void
-    {
-        foreach ([
-            ['operation' => 'create', 'method' => 'POST', 'endpoint' => '/api/meetings'],
-            ['operation' => 'update', 'method' => 'PUT', 'endpoint' => '/api/meetings/{id}'],
-            ['operation' => 'delete', 'method' => 'DELETE', 'endpoint' => '/api/meetings/{id}'],
-        ] as $apiData) {
-            $res = $this->actingAs($this->authorizedUser)
-                ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
-                    'module' => 'meetings',
-                    'operation' => $apiData['operation'],
-                    'method' => $apiData['method'],
-                    'endpoint' => $apiData['endpoint'],
-                    'is_active' => 1,
-                ]);
-            $res->assertStatus(201);
-        }
-
-        $this->assertSame(3, $this->connection->apis()->where('module', 'meetings')->count());
-    }
-
-    /**
-     * Scenario 8: Duplicate operation → Rejected.
-     */
-    public function test_scenario_8_duplicate_operation_is_rejected(): void
+    public function test_scenario_4_duplicate_operation_is_rejected(): void
     {
         $this->connection->apis()->create([
             'module' => 'project_categories',
-            'operation' => 'create',
+            'operation' => 'sync',
             'method' => 'POST',
-            'endpoint' => '/api/categories',
+            'endpoint' => '/api/categories/sync',
             'is_active' => true,
         ]);
 
         $resDuplicate = $this->actingAs($this->authorizedUser)
             ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
                 'module' => 'project_categories',
-                'operation' => 'create',
+                'operation' => 'sync',
                 'method' => 'POST',
-                'endpoint' => '/api/categories/duplicate',
+                'endpoint' => '/api/categories/duplicate-sync',
                 'is_active' => 1,
             ]);
 
         $resDuplicate->assertStatus(422);
         $resDuplicate->assertJsonValidationErrors('operation');
-        $this->assertStringContainsString('This operation is already configured for the selected module.', $resDuplicate->json('errors.operation.0'));
+        $this->assertStringContainsString('already configured for the selected module', $resDuplicate->json('errors.operation.0'));
     }
 
     /**
-     * Scenario 9: Same module under different connections → Allowed.
+     * Scenario 5: Same module under different connections → Allowed.
      */
-    public function test_scenario_9_same_module_under_different_connections_is_allowed(): void
+    public function test_scenario_5_same_module_under_different_connections_is_allowed(): void
     {
         $connection2 = DataSyncOutboundConnection::create([
             'name' => 'Second Outbound Connection',
@@ -272,22 +164,22 @@ class DataSyncOutboundApiConflictTest extends TestCase
             'is_active' => true,
         ]);
 
-        // Connection 1 has sync on projects
+        // Connection 1 has update on projects
         $this->connection->apis()->create([
             'module' => 'projects',
-            'operation' => 'sync',
-            'method' => 'POST',
-            'endpoint' => '/api/v1/projects/sync',
+            'operation' => 'update',
+            'method' => 'PUT',
+            'endpoint' => '/api/v1/projects/{id}',
             'is_active' => true,
         ]);
 
-        // Connection 2 can configure create on projects without conflict
+        // Connection 2 can configure update on projects without conflict
         $resConn2 = $this->actingAs($this->authorizedUser)
             ->postJson("/settings/data-sync/outbound/connections/{$connection2->id}/apis", [
                 'module' => 'projects',
-                'operation' => 'create',
-                'method' => 'POST',
-                'endpoint' => '/api/v2/projects',
+                'operation' => 'update',
+                'method' => 'PUT',
+                'endpoint' => '/api/v2/projects/{id}',
                 'is_active' => 1,
             ]);
 
@@ -295,24 +187,23 @@ class DataSyncOutboundApiConflictTest extends TestCase
     }
 
     /**
-     * Scenario 10: Editing an existing API without changing its operation → Allowed.
+     * Scenario 6: Editing an existing API without changing its operation → Allowed.
      */
-    public function test_scenario_10_editing_existing_api_without_changing_operation_is_allowed(): void
+    public function test_scenario_6_editing_existing_api_without_changing_operation_is_allowed(): void
     {
         $api = $this->connection->apis()->create([
             'module' => 'technologies',
-            'operation' => 'create',
+            'operation' => 'sync',
             'method' => 'POST',
-            'endpoint' => '/api/tech',
+            'endpoint' => '/api/v1/tech-sync',
             'is_active' => true,
         ]);
 
-        // Update endpoint without changing operation
         $resUpdate = $this->actingAs($this->authorizedUser)
             ->putJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis/{$api->id}", [
                 'module' => 'technologies',
-                'operation' => 'create',
-                'method' => 'POST',
+                'operation' => 'sync',
+                'method' => 'PUT',
                 'endpoint' => '/api/v2/tech-new-endpoint',
                 'is_active' => 1,
             ]);
@@ -320,64 +211,13 @@ class DataSyncOutboundApiConflictTest extends TestCase
         $resUpdate->assertStatus(200);
         $api->refresh();
         $this->assertSame('/api/v2/tech-new-endpoint', $api->endpoint);
+        $this->assertSame('PUT', $api->method);
     }
 
     /**
-     * Scenario 11: Changing an API's module or operation → Validated against the destination combination.
+     * Scenario 7: Inactive API configurations still prevent duplicates.
      */
-    public function test_scenario_11_changing_api_module_or_operation_is_validated_against_destination(): void
-    {
-        // Connection has Sync on 'customers'
-        $this->connection->apis()->create([
-            'module' => 'customers',
-            'operation' => 'sync',
-            'method' => 'POST',
-            'endpoint' => '/api/customers/sync',
-            'is_active' => true,
-        ]);
-
-        // Connection has Delete on 'projects'
-        $projectDeleteApi = $this->connection->apis()->create([
-            'module' => 'projects',
-            'operation' => 'delete',
-            'method' => 'DELETE',
-            'endpoint' => '/api/projects/{id}',
-            'is_active' => true,
-        ]);
-
-        // Attempt to move the delete API to 'customers' with 'create' (conflicts with customers sync)
-        $resInvalidMove = $this->actingAs($this->authorizedUser)
-            ->putJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis/{$projectDeleteApi->id}", [
-                'module' => 'customers',
-                'operation' => 'create',
-                'method' => 'POST',
-                'endpoint' => '/api/customers',
-                'is_active' => 1,
-            ]);
-
-        $resInvalidMove->assertStatus(422);
-        $resInvalidMove->assertJsonValidationErrors('operation');
-        $this->assertStringContainsString('Sync / Upsert is already configured for this module', $resInvalidMove->json('errors.operation.0'));
-
-        // Moving to 'customers' with 'delete' should be allowed (since sync + delete is permitted)
-        $resValidMove = $this->actingAs($this->authorizedUser)
-            ->putJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis/{$projectDeleteApi->id}", [
-                'module' => 'customers',
-                'operation' => 'delete',
-                'method' => 'DELETE',
-                'endpoint' => '/api/customers/{id}',
-                'is_active' => 1,
-            ]);
-
-        $resValidMove->assertStatus(200);
-        $projectDeleteApi->refresh();
-        $this->assertSame('customers', $projectDeleteApi->module);
-    }
-
-    /**
-     * Scenario 12: Inactive API configurations → Still included in conflict validation.
-     */
-    public function test_scenario_12_inactive_api_configurations_still_prevent_conflicts(): void
+    public function test_scenario_7_inactive_api_configurations_still_prevent_duplicates(): void
     {
         // Inactive 'sync' API
         $this->connection->apis()->create([
@@ -388,36 +228,36 @@ class DataSyncOutboundApiConflictTest extends TestCase
             'is_active' => false,
         ]);
 
-        // Attempting to add 'create' while 'sync' is inactive must still fail
+        // Attempting to add duplicate 'sync' while existing is inactive must still fail
         $resCreate = $this->actingAs($this->authorizedUser)
             ->postJson("/settings/data-sync/outbound/connections/{$this->connection->id}/apis", [
                 'module' => 'project_statuses',
-                'operation' => 'create',
+                'operation' => 'sync',
                 'method' => 'POST',
-                'endpoint' => '/api/statuses',
+                'endpoint' => '/api/statuses/another-sync',
                 'is_active' => 1,
             ]);
 
         $resCreate->assertStatus(422);
         $resCreate->assertJsonValidationErrors('operation');
-        $this->assertStringContainsString('Sync / Upsert is already configured for this module', $resCreate->json('errors.operation.0'));
+        $this->assertStringContainsString('already configured for the selected module', $resCreate->json('errors.operation.0'));
     }
 
     /**
-     * Scenario 13: Concurrent attempts to create conflicting operations → Only a valid combination is persisted.
+     * Scenario 8: Concurrent attempts to create duplicate operations are prevented.
      */
-    public function test_scenario_13_concurrent_attempts_to_create_conflicts_are_prevented(): void
+    public function test_scenario_8_concurrent_attempts_to_create_duplicates_are_prevented(): void
     {
         $service = app(OutboundConnectionService::class);
 
-        // Transaction A creates 'create'
+        // Transaction A creates 'update'
         DB::beginTransaction();
         try {
             $service->createApi($this->connection, [
                 'module' => 'projects',
-                'operation' => 'create',
-                'method' => 'POST',
-                'endpoint' => '/api/projects',
+                'operation' => 'update',
+                'method' => 'PUT',
+                'endpoint' => '/api/projects/{id}',
                 'is_active' => true,
             ]);
             DB::commit();
@@ -426,25 +266,24 @@ class DataSyncOutboundApiConflictTest extends TestCase
             throw $e;
         }
 
-        // Subsequent attempt to create 'sync' within another transaction must be blocked by validation
+        // Subsequent attempt to create duplicate 'update' within another transaction must be blocked by validation
         $conflictThrown = false;
         try {
             $service->createApi($this->connection, [
                 'module' => 'projects',
-                'operation' => 'sync',
-                'method' => 'POST',
-                'endpoint' => '/api/projects/sync',
+                'operation' => 'update',
+                'method' => 'PUT',
+                'endpoint' => '/api/projects/update-duplicate',
                 'is_active' => true,
             ]);
         } catch (ValidationException $e) {
             $conflictThrown = true;
             $this->assertArrayHasKey('operation', $e->errors());
-            $this->assertStringContainsString('Create or Update is already configured for this module', $e->errors()['operation'][0]);
+            $this->assertStringContainsString('already configured', $e->errors()['operation'][0]);
         }
 
         $this->assertTrue($conflictThrown);
         $this->assertSame(1, $this->connection->apis()->where('module', 'projects')->count());
-        $this->assertSame('create', $this->connection->apis()->where('module', 'projects')->first()->operation);
+        $this->assertSame('update', $this->connection->apis()->where('module', 'projects')->first()->operation);
     }
 }
-
