@@ -225,6 +225,7 @@ class OutboundDataSyncEngineTest extends TestCase
 
         $this->assertNotNull($history);
         $this->assertSame('https://api.external-system.com/api/v1/technologies/990005', $history->request_url);
+        $this->assertSame('technology', $history->request_payload['module']);
         $this->assertSame('990005', $history->request_payload['code']);
         Queue::assertPushed(SendOutboundApiJob::class, fn($j) => $j->historyId === $history->id);
     }
@@ -338,6 +339,7 @@ class OutboundDataSyncEngineTest extends TestCase
             ->where('entity_id', $category->id)
             ->first();
         $this->assertNotNull($deleteHistory);
+        $this->assertSame('project_categories', $deleteHistory->request_payload['module']);
         $this->assertSame('990201', $deleteHistory->request_payload['code']);
     }
 

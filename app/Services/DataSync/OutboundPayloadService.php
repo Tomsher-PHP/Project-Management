@@ -62,7 +62,20 @@ class OutboundPayloadService
     public function buildDeletePayload(string $module, Model $model, ?DataSyncOutboundConnection $connection = null): array
     {
         return match ($module) {
-            'technologies', 'industries', 'project_categories', 'project_statuses' => [
+            'technologies' => [
+                'module' => 'technology',
+                'code' => (string) $model->code,
+            ],
+            'industries' => [
+                'module' => 'industries',
+                'code' => (string) $model->code,
+            ],
+            'project_categories' => [
+                'module' => 'project_categories',
+                'code' => (string) $model->code,
+            ],
+            'project_statuses' => [
+                'module' => 'project_statuses',
                 'code' => (string) $model->code,
             ],
             'customers' => $this->buildCustomerDeletePayload($model, $connection),
