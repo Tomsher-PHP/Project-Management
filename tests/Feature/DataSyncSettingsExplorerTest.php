@@ -204,6 +204,13 @@ class DataSyncSettingsExplorerTest extends TestCase
 
         $this->assertEquals('POST', $module['operations']['create']['method']);
         $this->assertEquals('PUT', $module['operations']['update']['method']);
+
+        $createPayload = $module['operations']['create']['request_payload'];
+        $this->assertNotEmpty($createPayload['customer']['contacts']);
+        foreach ($createPayload['customer']['contacts'] as $contact) {
+            $this->assertArrayHasKey('whatsapp', $contact);
+            $this->assertArrayHasKey('landline', $contact);
+        }
     }
 
     /**
@@ -218,6 +225,13 @@ class DataSyncSettingsExplorerTest extends TestCase
         $this->assertContains('update', $operations);
         $this->assertEquals('PUT', $module['operations']['update']['method']);
         $this->assertEquals('/api/integrations/customers/{external_code}', $module['operations']['update']['endpoint']);
+
+        $updatePayload = $module['operations']['update']['request_payload'];
+        $this->assertNotEmpty($updatePayload['contacts']);
+        foreach ($updatePayload['contacts'] as $contact) {
+            $this->assertArrayHasKey('whatsapp', $contact);
+            $this->assertArrayHasKey('landline', $contact);
+        }
     }
 
     /**
