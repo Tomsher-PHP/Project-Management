@@ -125,11 +125,8 @@ class OutboundDataSyncService
     /**
      * Create delivery history record and dispatch SendOutboundApiJob.
      */
-    protected function createAndDispatchDelivery(
-        DataSyncOutboundConnection $connection,
-        DataSyncOutboundApi $api,
-        Model $model
-    ): ?DataSyncOutboundHistory {
+    protected function createAndDispatchDelivery(DataSyncOutboundConnection $connection, DataSyncOutboundApi $api, Model $model): ?DataSyncOutboundHistory
+    {
         $resolvedOperation = $api->operation;
 
         // Generate JSON payload
@@ -211,12 +208,8 @@ class OutboundDataSyncService
      *   If Delete API exists -> Delete
      *   Else -> Skip (null)
      */
-    public function resolveMatchingApi(
-        DataSyncOutboundConnection $connection,
-        string $operation,
-        ?string $module = null,
-        ?Model $model = null
-    ): ?DataSyncOutboundApi {
+    public function resolveMatchingApi(DataSyncOutboundConnection $connection, string $operation, ?string $module = null, ?Model $model = null): ?DataSyncOutboundApi
+    {
         $apis = $connection->apis->where('is_active', true);
 
         // Recognize status_update as a Projects-only operation
@@ -260,17 +253,15 @@ class OutboundDataSyncService
                     ->where('is_active', true);
             }])
             ->get()
-            ->filter(fn (DataSyncOutboundConnection $conn) => $conn->apis->isNotEmpty())
+            ->filter(fn(DataSyncOutboundConnection $conn) => $conn->apis->isNotEmpty())
             ->values();
     }
 
     /**
      * Determine whether a PMS project is mapped to the outbound connection's linked API client.
      */
-    private function isProjectMappedToConnection(
-        int $projectId,
-        DataSyncOutboundConnection $connection
-    ): bool {
+    private function isProjectMappedToConnection(int $projectId, DataSyncOutboundConnection $connection): bool
+    {
         if (empty($connection->api_client_id)) {
             return false;
         }
@@ -285,12 +276,8 @@ class OutboundDataSyncService
     /**
      * Determine if an outbound connection is the originating external system of the change.
      */
-    public function isOriginatingExternalSystem(
-        DataSyncOutboundConnection $connection,
-        ?ApiClient $originatingClient,
-        string $module,
-        Model $model
-    ): bool {
+    public function isOriginatingExternalSystem(DataSyncOutboundConnection $connection, ?ApiClient $originatingClient, string $module, Model $model): bool
+    {
         if (! $originatingClient) {
             return false;
         }
@@ -396,4 +383,3 @@ class OutboundDataSyncService
         return $dispatched;
     }
 }
-
