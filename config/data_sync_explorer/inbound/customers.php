@@ -13,17 +13,17 @@ return [
             'name' => 'Update Customer',
             'description' => 'Update customer organization attributes and contacts. Supplying contact id updates the existing contact, while omitting id creates a new contact.',
             'method' => 'PUT',
-            'endpoint' => '/api/integrations/customers/{customer_code}',
+            'endpoint' => '/api/integrations/customers/{external_code}',
             'scope' => ApiClient::SCOPE_PROJECTS_WRITE,
             'scope_description' => 'Allows creating and updating Customer and Project records.',
             'header_profile' => 'json_write',
             'path_params' => [
                 0 => [
-                    'name' => 'customer_code',
+                    'name' => 'external_code',
                     'type' => 'string',
                     'required' => true,
-                    'example' => 'CUS00025',
-                    'description' => 'Unique PMS customer code.',
+                    'example' => 'EXT-CUS-00025',
+                    'description' => 'External customer code mapped to the customer in data_sync_entity_mappings.',
                 ],
             ],
             'query_params' => [

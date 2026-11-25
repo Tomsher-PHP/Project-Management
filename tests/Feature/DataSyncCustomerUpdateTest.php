@@ -36,6 +36,8 @@ class DataSyncCustomerUpdateTest extends TestCase
     protected CustomerContact $contact1;
     protected CustomerContact $contact2;
     protected Project $project;
+    protected string $externalCode = 'CRM-CUS-00001';
+    protected DataSyncEntityMapping $mapping;
 
     protected function setUp(): void
     {
@@ -137,12 +139,19 @@ class DataSyncCustomerUpdateTest extends TestCase
         ]);
         $this->apiClient = $result['client'];
         $this->authorizedKey = $result['plain_text_key'];
+
+        $this->mapping = DataSyncEntityMapping::create([
+            'api_client_id' => $this->apiClient->id,
+            'entity_type' => DataSyncEntityMapping::ENTITY_TYPE_CUSTOMER,
+            'external_code' => $this->externalCode,
+            'local_id' => $this->customer->id,
+        ]);
     }
 
     public function test_1_existing_customer_updates_successfully(): void
     {
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Updated Customer LLC via API',
             ])
             ->assertStatus(200)
@@ -166,7 +175,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_2_invalid_customer_code_returns_404(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/CUS999999', [
+            ->putJson('/api/integrations/customers/NONEXISTENT_EXTERNAL_CODE', [
                 'name' => 'Nonexistent Customer',
             ])
             ->assertStatus(404)
@@ -178,7 +187,7 @@ class DataSyncCustomerUpdateTest extends TestCase
 
     public function test_3_missing_api_key_returns_401(): void
     {
-        $this->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+        $this->putJson('/api/integrations/customers/' . $this->externalCode, [
             'name' => 'Unauthorized Customer Update',
         ])->assertStatus(401);
     }
@@ -190,7 +199,7 @@ class DataSyncCustomerUpdateTest extends TestCase
         ]);
 
         $this->withHeader('Authorization', 'Bearer ' . $readResult['plain_text_key'])
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Forbidden Customer Update',
             ])
             ->assertStatus(403)
@@ -203,7 +212,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_5_customer_name_update(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Brand New Customer Name LLC',
             ])
             ->assertStatus(200);
@@ -214,7 +223,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_6_customer_email_update(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'email' => 'new.customer.email@abctech.ae',
             ])
             ->assertStatus(200);
@@ -232,7 +241,7 @@ class DataSyncCustomerUpdateTest extends TestCase
         $originalSalesPersonId = $this->customer->sales_person_id;
 
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'emirate' => 'Abu Dhabi',
             ])
             ->assertStatus(200);
@@ -251,7 +260,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_8_industry_resolution(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'industry_code' => $this->secondIndustry->code,
             ])
             ->assertStatus(200);
@@ -262,7 +271,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_9_invalid_industry_returns_422(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'industry_code' => '999999',
             ])
             ->assertStatus(422)
@@ -272,7 +281,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_10_country_resolution(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'country_code' => 'sa',
             ])
             ->assertStatus(200);
@@ -283,7 +292,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_11_invalid_country_returns_422(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'country_code' => 'ZZ',
             ])
             ->assertStatus(422)
@@ -293,7 +302,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_12_salesperson_resolution(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'sales_person_email' => $this->secondSalesUser->email,
             ])
             ->assertStatus(200);
@@ -304,7 +313,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_13_invalid_salesperson_returns_422(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'sales_person_email' => 'nobody@nonexistent.ae',
             ])
             ->assertStatus(422)
@@ -314,7 +323,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_14_active_status_update(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'is_active' => false,
             ])
             ->assertStatus(200);
@@ -325,7 +334,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_15_website_and_address_updates(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'website' => 'https://newdomain.com',
                 'company_address' => 'New Office Tower, Floor 10, Business Bay',
             ])
@@ -339,7 +348,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_16_existing_contact_update(): void
     {
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
                         'id' => $this->contact2->id,
@@ -365,7 +374,7 @@ class DataSyncCustomerUpdateTest extends TestCase
         $initialContactCount = CustomerContact::where('customer_id', $this->customer->id)->count();
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
                         'name' => 'Brand New Contact',
@@ -389,7 +398,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_18_existing_contacts_remain_unchanged_when_omitted(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Only Name Changed',
             ])
             ->assertStatus(200);
@@ -402,7 +411,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_19_empty_contacts_array_does_not_delete_contacts(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [],
             ])
             ->assertStatus(200);
@@ -424,7 +433,7 @@ class DataSyncCustomerUpdateTest extends TestCase
         ]);
 
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
                         'id' => $otherContact->id,
@@ -442,7 +451,7 @@ class DataSyncCustomerUpdateTest extends TestCase
         $this->assertFalse((bool) $this->contact2->fresh()->is_primary);
 
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
                         'id' => $this->contact2->id,
@@ -459,7 +468,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_22_multiple_primary_contacts_are_prevented(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
                         'id' => $this->contact1->id,
@@ -477,16 +486,9 @@ class DataSyncCustomerUpdateTest extends TestCase
 
     public function test_23_external_mapping_verification(): void
     {
-        DataSyncEntityMapping::create([
-            'api_client_id' => $this->apiClient->id,
-            'entity_type' => DataSyncEntityMapping::ENTITY_TYPE_CUSTOMER,
-            'external_code' => 'CRM-CUS-VALID-1',
-            'local_id' => $this->customer->id,
-        ]);
-
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
-                'external_code' => 'CRM-CUS-VALID-1',
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'external_code' => $this->externalCode,
                 'name' => 'Customer With Verified Mapping',
             ])
             ->assertStatus(200);
@@ -505,13 +507,14 @@ class DataSyncCustomerUpdateTest extends TestCase
             'api_client_id' => $this->apiClient->id,
             'entity_type' => DataSyncEntityMapping::ENTITY_TYPE_CUSTOMER,
             'external_code' => 'CRM-CUS-OTHER-CODE',
+            'external_id' => 'EXT-CUS-OTHER-ID',
             'local_id' => $otherCustomer->id,
         ]);
 
-        // Attempt to update Customer 1 claiming external code of Customer 2
+        // Attempt to update Customer 1 claiming external id of Customer 2
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
-                'external_code' => 'CRM-CUS-OTHER-CODE',
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'external_id' => 'EXT-CUS-OTHER-ID',
             ])
             ->assertStatus(409)
             ->assertJson([
@@ -520,38 +523,43 @@ class DataSyncCustomerUpdateTest extends TestCase
             ]);
     }
 
+    public function test_24b_conflicting_external_code_returns_409(): void
+    {
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'external_code' => 'CRM-CUS-OTHER-CODE',
+            ])
+            ->assertStatus(409)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Conflicting external customer code.',
+            ]);
+    }
+
     public function test_25_safe_mapping_enrichment(): void
     {
-        $mapping = DataSyncEntityMapping::create([
-            'api_client_id' => $this->apiClient->id,
-            'entity_type' => DataSyncEntityMapping::ENTITY_TYPE_CUSTOMER,
-            'external_code' => 'CRM-CUS-ENRICH',
-            'external_id' => null,
-            'local_id' => $this->customer->id,
-        ]);
-
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
-                'external_code' => 'CRM-CUS-ENRICH',
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'external_code' => $this->externalCode,
                 'external_id' => 'EXT-CUS-ID-999',
             ])
             ->assertStatus(200);
 
-        $mapping->refresh();
-        $this->assertSame('CRM-CUS-ENRICH', $mapping->external_code);
-        $this->assertSame('EXT-CUS-ID-999', $mapping->external_id);
+        $this->mapping->refresh();
+        $this->assertSame($this->externalCode, $this->mapping->external_code);
+        $this->assertSame('EXT-CUS-ID-999', $this->mapping->external_id);
     }
 
     public function test_26_no_unnecessary_customer_or_contact_duplication(): void
     {
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Idempotent Customer Name',
             ])
             ->assertStatus(200);
 
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Idempotent Customer Name',
             ])
             ->assertStatus(200);
@@ -568,7 +576,7 @@ class DataSyncCustomerUpdateTest extends TestCase
         $originalCustomerId = $this->project->customer_id;
 
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Updated Customer Name Check Projects',
                 'is_active' => false,
             ])
@@ -589,10 +597,11 @@ class DataSyncCustomerUpdateTest extends TestCase
         $this->instance(CustomerUpdateService::class, new class(
             app(ExternalEntityMappingService::class)
         ) extends CustomerUpdateService {
-            public function update(string $customerCode, array $data, ?ApiClient $apiClient = null): array
+            public function update(string $externalCode, array $data, ?ApiClient $apiClient = null): array
             {
-                return \Illuminate\Support\Facades\DB::transaction(function () use ($customerCode) {
-                    $customer = Customer::where('customer_code', $customerCode)->first();
+                return \Illuminate\Support\Facades\DB::transaction(function () use ($externalCode) {
+                    $mapping = DataSyncEntityMapping::where('external_code', $externalCode)->first();
+                    $customer = Customer::where('id', $mapping->local_id)->first();
                     $customer->update(['name' => 'Crash Test Customer Name']);
 
                     throw new Exception('Simulated customer update crash.');
@@ -601,7 +610,7 @@ class DataSyncCustomerUpdateTest extends TestCase
         });
 
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Failing Customer Update',
             ])
             ->assertStatus(500)
@@ -618,7 +627,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     public function test_29_no_change_request_returns_updated_false(): void
     {
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => $this->customer->name,
                 'email' => $this->customer->email,
             ])
@@ -633,7 +642,7 @@ class DataSyncCustomerUpdateTest extends TestCase
     {
         // Calling update preserves customer code and existing relationships
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->customer->customer_code, [
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Regression Test Customer',
             ])
             ->assertStatus(200);
