@@ -45,27 +45,27 @@
 
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-lg border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30">
                             <div>
-                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Connection</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Connection</span>
                                 <p id="history-modal-connection" class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">—</p>
                             </div>
                             <div>
-                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Module & Operation</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Module & Operation</span>
                                 <p id="history-modal-module-operation" class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">—</p>
                             </div>
                             <div>
-                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Method & Endpoint</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Method & Endpoint</span>
                                 <p class="mt-1 text-sm font-mono text-bgray-900 dark:text-white">
                                     <span id="history-modal-method" class="font-bold text-success-500">—</span>
                                     <span id="history-modal-endpoint" class="text-bgray-700 dark:text-bgray-300">—</span>
                                 </p>
                             </div>
                             <div>
-                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Execution Date</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Execution Date</span>
                                 <p id="history-modal-created-at" class="mt-1 text-sm text-bgray-900 dark:text-white">—</p>
                             </div>
                             <div class="sm:col-span-2">
-                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Request URL</span>
-                                <p id="history-modal-request-url" class="mt-1 break-all rounded border border-bgray-200 bg-white px-3 py-2 text-xs font-mono text-bgray-800 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-200">—</p>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Request URL</span>
+                                <p id="history-modal-request-url" class="mt-1 break-all rounded border border-bgray-200 bg-white px-3 py-2 text-xs font-mono text-bgray-800 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">—</p>
                             </div>
                         </div>
 
@@ -80,7 +80,7 @@
                                     <span>Copy Payload</span>
                                 </button>
                             </div>
-                            <pre class="max-h-56 overflow-y-auto rounded-lg border border-bgray-200 bg-bgray-100 p-3 text-xs font-mono text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100"><code id="history-modal-payload">No request payload</code></pre>
+                            <pre class="max-h-56 overflow-y-auto rounded-lg border border-bgray-200 bg-bgray-100 p-3 text-xs font-mono text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300"><code id="history-modal-payload">No request payload</code></pre>
                         </div>
                     </div>
 
@@ -93,11 +93,11 @@
 
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-lg border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30">
                             <div>
-                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Response Code</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Response Code</span>
                                 <p id="history-modal-response-code" class="mt-1 text-sm font-semibold font-mono text-bgray-900 dark:text-white">—</p>
                             </div>
                             <div>
-                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">Delivery Status</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Delivery Status</span>
                                 <p id="history-modal-status-text" class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">—</p>
                             </div>
                         </div>
@@ -113,7 +113,7 @@
                                     <span>Copy Response</span>
                                 </button>
                             </div>
-                            <pre class="max-h-56 overflow-y-auto rounded-lg border border-bgray-200 bg-bgray-100 p-3 text-xs font-mono text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100"><code id="history-modal-response-body">No response body</code></pre>
+                            <pre class="max-h-56 overflow-y-auto rounded-lg border border-bgray-200 bg-bgray-100 p-3 text-xs font-mono text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300"><code id="history-modal-response-body">No response body</code></pre>
                         </div>
                     </div>
                 </div>
