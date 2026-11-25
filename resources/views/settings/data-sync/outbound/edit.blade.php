@@ -61,10 +61,10 @@
 
                         <!-- Linked Inbound API Client (Optional) -->
                         <div>
-                            <label for="edit-connection-api-client" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
-                                Linked Inbound API Client <span class="text-xs font-normal text-bgray-500">(Optional)</span>
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                Linked Inbound API Client <span class="text-xs font-normal text-bgray-600">(Optional)</span>
                             </label>
-                            <select id="edit-connection-api-client" name="api_client_id" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                            <select id="edit-connection-api-client" name="api_client_id" class="tom-select w-full">
                                 <option value="">None (Standalone Outbound System)</option>
                                 @foreach ($apiClients ?? [] as $client)
                                     <option value="{{ $client->id }}" {{ (string) old('api_client_id', $connection->api_client_id) === (string) $client->id ? 'selected' : '' }}>
