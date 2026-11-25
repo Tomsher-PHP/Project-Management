@@ -118,7 +118,8 @@ $(document).ready(function () {
     // -------------------------------------------------------------------------
     // View History Details via AJAX
     // -------------------------------------------------------------------------
-    $(document).on('click', '.view-history-btn', function () {
+    $(document).on('click', '.view-history-btn', function (e) {
+        if (e) e.preventDefault();
         const url = $(this).data('url');
         const modal = $('#history-details-modal');
 

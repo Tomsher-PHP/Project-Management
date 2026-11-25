@@ -28,7 +28,7 @@
                     <div class="max-h-[75vh] overflow-y-auto px-6 py-6 sm:px-7 space-y-5">
                         <!-- Connection Name -->
                         <div>
-                            <label for="create-connection-name" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 Connection Name <span class="text-error-300">*</span>
                             </label>
                             <input type="text" id="create-connection-name" name="name" required maxlength="255" placeholder="e.g., Zoho CRM, HR ERP, SAP Gateway" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
@@ -37,7 +37,7 @@
 
                         <!-- Base URL -->
                         <div>
-                            <label for="create-connection-base-url" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 Base URL <span class="text-error-300">*</span>
                             </label>
                             <input type="url" id="create-connection-base-url" name="base_url" required maxlength="500" placeholder="https://api.external-system.com/v1" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
@@ -47,7 +47,7 @@
 
                         <!-- Bearer Token -->
                         <div>
-                            <label for="create-connection-token" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
                                 Bearer Token <span class="text-error-300">*</span>
                             </label>
                             <input type="password" id="create-connection-token" name="token" required placeholder="Enter Bearer Token" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm font-mono text-bgray-900 placeholder:text-bgray-400 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
@@ -56,10 +56,10 @@
 
                         <!-- Linked Inbound API Client (Optional) -->
                         <div>
-                            <label for="create-connection-api-client" class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
-                                Linked Inbound API Client <span class="text-xs font-normal text-bgray-500">(Optional)</span>
+                            <label class="block text-sm font-semibold text-bgray-900 dark:text-white mb-1.5">
+                                Linked Inbound API Client <span class="text-xs font-normal text-bgray-700">(Optional)</span>
                             </label>
-                            <select id="create-connection-api-client" name="api_client_id" class="w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-900 focus:border-success-300 focus:outline-none focus:ring-1 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                            <select id="create-connection-api-client" name="api_client_id" class="tom-select w-full">
                                 <option value="">None (Standalone Outbound System)</option>
                                 @foreach ($apiClients ?? [] as $client)
                                     <option value="{{ $client->id }}">{{ $client->name }}</option>

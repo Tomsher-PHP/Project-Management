@@ -7,16 +7,13 @@
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                     <div class="flex flex-col gap-1">
-                        <div class="flex flex-wrap items-center gap-2.5">
+                        <div class="flex flex-wrap items-center gap-2">
                             <h3 class="text-xl font-bold text-bgray-900 dark:text-white">
                                 Outbound Sync Details
                             </h3>
                             <span id="history-modal-status-badge"></span>
                             <span id="history-modal-response-code-badge"></span>
                         </div>
-                        <p class="text-xs text-bgray-600 dark:text-bgray-400">
-                            Inspect outbound request parameters, response bodies, and execution status.
-                        </p>
                     </div>
 
                     <button type="button" class="modal-close inline-flex h-9 w-9 items-center justify-center rounded-lg bg-bgray-100 text-bgray-700 transition hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">
@@ -27,14 +24,14 @@
                 <!-- Modal Body -->
                 <div class="max-h-[75vh] overflow-y-auto px-6 py-6 sm:px-7 space-y-6">
                     <!-- Error Message Alert (if present) -->
-                    <div id="history-modal-error-box" class="hidden rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800/40 dark:bg-red-900/20">
+                    <div id="history-modal-error-box" class="hidden rounded-lg border border-error-200 bg-error-50 p-4">
                         <div class="flex items-start gap-3">
-                            <svg class="h-5 w-5 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 text-error-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div class="min-w-0 flex-1">
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-red-800 dark:text-red-300">Execution Error</h4>
-                                <p id="history-modal-error-message" class="mt-1 text-sm text-red-700 dark:text-red-200 font-mono whitespace-pre-wrap break-all"></p>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-error-300">Execution Error</h4>
+                                <p id="history-modal-error-message" class="mt-1 text-sm text-error-200 dark:text-error-200 font-mono whitespace-pre-wrap break-all"></p>
                             </div>
                         </div>
                     </div>
@@ -131,4 +128,3 @@
         </div>
     </div>
 </div>
-

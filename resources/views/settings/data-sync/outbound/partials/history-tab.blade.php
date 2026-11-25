@@ -52,19 +52,19 @@
                                     {{ $connection?->name ?? '—' }}
                                 </span>
                                 @if ($api && $api->endpoint)
-                                    <span class="text-xs font-mono text-bgray-500 dark:text-bgray-400 truncate max-w-xs">
+                                    <span class="text-xs font-mono text-bgray-700 dark:text-bgray-300 truncate max-w-xs">
                                         {{ $api->method }} {{ $api->endpoint }}
                                     </span>
                                 @endif
                             </div>
                         </td>
                         <td class="px-4 py-5 whitespace-nowrap">
-                            <span class="inline-flex items-center rounded-md bg-bgray-100 px-2.5 py-1 text-xs font-semibold text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-200">
+                            <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-800 dark:text-bgray-300">
                                 {{ $moduleName }}
                             </span>
                         </td>
                         <td class="px-4 py-5 whitespace-nowrap">
-                            <span class="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                            <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold text-blue-700 dark:text-blue-400">
                                 {{ $operationName }}
                             </span>
                         </td>
@@ -103,16 +103,11 @@
                         </td>
                         <td class="px-4 py-5 whitespace-nowrap">
                             <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">
-                                {{ $history->created_at?->format('M d, Y H:i:s') ?? '—' }}
+                                @appDateTime($history->created_at)
                             </span>
                         </td>
                         <td class="pl-4 py-5 whitespace-nowrap text-right">
-                            <button type="button" class="view-history-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-300 text-bgray-600 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:text-bgray-300 dark:hover:border-success-300" data-id="{{ $history->id }}" data-url="{{ route('settings.data-sync.outbound.history.show', $history) }}" title="View History Details">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                            </button>
+                            <x-view-button action="javascript:void(0)" class="view-history-btn" data-id="{{ $history->id }}" data-url="{{ route('settings.data-sync.outbound.history.show', $history) }}" title="View History Details" />
                         </td>
                     </tr>
                 @empty
