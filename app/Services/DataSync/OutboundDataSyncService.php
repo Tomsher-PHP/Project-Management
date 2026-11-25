@@ -100,7 +100,19 @@ class OutboundDataSyncService
                 continue;
             }
 
-            // 4. Prepare delivery for this connection and API
+            // 4. Validate project mapping for status_update and update operations
+            if ($module === 'projects' && in_array($operation, ['status_update', 'update'], true)) {
+                if (! $this->isProjectMappedToConnection((int) $model->id, $connection)) {
+                    Log::debug('Outbound Data Sync skipped for unmapped project', [
+                        'connection_id' => $connection->id,
+                        'operation' => $operation,
+                        'project_id' => $model->id,
+                    ]);
+                    continue;
+                }
+            }
+
+            // 5. Prepare delivery for this connection and API
             $history = $this->createAndDispatchDelivery($connection, $matchingApi, $model);
             if ($history) {
                 $createdHistories[] = $history;
@@ -250,6 +262,24 @@ class OutboundDataSyncService
             ->get()
             ->filter(fn (DataSyncOutboundConnection $conn) => $conn->apis->isNotEmpty())
             ->values();
+    }
+
+    /**
+     * Determine whether a PMS project is mapped to the outbound connection's linked API client.
+     */
+    private function isProjectMappedToConnection(
+        int $projectId,
+        DataSyncOutboundConnection $connection
+    ): bool {
+        if (empty($connection->api_client_id)) {
+            return false;
+        }
+
+        return DataSyncEntityMapping::query()
+            ->where('api_client_id', $connection->api_client_id)
+            ->where('entity_type', DataSyncEntityMapping::ENTITY_TYPE_PROJECT)
+            ->where('local_id', $projectId)
+            ->exists();
     }
 
     /**

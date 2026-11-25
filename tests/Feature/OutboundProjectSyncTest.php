@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Jobs\DataSync\SendOutboundApiJob;
+use App\Models\ApiClient;
 use App\Models\Customer;
+use App\Models\DataSyncEntityMapping;
 use App\Models\DataSyncOutboundConnection;
 use App\Models\DataSyncOutboundHistory;
 use App\Models\Project;
@@ -22,6 +24,7 @@ class OutboundProjectSyncTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected ApiClient $apiClient;
     protected DataSyncOutboundConnection $connection;
     protected User $user;
     protected Customer $customer;
@@ -43,7 +46,16 @@ class OutboundProjectSyncTest extends TestCase
         ]);
         $this->actingAs($this->user);
 
+        $this->apiClient = ApiClient::create([
+            'name' => 'CRM External System',
+            'key_id' => 'pms_crm_' . uniqid(),
+            'secret_hash' => hash('sha256', 'secret'),
+            'scopes' => [ApiClient::SCOPE_PROJECTS_WRITE],
+            'is_active' => true,
+        ]);
+
         $this->connection = DataSyncOutboundConnection::create([
+            'api_client_id' => $this->apiClient->id,
             'name' => 'CRM External System',
             'base_url' => 'https://crm.example.com',
             'auth_type' => 'bearer',
@@ -97,9 +109,9 @@ class OutboundProjectSyncTest extends TestCase
     /**
      * Helper to create a base project for testing.
      */
-    protected function createProject(array $attributes = []): Project
+    protected function createProject(array $attributes = [], bool $mapped = true): Project
     {
-        return Project::create(array_merge([
+        $project = Project::create(array_merge([
             'project_code' => 'PRJ-2026-001',
             'name' => 'Corporate Portal Redesign',
             'customer_id' => $this->customer->id,
@@ -114,6 +126,26 @@ class OutboundProjectSyncTest extends TestCase
             'project_category_ids' => [$this->categoryWeb->id],
             'is_active' => true,
         ], $attributes));
+
+        if ($mapped) {
+            $this->mapProjectToClient($project, $this->apiClient);
+        }
+
+        return $project;
+    }
+
+    /**
+     * Helper to map a project to an ApiClient.
+     */
+    protected function mapProjectToClient(Project $project, ApiClient $client, ?string $externalId = null): DataSyncEntityMapping
+    {
+        return DataSyncEntityMapping::create([
+            'api_client_id' => $client->id,
+            'entity_type' => DataSyncEntityMapping::ENTITY_TYPE_PROJECT,
+            'external_code' => 'EXT-' . $project->project_code,
+            'external_id' => $externalId ?? (string) ($project->id + 1000),
+            'local_id' => $project->id,
+        ]);
     }
 
     /**
@@ -531,5 +563,249 @@ class OutboundProjectSyncTest extends TestCase
 
         $this->assertSame(0, DataSyncOutboundHistory::count());
         Queue::assertNothingPushed();
+    }
+
+    /**
+     * 11. Unmapped Project → Status Update:
+     * Skipped without creating history, while PMS status update completes normally.
+     */
+    public function test_11_unmapped_project_skips_status_update_without_interrupting_pms(): void
+    {
+        Queue::fake([SendOutboundApiJob::class]);
+
+        $this->connection->apis()->create([
+            'module' => 'projects',
+            'operation' => 'status_update',
+            'method' => 'POST',
+            'endpoint' => '/projects/status-update',
+            'is_active' => true,
+        ]);
+
+        // Create unmapped project
+        $project = $this->createProject(['project_code' => 'PRJ-UNMAPPED-1'], mapped: false);
+
+        $service = app(ProjectServices::class);
+        $updated = $service->updateStatus($project, $this->statusCompleted->id, '2026-03-01', 'Completed locally', $this->user);
+
+        // PMS update succeeded
+        $this->assertSame($this->statusCompleted->id, $updated->status_id);
+
+        // Outbound skipped
+        $this->assertSame(0, DataSyncOutboundHistory::count());
+        Queue::assertNothingPushed();
+    }
+
+    /**
+     * 12. Unmapped Project → Details Update:
+     * Skipped without creating history, while PMS project update completes normally.
+     */
+    public function test_12_unmapped_project_skips_details_update_without_interrupting_pms(): void
+    {
+        Queue::fake([SendOutboundApiJob::class]);
+
+        $this->connection->apis()->create([
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'POST',
+            'endpoint' => '/projects/update',
+            'is_active' => true,
+        ]);
+
+        // Create unmapped project
+        $project = $this->createProject(['project_code' => 'PRJ-UNMAPPED-2'], mapped: false);
+
+        $service = app(ProjectServices::class);
+        $updated = $service->update($project, [
+            'name' => 'Updated Unmapped Project',
+            'customer_id' => $this->customer->id,
+            'priority' => 'medium',
+            'default_billable' => false,
+        ], $this->user);
+
+        // PMS update succeeded
+        $this->assertSame('Updated Unmapped Project', $updated->name);
+
+        // Outbound skipped
+        $this->assertSame(0, DataSyncOutboundHistory::count());
+        Queue::assertNothingPushed();
+    }
+
+    /**
+     * 13. Mapping Belongs to Another API Client:
+     * Mapping for an unrelated ApiClient does not authorize outbound sync for this connection.
+     */
+    public function test_13_mapping_for_different_api_client_is_skipped(): void
+    {
+        Queue::fake([SendOutboundApiJob::class]);
+
+        $this->connection->apis()->create([
+            'module' => 'projects',
+            'operation' => 'status_update',
+            'method' => 'POST',
+            'endpoint' => '/projects/status-update',
+            'is_active' => true,
+        ]);
+        $this->connection->apis()->create([
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'POST',
+            'endpoint' => '/projects/update',
+            'is_active' => true,
+        ]);
+
+        $otherClient = ApiClient::create([
+            'name' => 'Other ERP System',
+            'key_id' => 'pms_erp_' . uniqid(),
+            'secret_hash' => hash('sha256', 'secret'),
+            'scopes' => [ApiClient::SCOPE_PROJECTS_WRITE],
+            'is_active' => true,
+        ]);
+
+        $project = $this->createProject(['project_code' => 'PRJ-OTHER-CLIENT'], mapped: false);
+        $this->mapProjectToClient($project, $otherClient);
+
+        $project->update([
+            'status_id' => $this->statusCompleted->id,
+            'name' => 'Updated Name',
+        ]);
+
+        $this->assertSame(0, DataSyncOutboundHistory::count());
+        Queue::assertNothingPushed();
+    }
+
+    /**
+     * 14. Connection Without Linked API Client:
+     * Fails closed even if the connection name matches an ApiClient that has a mapping.
+     */
+    public function test_14_connection_without_linked_api_client_fails_closed_even_if_name_matches(): void
+    {
+        Queue::fake([SendOutboundApiJob::class]);
+
+        // Unlink api_client_id from $this->connection (name still matches $this->apiClient->name)
+        $this->connection->update(['api_client_id' => null]);
+
+        $this->connection->apis()->create([
+            'module' => 'projects',
+            'operation' => 'status_update',
+            'method' => 'POST',
+            'endpoint' => '/projects/status-update',
+            'is_active' => true,
+        ]);
+        $this->connection->apis()->create([
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'POST',
+            'endpoint' => '/projects/update',
+            'is_active' => true,
+        ]);
+
+        // Map project to $this->apiClient (same name as connection, but connection has api_client_id = null)
+        $project = $this->createProject(['project_code' => 'PRJ-NO-CLIENT'], mapped: true);
+
+        $project->update([
+            'status_id' => $this->statusCompleted->id,
+            'name' => 'Should Not Dispatch',
+        ]);
+
+        $this->assertSame(0, DataSyncOutboundHistory::count());
+        Queue::assertNothingPushed();
+    }
+
+    /**
+     * 15. Multiple Outbound Connections:
+     * Each connection validates mapping independently.
+     */
+    public function test_15_multiple_connections_validate_mappings_independently(): void
+    {
+        Queue::fake([SendOutboundApiJob::class]);
+
+        $erpClient = ApiClient::create([
+            'name' => 'External ERP',
+            'key_id' => 'pms_erp_' . uniqid(),
+            'secret_hash' => hash('sha256', 'secret'),
+            'scopes' => [ApiClient::SCOPE_PROJECTS_WRITE],
+            'is_active' => true,
+        ]);
+
+        $erpConnection = DataSyncOutboundConnection::create([
+            'api_client_id' => $erpClient->id,
+            'name' => 'External ERP',
+            'base_url' => 'https://erp.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'erp-token'],
+            'is_active' => true,
+        ]);
+
+        $crmUpdateApi = $this->connection->apis()->create([
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'POST',
+            'endpoint' => '/projects/update',
+            'is_active' => true,
+        ]);
+        $erpUpdateApi = $erpConnection->apis()->create([
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'POST',
+            'endpoint' => '/erp/projects/update',
+            'is_active' => true,
+        ]);
+
+        // Project A: Mapped to CRM only
+        $projectA = $this->createProject(['project_code' => 'PRJ-A'], mapped: true);
+        $projectA->update(['name' => 'Project A Updated']);
+
+        $this->assertNotNull(
+            DataSyncOutboundHistory::where('outbound_api_id', $crmUpdateApi->id)->where('entity_id', $projectA->id)->first()
+        );
+        $this->assertNull(
+            DataSyncOutboundHistory::where('outbound_api_id', $erpUpdateApi->id)->where('entity_id', $projectA->id)->first()
+        );
+
+        // Project B: Mapped to both CRM and ERP
+        $projectB = $this->createProject(['project_code' => 'PRJ-B'], mapped: true);
+        $this->mapProjectToClient($projectB, $erpClient);
+        $projectB->update(['name' => 'Project B Updated']);
+
+        $this->assertNotNull(
+            DataSyncOutboundHistory::where('outbound_api_id', $crmUpdateApi->id)->where('entity_id', $projectB->id)->first()
+        );
+        $this->assertNotNull(
+            DataSyncOutboundHistory::where('outbound_api_id', $erpUpdateApi->id)->where('entity_id', $projectB->id)->first()
+        );
+    }
+
+    /**
+     * 16. Settings Masters Unaffected:
+     * Technologies, Industries, Project Categories, and Project Statuses sync without project mappings.
+     */
+    public function test_16_settings_masters_are_not_restricted_by_project_mapping(): void
+    {
+        Queue::fake([SendOutboundApiJob::class]);
+
+        $this->connection->update(['api_client_id' => null]);
+
+        $techApi = $this->connection->apis()->create([
+            'module' => 'technologies',
+            'operation' => 'sync',
+            'method' => 'POST',
+            'endpoint' => '/settings/sync',
+            'is_active' => true,
+        ]);
+
+        $tech = Technology::create([
+            'name' => 'GraphQL',
+            'code' => '991234',
+            'sort_order' => 10,
+            'is_system' => false,
+            'is_active' => true,
+        ]);
+
+        $history = DataSyncOutboundHistory::where('outbound_api_id', $techApi->id)
+            ->where('entity_id', $tech->id)
+            ->first();
+
+        $this->assertNotNull($history);
+        Queue::assertPushed(SendOutboundApiJob::class, fn ($job) => $job->historyId === $history->id);
     }
 }
