@@ -226,6 +226,20 @@ select {
     white-space: nowrap;
 }
 
+.ts-dropdown .option[aria-disabled="true"],
+.ts-dropdown .ts-option[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    color: #9ca3af !important;
+}
+
+.dark .ts-dropdown .option[aria-disabled="true"],
+.dark .ts-dropdown .ts-option[aria-disabled="true"] {
+    opacity: 0.4;
+    color: #6b7280 !important;
+}
+
 .ts-dropdown .option *,
 .ts-dropdown .ts-option * {
     min-width: 0;

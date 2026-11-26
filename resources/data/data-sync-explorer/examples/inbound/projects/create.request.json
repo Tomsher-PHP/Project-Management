@@ -15,6 +15,8 @@
                 "name": "Ahmed Mohammed",
                 "email": "ahmed@abctech.ae",
                 "mobile": "+971501234567",
+                "whatsapp": "+971501234567",
+                "landline": "+97143123456",
                 "designation": "Director",
                 "is_primary": true
             },
@@ -22,6 +24,8 @@
                 "name": "Sarah Jenkins",
                 "email": "sarah@abctech.ae",
                 "mobile": "+971507654321",
+                "whatsapp": "+971507654321",
+                "landline": "+97143123457",
                 "designation": "Technical Lead",
                 "is_primary": false
             }

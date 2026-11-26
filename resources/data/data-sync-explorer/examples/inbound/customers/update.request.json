@@ -12,14 +12,19 @@
         {
             "id": 15,
             "name": "Ahmed Mohammed",
-            "designation": "Managing Director",
+            "email": "ahmed@abctech.ae",
             "mobile": "+971501234567",
+            "whatsapp": "+971501234567",
+            "landline": "+97143123456",
+            "designation": "Managing Director",
             "is_primary": true
         },
         {
             "name": "Fatima Al-Zahra",
             "email": "fatima@abctech.ae",
             "mobile": "+971509988776",
+            "whatsapp": "+971509988776",
+            "landline": "+97143123458",
             "designation": "Operations Lead",
             "is_primary": false
         }

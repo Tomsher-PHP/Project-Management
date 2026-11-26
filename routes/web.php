@@ -442,6 +442,32 @@ Route::middleware([
                     Route::get('/clients/{client}', 'showClient')->name('clients.show');
                     Route::get('/explorer', 'explorer')->name('explorer');
                     Route::get('/mappings', 'mappings')->name('mappings');
+
+                    // Outbound Settings
+                    Route::prefix('outbound')->name('outbound.')->group(function () {
+                        Route::get('/', 'outbound')->name('index');
+                        Route::get('/connections', 'outboundConnections')->name('connections');
+                        Route::get('/connections/{connection}', 'showConnection')->name('connections.show');
+                        Route::get('/connections/{connection}/edit', 'editConnection')->name('connections.edit');
+                        Route::get('/connections/{connection}/apis/{api}', 'showApi')->name('apis.show');
+                        Route::get('/history', 'outboundHistory')->name('history');
+                        Route::get('/history/{history}', 'showHistory')->name('history.show');
+                    });
+                });
+
+                // Outbound Connection and API Mutation routes
+                Route::prefix('outbound')->name('outbound.')->group(function () {
+                    // Connections mutations
+                    Route::post('/connections', 'storeConnection')->middleware('permission.type:data_sync_settings.create')->name('connections.store');
+                    Route::match(['put', 'patch'], '/connections/{connection}', 'updateConnection')->middleware('permission.type:data_sync_settings.edit')->name('connections.update');
+                    Route::delete('/connections/{connection}', 'destroyConnection')->middleware('permission.type:data_sync_settings.delete')->name('connections.destroy');
+                    Route::patch('/connections/{connection}/toggle-status', 'toggleConnectionStatus')->middleware('permission.type:data_sync_settings.edit')->name('connections.toggle-status');
+
+                    // API configurations mutations
+                    Route::post('/connections/{connection}/apis', 'storeApi')->middleware('permission.type:data_sync_settings.create')->name('apis.store');
+                    Route::match(['put', 'patch'], '/connections/{connection}/apis/{api}', 'updateApi')->middleware('permission.type:data_sync_settings.edit')->name('apis.update');
+                    Route::delete('/connections/{connection}/apis/{api}', 'destroyApi')->middleware('permission.type:data_sync_settings.delete')->name('apis.destroy');
+                    Route::patch('/connections/{connection}/apis/{api}/toggle-status', 'toggleApiStatus')->middleware('permission.type:data_sync_settings.edit')->name('apis.toggle-status');
                 });
 
                 // Client Management Mutation routes
