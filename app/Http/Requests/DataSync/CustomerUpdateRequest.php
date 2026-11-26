@@ -5,7 +5,6 @@ namespace App\Http\Requests\DataSync;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Validation\ValidationException;
 
 class CustomerUpdateRequest extends FormRequest
 {
@@ -51,8 +50,8 @@ class CustomerUpdateRequest extends FormRequest
             'external_code' => ['sometimes', 'nullable', 'string', 'max:255'],
             'external_id' => ['sometimes', 'nullable', 'string', 'max:255'],
             'contacts' => ['sometimes', 'nullable', 'array'],
-            'contacts.*.id' => ['sometimes', 'nullable', 'integer'],
-            'contacts.*.name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'contacts.*.id' => ['prohibited'],
+            'contacts.*.name' => ['required', 'string', 'max:255'],
             'contacts.*.email' => ['nullable', 'email', 'max:150'],
             'contacts.*.mobile' => ['nullable', 'string', 'max:255'],
             'contacts.*.whatsapp' => ['nullable', 'string', 'max:255'],
@@ -72,18 +71,30 @@ class CustomerUpdateRequest extends FormRequest
             $contacts = $this->input('contacts');
             if (is_array($contacts)) {
                 $primaryCount = 0;
+                $seenEmails = [];
+
                 foreach ($contacts as $index => $contact) {
                     if (! is_array($contact)) {
                         continue;
                     }
 
-                    $hasId = isset($contact['id']) && $contact['id'] !== null && $contact['id'] !== '';
-                    if (! $hasId && (! isset($contact['name']) || trim((string) $contact['name']) === '')) {
-                        $validator->errors()->add("contacts.{$index}.name", 'The contact name is required for new contacts.');
-                    }
-
                     if (! empty($contact['is_primary'])) {
                         $primaryCount++;
+                    }
+
+                    $rawEmail = $contact['email'] ?? null;
+                    if (is_string($rawEmail)) {
+                        $normalizedEmail = strtolower(trim($rawEmail));
+                        if ($normalizedEmail !== '') {
+                            if (isset($seenEmails[$normalizedEmail])) {
+                                $validator->errors()->add(
+                                    "contacts.{$index}.email",
+                                    'Duplicate contact email in payload is not allowed.'
+                                );
+                            } else {
+                                $seenEmails[$normalizedEmail] = true;
+                            }
+                        }
                     }
                 }
 

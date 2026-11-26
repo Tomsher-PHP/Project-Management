@@ -10,7 +10,6 @@
     "is_active": true,
     "contacts": [
         {
-            "id": 15,
             "name": "Ahmed Mohammed",
             "email": "ahmed@abctech.ae",
             "mobile": "+971501234567",
