@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DKmyqakK.css",
+    "file": "assets/app-DVi8n1rb.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -752,7 +752,7 @@
     ]
   },
   "resources/js/settings/data-sync/outbound-tab.js": {
-    "file": "assets/outbound-tab-BxXuuW8m.js",
+    "file": "assets/outbound-tab-iyRnyf7h.js",
     "name": "outbound-tab",
     "src": "resources/js/settings/data-sync/outbound-tab.js",
     "isEntry": true,
