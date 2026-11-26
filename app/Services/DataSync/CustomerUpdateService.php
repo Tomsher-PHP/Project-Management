@@ -24,7 +24,7 @@ class CustomerUpdateService
     /**
      * Update an existing customer and manage customer contacts atomically.
      *
-     * @param  string  $customerCode
+     * @param  string  $externalCode
      * @param  array<string, mixed>  $data
      * @param  ApiClient|null  $apiClient
      * @return array<string, mixed>
@@ -34,54 +34,67 @@ class CustomerUpdateService
      * @throws ValidationException
      * @throws Throwable
      */
-    public function update(string $customerCode, array $data, ?ApiClient $apiClient = null): array
+    public function update(string $externalCode, array $data, ?ApiClient $apiClient = null): array
     {
-        return DB::transaction(function () use ($customerCode, $data, $apiClient) {
+        return DB::transaction(function () use ($externalCode, $data, $apiClient) {
+            if (! $apiClient instanceof ApiClient) {
+                throw new NotFoundHttpException('Customer not found.');
+            }
+
+            $cleanExternalCode = $this->mappingService->sanitizeIdentifier($externalCode);
+
+            if ($cleanExternalCode === null) {
+                throw new NotFoundHttpException('Customer not found.');
+            }
+
+            /** @var DataSyncEntityMapping|null $customerMapping */
+            $customerMapping = DataSyncEntityMapping::query()
+                ->where('api_client_id', $apiClient->id)
+                ->where('entity_type', DataSyncEntityMapping::ENTITY_TYPE_CUSTOMER)
+                ->where('external_code', $cleanExternalCode)
+                ->first();
+
+            if (! $customerMapping) {
+                throw new NotFoundHttpException('Customer not found.');
+            }
+
             /** @var Customer|null $customer */
-            $customer = Customer::query()->where('customer_code', $customerCode)->lockForUpdate()->first();
+            $customer = Customer::query()->where('id', $customerMapping->local_id)->lockForUpdate()->first();
 
             if (! $customer) {
                 throw new NotFoundHttpException('Customer not found.');
             }
 
             // 1. External Mapping Verification & Enrichment
-            $externalCode = array_key_exists('external_code', $data)
+            $bodyExternalCode = array_key_exists('external_code', $data)
                 ? $this->mappingService->sanitizeIdentifier($data['external_code'])
                 : null;
-            $externalId = array_key_exists('external_id', $data)
+            $bodyExternalId = array_key_exists('external_id', $data)
                 ? $this->mappingService->sanitizeIdentifier($data['external_id'])
                 : null;
 
-            if ($apiClient instanceof ApiClient && ($externalCode !== null || $externalId !== null)) {
+            if ($bodyExternalCode !== null || $bodyExternalId !== null) {
+                if ($bodyExternalCode !== null && $customerMapping->external_code !== null && $customerMapping->external_code !== $bodyExternalCode) {
+                    throw new ConflictHttpException('Conflicting external customer code.');
+                }
+
                 $existingMapping = $this->mappingService->findMapping(
                     $apiClient->id,
                     DataSyncEntityMapping::ENTITY_TYPE_CUSTOMER,
-                    $externalCode,
-                    $externalId
+                    $bodyExternalCode,
+                    $bodyExternalId
                 );
 
                 if ($existingMapping !== null && (int) $existingMapping->local_id !== (int) $customer->id) {
                     throw new ConflictHttpException('External mapping belongs to a different customer.');
                 }
 
-                $customerMapping = DataSyncEntityMapping::query()
-                    ->where('api_client_id', $apiClient->id)
-                    ->where('entity_type', DataSyncEntityMapping::ENTITY_TYPE_CUSTOMER)
-                    ->where('local_id', $customer->id)
-                    ->first();
-
-                if ($customerMapping !== null) {
-                    if ($externalCode !== null && $customerMapping->external_code !== null && $customerMapping->external_code !== $externalCode) {
-                        throw new ConflictHttpException('Conflicting external customer code.');
-                    }
-
-                    if ($externalId !== null && $customerMapping->external_id !== null && $customerMapping->external_id !== $externalId) {
-                        throw new ConflictHttpException('Conflicting external customer id.');
-                    }
-
-                    // Safe mapping enrichment if missing a secondary identifier
-                    $this->mappingService->enrichMapping($customerMapping, $externalCode, $externalId);
+                if ($bodyExternalId !== null && $customerMapping->external_id !== null && $customerMapping->external_id !== $bodyExternalId) {
+                    throw new ConflictHttpException('Conflicting external customer id.');
                 }
+
+                // Safe mapping enrichment if missing a secondary identifier
+                $this->mappingService->enrichMapping($customerMapping, $bodyExternalCode, $bodyExternalId);
             }
 
             // 2. Industry Resolution

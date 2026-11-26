@@ -1,0 +1,452 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\DataSyncOutboundApi;
+use App\Models\DataSyncOutboundConnection;
+use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Spatie\Permission\Models\Permission;
+use Tests\TestCase;
+
+class DataSyncOutboundConnectionTest extends TestCase
+{
+    use DatabaseTransactions;
+
+    protected User $authorizedUser;
+    protected User $unauthorizedUser;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->authorizedUser = User::factory()->create([
+            'is_super_admin' => false,
+        ]);
+
+        foreach (['data_sync_settings.view', 'data_sync_settings.create', 'data_sync_settings.edit', 'data_sync_settings.delete'] as $perm) {
+            $permission = Permission::firstOrCreate([
+                'name' => $perm,
+                'guard_name' => 'web',
+            ]);
+            $this->authorizedUser->givePermissionTo($permission);
+        }
+
+        $this->unauthorizedUser = User::factory()->create([
+            'is_super_admin' => false,
+        ]);
+    }
+
+    public function test_authorized_user_can_view_connections_listing(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Test CRM System',
+            'base_url' => 'https://api.crm.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'secret-test-token'],
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->authorizedUser)->get('/settings/data-sync/outbound/connections');
+        $response->assertStatus(200);
+        $response->assertSee('Test CRM System');
+        $response->assertSee('https://api.crm.example.com');
+        $response->assertSee('Bearer Token');
+        $response->assertDontSee('secret-test-token');
+    }
+
+    public function test_authorized_user_can_view_edit_connection_page(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Edit CRM System',
+            'base_url' => 'https://api.crm.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'secret-test-token'],
+            'is_active' => true,
+        ]);
+
+        $conn->apis()->create([
+            'module' => 'projects',
+            'operation' => 'create',
+            'method' => 'POST',
+            'endpoint' => '/api/projects',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->authorizedUser)->get("/settings/data-sync/outbound/connections/{$conn->id}/edit");
+        $response->assertStatus(200);
+        $response->assertSee('Edit CRM System');
+        $response->assertSee('https://api.crm.example.com');
+        $response->assertSee('projects');
+        $response->assertSee('data-existing-apis', false);
+    }
+
+    public function test_can_create_connection_with_bearer_auth(): void
+    {
+        $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
+            'name' => 'External ERP',
+            'base_url' => 'https://erp.example.com/api',
+            'auth_type' => 'bearer',
+            'token' => 'my-bearer-secret-token',
+            'is_active' => 1,
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJson([
+            'success' => true,
+            'connection' => [
+                'name' => 'External ERP',
+                'base_url' => 'https://erp.example.com/api',
+                'auth_type' => 'bearer',
+                'is_active' => true,
+            ],
+        ]);
+
+        $conn = DataSyncOutboundConnection::where('name', 'External ERP')->firstOrFail();
+        $this->assertSame('my-bearer-secret-token', $conn->auth_config['token']);
+
+        // Check raw DB row is encrypted and does not contain plaintext token
+        $raw = \DB::table('data_sync_outbound_connections')->where('id', $conn->id)->value('auth_config');
+        $this->assertStringNotContainsString('my-bearer-secret-token', $raw);
+    }
+
+    public function test_creation_requires_bearer_token(): void
+    {
+        $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
+            'name' => 'No Token Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('token');
+    }
+
+    public function test_unsupported_auth_types_are_rejected_on_create(): void
+    {
+        foreach (['api_key', 'basic', 'none', 'oauth2'] as $badType) {
+            $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
+                'name' => "Bad Type {$badType}",
+                'base_url' => 'https://api.example.com',
+                'auth_type' => $badType,
+                'token' => 'dummy-token',
+            ]);
+
+            $response->assertStatus(422);
+            $response->assertJsonValidationErrors('auth_type');
+        }
+    }
+
+    public function test_unsupported_auth_types_are_rejected_on_update(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Existing Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'existing-token'],
+            'is_active' => true,
+        ]);
+
+        foreach (['api_key', 'basic', 'none'] as $badType) {
+            $response = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+                'name' => 'Existing Conn',
+                'base_url' => 'https://api.example.com',
+                'auth_type' => $badType,
+            ]);
+
+            $response->assertStatus(422);
+            $response->assertJsonValidationErrors('auth_type');
+        }
+    }
+
+    public function test_update_connection_with_new_token_replaces_previous_token(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Initial Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'initial-token'],
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+            'name' => 'Initial Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'token' => 'brand-new-token',
+        ]);
+
+        $response->assertStatus(200);
+        $conn->refresh();
+        $this->assertSame('brand-new-token', $conn->auth_config['token']);
+    }
+
+    public function test_ssrf_prevention_rejects_internal_and_loopback_hosts(): void
+    {
+        $blockedUrls = [
+            'http://localhost/api',
+            'http://127.0.0.1:8000',
+            'http://0.0.0.0',
+            'http://169.254.169.254/latest/meta-data',
+            'http://10.0.0.5/sync',
+            'http://192.168.1.1',
+            'http://172.16.0.1',
+            'ftp://api.example.com',
+            'not-a-valid-url',
+        ];
+
+        foreach ($blockedUrls as $badUrl) {
+            $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
+                'name' => 'Invalid Connection',
+                'base_url' => $badUrl,
+                'auth_type' => 'bearer',
+                'token' => 'test-bearer-token',
+            ]);
+
+            $response->assertStatus(422);
+            $response->assertJsonValidationErrors('base_url');
+        }
+    }
+
+    public function test_update_connection_preserves_credentials_when_blank(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Original Name',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'original-bearer-token'],
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+            'name' => 'Updated Connection Name',
+            'base_url' => 'https://new-api.example.com',
+            'auth_type' => 'bearer',
+            'token' => '', // Left empty to preserve
+        ]);
+
+        $response->assertStatus(200);
+        $conn->refresh();
+        $this->assertSame('Updated Connection Name', $conn->name);
+        $this->assertSame('https://new-api.example.com', $conn->base_url);
+        $this->assertSame('original-bearer-token', $conn->auth_config['token']);
+    }
+
+    public function test_toggle_connection_status(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Toggle Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'none',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->authorizedUser)->patchJson("/settings/data-sync/outbound/connections/{$conn->id}/toggle-status");
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true, 'is_active' => false]);
+
+        $conn->refresh();
+        $this->assertFalse($conn->is_active);
+    }
+
+    public function test_soft_delete_connection(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Delete Me',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'none',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->authorizedUser)->deleteJson("/settings/data-sync/outbound/connections/{$conn->id}");
+        $response->assertStatus(200);
+
+        $this->assertSoftDeleted('data_sync_outbound_connections', ['id' => $conn->id]);
+    }
+
+    public function test_can_add_multiple_apis_to_connection(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Multi-API System',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'test-token'],
+            'is_active' => true,
+        ]);
+
+        // Add API 1: Projects Status Update
+        $response1 = $this->actingAs($this->authorizedUser)->postJson("/settings/data-sync/outbound/connections/{$conn->id}/apis", [
+            'module' => 'projects',
+            'operation' => 'status_update',
+            'method' => 'POST',
+            'endpoint' => '/api/projects/status-update',
+            'is_active' => 1,
+        ]);
+        $response1->assertStatus(201);
+
+        // Add API 2: Projects Update
+        $response2 = $this->actingAs($this->authorizedUser)->postJson("/settings/data-sync/outbound/connections/{$conn->id}/apis", [
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'PUT',
+            'endpoint' => '/api/projects',
+            'is_active' => 1,
+        ]);
+        $response2->assertStatus(201);
+
+        // Add API 3: Technologies Sync
+        $response3 = $this->actingAs($this->authorizedUser)->postJson("/settings/data-sync/outbound/connections/{$conn->id}/apis", [
+            'module' => 'technologies',
+            'operation' => 'sync',
+            'method' => 'POST',
+            'endpoint' => '/api/technologies/sync',
+            'is_active' => 1,
+        ]);
+        $response3->assertStatus(201);
+
+        $this->assertSame(3, $conn->apis()->count());
+    }
+
+    public function test_duplicate_module_and_operation_for_same_connection_is_rejected(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Duplicate Test',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'dup-token'],
+            'is_active' => true,
+        ]);
+
+        $conn->apis()->create([
+            'module' => 'projects',
+            'operation' => 'status_update',
+            'method' => 'POST',
+            'endpoint' => '/projects/status',
+            'is_active' => true,
+        ]);
+
+        // Attempt to create duplicate (projects + status_update) under the same connection
+        $response = $this->actingAs($this->authorizedUser)->postJson("/settings/data-sync/outbound/connections/{$conn->id}/apis", [
+            'module' => 'projects',
+            'operation' => 'status_update',
+            'method' => 'POST',
+            'endpoint' => '/projects/duplicate',
+            'is_active' => 1,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('operation');
+    }
+
+    public function test_can_update_and_delete_api(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'API CRUD Test',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'bearer',
+            'auth_config' => ['token' => 'crud-token'],
+            'is_active' => true,
+        ]);
+
+        $api = $conn->apis()->create([
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'PUT',
+            'endpoint' => '/projects',
+            'is_active' => true,
+        ]);
+
+        // Update API
+        $updateResp = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}/apis/{$api->id}", [
+            'module' => 'projects',
+            'operation' => 'update',
+            'method' => 'PATCH',
+            'endpoint' => '/api/v2/projects/update',
+            'is_active' => 0,
+        ]);
+        $updateResp->assertStatus(200);
+
+        $api->refresh();
+        $this->assertSame('/api/v2/projects/update', $api->endpoint);
+        $this->assertSame('PATCH', $api->method);
+        $this->assertFalse($api->is_active);
+
+        // Delete API
+        $deleteResp = $this->actingAs($this->authorizedUser)->deleteJson("/settings/data-sync/outbound/connections/{$conn->id}/apis/{$api->id}");
+        $deleteResp->assertStatus(200);
+
+        $this->assertDatabaseMissing('data_sync_outbound_apis', ['id' => $api->id]);
+    }
+
+    public function test_unauthorized_user_cannot_create_or_edit(): void
+    {
+        $conn = DataSyncOutboundConnection::create([
+            'name' => 'Protected Conn',
+            'base_url' => 'https://api.example.com',
+            'auth_type' => 'none',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->unauthorizedUser)
+            ->postJson('/settings/data-sync/outbound/connections', [
+                'name' => 'Hacker Conn',
+                'base_url' => 'https://evil.example.com',
+                'auth_type' => 'none',
+            ])
+            ->assertStatus(403);
+
+        $this->actingAs($this->unauthorizedUser)
+            ->deleteJson("/settings/data-sync/outbound/connections/{$conn->id}")
+            ->assertStatus(403);
+    }
+
+    public function test_can_create_and_update_connection_with_linked_api_client(): void
+    {
+        $client = \App\Models\ApiClient::create([
+            'name' => 'Inbound CRM Partner',
+            'key_id' => 'pms_test_' . uniqid(),
+            'secret_hash' => hash('sha256', 'secret'),
+            'scopes' => ['settings.read'],
+            'is_active' => true,
+        ]);
+
+        // Create with linked client
+        $response = $this->actingAs($this->authorizedUser)->postJson('/settings/data-sync/outbound/connections', [
+            'name' => 'Outbound CRM Pipe',
+            'base_url' => 'https://crm.partner.example.com/api',
+            'auth_type' => 'bearer',
+            'token' => 'partner-bearer-token',
+            'api_client_id' => $client->id,
+            'is_active' => 1,
+        ]);
+
+        $response->assertStatus(201);
+        $connId = $response->json('connection.id');
+
+        $conn = DataSyncOutboundConnection::findOrFail($connId);
+        $this->assertSame($client->id, $conn->api_client_id);
+        $this->assertSame($client->name, $conn->apiClient->name);
+
+        // Update to remove linked client (set to null)
+        $updateRes = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+            'name' => 'Outbound CRM Pipe (Standalone)',
+            'base_url' => 'https://crm.partner.example.com/api',
+            'api_client_id' => '',
+            'is_active' => 1,
+        ]);
+
+        $updateRes->assertStatus(200);
+        $conn->refresh();
+        $this->assertNull($conn->api_client_id);
+
+        // Non-existent api_client_id is rejected
+        $badRes = $this->actingAs($this->authorizedUser)->putJson("/settings/data-sync/outbound/connections/{$conn->id}", [
+            'name' => 'Outbound CRM Pipe',
+            'base_url' => 'https://crm.partner.example.com/api',
+            'api_client_id' => 99999999,
+        ]);
+        $badRes->assertStatus(422);
+        $badRes->assertJsonValidationErrors('api_client_id');
+    }
+}
+

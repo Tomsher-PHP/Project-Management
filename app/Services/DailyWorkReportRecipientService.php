@@ -12,8 +12,7 @@ class DailyWorkReportRecipientService
     /**
      * Resolve recipients for an individual employee report.
      *
-     * Includes the employee, reporting person, manager,
-     * and applicable global, team, and user-specific recipients.
+     * Individual reports are sent only to the employee.
      */
     public function resolve(
         User $employee,
@@ -22,7 +21,6 @@ class DailyWorkReportRecipientService
     ): Collection {
         $recipients = collect();
 
-        /* Employee */
         $this->addRecipient(
             $recipients,
             $employee->email,
@@ -30,94 +28,9 @@ class DailyWorkReportRecipientService
             'employee'
         );
 
-        /* Reporting Person and Manager */
-        $details = $employee->details;
-
-        if ($details) {
-            $relatedUserIds = array_filter([
-                $details->reporter_id,
-                $details->manager_id,
-            ]);
-
-            $relatedUsers = User::query()
-                ->whereIn('id', $relatedUserIds)
-                ->get()
-                ->keyBy('id');
-
-            $reporter = $relatedUsers->get($details->reporter_id);
-            $manager = $relatedUsers->get($details->manager_id);
-
-            if ($reporter) {
-                $this->addRecipient(
-                    $recipients,
-                    $reporter->email,
-                    $reporter->name,
-                    'reporting_person'
-                );
-            }
-
-            if ($manager) {
-                $this->addRecipient(
-                    $recipients,
-                    $manager->email,
-                    $manager->name,
-                    'manager'
-                );
-            }
-        }
-
-        /* Global and User-specific Recipients */
-        $additionalRecipients = DailyWorkReportRecipient::query()
-            ->effective($reportDate)
-            ->where('report_key', $reportKey)
-            ->where(function ($query) use ($employee) {
-                $query->where('scope', 'global')
-                    ->orWhere(function ($q) use ($employee) {
-                        $q->where('scope', 'user')
-                            ->where('scope_id', $employee->id);
-                    });
-            })
-            ->get();
-
-        foreach ($additionalRecipients as $recipient) {
-            $this->addRecipient(
-                $recipients,
-                $recipient->email,
-                $recipient->name,
-                $recipient->scope === 'global'
-                    ? 'global'
-                    : 'user_specific'
-            );
-        }
-
-        /* Active Team Recipients */
-        $teams = Team::query()
-            ->where('is_active', true)
-            ->whereHas('users', function ($query) use ($employee) {
-                $query->where('users.id', $employee->id);
-            })
-            ->get();
-
-        if ($teams->isNotEmpty()) {
-            $teamRecipients = DailyWorkReportRecipient::query()
-                ->effective($reportDate)
-                ->where('report_key', $reportKey)
-                ->where('scope', 'team')
-                ->whereIn('scope_id', $teams->pluck('id'))
-                ->get();
-
-            foreach ($teamRecipients as $recipient) {
-                $this->addRecipient(
-                    $recipients,
-                    $recipient->email,
-                    $recipient->name,
-                    'team'
-                );
-            }
-        }
-
         return $recipients->values();
     }
+
 
     /**
      * Resolve recipients for one supervisor's consolidated report.

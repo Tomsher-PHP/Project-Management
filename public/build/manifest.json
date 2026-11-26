@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-LCjAdU0D.css",
+    "file": "assets/app-DVi8n1rb.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -735,10 +735,31 @@
     ]
   },
   "resources/js/settings/data-sync/data-sync-settings.js": {
-    "file": "assets/data-sync-settings-CmkGa7nh.js",
+    "file": "assets/data-sync-settings-Bn5sbeK4.js",
     "name": "data-sync-settings",
     "src": "resources/js/settings/data-sync/data-sync-settings.js",
     "isEntry": true
+  },
+  "resources/js/settings/data-sync/outbound-edit.js": {
+    "file": "assets/outbound-edit-CikHfvjA.js",
+    "name": "outbound-edit",
+    "src": "resources/js/settings/data-sync/outbound-edit.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_tom-select-0sN9vRSW.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/settings/data-sync/outbound-tab.js": {
+    "file": "assets/outbound-tab-iyRnyf7h.js",
+    "name": "outbound-tab",
+    "src": "resources/js/settings/data-sync/outbound-tab.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/settings/report-settings/daily-report.js": {
     "file": "assets/daily-report-DVurWOeu.js",

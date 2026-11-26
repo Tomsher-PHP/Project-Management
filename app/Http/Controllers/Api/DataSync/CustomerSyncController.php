@@ -23,7 +23,7 @@ class CustomerSyncController extends Controller
     /**
      * Update an existing customer and manage customer contacts from external applications.
      */
-    public function update(Request $request, string $customer_code): JsonResponse
+    public function update(Request $request, string $external_code): JsonResponse
     {
         /** @var ApiClient|null $apiClient */
         $apiClient = $request->attributes->get('api_client');
@@ -40,7 +40,7 @@ class CustomerSyncController extends Controller
         $validatedData = $updateRequest->validated();
 
         try {
-            $result = $this->customerUpdateService->update($customer_code, $validatedData, $apiClient);
+            $result = $this->customerUpdateService->update($external_code, $validatedData, $apiClient);
 
             return response()->json([
                 'success' => true,
@@ -66,7 +66,7 @@ class CustomerSyncController extends Controller
         } catch (Throwable $e) {
             Log::error('Data Sync Customer Update Failed', [
                 'error' => $e->getMessage(),
-                'customer_code' => $customer_code,
+                'external_code' => $external_code,
                 'api_client_id' => $apiClient->id,
             ]);
 

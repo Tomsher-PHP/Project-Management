@@ -1,5 +1,4 @@
 <div id="api-explorer-root" class="flex flex-col space-y-5">
-
     <!-- Explorer Two-Column Layout -->
     <div class="flex flex-col lg:flex-row gap-6 items-start w-full">
         <!-- =============================================================== -->

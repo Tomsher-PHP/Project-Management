@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Http\Requests\Settings;
+
+use App\Models\DataSyncOutboundApi;
+use App\Models\DataSyncOutboundConnection;
+use App\Services\DataSync\OutboundConnectionService;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class UpdateOutboundApiRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return $this->user()?->can('data_sync_settings.edit') ?? false;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('is_active')) {
+            $this->merge([
+                'is_active' => filter_var($this->input('is_active'), FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        $connection = $this->route('connection');
+        $connectionId = $connection instanceof DataSyncOutboundConnection ? $connection->id : (int) $connection;
+        $api = $this->route('api');
+        $apiId = $api instanceof DataSyncOutboundApi ? $api->id : (int) $api;
+        $module = trim((string) $this->input('module'));
+
+        return [
+            'module' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::in(array_keys(OutboundConnectionService::MODULE_OPERATIONS)),
+            ],
+            'operation' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::in(array_keys(OutboundConnectionService::AVAILABLE_OPERATIONS)),
+                Rule::unique('data_sync_outbound_apis', 'operation')
+                    ->where(fn ($query) => $query->where('connection_id', $connectionId)->where('module', $module))
+                    ->ignore($apiId),
+            ],
+            'method' => ['required', 'string', Rule::in(array_keys(OutboundConnectionService::AVAILABLE_METHODS))],
+            'endpoint' => ['required', 'string', 'max:500'],
+            'is_active' => ['sometimes', 'boolean'],
+        ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->has('operation') || $validator->errors()->has('module')) {
+                return;
+            }
+
+            $connection = $this->route('connection');
+            $connectionId = $connection instanceof DataSyncOutboundConnection ? $connection->id : (int) $connection;
+            $api = $this->route('api');
+            $apiId = $api instanceof DataSyncOutboundApi ? $api->id : (int) $api;
+            $module = trim((string) $this->input('module'));
+            $operation = trim((string) $this->input('operation'));
+
+            $allowedOperations = OutboundConnectionService::getOperationsForModule($module);
+            if (! array_key_exists($operation, $allowedOperations)) {
+                $validator->errors()->add('operation', "The operation [{$operation}] is not supported for module [{$module}].");
+                return;
+            }
+
+            $conflictError = OutboundConnectionService::getOperationConflictError($connectionId, $module, $operation, $apiId);
+            if ($conflictError) {
+                $validator->errors()->add('operation', $conflictError);
+            }
+        });
+    }
+
+    /**
+     * Custom validation messages.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'module.required' => 'The module is required.',
+            'operation.required' => 'The operation is required.',
+            'operation.in' => 'The selected operation is invalid.',
+            'operation.unique' => 'This operation is already configured for the selected module.',
+            'method.required' => 'The HTTP method is required.',
+            'endpoint.required' => 'The API endpoint is required.',
+        ];
+    }
+}

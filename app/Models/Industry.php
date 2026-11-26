@@ -21,6 +21,10 @@ class Industry extends Model
         'is_active'
     ];
 
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     protected $sortable = [
         'name',
         'code',

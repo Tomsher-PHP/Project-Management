@@ -15,6 +15,7 @@ Route::middleware(['api.key', 'throttle:api-client'])->group(function () {
         Route::get('/{code}', [SettingsController::class, 'commonShow'])
             ->where('code', '[0-9]{6}')
             ->name('common-show');
+
         Route::delete('/{code}', [SettingsController::class, 'commonDestroy'])
             ->where('code', '[0-9]{6}')
             ->name('common-destroy');
@@ -22,5 +23,5 @@ Route::middleware(['api.key', 'throttle:api-client'])->group(function () {
 
     Route::post('data-sync/projects', [ProjectSyncController::class, 'store'])->name('api.data-sync.projects.store');
     Route::put('integrations/projects/{project_code}', [ProjectSyncController::class, 'update'])->name('api.integrations.projects.update');
-    Route::put('integrations/customers/{customer_code}', [CustomerSyncController::class, 'update'])->name('api.integrations.customers.update');
+    Route::put('integrations/customers/{external_code}', [CustomerSyncController::class, 'update'])->name('api.integrations.customers.update');
 });
