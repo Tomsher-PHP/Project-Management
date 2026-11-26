@@ -104,7 +104,7 @@
                 @if (!empty($emergencyContacts))
                     <div class="mt-6 space-y-4">
                         @foreach ($emergencyContacts as $contact)
-                            <div class="rounded-lg border border-bgray-200 dark:border-darkblack-400 p-4 bg-gray-50/50 dark:bg-darkblack-500/50">
+                            <div class="rounded-lg border border-bgray-200 dark:border-darkblack-400 p-4 bg-gray-50 dark:bg-darkblack-500">
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div>
                                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Name</label>
@@ -137,7 +137,7 @@
                 @if (!empty($nativeContacts))
                     <div class="mt-6 space-y-4">
                         @foreach ($nativeContacts as $contact)
-                            <div class="rounded-lg border border-bgray-200 dark:border-darkblack-400 p-4 bg-gray-50/50 dark:bg-darkblack-500/50">
+                            <div class="rounded-lg border border-bgray-200 dark:border-darkblack-400 p-4 bg-gray-50 dark:bg-darkblack-500">
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div>
                                         <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Name</label>

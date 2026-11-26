@@ -628,6 +628,12 @@
     "src": "resources/js/modules/users/general-settings.js",
     "isEntry": true
   },
+  "resources/js/modules/users/user-edit-modal.js": {
+    "file": "assets/user-edit-modal-eJ3TuORi.js",
+    "name": "user-edit-modal",
+    "src": "resources/js/modules/users/user-edit-modal.js",
+    "isEntry": true
+  },
   "resources/js/modules/users/user-edit.js": {
     "file": "assets/user-edit-DZeXu6L6.js",
     "name": "user-edit",
