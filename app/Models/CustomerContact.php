@@ -7,10 +7,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class CustomerContact extends Authenticatable
 {
@@ -85,5 +83,44 @@ class CustomerContact extends Authenticatable
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'password',
+        'password_set_at',
+        'last_login_at',
+        'email_verified_at',
+        'force_password_reset',
+        'added_by',
+        'updated_by',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'is_primary' => 'Primary',
+            'is_active' => 'Active',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'customer_id' => Customer::find($value)?->name ?? $value,
+            default => is_array($value) ? json_encode($value) : $value,
+        };
+    }
+
+    protected function getActivityParent(): array
+    {
+        return [
+            'type' => Customer::class,
+            'id' => $this->customer_id,
+        ];
     }
 }

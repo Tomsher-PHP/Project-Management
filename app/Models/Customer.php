@@ -119,4 +119,35 @@ class Customer extends Model
     {
         return $query->where('is_active', true);
     }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'added_by',
+        'updated_by',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'industry_id' => 'Industry',
+            'customer_profile_grade_id' => 'Profile grade',
+            'registered_country_id' => 'Registered country',
+            'sales_person_id' => 'Sales person',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'industry_id' => Industry::find($value)?->name ?? $value,
+            'customer_profile_grade_id' => CustomerProfileGrade::find($value)?->name ?? $value,
+            'registered_country_id' => Country::find($value)?->name ?? $value,
+            'sales_person_id' => User::find($value)?->name ?? $value,
+            default => is_array($value) ? json_encode($value) : $value,
+        };
+    }
 }
