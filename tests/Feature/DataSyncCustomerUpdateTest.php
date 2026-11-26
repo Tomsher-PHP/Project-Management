@@ -1010,15 +1010,24 @@ class DataSyncCustomerUpdateTest extends TestCase
         $this->assertStringNotContainsString('PortalPass123', json_encode($contactsReplacedActivity->properties));
         $this->assertStringNotContainsString('password', json_encode($contactsReplacedActivity->properties));
 
-        $this->assertSame(2, \Spatie\Activitylog\Models\Activity::query()
+        $deletedContactActivities = \Spatie\Activitylog\Models\Activity::query()
             ->where('log_name', 'customer_contacts')
             ->where('description', 'customer_contacts.deleted')
-            ->count());
+            ->get();
+        $this->assertCount(2, $deletedContactActivities);
+        foreach ($deletedContactActivities as $deletedActivity) {
+            $this->assertSame('Customer', $deletedActivity->properties['labels']['customer_id'] ?? null);
+            $this->assertSame('Activity Logged Customer LLC', $deletedActivity->properties['display_old']['customer_id'] ?? null);
+            $this->assertSame('Activity Logged Customer LLC', $deletedActivity->properties['customer_name'] ?? null);
+        }
 
-        $this->assertSame(1, \Spatie\Activitylog\Models\Activity::query()
+        $createdContactActivity = \Spatie\Activitylog\Models\Activity::query()
             ->where('log_name', 'customer_contacts')
             ->where('description', 'customer_contacts.created')
-            ->count());
+            ->sole();
+        $this->assertSame('Customer', $createdContactActivity->properties['labels']['customer_id'] ?? null);
+        $this->assertSame('Activity Logged Customer LLC', $createdContactActivity->properties['display_attributes']['customer_id'] ?? null);
+        $this->assertSame('Activity Logged Customer LLC', $createdContactActivity->properties['customer_name'] ?? null);
     }
 }
 

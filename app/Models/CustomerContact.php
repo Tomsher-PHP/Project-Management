@@ -9,10 +9,14 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 
 class CustomerContact extends Authenticatable
 {
-    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity;
+    use HasFactory, SoftDeletes, Filterable, Sortable;
+    use LogsModelActivity {
+        tapActivity as baseTapActivity;
+    }
 
     protected $fillable = [
         'customer_id',
@@ -102,6 +106,7 @@ class CustomerContact extends Authenticatable
     public function getActivityAttributeLabels(): array
     {
         return [
+            'customer_id' => 'Customer',
             'is_primary' => 'Primary',
             'is_active' => 'Active',
         ];
@@ -111,9 +116,24 @@ class CustomerContact extends Authenticatable
     public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
     {
         return match ($attribute) {
-            'customer_id' => Customer::find($value)?->name ?? $value,
+            'customer_id' => Customer::withTrashed()->find($value)?->name ?? $value,
             default => is_array($value) ? json_encode($value) : $value,
         };
+    }
+
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $this->baseTapActivity($activity, $eventName);
+
+        $customerName = $this->relationLoaded('customer')
+            ? $this->customer?->name
+            : Customer::withTrashed()->find($this->customer_id)?->name;
+
+        if ($customerName !== null) {
+            $activity->properties = $activity->properties->merge([
+                'customer_name' => $customerName,
+            ]);
+        }
     }
 
     protected function getActivityParent(): array
