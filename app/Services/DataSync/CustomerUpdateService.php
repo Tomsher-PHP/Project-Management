@@ -182,6 +182,9 @@ class CustomerUpdateService
             if (array_key_exists('emirate', $data) && $customer->emirate !== $data['emirate']) {
                 $customerAttributesToUpdate['emirate'] = $data['emirate'];
             }
+            if (array_key_exists('google_location', $data) && $customer->google_location !== $data['google_location']) {
+                $customerAttributesToUpdate['google_location'] = $data['google_location'];
+            }
             if (array_key_exists('company_address', $data) && $customer->company_address !== $data['company_address']) {
                 $customerAttributesToUpdate['company_address'] = $data['company_address'];
             }
@@ -393,4 +396,3 @@ class CustomerUpdateService
         return $summaries;
     }
 }
-

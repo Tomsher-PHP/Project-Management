@@ -44,6 +44,7 @@ class CustomerUpdateRequest extends FormRequest
             'website' => ['sometimes', 'nullable', 'url', 'max:255'],
             'country_code' => ['sometimes', 'nullable', 'string', 'regex:/^[A-Za-z]{2,3}$/', 'max:3'],
             'emirate' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'google_location' => ['sometimes', 'nullable', 'string', 'max:255'],
             'company_address' => ['sometimes', 'nullable', 'string', 'max:65535'],
             'sales_person_email' => ['sometimes', 'nullable', 'email', 'max:150'],
             'is_active' => ['sometimes', 'boolean'],
@@ -117,4 +118,3 @@ class CustomerUpdateRequest extends FormRequest
         ], 422));
     }
 }
-
