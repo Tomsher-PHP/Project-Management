@@ -11,7 +11,7 @@ return [
         'update' => [
             'id' => 'customers.update',
             'name' => 'Update Customer',
-            'description' => 'Update customer organization attributes and contacts. Supplying contact id updates the existing contact, while omitting id creates a new contact.',
+            'description' => 'Update customer organization attributes and optionally replace all customer contacts. Omitting the contacts key leaves existing contacts untouched, whereas supplying a contacts array (including an empty array []) replaces all existing contacts for the customer while preserving portal login credentials for matching active contact emails. Contact IDs are not accepted.',
             'method' => 'PUT',
             'endpoint' => '/api/integrations/customers/{external_code}',
             'scope' => ApiClient::SCOPE_PROJECTS_WRITE,

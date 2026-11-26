@@ -163,6 +163,7 @@ class DataSyncCustomerUpdateTest extends TestCase
                     'customer_code' => $this->customer->customer_code,
                     'updated' => true,
                     'contacts' => [
+                        'deleted' => 0,
                         'created' => 0,
                         'updated' => 0,
                     ],
@@ -345,124 +346,176 @@ class DataSyncCustomerUpdateTest extends TestCase
         $this->assertSame('New Office Tower, Floor 10, Business Bay', $fresh->company_address);
     }
 
-    public function test_16_existing_contact_update(): void
+    public function test_16_replace_multiple_existing_contacts_with_one_new_contact(): void
     {
+        $oldId1 = $this->contact1->id;
+        $oldId2 = $this->contact2->id;
+
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
-                        'id' => $this->contact2->id,
-                        'name' => 'Updated Secondary Name',
+                        'name' => 'Single Replacement Contact',
+                        'email' => 'single@origcompany.ae',
                         'designation' => 'Chief Technology Officer',
                         'mobile' => '+971509990000',
+                        'is_primary' => true,
                     ],
                 ],
             ])
-            ->assertStatus(200);
+            ->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'updated' => true,
+                    'contacts' => [
+                        'deleted' => 2,
+                        'created' => 1,
+                        'updated' => 0,
+                    ],
+                ],
+            ]);
 
-        $this->assertSame(1, $response->json('data.contacts.updated'));
-        $this->assertSame(0, $response->json('data.contacts.created'));
+        $this->assertNull(CustomerContact::withTrashed()->find($oldId1));
+        $this->assertNull(CustomerContact::withTrashed()->find($oldId2));
 
-        $freshContact2 = $this->contact2->fresh();
-        $this->assertSame('Updated Secondary Name', $freshContact2->name);
-        $this->assertSame('Chief Technology Officer', $freshContact2->designation);
-        $this->assertSame('+971509990000', $freshContact2->mobile);
+        $contacts = CustomerContact::where('customer_id', $this->customer->id)->get();
+        $this->assertCount(1, $contacts);
+        $this->assertSame('Single Replacement Contact', $contacts->first()->name);
+        $this->assertNotSame($oldId1, $contacts->first()->id);
+        $this->assertNotSame($oldId2, $contacts->first()->id);
     }
 
-    public function test_17_new_contact_creation(): void
+    public function test_17_replace_existing_contacts_with_multiple_new_contacts(): void
     {
-        $initialContactCount = CustomerContact::where('customer_id', $this->customer->id)->count();
+        $oldIds = [$this->contact1->id, $this->contact2->id];
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
-                        'name' => 'Brand New Contact',
-                        'email' => 'newcontact@origcompany.ae',
+                        'name' => 'Brand New Contact 1',
+                        'email' => 'new1@origcompany.ae',
                         'mobile' => '+971509998877',
                         'designation' => 'Project Lead',
+                        'is_primary' => true,
+                    ],
+                    [
+                        'name' => 'Brand New Contact 2',
+                        'email' => 'new2@origcompany.ae',
+                        'whatsapp' => '+971509998878',
+                        'landline' => '+97143334455',
+                        'is_primary' => false,
+                    ],
+                    [
+                        'name' => 'Brand New Contact 3',
+                        'mobile' => '+971509998879',
+                        'is_active' => false,
                     ],
                 ],
             ])
-            ->assertStatus(200);
+            ->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'updated' => true,
+                    'contacts' => [
+                        'deleted' => 2,
+                        'created' => 3,
+                        'updated' => 0,
+                    ],
+                ],
+            ]);
 
-        $this->assertSame(1, $response->json('data.contacts.created'));
-        $this->assertSame($initialContactCount + 1, CustomerContact::where('customer_id', $this->customer->id)->count());
-
-        $newContact = CustomerContact::where('name', 'Brand New Contact')->first();
-        $this->assertNotNull($newContact);
-        $this->assertSame('newcontact@origcompany.ae', $newContact->email);
-        $this->assertSame($this->customer->id, $newContact->customer_id);
+        $contacts = CustomerContact::where('customer_id', $this->customer->id)->orderBy('id')->get();
+        $this->assertCount(3, $contacts);
+        foreach ($contacts as $contact) {
+            $this->assertNotContains($contact->id, $oldIds);
+        }
+        $this->assertFalse($contacts[2]->is_active);
     }
 
     public function test_18_existing_contacts_remain_unchanged_when_omitted(): void
     {
-        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'name' => 'Only Name Changed',
             ])
-            ->assertStatus(200);
+            ->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'updated' => true,
+                    'contacts' => [
+                        'deleted' => 0,
+                        'created' => 0,
+                        'updated' => 0,
+                    ],
+                ],
+            ]);
 
         $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
         $this->assertSame('Primary Contact', $this->contact1->fresh()->name);
         $this->assertSame('Secondary Contact', $this->contact2->fresh()->name);
     }
 
-    public function test_19_empty_contacts_array_does_not_delete_contacts(): void
+    public function test_19_empty_contacts_array_removes_all_existing_contacts(): void
     {
+        $oldId1 = $this->contact1->id;
+        $oldId2 = $this->contact2->id;
+
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [],
             ])
-            ->assertStatus(200);
+            ->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'updated' => true,
+                    'contacts' => [
+                        'deleted' => 2,
+                        'created' => 0,
+                        'updated' => 0,
+                    ],
+                ],
+            ]);
 
-        $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
+        $this->assertSame(0, CustomerContact::where('customer_id', $this->customer->id)->count());
+        $this->assertNull(CustomerContact::withTrashed()->find($oldId1));
+        $this->assertNull(CustomerContact::withTrashed()->find($oldId2));
     }
 
-    public function test_20_contact_belonging_to_another_customer_is_rejected(): void
+    public function test_20_payload_containing_contact_ids_is_rejected(): void
     {
-        $otherCustomer = Customer::create([
-            'customer_code' => 'CUS00002',
-            'name' => 'Other Customer LLC',
-        ]);
-
-        $otherContact = CustomerContact::create([
-            'customer_id' => $otherCustomer->id,
-            'name' => 'Other Contact',
-            'is_primary' => true,
-        ]);
-
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
-                        'id' => $otherContact->id,
-                        'name' => 'Hijacked Contact',
+                        'id' => $this->contact1->id,
+                        'name' => 'Contact With ID',
                     ],
                 ],
             ])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['contacts.0.id']);
+
+        $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
     }
 
-    public function test_21_primary_contact_change(): void
+    public function test_21_contact_without_name_is_rejected(): void
     {
-        $this->assertTrue((bool) $this->contact1->fresh()->is_primary);
-        $this->assertFalse((bool) $this->contact2->fresh()->is_primary);
-
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
             ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
-                        'id' => $this->contact2->id,
+                        'email' => 'noname@origcompany.ae',
                         'is_primary' => true,
                     ],
                 ],
             ])
-            ->assertStatus(200);
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['contacts.0.name']);
 
-        $this->assertTrue((bool) $this->contact2->fresh()->is_primary);
-        $this->assertFalse((bool) $this->contact1->fresh()->is_primary);
+        $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
     }
 
     public function test_22_multiple_primary_contacts_are_prevented(): void
@@ -471,11 +524,13 @@ class DataSyncCustomerUpdateTest extends TestCase
             ->putJson('/api/integrations/customers/' . $this->externalCode, [
                 'contacts' => [
                     [
-                        'id' => $this->contact1->id,
+                        'name' => 'Primary One',
+                        'email' => 'p1@origcompany.ae',
                         'is_primary' => true,
                     ],
                     [
-                        'id' => $this->contact2->id,
+                        'name' => 'Primary Two',
+                        'email' => 'p2@origcompany.ae',
                         'is_primary' => true,
                     ],
                 ],
@@ -634,6 +689,7 @@ class DataSyncCustomerUpdateTest extends TestCase
             ->assertStatus(200);
 
         $this->assertFalse($response->json('data.updated'));
+        $this->assertSame(0, $response->json('data.contacts.deleted'));
         $this->assertSame(0, $response->json('data.contacts.created'));
         $this->assertSame(0, $response->json('data.contacts.updated'));
     }
@@ -649,6 +705,329 @@ class DataSyncCustomerUpdateTest extends TestCase
 
         $this->assertSame('CUS00001', $this->customer->fresh()->customer_code);
         $this->assertSame($this->customer->id, $this->project->fresh()->customer_id);
+    }
+
+    public function test_31_create_contacts_for_customer_without_existing_contacts(): void
+    {
+        $this->customer->contacts()->forceDelete();
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'contacts' => [
+                    [
+                        'name' => 'First Contact',
+                        'email' => 'first@origcompany.ae',
+                        'is_primary' => true,
+                    ],
+                    [
+                        'name' => 'Second Contact',
+                        'email' => 'second@origcompany.ae',
+                    ],
+                ],
+            ])
+            ->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'updated' => true,
+                    'contacts' => [
+                        'deleted' => 0,
+                        'created' => 2,
+                        'updated' => 0,
+                    ],
+                ],
+            ]);
+
+        $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
+    }
+
+    public function test_32_duplicate_emails_within_payload_are_rejected(): void
+    {
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'contacts' => [
+                    [
+                        'name' => 'Contact A',
+                        'email' => 'Same@OrigCompany.ae',
+                    ],
+                    [
+                        'name' => 'Contact B',
+                        'email' => 'same@origcompany.ae',
+                    ],
+                ],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['contacts.1.email']);
+
+        $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
+    }
+
+    public function test_33_email_belonging_to_other_customer_is_rejected_and_other_contacts_unaffected(): void
+    {
+        $otherCustomer = Customer::create([
+            'customer_code' => 'CUS00002',
+            'name' => 'Other Customer LLC',
+        ]);
+
+        $otherContact = CustomerContact::create([
+            'customer_id' => $otherCustomer->id,
+            'name' => 'Other Contact',
+            'email' => 'taken@othercompany.ae',
+            'is_primary' => true,
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'contacts' => [
+                    [
+                        'name' => 'Hijack Email Contact',
+                        'email' => 'TAKEN@othercompany.ae',
+                    ],
+                ],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['contacts.0.email']);
+
+        // Both customers' contacts remain untouched
+        $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
+        $this->assertNotNull($otherContact->fresh());
+    }
+
+    public function test_34_contacts_of_other_customers_remain_unaffected_on_replacement(): void
+    {
+        $otherCustomer = Customer::create([
+            'customer_code' => 'CUS00002',
+            'name' => 'Other Customer LLC',
+        ]);
+
+        $otherContact = CustomerContact::create([
+            'customer_id' => $otherCustomer->id,
+            'name' => 'Other Contact',
+            'email' => 'other@othercompany.ae',
+            'is_primary' => true,
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'contacts' => [
+                    [
+                        'name' => 'Replaced Contact',
+                        'email' => 'replaced@origcompany.ae',
+                        'is_primary' => true,
+                    ],
+                ],
+            ])
+            ->assertStatus(200);
+
+        $this->assertSame(1, CustomerContact::where('customer_id', $otherCustomer->id)->count());
+        $this->assertSame('Other Contact', $otherContact->fresh()->name);
+    }
+
+    public function test_35_replace_contacts_reusing_existing_emails_preserves_portal_credentials_and_hash(): void
+    {
+        $passwordSetAt = now()->subDays(5)->startOfSecond();
+        $lastLoginAt = now()->subHours(3)->startOfSecond();
+        $emailVerifiedAt = now()->subDays(4)->startOfSecond();
+
+        $this->contact1->update([
+            'login_enabled' => true,
+            'password' => 'PortalPass123',
+            'password_set_at' => $passwordSetAt,
+            'last_login_at' => $lastLoginAt,
+            'email_verified_at' => $emailVerifiedAt,
+            'force_password_reset' => true,
+        ]);
+
+        $originalId = $this->contact1->id;
+        $originalRawHash = $this->contact1->fresh()->getRawOriginal('password');
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'contacts' => [
+                    [
+                        'name' => 'Primary Contact Renamed',
+                        'email' => '  PRIMARY@origcompany.ae  ',
+                        'is_primary' => true,
+                    ],
+                    [
+                        'name' => 'Brand New Email Contact',
+                        'email' => 'brandnew@origcompany.ae',
+                    ],
+                    [
+                        'name' => 'No Email Contact',
+                    ],
+                ],
+            ])
+            ->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'updated' => true,
+                    'contacts' => [
+                        'deleted' => 2,
+                        'created' => 3,
+                        'updated' => 0,
+                    ],
+                ],
+            ]);
+
+        $recreated = CustomerContact::where('customer_id', $this->customer->id)
+            ->where('email', 'PRIMARY@origcompany.ae')
+            ->firstOrFail();
+
+        $this->assertNotSame($originalId, $recreated->id);
+        $this->assertSame('Primary Contact Renamed', $recreated->name);
+        $this->assertTrue($recreated->login_enabled);
+        $this->assertSame($originalRawHash, $recreated->getRawOriginal('password'));
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('PortalPass123', $recreated->password));
+        $this->assertSame($passwordSetAt->toISOString(), $recreated->password_set_at?->toISOString());
+        $this->assertSame($lastLoginAt->toISOString(), $recreated->last_login_at?->toISOString());
+        $this->assertSame($emailVerifiedAt->toISOString(), $recreated->email_verified_at?->toISOString());
+        $this->assertTrue($recreated->force_password_reset);
+
+        $brandNew = CustomerContact::where('customer_id', $this->customer->id)
+            ->where('email', 'brandnew@origcompany.ae')
+            ->firstOrFail();
+        $this->assertFalse($brandNew->login_enabled);
+        $this->assertNull($brandNew->getRawOriginal('password'));
+        $this->assertNull($brandNew->password_set_at);
+        $this->assertNull($brandNew->last_login_at);
+        $this->assertNull($brandNew->email_verified_at);
+        $this->assertFalse($brandNew->force_password_reset);
+
+        $noEmail = CustomerContact::where('customer_id', $this->customer->id)
+            ->whereNull('email')
+            ->firstOrFail();
+        $this->assertFalse($noEmail->login_enabled);
+        $this->assertNull($noEmail->getRawOriginal('password'));
+        $this->assertFalse($noEmail->force_password_reset);
+    }
+
+    public function test_36_previously_soft_deleted_email_conflict_returns_422_and_does_not_restore_auth(): void
+    {
+        $trashedContact = CustomerContact::create([
+            'customer_id' => $this->customer->id,
+            'name' => 'Archived Contact',
+            'email' => 'archived@origcompany.ae',
+            'login_enabled' => true,
+            'password' => 'OldSecret123',
+        ]);
+        $trashedContact->delete();
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'contacts' => [
+                    [
+                        'name' => 'Reused Archived Email',
+                        'email' => 'archived@origcompany.ae',
+                    ],
+                ],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['contacts.0.email']);
+
+        // Active contacts and soft-deleted record remain intact
+        $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
+        $this->assertNotNull(CustomerContact::onlyTrashed()->find($trashedContact->id));
+    }
+
+    public function test_37_transaction_rollback_restores_deleted_contacts_when_creation_fails(): void
+    {
+        $originalId1 = $this->contact1->id;
+        $originalId2 = $this->contact2->id;
+
+        CustomerContact::creating(function (CustomerContact $contact) {
+            if ($contact->name === 'Trigger Failure') {
+                throw new Exception('Simulated contact creation failure.');
+            }
+        });
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'name' => 'Should Rollback Name',
+                'contacts' => [
+                    [
+                        'name' => 'Valid First',
+                        'email' => 'valid@origcompany.ae',
+                    ],
+                    [
+                        'name' => 'Trigger Failure',
+                        'email' => 'fail@origcompany.ae',
+                    ],
+                ],
+            ])
+            ->assertStatus(500);
+
+        $this->assertSame('Original Customer LLC', $this->customer->fresh()->name);
+        $this->assertNotNull(CustomerContact::find($originalId1));
+        $this->assertNotNull(CustomerContact::find($originalId2));
+        $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
+    }
+
+    public function test_38_spatie_activity_log_records_customer_update_and_contact_replacement_without_auth_data(): void
+    {
+        $this->contact1->update([
+            'login_enabled' => true,
+            'password' => 'PortalPass123',
+        ]);
+
+        \Spatie\Activitylog\Models\Activity::query()->delete();
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'name' => 'Activity Logged Customer LLC',
+                'contacts' => [
+                    [
+                        'name' => 'Primary Contact',
+                        'email' => 'primary@origcompany.ae',
+                        'is_primary' => true,
+                    ],
+                ],
+            ])
+            ->assertStatus(200);
+
+        $customerUpdateActivity = \Spatie\Activitylog\Models\Activity::query()
+            ->where('log_name', 'customers')
+            ->where('subject_type', Customer::class)
+            ->where('subject_id', $this->customer->id)
+            ->where('description', 'customers.updated')
+            ->first();
+
+        $this->assertNotNull($customerUpdateActivity);
+        $this->assertSame('Activity Logged Customer LLC', $customerUpdateActivity->properties['attributes']['name'] ?? null);
+        $this->assertSame('Original Customer LLC', $customerUpdateActivity->properties['old']['name'] ?? null);
+
+        $contactsReplacedActivity = \Spatie\Activitylog\Models\Activity::query()
+            ->where('log_name', 'customers')
+            ->where('subject_type', Customer::class)
+            ->where('subject_id', $this->customer->id)
+            ->where('description', 'customers.contacts_replaced')
+            ->first();
+
+        $this->assertNotNull($contactsReplacedActivity);
+        $this->assertSame(ApiClient::class, $contactsReplacedActivity->causer_type);
+        $this->assertSame($this->apiClient->id, $contactsReplacedActivity->causer_id);
+        $this->assertSame(2, $contactsReplacedActivity->properties['deleted_count'] ?? null);
+        $this->assertSame(1, $contactsReplacedActivity->properties['created_count'] ?? null);
+        $this->assertStringNotContainsString('PortalPass123', json_encode($contactsReplacedActivity->properties));
+        $this->assertStringNotContainsString('password', json_encode($contactsReplacedActivity->properties));
+
+        $deletedContactActivities = \Spatie\Activitylog\Models\Activity::query()
+            ->where('log_name', 'customer_contacts')
+            ->where('description', 'customer_contacts.deleted')
+            ->get();
+        $this->assertCount(2, $deletedContactActivities);
+        foreach ($deletedContactActivities as $deletedActivity) {
+            $this->assertSame('Customer', $deletedActivity->properties['labels']['customer_id'] ?? null);
+            $this->assertSame('Activity Logged Customer LLC', $deletedActivity->properties['display_old']['customer_id'] ?? null);
+            $this->assertSame('Activity Logged Customer LLC', $deletedActivity->properties['customer_name'] ?? null);
+        }
+
+        $createdContactActivity = \Spatie\Activitylog\Models\Activity::query()
+            ->where('log_name', 'customer_contacts')
+            ->where('description', 'customer_contacts.created')
+            ->sole();
+        $this->assertSame('Customer', $createdContactActivity->properties['labels']['customer_id'] ?? null);
+        $this->assertSame('Activity Logged Customer LLC', $createdContactActivity->properties['display_attributes']['customer_id'] ?? null);
+        $this->assertSame('Activity Logged Customer LLC', $createdContactActivity->properties['customer_name'] ?? null);
     }
 }
 

@@ -182,6 +182,9 @@ class CustomerUpdateService
             if (array_key_exists('emirate', $data) && $customer->emirate !== $data['emirate']) {
                 $customerAttributesToUpdate['emirate'] = $data['emirate'];
             }
+            if (array_key_exists('google_location', $data) && $customer->google_location !== $data['google_location']) {
+                $customerAttributesToUpdate['google_map_link'] = $data['google_location'];
+            }
             if (array_key_exists('company_address', $data) && $customer->company_address !== $data['company_address']) {
                 $customerAttributesToUpdate['company_address'] = $data['company_address'];
             }
@@ -195,121 +198,201 @@ class CustomerUpdateService
                 $customerUpdated = true;
             }
 
-            // 6. Contact Processing
+            // 6. Contact Replacement
+            $contactsDeletedCount = 0;
             $contactsCreatedCount = 0;
-            $contactsUpdatedCount = 0;
 
-            if (array_key_exists('contacts', $data) && is_array($data['contacts']) && ! empty($data['contacts'])) {
-                // Verify all provided contact IDs belong to this customer
-                foreach ($data['contacts'] as $index => $contactData) {
-                    if (! is_array($contactData)) {
-                        continue;
-                    }
-                    if (isset($contactData['id']) && $contactData['id'] !== null) {
-                        $contactId = (int) $contactData['id'];
-                        $belongs = $customer->contacts()->where('id', $contactId)->exists();
-                        if (! $belongs) {
-                            throw ValidationException::withMessages([
-                                "contacts.{$index}.id" => ['The selected contact does not belong to this customer.'],
-                            ]);
-                        }
-                    }
+            if (array_key_exists('contacts', $data) && is_array($data['contacts'])) {
+                $this->validateReplacementContacts($customer, $data['contacts']);
+
+                $existingContacts = $customer->contacts()->lockForUpdate()->get();
+                $preservedAuthByEmail = $this->collectPreservedAuthByEmail($existingContacts);
+                $oldContactSummaries = $this->formatContactActivitySummaries($existingContacts);
+
+                $contactsDeletedCount = $existingContacts->count();
+                foreach ($existingContacts as $existingContact) {
+                    $existingContact->forceDelete();
                 }
 
-                // Check if any contact in payload is designated as primary
-                $designatedPrimaryContactId = null;
-                $designatedPrimaryIsNewIndex = null;
-
-                foreach ($data['contacts'] as $index => $contactData) {
-                    if (! empty($contactData['is_primary'])) {
-                        if (isset($contactData['id']) && $contactData['id'] !== null) {
-                            $designatedPrimaryContactId = (int) $contactData['id'];
-                        } else {
-                            $designatedPrimaryIsNewIndex = $index;
-                        }
-                        break;
-                    }
-                }
-
-                if ($designatedPrimaryContactId !== null || $designatedPrimaryIsNewIndex !== null) {
-                    // Demote existing primary contacts atomically
-                    $customer->contacts()->where('is_primary', true)->update(['is_primary' => false]);
-                }
-
-                foreach ($data['contacts'] as $index => $contactData) {
+                $createdContacts = [];
+                foreach ($data['contacts'] as $contactData) {
                     if (! is_array($contactData)) {
                         continue;
                     }
 
-                    if (isset($contactData['id']) && $contactData['id'] !== null) {
-                        /** @var CustomerContact $contact */
-                        $contact = $customer->contacts()->lockForUpdate()->findOrFail((int) $contactData['id']);
+                    $email = isset($contactData['email']) && trim((string) $contactData['email']) !== ''
+                        ? trim((string) $contactData['email'])
+                        : null;
+                    $normalizedEmail = $email !== null ? strtolower($email) : null;
+                    $authData = $normalizedEmail !== null ? ($preservedAuthByEmail[$normalizedEmail] ?? null) : null;
 
-                        $contactUpdates = [];
-                        if (array_key_exists('name', $contactData) && $contact->name !== $contactData['name']) {
-                            $contactUpdates['name'] = $contactData['name'];
-                        }
-                        if (array_key_exists('email', $contactData) && $contact->email !== $contactData['email']) {
-                            $contactUpdates['email'] = $contactData['email'];
-                        }
-                        if (array_key_exists('mobile', $contactData) && $contact->mobile !== $contactData['mobile']) {
-                            $contactUpdates['mobile'] = $contactData['mobile'];
-                        }
-                        if (array_key_exists('whatsapp', $contactData) && $contact->whatsapp !== $contactData['whatsapp']) {
-                            $contactUpdates['whatsapp'] = $contactData['whatsapp'];
-                        }
-                        if (array_key_exists('landline', $contactData) && $contact->landline !== $contactData['landline']) {
-                            $contactUpdates['landline'] = $contactData['landline'];
-                        }
-                        if (array_key_exists('designation', $contactData) && $contact->designation !== $contactData['designation']) {
-                            $contactUpdates['designation'] = $contactData['designation'];
-                        }
-                        if (array_key_exists('is_active', $contactData) && (bool) $contact->is_active !== (bool) $contactData['is_active']) {
-                            $contactUpdates['is_active'] = (bool) $contactData['is_active'];
-                        }
+                    $createdContacts[] = CustomerContact::create([
+                        'customer_id' => $customer->id,
+                        'name' => (string) ($contactData['name'] ?? ''),
+                        'email' => $email,
+                        'mobile' => isset($contactData['mobile']) && $contactData['mobile'] !== '' ? (string) $contactData['mobile'] : null,
+                        'whatsapp' => isset($contactData['whatsapp']) && $contactData['whatsapp'] !== '' ? (string) $contactData['whatsapp'] : null,
+                        'landline' => isset($contactData['landline']) && $contactData['landline'] !== '' ? (string) $contactData['landline'] : null,
+                        'designation' => isset($contactData['designation']) && $contactData['designation'] !== '' ? (string) $contactData['designation'] : null,
+                        'is_primary' => (bool) ($contactData['is_primary'] ?? false),
+                        'is_active' => isset($contactData['is_active']) ? (bool) $contactData['is_active'] : true,
+                        'login_enabled' => $authData['login_enabled'] ?? false,
+                        'password' => $authData['password'] ?? null,
+                        'password_set_at' => $authData['password_set_at'] ?? null,
+                        'last_login_at' => $authData['last_login_at'] ?? null,
+                        'email_verified_at' => $authData['email_verified_at'] ?? null,
+                        'force_password_reset' => $authData['force_password_reset'] ?? false,
+                    ]);
+                    $contactsCreatedCount++;
+                }
 
-                        if ($designatedPrimaryContactId === (int) $contact->id) {
-                            $contactUpdates['is_primary'] = true;
-                        } elseif (array_key_exists('is_primary', $contactData) && (bool) $contact->is_primary !== (bool) $contactData['is_primary']) {
-                            $contactUpdates['is_primary'] = (bool) $contactData['is_primary'];
-                        }
+                if ($contactsDeletedCount > 0 || $contactsCreatedCount > 0) {
+                    $newContactSummaries = $this->formatContactActivitySummaries($createdContacts);
+                    $oldText = ! empty($oldContactSummaries) ? implode(', ', $oldContactSummaries) : null;
+                    $newText = ! empty($newContactSummaries) ? implode(', ', $newContactSummaries) : null;
 
-                        if (! empty($contactUpdates)) {
-                            $contact->update($contactUpdates);
-                            $contactsUpdatedCount++;
-                        }
-                    } else {
-                        // New contact creation
-                        $isPrimary = ($designatedPrimaryIsNewIndex === $index) || (bool) ($contactData['is_primary'] ?? false);
-
-                        CustomerContact::create([
-                            'customer_id' => $customer->id,
-                            'name' => (string) ($contactData['name'] ?? ''),
-                            'email' => isset($contactData['email']) && $contactData['email'] !== '' ? (string) $contactData['email'] : null,
-                            'mobile' => isset($contactData['mobile']) && $contactData['mobile'] !== '' ? (string) $contactData['mobile'] : null,
-                            'whatsapp' => isset($contactData['whatsapp']) && $contactData['whatsapp'] !== '' ? (string) $contactData['whatsapp'] : null,
-                            'landline' => isset($contactData['landline']) && $contactData['landline'] !== '' ? (string) $contactData['landline'] : null,
-                            'designation' => isset($contactData['designation']) && $contactData['designation'] !== '' ? (string) $contactData['designation'] : null,
-                            'is_primary' => $isPrimary,
-                            'is_active' => isset($contactData['is_active']) ? (bool) $contactData['is_active'] : true,
-                        ]);
-                        $contactsCreatedCount++;
-                    }
+                    activity('customers')
+                        ->performedOn($customer)
+                        ->causedBy($apiClient)
+                        ->event('updated')
+                        ->withProperties([
+                            'old' => [
+                                'contacts' => $oldText,
+                            ],
+                            'attributes' => [
+                                'contacts' => $newText,
+                            ],
+                            'labels' => [
+                                'contacts' => 'Contacts',
+                            ],
+                            'display_old' => [
+                                'contacts' => $oldText ?? 'None',
+                            ],
+                            'display_attributes' => [
+                                'contacts' => $newText ?? 'None',
+                            ],
+                            'deleted_count' => $contactsDeletedCount,
+                            'created_count' => $contactsCreatedCount,
+                        ])
+                        ->log('customers.contacts_replaced');
                 }
             }
 
-            $overallUpdated = $customerUpdated || ($contactsCreatedCount > 0) || ($contactsUpdatedCount > 0);
+            $overallUpdated = $customerUpdated || ($contactsDeletedCount > 0) || ($contactsCreatedCount > 0);
 
             return [
                 'customer_id' => $customer->id,
                 'customer_code' => $customer->customer_code,
                 'updated' => $overallUpdated,
                 'contacts' => [
+                    'deleted' => $contactsDeletedCount,
                     'created' => $contactsCreatedCount,
-                    'updated' => $contactsUpdatedCount,
+                    'updated' => 0,
                 ],
             ];
         });
     }
-}
 
+    /**
+     * Validate replacement contacts against payload duplicates, soft-deleted records, and other customers.
+     *
+     * @param  Customer  $customer
+     * @param  array<int, mixed>  $contacts
+     *
+     * @throws ValidationException
+     */
+    protected function validateReplacementContacts(Customer $customer, array $contacts): void
+    {
+        $seenEmails = [];
+
+        foreach ($contacts as $index => $contactData) {
+            if (! is_array($contactData)) {
+                continue;
+            }
+
+            $rawEmail = $contactData['email'] ?? null;
+            if (! is_string($rawEmail) || trim($rawEmail) === '') {
+                continue;
+            }
+
+            $normalizedEmail = strtolower(trim($rawEmail));
+
+            if (isset($seenEmails[$normalizedEmail])) {
+                throw ValidationException::withMessages([
+                    "contacts.{$index}.email" => ['Duplicate contact email in payload is not allowed.'],
+                ]);
+            }
+            $seenEmails[$normalizedEmail] = true;
+
+            $trashedConflict = CustomerContact::onlyTrashed()
+                ->whereRaw('LOWER(TRIM(email)) = ?', [$normalizedEmail])
+                ->exists();
+
+            if ($trashedConflict) {
+                throw ValidationException::withMessages([
+                    "contacts.{$index}.email" => ['The contact email conflicts with a previously deleted contact record.'],
+                ]);
+            }
+
+            $otherCustomerConflict = CustomerContact::query()
+                ->where('customer_id', '!=', $customer->id)
+                ->whereRaw('LOWER(TRIM(email)) = ?', [$normalizedEmail])
+                ->exists();
+
+            if ($otherCustomerConflict) {
+                throw ValidationException::withMessages([
+                    "contacts.{$index}.email" => ['The contact email is already in use by another customer.'],
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Collect portal authentication attributes from existing active contacts keyed by normalized email.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, CustomerContact>  $existingContacts
+     * @return array<string, array<string, mixed>>
+     */
+    protected function collectPreservedAuthByEmail($existingContacts): array
+    {
+        $preserved = [];
+
+        foreach ($existingContacts as $existingContact) {
+            $rawEmail = $existingContact->email;
+            if (! is_string($rawEmail) || trim($rawEmail) === '') {
+                continue;
+            }
+
+            $normalizedEmail = strtolower(trim($rawEmail));
+            $preserved[$normalizedEmail] = [
+                'login_enabled' => (bool) $existingContact->login_enabled,
+                'password' => $existingContact->getRawOriginal('password'),
+                'password_set_at' => $existingContact->password_set_at,
+                'last_login_at' => $existingContact->last_login_at,
+                'email_verified_at' => $existingContact->email_verified_at,
+                'force_password_reset' => (bool) $existingContact->force_password_reset,
+            ];
+        }
+
+        return $preserved;
+    }
+
+    /**
+     * Format contact summaries for activity log display without exposing auth credentials.
+     *
+     * @param  iterable<int, CustomerContact>  $contacts
+     * @return array<int, string>
+     */
+    protected function formatContactActivitySummaries(iterable $contacts): array
+    {
+        $summaries = [];
+
+        foreach ($contacts as $contact) {
+            $summaries[] = $contact->email
+                ? "{$contact->name} <{$contact->email}>"
+                : (string) $contact->name;
+        }
+
+        return $summaries;
+    }
+}

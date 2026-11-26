@@ -35,7 +35,6 @@ class CustomerSyncController extends Controller
             ], 403);
         }
 
-        /** @var CustomerUpdateRequest $updateRequest */
         $updateRequest = app(CustomerUpdateRequest::class);
         $validatedData = $updateRequest->validated();
 
@@ -77,4 +76,3 @@ class CustomerSyncController extends Controller
         }
     }
 }
-
