@@ -198,4 +198,5 @@
     @vite('resources/js/modules/users/change-password.js')
     @vite('resources/js/modules/users/user-shift.js')
     @vite('resources/js/modules/users/user-edit.js')
+    @vite('resources/js/modules/users/user-edit-modal.js')
 @endpush

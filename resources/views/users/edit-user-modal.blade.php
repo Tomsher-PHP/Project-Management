@@ -187,43 +187,19 @@
 
                 <div id="modal-emergency-contacts-container" class="space-y-4">
                     @foreach ($modalEmergencyContacts as $index => $contact)
-                        <div class="modal-contact-row border border-gray-200 dark:border-darkblack-400 rounded-lg p-4 bg-gray-50/50 dark:bg-darkblack-500/50" data-index="{{ $index }}">
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                                <div class="col-contact-name md:col-span-4 flex flex-col gap-2">
-                                    <label for="modal_emergency_contact_name_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Contact Name
-                                    </label>
-                                    <input type="text" id="modal_emergency_contact_name_{{ $index }}" name="emergency_contacts[{{ $index }}][name]" value="{{ $contact['name'] ?? '' }}" placeholder="Enter contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                                </div>
-
-                                <div class="col-contact-number md:col-span-4 flex flex-col gap-2">
-                                    <label for="modal_emergency_contact_number_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Contact Number
-                                    </label>
-                                    <input type="text" id="modal_emergency_contact_number_{{ $index }}" name="emergency_contacts[{{ $index }}][number]" value="{{ $contact['number'] ?? '' }}" placeholder="e.g. +971501234567" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                                </div>
-
-                                <div class="col-contact-relation md:col-span-3 flex flex-col gap-2">
-                                    <label for="modal_emergency_contact_relation_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Relation
-                                    </label>
-                                    <input type="text" id="modal_emergency_contact_relation_{{ $index }}" name="emergency_contacts[{{ $index }}][relation]" value="{{ $contact['relation'] ?? '' }}" placeholder="e.g. Father, Spouse" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                                </div>
-
-                                <div class="md:col-span-1 flex items-center justify-end md:justify-center pt-8">
-                                    <button type="button" class="btn-remove-contact inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition dark:bg-darkblack-600 dark:border-red-900/50" title="Remove Contact" aria-label="Remove contact">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        @include('users.partials.modal-contact-row', [
+                            'index' => $index,
+                            'fieldName' => 'emergency_contacts',
+                            'idPrefix' => 'modal_emergency_contact',
+                            'contact' => $contact,
+                            'numberPlaceholder' => 'e.g. +971501234567',
+                            'relationPlaceholder' => 'e.g. Father, Spouse',
+                        ])
                     @endforeach
                 </div>
 
                 <div class="mt-4 flex justify-start">
-                    <button type="button" id="modal-btn-add-emergency-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-500 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
+                    <button type="button" id="modal-btn-add-emergency-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-300 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
@@ -247,43 +223,28 @@
 
                 <div id="modal-native-contacts-container" class="space-y-4">
                     @foreach ($modalNativeContacts as $index => $contact)
-                        <div class="modal-contact-row border border-gray-200 dark:border-darkblack-400 rounded-lg p-4 bg-gray-50/50 dark:bg-darkblack-500/50" data-index="{{ $index }}">
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                                <div class="col-contact-name md:col-span-4 flex flex-col gap-2">
-                                    <label for="modal_native_contact_name_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Contact Name
-                                    </label>
-                                    <input type="text" id="modal_native_contact_name_{{ $index }}" name="native_contacts[{{ $index }}][name]" value="{{ $contact['name'] ?? '' }}" placeholder="Enter contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                                </div>
-
-                                <div class="col-contact-number md:col-span-4 flex flex-col gap-2">
-                                    <label for="modal_native_contact_number_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Contact Number
-                                    </label>
-                                    <input type="text" id="modal_native_contact_number_{{ $index }}" name="native_contacts[{{ $index }}][number]" value="{{ $contact['number'] ?? '' }}" placeholder="e.g. +919876543210" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                                </div>
-
-                                <div class="col-contact-relation md:col-span-3 flex flex-col gap-2">
-                                    <label for="modal_native_contact_relation_{{ $index }}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Relation
-                                    </label>
-                                    <input type="text" id="modal_native_contact_relation_{{ $index }}" name="native_contacts[{{ $index }}][relation]" value="{{ $contact['relation'] ?? '' }}" placeholder="e.g. Brother, Friend" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                                </div>
-
-                                <div class="md:col-span-1 flex items-center justify-end md:justify-center pt-8">
-                                    <button type="button" class="btn-remove-contact inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition dark:bg-darkblack-600 dark:border-red-900/50" title="Remove Contact" aria-label="Remove contact">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        @include('users.partials.modal-contact-row', [
+                            'index' => $index,
+                            'fieldName' => 'native_contacts',
+                            'idPrefix' => 'modal_native_contact',
+                            'contact' => $contact,
+                            'numberPlaceholder' => 'e.g. +919876543210',
+                            'relationPlaceholder' => 'e.g. Brother, Friend',
+                        ])
                     @endforeach
                 </div>
 
+                <template id="modal-contact-row-template">
+                    @include('users.partials.modal-contact-row', [
+                        'index' => 0,
+                        'fieldName' => '',
+                        'idPrefix' => 'modal_contact',
+                        'contact' => [],
+                    ])
+                </template>
+
                 <div class="mt-4 flex justify-start">
-                    <button type="button" id="modal-btn-add-native-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-500 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
+                    <button type="button" id="modal-btn-add-native-contact" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-success-300 bg-success-50 text-success-300 hover:bg-success-100 dark:bg-darkblack-500 dark:border-success-400 text-sm font-medium transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
@@ -479,176 +440,4 @@
 
 @push('scripts')
     @vite('resources/js/image-draggable.js')
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            function initModalContactRepeater({
-                containerId,
-                addButtonId,
-                fieldName,
-                idPrefix,
-                numberPlaceholder
-            }) {
-                const container = document.getElementById(containerId);
-                const addButton = document.getElementById(addButtonId);
-                if (!container || !addButton) return;
-
-                function reindex() {
-                    const rows = container.querySelectorAll('.modal-contact-row');
-                    rows.forEach((row, idx) => {
-                        row.dataset.index = idx;
-
-                        const nameLabel = row.querySelector('.col-contact-name label');
-                        const nameInput = row.querySelector('.col-contact-name input');
-                        if (nameLabel && nameInput) {
-                            const id = `${idPrefix}_name_${idx}`;
-                            nameLabel.setAttribute('for', id);
-                            nameInput.id = id;
-                            nameInput.name = `${fieldName}[${idx}][name]`;
-                        }
-
-                        const numLabel = row.querySelector('.col-contact-number label');
-                        const numInput = row.querySelector('.col-contact-number input');
-                        if (numLabel && numInput) {
-                            const id = `${idPrefix}_number_${idx}`;
-                            numLabel.setAttribute('for', id);
-                            numInput.id = id;
-                            numInput.name = `${fieldName}[${idx}][number]`;
-                        }
-
-                        const relLabel = row.querySelector('.col-contact-relation label');
-                        const relInput = row.querySelector('.col-contact-relation input');
-                        if (relLabel && relInput) {
-                            const id = `${idPrefix}_relation_${idx}`;
-                            relLabel.setAttribute('for', id);
-                            relInput.id = id;
-                            relInput.name = `${fieldName}[${idx}][relation]`;
-                        }
-                    });
-                }
-
-                function createRow(index) {
-                    const row = document.createElement('div');
-                    row.className = 'modal-contact-row border border-gray-200 dark:border-darkblack-400 rounded-lg p-4 bg-gray-50/50 dark:bg-darkblack-500/50';
-                    row.dataset.index = index;
-                    row.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                            <div class="col-contact-name md:col-span-4 flex flex-col gap-2">
-                                <label for="${idPrefix}_name_${index}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                    Contact Name
-                                </label>
-                                <input type="text"
-                                       id="${idPrefix}_name_${index}"
-                                       name="${fieldName}[${index}][name]"
-                                       value=""
-                                       placeholder="Enter contact name"
-                                       class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                            </div>
-
-                            <div class="col-contact-number md:col-span-4 flex flex-col gap-2">
-                                <label for="${idPrefix}_number_${index}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                    Contact Number
-                                </label>
-                                <input type="text"
-                                       id="${idPrefix}_number_${index}"
-                                       name="${fieldName}[${index}][number]"
-                                       value=""
-                                       placeholder="${numberPlaceholder || '+971501234567'}"
-                                       class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                            </div>
-
-                            <div class="col-contact-relation md:col-span-3 flex flex-col gap-2">
-                                <label for="${idPrefix}_relation_${index}" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                    Relation
-                                </label>
-                                <input type="text"
-                                       id="${idPrefix}_relation_${index}"
-                                       name="${fieldName}[${index}][relation]"
-                                       value=""
-                                       placeholder="e.g. Father, Brother"
-                                       class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                            </div>
-
-                            <div class="md:col-span-1 flex items-center justify-end md:justify-center pt-8">
-                                <button type="button" class="btn-remove-contact inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition dark:bg-darkblack-600 dark:border-red-900/50" title="Remove Contact" aria-label="Remove contact">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    return row;
-                }
-
-                addButton.addEventListener('click', () => {
-                    const rows = container.querySelectorAll('.modal-contact-row');
-                    const nextIndex = rows.length;
-                    const newRow = createRow(nextIndex);
-                    container.appendChild(newRow);
-                    reindex();
-                });
-
-                container.addEventListener('click', (e) => {
-                    const removeBtn = e.target.closest('.btn-remove-contact');
-                    if (!removeBtn) return;
-                    const row = removeBtn.closest('.modal-contact-row');
-                    if (!row) return;
-
-                    const rows = container.querySelectorAll('.modal-contact-row');
-                    if (rows.length <= 1) {
-                        row.querySelectorAll('input').forEach(input => input.value = '');
-                    } else {
-                        row.remove();
-                        reindex();
-                    }
-                });
-            }
-
-            initModalContactRepeater({
-                containerId: 'modal-emergency-contacts-container',
-                addButtonId: 'modal-btn-add-emergency-contact',
-                fieldName: 'emergency_contacts',
-                idPrefix: 'modal_emergency_contact',
-                numberPlaceholder: '+971501234567',
-            });
-
-            initModalContactRepeater({
-                containerId: 'modal-native-contacts-container',
-                addButtonId: 'modal-btn-add-native-contact',
-                fieldName: 'native_contacts',
-                idPrefix: 'modal_native_contact',
-                numberPlaceholder: '+919876543210',
-            });
-
-            // Children Count Conditional Toggle
-            const modalMaritalStatus = document.getElementById('modal_marital_status');
-            const modalChildrenCountWrapper = document.getElementById('modal-children-count-wrapper');
-            const modalChildrenCount = document.getElementById('modal_children_count');
-
-            function syncModalChildrenCountVisibility() {
-                if (!modalMaritalStatus || !modalChildrenCountWrapper) return;
-                const isMarried = modalMaritalStatus.value === 'Married';
-                if (isMarried) {
-                    modalChildrenCountWrapper.classList.remove('hidden');
-                } else {
-                    modalChildrenCountWrapper.classList.add('hidden');
-                    if (modalChildrenCount) {
-                        if (modalChildrenCount.tomselect) {
-                            modalChildrenCount.tomselect.clear();
-                        } else {
-                            modalChildrenCount.value = '';
-                        }
-                    }
-                }
-            }
-
-            if (modalMaritalStatus) {
-                modalMaritalStatus.addEventListener('change', syncModalChildrenCountVisibility);
-                if (modalMaritalStatus.tomselect) {
-                    modalMaritalStatus.tomselect.on('change', syncModalChildrenCountVisibility);
-                }
-                syncModalChildrenCountVisibility();
-            }
-        });
-    </script>
 @endpush
