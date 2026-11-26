@@ -204,15 +204,14 @@ class CustomerUpdateService
 
                 $existingContacts = $customer->contacts()->lockForUpdate()->get();
                 $preservedAuthByEmail = $this->collectPreservedAuthByEmail($existingContacts);
+                $oldContactSummaries = $this->formatContactActivitySummaries($existingContacts);
 
                 $contactsDeletedCount = $existingContacts->count();
-                if ($contactsDeletedCount > 0) {
-                    CustomerContact::query()
-                        ->where('customer_id', $customer->id)
-                        ->whereIn('id', $existingContacts->pluck('id'))
-                        ->forceDelete();
+                foreach ($existingContacts as $existingContact) {
+                    $existingContact->forceDelete();
                 }
 
+                $createdContacts = [];
                 foreach ($data['contacts'] as $contactData) {
                     if (! is_array($contactData)) {
                         continue;
@@ -224,7 +223,7 @@ class CustomerUpdateService
                     $normalizedEmail = $email !== null ? strtolower($email) : null;
                     $authData = $normalizedEmail !== null ? ($preservedAuthByEmail[$normalizedEmail] ?? null) : null;
 
-                    CustomerContact::create([
+                    $createdContacts[] = CustomerContact::create([
                         'customer_id' => $customer->id,
                         'name' => (string) ($contactData['name'] ?? ''),
                         'email' => $email,
@@ -242,6 +241,37 @@ class CustomerUpdateService
                         'force_password_reset' => $authData['force_password_reset'] ?? false,
                     ]);
                     $contactsCreatedCount++;
+                }
+
+                if ($contactsDeletedCount > 0 || $contactsCreatedCount > 0) {
+                    $newContactSummaries = $this->formatContactActivitySummaries($createdContacts);
+                    $oldText = ! empty($oldContactSummaries) ? implode(', ', $oldContactSummaries) : null;
+                    $newText = ! empty($newContactSummaries) ? implode(', ', $newContactSummaries) : null;
+
+                    activity('customers')
+                        ->performedOn($customer)
+                        ->causedBy($apiClient)
+                        ->event('updated')
+                        ->withProperties([
+                            'old' => [
+                                'contacts' => $oldText,
+                            ],
+                            'attributes' => [
+                                'contacts' => $newText,
+                            ],
+                            'labels' => [
+                                'contacts' => 'Contacts',
+                            ],
+                            'display_old' => [
+                                'contacts' => $oldText ?? 'None',
+                            ],
+                            'display_attributes' => [
+                                'contacts' => $newText ?? 'None',
+                            ],
+                            'deleted_count' => $contactsDeletedCount,
+                            'created_count' => $contactsCreatedCount,
+                        ])
+                        ->log('customers.contacts_replaced');
                 }
             }
 
@@ -342,6 +372,25 @@ class CustomerUpdateService
         }
 
         return $preserved;
+    }
+
+    /**
+     * Format contact summaries for activity log display without exposing auth credentials.
+     *
+     * @param  iterable<int, CustomerContact>  $contacts
+     * @return array<int, string>
+     */
+    protected function formatContactActivitySummaries(iterable $contacts): array
+    {
+        $summaries = [];
+
+        foreach ($contacts as $contact) {
+            $summaries[] = $contact->email
+                ? "{$contact->name} <{$contact->email}>"
+                : (string) $contact->name;
+        }
+
+        return $summaries;
     }
 }
 

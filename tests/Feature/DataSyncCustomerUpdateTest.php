@@ -961,5 +961,64 @@ class DataSyncCustomerUpdateTest extends TestCase
         $this->assertNotNull(CustomerContact::find($originalId2));
         $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
     }
+
+    public function test_38_spatie_activity_log_records_customer_update_and_contact_replacement_without_auth_data(): void
+    {
+        $this->contact1->update([
+            'login_enabled' => true,
+            'password' => 'PortalPass123',
+        ]);
+
+        \Spatie\Activitylog\Models\Activity::query()->delete();
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
+            ->putJson('/api/integrations/customers/' . $this->externalCode, [
+                'name' => 'Activity Logged Customer LLC',
+                'contacts' => [
+                    [
+                        'name' => 'Primary Contact',
+                        'email' => 'primary@origcompany.ae',
+                        'is_primary' => true,
+                    ],
+                ],
+            ])
+            ->assertStatus(200);
+
+        $customerUpdateActivity = \Spatie\Activitylog\Models\Activity::query()
+            ->where('log_name', 'customers')
+            ->where('subject_type', Customer::class)
+            ->where('subject_id', $this->customer->id)
+            ->where('description', 'customers.updated')
+            ->first();
+
+        $this->assertNotNull($customerUpdateActivity);
+        $this->assertSame('Activity Logged Customer LLC', $customerUpdateActivity->properties['attributes']['name'] ?? null);
+        $this->assertSame('Original Customer LLC', $customerUpdateActivity->properties['old']['name'] ?? null);
+
+        $contactsReplacedActivity = \Spatie\Activitylog\Models\Activity::query()
+            ->where('log_name', 'customers')
+            ->where('subject_type', Customer::class)
+            ->where('subject_id', $this->customer->id)
+            ->where('description', 'customers.contacts_replaced')
+            ->first();
+
+        $this->assertNotNull($contactsReplacedActivity);
+        $this->assertSame(ApiClient::class, $contactsReplacedActivity->causer_type);
+        $this->assertSame($this->apiClient->id, $contactsReplacedActivity->causer_id);
+        $this->assertSame(2, $contactsReplacedActivity->properties['deleted_count'] ?? null);
+        $this->assertSame(1, $contactsReplacedActivity->properties['created_count'] ?? null);
+        $this->assertStringNotContainsString('PortalPass123', json_encode($contactsReplacedActivity->properties));
+        $this->assertStringNotContainsString('password', json_encode($contactsReplacedActivity->properties));
+
+        $this->assertSame(2, \Spatie\Activitylog\Models\Activity::query()
+            ->where('log_name', 'customer_contacts')
+            ->where('description', 'customer_contacts.deleted')
+            ->count());
+
+        $this->assertSame(1, \Spatie\Activitylog\Models\Activity::query()
+            ->where('log_name', 'customer_contacts')
+            ->where('description', 'customer_contacts.created')
+            ->count());
+    }
 }
 
