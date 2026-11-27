@@ -48,6 +48,7 @@ class DatabaseSeeder extends Seeder
             AgileSprintStatusSeeder::class,
             KpiSeeder::class,
             HandoffPurposesSeeder::class,
+            SystemProjectSeeder::class,
 
             // Hosting related seeders
             HostingProviderSeeder::class,
