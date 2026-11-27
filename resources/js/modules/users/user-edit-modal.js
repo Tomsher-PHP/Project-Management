@@ -96,34 +96,4 @@ document.addEventListener('DOMContentLoaded', () => {
         idPrefix: 'modal_native_contact',
         numberPlaceholder: '+919876543210',
     });
-
-    // Children Count Conditional Toggle
-    const modalMaritalStatus = document.getElementById('modal_marital_status');
-    const modalChildrenCountWrapper = document.getElementById('modal-children-count-wrapper');
-    const modalChildrenCount = document.getElementById('modal_children_count');
-
-    function syncModalChildrenCountVisibility() {
-        if (!modalMaritalStatus || !modalChildrenCountWrapper) return;
-        const isMarried = modalMaritalStatus.value === 'Married';
-        if (isMarried) {
-            modalChildrenCountWrapper.classList.remove('hidden');
-        } else {
-            modalChildrenCountWrapper.classList.add('hidden');
-            if (modalChildrenCount) {
-                if (modalChildrenCount.tomselect) {
-                    modalChildrenCount.tomselect.clear();
-                } else {
-                    modalChildrenCount.value = '';
-                }
-            }
-        }
-    }
-
-    if (modalMaritalStatus) {
-        modalMaritalStatus.addEventListener('change', syncModalChildrenCountVisibility);
-        if (modalMaritalStatus.tomselect) {
-            modalMaritalStatus.tomselect.on('change', syncModalChildrenCountVisibility);
-        }
-        syncModalChildrenCountVisibility();
-    }
 });

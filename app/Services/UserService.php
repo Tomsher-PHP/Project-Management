@@ -580,18 +580,13 @@ class UserService
             }
         }
 
-        // Enforce Marital Status & Children Count conditional rule
+        // Normalize Marital Status & Children Count
         if (array_key_exists('marital_status', $data)) {
             $maritalStatus = isset($data['marital_status']) && trim((string)$data['marital_status']) !== '' ? trim((string)$data['marital_status']) : null;
             $detailsData['marital_status'] = $maritalStatus;
+        }
 
-            if ($maritalStatus !== 'Married') {
-                $detailsData['children_count'] = null;
-            } elseif (array_key_exists('children_count', $data)) {
-                $childrenCount = $data['children_count'];
-                $detailsData['children_count'] = ($childrenCount !== null && $childrenCount !== '') ? (int)$childrenCount : null;
-            }
-        } elseif (array_key_exists('children_count', $data)) {
+        if (array_key_exists('children_count', $data)) {
             $childrenCount = $data['children_count'];
             $detailsData['children_count'] = ($childrenCount !== null && $childrenCount !== '') ? (int)$childrenCount : null;
         }
