@@ -332,7 +332,7 @@ class UserEmployeeInformationTest extends TestCase
         $this->assertNull($user->details->native_contacts);
     }
 
-    public function test_children_count_conditional_behavior_backend_enforcement(): void
+    public function test_children_count_is_preserved_regardless_of_marital_status(): void
     {
         // When marital status is Married, children count is saved
         $marriedData = [
@@ -349,7 +349,7 @@ class UserEmployeeInformationTest extends TestCase
         $this->assertEquals('Married', $user->details->marital_status);
         $this->assertEquals(3, $user->details->children_count);
 
-        // When marital status is Single, children count is forced to null on backend even if submitted
+        // When marital status is Single, children count is still saved
         $singleData = [
             'name' => 'Single User',
             'email' => 'single@example.com',
@@ -362,9 +362,9 @@ class UserEmployeeInformationTest extends TestCase
         $this->post(route('users.store'), $singleData);
         $singleUser = User::where('email', 'single@example.com')->first();
         $this->assertEquals('Single', $singleUser->details->marital_status);
-        $this->assertNull($singleUser->details->children_count);
+        $this->assertEquals(2, $singleUser->details->children_count);
 
-        // When updating a Married user to Divorced, children count is cleared
+        // When updating a Married user to Divorced, children count is preserved
         $this->put(route('users.update', $user->id), [
             'name' => 'Married User Now Divorced',
             'roles' => [$this->testRole->id],
@@ -373,7 +373,7 @@ class UserEmployeeInformationTest extends TestCase
         ]);
         $user->refresh();
         $this->assertEquals('Divorced', $user->details->marital_status);
-        $this->assertNull($user->details->children_count);
+        $this->assertEquals(3, $user->details->children_count);
     }
 
     public function test_old_emergency_contact_data_migration(): void

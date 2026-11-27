@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exports\UserDetailsExport;
 use App\Jobs\SendWelcomeMailJob;
 use App\Models\Configuration;
 use App\Models\ProjectMember;
@@ -11,9 +12,12 @@ use App\Models\UserDetail;
 use App\Models\UserGeneralSetting;
 use App\Models\UserNotificationSetting;
 use App\Models\UserSetting;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Activitylog\Facades\LogBatch;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class UserService
 {
@@ -576,18 +580,13 @@ class UserService
             }
         }
 
-        // Enforce Marital Status & Children Count conditional rule
+        // Normalize Marital Status & Children Count
         if (array_key_exists('marital_status', $data)) {
             $maritalStatus = isset($data['marital_status']) && trim((string)$data['marital_status']) !== '' ? trim((string)$data['marital_status']) : null;
             $detailsData['marital_status'] = $maritalStatus;
+        }
 
-            if ($maritalStatus !== 'Married') {
-                $detailsData['children_count'] = null;
-            } elseif (array_key_exists('children_count', $data)) {
-                $childrenCount = $data['children_count'];
-                $detailsData['children_count'] = ($childrenCount !== null && $childrenCount !== '') ? (int)$childrenCount : null;
-            }
-        } elseif (array_key_exists('children_count', $data)) {
+        if (array_key_exists('children_count', $data)) {
             $childrenCount = $data['children_count'];
             $detailsData['children_count'] = ($childrenCount !== null && $childrenCount !== '') ? (int)$childrenCount : null;
         }
@@ -602,5 +601,76 @@ class UserService
         ProjectMember::where('user_id', $user->id)->update([
             'is_active' => false,
         ]);
+    }
+
+    /**
+     * Build the base query for listing and exporting eligible users.
+     */
+    public function getUsersListingQuery(User $authUser, array $filters = []): Builder
+    {
+        return User::accessibleBy($authUser)
+            ->filter($filters)
+            ->sort($filters)
+            ->orderBy('users.id', 'desc')
+            ->where('is_super_admin', false)
+            ->where('delete_status', false)
+            ->whereNot('id', $authUser->id);
+    }
+
+    /**
+     * Export eligible users and their details to an Excel file.
+     */
+    public function exportUsersToExcel(User $authUser, array $filters = []): BinaryFileResponse
+    {
+        $users = $this->getUsersListingQuery($authUser, $filters)
+            ->select([
+                'users.id',
+                'users.name',
+                'users.email',
+                'users.is_active',
+            ])
+            ->with([
+                'details' => function ($query): void {
+                    $query->select([
+                        'id',
+                        'user_id',
+                        'department_id',
+                        'designation_id',
+                        'reporter_id',
+                        'manager_id',
+                        'employee_id',
+                        'gender',
+                        'dob',
+                        'phone',
+                        'whatsapp',
+                        'joining_date',
+                        'leaving_date',
+                        'marital_status',
+                        'children_count',
+                        'favorite_color',
+                        'address',
+                        'native_address',
+                        'emergency_contacts',
+                        'native_contacts',
+                        'shirt_sizes',
+                        'shoe_sizes',
+                    ]);
+                },
+                'details.department:id,name',
+                'details.designation:id,name',
+                'details.reporter:id,name',
+                'details.manager:id,name',
+            ])
+            ->get();
+
+        $timestamp = now((string) config('constants.timezone', config('app.timezone')))
+            ->format('Y-m-d_H-i-s');
+
+        $fileName = 'users_details_' . $timestamp . '.xlsx';
+
+        return Excel::download(
+            new UserDetailsExport($users),
+            $fileName
+        );
     }
 }

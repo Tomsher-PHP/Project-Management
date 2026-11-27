@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 
 class UserController extends Controller
@@ -43,19 +44,13 @@ class UserController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $users = User::accessibleBy(auth()->user())
-            ->filter($request->all())
-            ->sort($request->all())
-            ->orderBy('users.id', 'desc')
+        $users = $this->service->getUsersListingQuery(auth()->user(), $request->all())
             ->with([
                 'details',
                 'details.department',
                 'details.designation',
                 'primaryAttachment'
             ])
-            ->where('is_super_admin', false)
-            ->where('delete_status', false)
-            ->whereNot('id', auth()->id())
             ->paginate($perPage)
             ->withQueryString();
 
@@ -64,6 +59,17 @@ class UserController extends Controller
         $designations = Designation::withTrashed()->orderBy('sort_order', 'asc')->get();
 
         return view('users.index', compact('users', 'perPage', 'roles', 'departments', 'designations'));
+    }
+
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        $user = auth()->user();
+
+        if (! $user || ! $user->can('user.export')) {
+            abort(403);
+        }
+
+        return $this->service->exportUsersToExcel($user, $request->all());
     }
 
     public function create()

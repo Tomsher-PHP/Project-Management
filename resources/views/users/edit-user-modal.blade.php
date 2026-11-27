@@ -280,7 +280,7 @@
                     </div>
 
                     <!-- Children Count -->
-                    <div id="modal-children-count-wrapper" class="flex flex-col gap-2 {{ (string) $modalMaritalStatus === 'Married' ? '' : 'hidden' }}">
+                    <div id="modal-children-count-wrapper" class="flex flex-col gap-2">
                         <label for="modal_children_count" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                             Children Count
                         </label>

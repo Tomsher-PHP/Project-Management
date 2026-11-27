@@ -629,7 +629,7 @@
             </div>
 
             <!-- Children Count -->
-            <div id="children-count-wrapper" class="flex flex-col gap-2 {{ (string) $selectedMaritalStatus === 'Married' ? '' : 'hidden' }}">
+            <div id="children-count-wrapper" class="flex flex-col gap-2">
                 <label for="children_count" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Children Count
                 </label>
@@ -1043,36 +1043,6 @@
                     idPrefix: 'native_contact',
                     numberPlaceholder: '+919876543210',
                 });
-
-                // Children Count Conditional Visibility
-                const maritalStatusSelect = document.getElementById('marital_status');
-                const childrenCountWrapper = document.getElementById('children-count-wrapper');
-                const childrenCountSelect = document.getElementById('children_count');
-
-                function syncChildrenCountVisibility() {
-                    if (!maritalStatusSelect || !childrenCountWrapper) return;
-                    const isMarried = maritalStatusSelect.value === 'Married';
-                    if (isMarried) {
-                        childrenCountWrapper.classList.remove('hidden');
-                    } else {
-                        childrenCountWrapper.classList.add('hidden');
-                        if (childrenCountSelect) {
-                            if (childrenCountSelect.tomselect) {
-                                childrenCountSelect.tomselect.clear();
-                            } else {
-                                childrenCountSelect.value = '';
-                            }
-                        }
-                    }
-                }
-
-                if (maritalStatusSelect) {
-                    maritalStatusSelect.addEventListener('change', syncChildrenCountVisibility);
-                    if (maritalStatusSelect.tomselect) {
-                        maritalStatusSelect.tomselect.on('change', syncChildrenCountVisibility);
-                    }
-                    syncChildrenCountVisibility();
-                }
             });
         </script>
     @endpush

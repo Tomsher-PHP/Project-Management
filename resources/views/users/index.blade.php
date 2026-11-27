@@ -13,6 +13,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3 sm:ml-auto">
+            @can('user.export')
+                <x-button.export-button :action="route('users.export')" :params="request()->except(['page', 'per_page'])" label="Export Excel" aria-label="Export users to Excel" button-class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white dark:border-success-300 dark:text-success-300 dark:hover:bg-success-300 dark:hover:text-white" />
+            @endcan
             @can('user.restore')
                 <a href="{{ route('users.restore.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -26,11 +29,7 @@
                 </a>
             @endcan
             @if (auth()->user()->can('user_leave_balance.import'))
-                <x-button.link-button
-                    :href="route('user-leave-balances.import')"
-                    icon="import"
-                    label="Import Leave Balances"
-                />
+                <x-button.link-button :href="route('user-leave-balances.import')" icon="import" label="Import Leave Balances" />
             @endif
         </div>
     </div>
