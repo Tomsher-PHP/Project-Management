@@ -169,6 +169,7 @@ Route::middleware([
 
     Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])->name('users.modal.update');
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
+    Route::get('/users/export', [UserController::class, 'exportExcel'])->name('users.export')->middleware(['permission.type:user.view', 'permission.type:user.export']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
     Route::resource('users', UserController::class)->middleware('can:view,user')->only(['show']);

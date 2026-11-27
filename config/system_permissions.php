@@ -12,6 +12,7 @@ return [
     ['name' => 'user.edit',           'label' => 'User', 'sort_order' => 1060, 'default_checked' => false],
     ['name' => 'user.delete',         'label' => 'User', 'sort_order' => 1080, 'default_checked' => false],
     ['name' => 'user.restore',        'label' => 'User', 'sort_order' => 1100, 'default_checked' => false],
+    ['name' => 'user.export',         'label' => 'User', 'sort_order' => 1110, 'default_checked' => false],
     ['name' => 'user.tree_view',      'label' => 'User', 'sort_order' => 1120, 'default_checked' => true],
     ['name' => 'user.leave_details.view',  'label' => 'Leave Details',    'sort_order' => 1130, 'default_checked' => true],
     ['name' => 'user.leave_details.create', 'label' => 'Leave Details', 'sort_order' => 1140, 'default_checked' => true],
