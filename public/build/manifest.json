@@ -434,6 +434,17 @@
       "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
+  "resources/js/modules/quick-task-create.js": {
+    "file": "assets/quick-task-create-Dqdm8jnH.js",
+    "name": "quick-task-create",
+    "src": "resources/js/modules/quick-task-create.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-kNjqpuwD.js",
+      "_tom-select-0sN9vRSW.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
   "resources/js/modules/requests/break-requests.js": {
     "file": "assets/break-requests-Cg4yK0G0.js",
     "name": "break-requests",
