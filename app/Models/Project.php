@@ -97,18 +97,25 @@ class Project extends Model
         return $candidate;
     }
 
-    public function scopeAccessibleBy($query, $user)
+    public function scopeAccessibleBy($query, $user, bool $includeSystem = false)
     {
-        // Skip misc projects
-        $query->where('projects.is_system', false);
+        if (! $includeSystem) {
+            // Skip misc projects
+            $query->where('projects.is_system', false);
+        }
+
         // Superadmin or view all projects permission
         if ($user->is_super_admin || $user->can('project.view_all_projects')) {
             return $query;
         }
 
-        // Creator or member
-        return $query->where(function ($q) use ($user) {
-            $q->where('added_by', $user->id)
+        // Creator or member (plus system projects when explicitly included)
+        return $query->where(function ($q) use ($user, $includeSystem) {
+            if ($includeSystem) {
+                $q->orWhere('projects.is_system', true);
+            }
+
+            $q->orWhere('added_by', $user->id)
                 ->orWhereHas('members', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
                 });

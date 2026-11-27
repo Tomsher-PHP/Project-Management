@@ -21,9 +21,9 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        // Skip system projects
-        if($project->is_system) {
-            return false;
+        // System projects are viewable by authenticated users
+        if ($project->is_system) {
+            return true;
         }
 
         // Superadmin or view all projects permission
@@ -47,6 +47,10 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
+        if ($project->is_system) {
+            return false;
+        }
+
         return $this->view($user, $project);
     }
 
@@ -55,6 +59,10 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
+        if ($project->is_system) {
+            return false;
+        }
+
         return $this->view($user, $project);
     }
 

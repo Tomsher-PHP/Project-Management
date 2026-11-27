@@ -151,10 +151,21 @@ class Task extends Model
             ->format('Y-m-d H:i:s');
     }
 
+    public function scopeExcludeBreakTasks(Builder $query): Builder
+    {
+        return $query
+            ->whereNull('tasks.break_work_request_id')
+            ->where(function (Builder $subQuery) {
+                $subQuery
+                    ->whereNull('tasks.request_type')
+                    ->orWhere('tasks.request_type', '!=', self::REQUEST_TYPE_BREAK);
+            });
+    }
+
     public function scopeAccessibleBy($query, User $user)
     {
         // skip break work requested tasks
-        $query->whereNull('tasks.break_work_request_id');
+        $this->scopeExcludeBreakTasks($query);
 
         $query->whereHas('project', function ($projectQuery) {
             $projectQuery->whereNull('deleted_at');

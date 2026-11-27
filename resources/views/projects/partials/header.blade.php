@@ -1,10 +1,11 @@
 @php
     $isDeletedProject = $project->trashed();
+    $isProtectedSystemProject = (bool) $project->is_system;
     $canCustomerEndDate = auth()->user()->can('project.customer_end_date');
-    $canChangeProjectStatus = !$isDeletedProject && auth()->user()->can('project.status_change');
-    $canChangeProjectStage = !$isDeletedProject && auth()->user()->can('project.edit');
-    $canEditProject = !$isDeletedProject && auth()->user()->can('project.edit');
-    $canAddProjectPayment = !$isDeletedProject && auth()->user()->can('project.add_payment_status');
+    $canChangeProjectStatus = !$isDeletedProject && !$isProtectedSystemProject && auth()->user()->can('project.status_change');
+    $canChangeProjectStage = !$isDeletedProject && !$isProtectedSystemProject && auth()->user()->can('project.edit');
+    $canEditProject = !$isDeletedProject && !$isProtectedSystemProject && auth()->user()->can('project.edit');
+    $canAddProjectPayment = !$isDeletedProject && !$isProtectedSystemProject && auth()->user()->can('project.add_payment_status');
     $canViewProjectPayment = auth()->user()->can('project.view_payment_status');
 
     $projectStatusUpdateUrl = route('projects.updateProjectStatus', $project);
@@ -54,9 +55,14 @@
                     <div class="flex min-w-0 flex-wrap items-center gap-2.5">
                         <div class="flex min-w-0 items-center gap-2">
                             <x-project-flow-icon :flow="$project->project_flow" size="md" />
-                            <h2 class="min-w-0 truncate text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
-                                {{ $project->name }}
+                            <h2 class="flex min-w-0 flex-wrap items-center gap-2 truncate text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
+                                <span>{{ $project->name }}</span>
                                 <span class="text-base font-semibold text-bgray-700 dark:text-bgray-300">({{ $project->project_code ?? '--' }})</span>
+                                @if ($project->is_system)
+                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
+                                        System
+                                    </span>
+                                @endif
                             </h2>
                         </div>
                         @if ($project->serviceTypes && $project->serviceTypes->isNotEmpty())

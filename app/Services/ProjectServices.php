@@ -196,6 +196,10 @@ class ProjectServices
 
     public function update(Project $project, array $data, ?User $actor = null)
     {
+        if ($project->is_system) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('System projects cannot be edited.');
+        }
+
         return DB::transaction(function () use ($project, $data, $actor) {
             $actor = $actor ?? auth()->user();
 

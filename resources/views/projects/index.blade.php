@@ -102,8 +102,13 @@
                                                 <x-project-flow-icon :flow="$project->project_flow" class="absolute right-0 top-0" :title="'Project Flow: ' . $flowLabel" />
 
                                                 <a href="{{ route('projects.edit', $project->id) }}">
-                                                    <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        {{ $project->name }}
+                                                    <h4 class="flex flex-wrap items-center gap-2 text-lg font-bold text-bgray-900 dark:text-white">
+                                                        <span>{{ $project->name }}</span>
+                                                        @if ($project->is_system)
+                                                            <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-200">
+                                                                System
+                                                            </span>
+                                                        @endif
                                                     </h4>
                                                 </a>
                                                 <p class="text-sm text-bgray-700 dark:text-bgray-300">
@@ -184,12 +189,14 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-1">
-                                            @can('project.edit')
-                                                <x-edit-button class="project-edit-btn" data-project="{{ json_encode($project) }}" title="Edit project" />
-                                            @endcan
-                                            @can('project.delete')
-                                                <x-delete-form :action="route('projects.destroy', $project->id)" formClass="project-delete-form" />
-                                            @endcan
+                                            @if (!$project->is_system)
+                                                @can('project.edit')
+                                                    <x-edit-button class="project-edit-btn" data-project="{{ json_encode($project) }}" title="Edit project" />
+                                                @endcan
+                                                @can('project.delete')
+                                                    <x-delete-form :action="route('projects.destroy', $project->id)" formClass="project-delete-form" />
+                                                @endcan
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

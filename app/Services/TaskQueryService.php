@@ -9,6 +9,8 @@ class TaskQueryService
 {
     public function baseQuery(User $user)
     {
-        return Task::query()->accessibleBy($user);
+        return Task::query()
+            ->excludeBreakTasks()
+            ->accessibleBy($user);
     }
 }

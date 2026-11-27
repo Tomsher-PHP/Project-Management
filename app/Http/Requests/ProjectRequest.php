@@ -12,6 +12,11 @@ class ProjectRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        $project = $this->route('project');
+        if ($project instanceof Project && $project->is_system) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('System projects cannot be edited.');
+        }
+
         return true;
     }
 

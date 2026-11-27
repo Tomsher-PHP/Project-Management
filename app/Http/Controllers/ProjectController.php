@@ -70,7 +70,7 @@ class ProjectController extends Controller
             config('constants.per_page_count')
         );
 
-        $projects = Project::accessibleBy(auth()->user())
+        $projects = Project::accessibleBy(auth()->user(), true)
             ->with(['customer.profileGrade', 'technologies', 'parentProject', 'projectTimelines', 'serviceTypes'])
             ->filter($request->all())
             ->sort($request->all())
@@ -123,7 +123,7 @@ class ProjectController extends Controller
             abort(403);
         }
 
-        $projects = Project::accessibleBy($user)
+        $projects = Project::accessibleBy($user, true)
             ->with([
                 'customer.profileGrade',
                 'technologies',
@@ -276,6 +276,14 @@ class ProjectController extends Controller
 
     public function update(ProjectRequest $request, Project $project, ProjectServices $service)
     {
+        if ($project->is_system) {
+            return response()->json([
+                'success' => false,
+                'status' => false,
+                'message' => 'System projects cannot be edited.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $project = $service->update($project, $request->validated());
 
         return response()->json([
@@ -288,6 +296,13 @@ class ProjectController extends Controller
 
     public function updateProjectStatus(Request $request, Project $project, ProjectServices $service)
     {
+        if ($project->is_system) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System projects cannot be edited.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $latestStatusChangeDate = $service->getLatestProjectStatusChangeDate($project);
         $validator = Validator::make($request->all(), [
             'status_id' => 'required|exists:project_statuses,id',
@@ -314,6 +329,13 @@ class ProjectController extends Controller
 
     public function updateProjectStage(Request $request, Project $project, ProjectServices $service)
     {
+        if ($project->is_system) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System projects cannot be edited.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $request->merge([
             'project_stage_id' => $request->filled('project_stage_id') ? $request->input('project_stage_id') : null,
         ]);
@@ -490,6 +512,13 @@ class ProjectController extends Controller
 
     public function deleteSummary(Project $project): JsonResponse
     {
+        if ($project->is_system) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System projects cannot be deleted.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $summary = $this->projectServices->getDeleteSummary($project);
 
         $html = view('projects.partials.delete-modal', [
@@ -506,6 +535,19 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
+        if ($project->is_system) {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'System projects cannot be deleted.',
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            return redirect()
+                ->back()
+                ->with('error', 'System projects cannot be deleted.');
+        }
+
         $summary = $this->projectServices->getDeleteSummary($project);
 
         if (($summary['running_timers_count'] ?? 0) > 0) {
@@ -539,6 +581,13 @@ class ProjectController extends Controller
     public function toggleStatus(Request $request)
     {
         $project = Project::findOrFail($request->id);
+        if ($project->is_system) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System projects cannot be edited.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $project->is_active = !$project->is_active;
         $project->save();
 
