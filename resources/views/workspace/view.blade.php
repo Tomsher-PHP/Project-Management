@@ -43,6 +43,11 @@
             <!-- Task Create Modal -->
             @include('tasks.partials.create-modal')
 
+            <!-- Quick Task Create Modal -->
+            @can('task.quick_task')
+                @include('tasks.partials.quick-task-create-modal')
+            @endcan
+
             <script id="task-create-dependencies" type="application/json">
                 @json($taskCreateDependencies)
             </script>
@@ -90,6 +95,9 @@
     @vite('resources/js/modules/workspace/user-timeline.js')
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/task-list-create.js')
+    @can('task.quick_task')
+        @vite('resources/js/modules/quick-task-create.js')
+    @endcan
     @vite('resources/js/modules/tasks/kanban-board.js')
     @vite('resources/js/modules/workspace/workspace-kanban-filters.js')
     @vite('resources/js/modules/workspace/workspace-user-selector.js')

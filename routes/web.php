@@ -661,6 +661,8 @@ Route::middleware([
 
     // Task Routes
     Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
+    Route::get('tasks/quick-task/projects', [TaskController::class, 'quickTaskProjects'])->middleware(['permission.type:task.quick_task'])->name('tasks.quick-task.projects');
+    Route::post('tasks/quick-task', [TaskController::class, 'storeQuickTask'])->middleware(['permission.type:task.quick_task'])->name('tasks.quick-task.store');
 
     Route::prefix('tasks/{task}')->as('tasks.')->group(function () {
         Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tabs.show');

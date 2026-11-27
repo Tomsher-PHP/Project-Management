@@ -56,6 +56,58 @@ class TaskFormService
             ->get(['id', 'name', 'project_code']);
     }
 
+    public function getQuickTaskDefaultProject(): ?Project
+    {
+        $miscProject = Project::query()
+            ->where('is_system', true)
+            ->where('is_active', true)
+            ->where('name', 'Misc')
+            ->first(['id', 'name', 'project_code']);
+
+        if ($miscProject) {
+            return $miscProject;
+        }
+
+        $systemProjects = Project::query()
+            ->where('is_system', true)
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->limit(2)
+            ->get(['id', 'name', 'project_code']);
+
+        return $systemProjects->count() === 1 ? $systemProjects->first() : null;
+    }
+
+    public function searchQuickTaskProjects(User $user, ?string $query = null)
+    {
+        $search = trim((string) $query);
+
+        return Project::query()
+            ->where(function ($scopeQuery) use ($user) {
+                $scopeQuery
+                    ->where(function ($regularQuery) use ($user) {
+                        $regularQuery
+                            ->accessibleBy($user)
+                            ->whereHas('activeMembers', fn($memberQuery) => $memberQuery->whereKey($user->id));
+                    })
+                    ->orWhere(function ($systemQuery) {
+                        $systemQuery
+                            ->where('is_system', true)
+                            ->where('is_active', true);
+                    });
+            })
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('project_code', 'like', "%{$search}%");
+                });
+            })
+            ->orderByDesc('is_system')
+            ->orderBy('name')
+            ->limit(50)
+            ->get(['id', 'name', 'project_code', 'is_system']);
+    }
+
     public function getInitialDependencies(): array
     {
         $statusOptionsByFlow = TaskStatus::query()

@@ -16,6 +16,10 @@
                     @can('handoff_request.create')
                         <x-button.create-button type="button" data-handoff-create-open title="Create Handoff request to qa, review etc.." label="Handoff" />
                     @endcan
+
+                    @can('task.quick_task')
+                        <x-button.create-button type="button" data-quick-task-create-open title="Create quick task" label="Quick Task" />
+                    @endcan
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">

@@ -73,6 +73,9 @@ class UserWorkspaceController extends Controller
 
         $formData = $taskFormService->getCreateData($user);
         $taskCreateDependencies = $taskFormService->getInitialDependencies();
+        $quickTaskDefaultProject = ($user->is_super_admin || $user->can('task.quick_task'))
+            ? $taskFormService->getQuickTaskDefaultProject()
+            : null;
 
         $workspaceFilterCount = collect([
             filled($request->input('project_id')) ? 'project_id' : null,
@@ -108,6 +111,7 @@ class UserWorkspaceController extends Controller
             'workspaceSelectableUsers' => $userService->getNavSelectableUsers($user),
             'workspaceSelectedUserId' => (int) $workspaceUser->id === (int) $user->id ? '' : (string) $workspaceUser->id,
             'taskCreateDependencies' => $taskCreateDependencies,
+            'quickTaskDefaultProject' => $quickTaskDefaultProject,
             'workspaceFilterCount' => $workspaceFilterCount,
             'workspaceHasActiveFilters' => $workspaceFilterCount > 0,
             'pendingHandoffCount' => $pendingHandoffCount,

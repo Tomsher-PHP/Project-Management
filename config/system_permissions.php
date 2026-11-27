@@ -88,6 +88,7 @@ return [
     ['name' => 'task.add_notes_files',    'label' => 'Task', 'sort_order' => 7120, 'default_checked' => false],
     ['name' => 'task.remove_notes_files', 'label' => 'Task', 'sort_order' => 7140, 'default_checked' => false],
     ['name' => 'task.move',               'label' => 'Task', 'sort_order' => 7160, 'default_checked' => false],
+    ['name' => 'task.quick_task',         'label' => 'Task', 'sort_order' => 7165, 'default_checked' => false],
 
     // SCHEDULE SHIFT
     ['name' => 'schedule_shift.view',   'label' => 'Schedule Shift', 'sort_order' => 8000, 'default_checked' => false],

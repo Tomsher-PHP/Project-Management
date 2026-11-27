@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\TaskTimerAlreadyRunningException;
 use App\Exceptions\TaskTimerStateConflictException;
+use App\Http\Requests\QuickTaskCreateRequest;
 use App\Http\Requests\TaskCommentRequest;
 use App\Http\Requests\TaskNoteRequest;
 use App\Http\Requests\TaskQuickStoreRequest;
@@ -17,6 +18,7 @@ use App\Models\TaskStatus;
 use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Services\AttachmentService;
+use App\Services\QuickTaskService;
 use App\Services\Task\RunningTaskNavbarService;
 use App\Services\TaskFilterService;
 use App\Services\TaskFormService;
@@ -254,6 +256,67 @@ class TaskController extends Controller
                     : ($firstTask->project_sprint_id ? 'sprint-' . $firstTask->project_sprint_id : 'ungrouped'))
                 : null,
         ], Response::HTTP_OK);
+    }
+
+    public function quickTaskProjects(Request $request, TaskFormService $taskFormService): JsonResponse
+    {
+        $projects = $taskFormService->searchQuickTaskProjects(
+            $request->user(),
+            $request->input('q', '')
+        );
+
+        return response()->json($projects->map(fn(Project $project) => [
+            'id' => $project->id,
+            'value' => (string) $project->id,
+            'name' => $project->name,
+            'text' => $project->name,
+            'subtype' => $project->project_code ?: '--',
+            'project_code' => $project->project_code ?: '--',
+        ]));
+    }
+
+    public function storeQuickTask(QuickTaskCreateRequest $request, QuickTaskService $quickTaskService): JsonResponse
+    {
+        $validated = $request->validated();
+        $startTimer = (bool) ($validated['start_timer'] ?? false);
+
+        try {
+            $result = $quickTaskService->createQuickTask(
+                $request->user(),
+                (int) $validated['project_id'],
+                (string) $validated['name'],
+                $startTimer
+            );
+
+            return response()->json([
+                'status' => true,
+                'message' => $startTimer
+                    ? 'Task created and timer started successfully.'
+                    : 'Task created successfully.',
+                'task_id' => $result['task']->id,
+                'timer_started' => $result['timer_started'],
+                'navbar_timer' => $result['navbar_timer'],
+            ], Response::HTTP_OK);
+        } catch (TaskTimerAlreadyRunningException $e) {
+            $restriction = $e->getRestriction();
+
+            return response()->json([
+                'status' => false,
+                'message' => $restriction['message'] ?? 'Unable to start timer for this task.',
+            ], $restriction['status'] ?? Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (TaskTimerStateConflictException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], Response::HTTP_CONFLICT);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage() ?: 'Unable to create quick task.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
     }
 
     /**
