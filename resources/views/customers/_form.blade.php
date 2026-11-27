@@ -87,13 +87,27 @@
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">Location Details</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <!-- Registered Country -->
+            @php
+                $selectedRegisteredCountryId = old('registered_country_id', $customer->registered_country_id ?? null);
+                $selectedRegisteredCountryName = null;
+
+                if (filled($selectedRegisteredCountryId)) {
+                    if (isset($customer) && (string) $customer->registered_country_id === (string) $selectedRegisteredCountryId) {
+                        $selectedRegisteredCountryName = $customer->country?->name;
+                    }
+
+                    if (blank($selectedRegisteredCountryName)) {
+                        $selectedRegisteredCountryName = \App\Models\Country::whereKey($selectedRegisteredCountryId)->value('name');
+                    }
+                }
+            @endphp
             <div class="flex flex-col gap-2">
                 <label for="registered_country_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Registered Country</label>
                 <select name="registered_country_id" id="registered_country_id" class="tom-select-lazy w-full border-gray-300 dark:border-darkblack-400" data-placeholder="Start typing to search..." data-sort="0" data-route="{{ route('countries.search') }}">
 
-                    @if (old('registered_country_id', $customer->registered_country_id ?? false))
-                        <option value="{{ old('registered_country_id', $customer->registered_country_id ?? '') }}" selected>
-                            {{ old('registered_country_name', $customer->country->name ?? '') }}
+                    @if (filled($selectedRegisteredCountryId) && filled($selectedRegisteredCountryName))
+                        <option value="{{ $selectedRegisteredCountryId }}" selected>
+                            {{ $selectedRegisteredCountryName }}
                         </option>
                     @endif
 

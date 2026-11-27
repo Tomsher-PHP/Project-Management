@@ -58,7 +58,32 @@ class CustomerRequest extends FormRequest
                 Rule::unique('customers', 'email')->ignore($customerId),
             ],
             'industry_id' => ['nullable', 'exists:industries,id'],
-            'website' => ['nullable', 'url', 'max:255'],
+            'website' => [
+                'nullable',
+                'string',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $url = trim((string) $value);
+                    if ($url === '') {
+                        return;
+                    }
+
+                    $candidate = preg_match('/^https?:\/\//i', $url)
+                        ? $url
+                        : 'https://' . ltrim($url, '/');
+
+                    if (! filter_var($candidate, FILTER_VALIDATE_URL)) {
+                        $fail('Please enter a valid website URL.');
+
+                        return;
+                    }
+
+                    $host = parse_url($candidate, PHP_URL_HOST);
+                    if (! is_string($host) || ! preg_match('/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i', $host)) {
+                        $fail('Please enter a valid website URL.');
+                    }
+                },
+            ],
             'registered_country_id' => ['nullable', 'exists:countries,id'],
             'emirate' => ['nullable', 'string', 'max:255'],
             'google_map_link' => ['nullable', 'url', 'max:255'],

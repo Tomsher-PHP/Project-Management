@@ -94,6 +94,7 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer)
     {
+        $customer->loadMissing('country');
         $selectedIndustryId = $customer->industry_id;
 
         $industries = Industry::forForm($selectedIndustryId, ['order_by' => 'sort_order', 'direction' => 'asc'])->get();
