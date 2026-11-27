@@ -723,7 +723,7 @@
             <!-- Casual Shoe Size -->
             <div class="flex flex-col gap-2">
                 <label for="shoe_size_casual" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Casual Shoe Size
+                    Casual Shoe (EU) Size
                 </label>
 
                 <select name="shoe_sizes[casual]" id="shoe_size_casual" class="tom-select w-full" data-sort="0">
@@ -746,7 +746,7 @@
             <!-- Formal Shoe Size -->
             <div class="flex flex-col gap-2">
                 <label for="shoe_size_formal" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Formal Shoe Size
+                    Formal Shoe (EU) Size
                 </label>
 
                 <select name="shoe_sizes[formal]" id="shoe_size_formal" class="tom-select w-full" data-sort="0">
