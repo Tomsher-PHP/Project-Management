@@ -2,7 +2,7 @@
     <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-quick-task-create-close></div>
 
     <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
-        <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
+        <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600" data-quick-task-create-panel>
             <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-3 dark:border-darkblack-400">
                 <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">
                     Create Quick Task

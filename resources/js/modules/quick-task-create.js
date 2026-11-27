@@ -215,6 +215,15 @@ const initQuickTaskCreate = () => {
         if (event.target.closest('[data-quick-task-create-close]')) {
             event.preventDefault();
             closeModal();
+            return;
+        }
+
+        if (
+            !modal.classList.contains('hidden')
+            && !event.target.closest('[data-quick-task-create-panel]')
+            && !event.target.closest('.ts-dropdown')
+        ) {
+            closeModal();
         }
     });
 
