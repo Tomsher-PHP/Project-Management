@@ -357,7 +357,6 @@ class BreakRequestService
     private function getOrCreateMiscProject(BreakWorkRequest $breakWorkRequest): Project
     {
         $project = Project::query()
-            ->where('name', 'Misc')
             ->where('is_system', true)
             ->first();
 
