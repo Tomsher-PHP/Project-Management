@@ -91,7 +91,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-D14WtpsT.css",
+    "file": "assets/app-qqVwN9ah.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -266,7 +266,7 @@
     "isEntry": true
   },
   "resources/js/modules/customer-contact.js": {
-    "file": "assets/customer-contact-hN_XqqCH.js",
+    "file": "assets/customer-contact-B-sL0cMz.js",
     "name": "customer-contact",
     "src": "resources/js/modules/customer-contact.js",
     "isEntry": true
