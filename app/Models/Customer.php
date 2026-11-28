@@ -127,6 +127,11 @@ class Customer extends Authenticatable
         return $this->hasMany(CustomerContact::class)->where('is_primary', false);
     }
 
+    public function passwordResets()
+    {
+        return $this->hasMany(CustomerPasswordReset::class);
+    }
+
 
     public function scopeActive($query)
     {

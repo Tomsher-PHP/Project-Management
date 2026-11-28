@@ -93,6 +93,9 @@ class CustomerServices
     {
         try {
             return DB::transaction(function () use ($customer, $data) {
+                $previousUsername = $customer->username;
+                $previousEmail = strtolower(trim((string) $customer->email));
+                $previousLoginEnabled = (bool) $customer->login_enabled;
 
                 // 1. Update Customer
                 $customer->update(array_merge([
@@ -107,6 +110,21 @@ class CustomerServices
                     'sales_person_id' => $data['sales_person_id'],
                     'new_to_company' => $data['new_to_company'] ?? 0,
                 ], $this->buildAuthAttributes($data, $customer)));
+
+                $usernameChanged = $customer->username !== $previousUsername;
+                $passwordChanged = filled($data['password'] ?? null);
+                $loginDisabled = $previousLoginEnabled && ! $customer->login_enabled;
+                $emailChanged = strtolower(trim((string) $customer->email)) !== $previousEmail;
+
+                if ($usernameChanged || $passwordChanged || $loginDisabled) {
+                    app(\App\Services\CustomerPortal\Auth\CustomerAuthService::class)
+                        ->revokeCustomerSessions($customer->id);
+                    app(\App\Services\CustomerPortal\Auth\CustomerOtpService::class)
+                        ->invalidateOutstandingForCustomer($customer->id);
+                } elseif ($emailChanged) {
+                    app(\App\Services\CustomerPortal\Auth\CustomerOtpService::class)
+                        ->invalidateOutstandingForCustomer($customer->id);
+                }
 
                 // 2. Sync contacts
                 $this->syncContactsInfo($customer, $data);

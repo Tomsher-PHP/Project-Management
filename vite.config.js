@@ -88,6 +88,14 @@ export default defineConfig({
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',
                 'resources/css/modules/task-running-timer.css',
+
+                // Customer Portal entry points
+                'resources/css/customer-portal/app.css',
+                'resources/css/customer-portal/auth.css',
+                'resources/js/customer-portal/app.js',
+                'resources/js/customer-portal/auth/login.js',
+                'resources/js/customer-portal/auth/verify-otp.js',
+                'resources/js/customer-portal/auth/reset-password.js',
             ],
             refresh: true,
         }),

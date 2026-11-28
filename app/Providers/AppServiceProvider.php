@@ -64,6 +64,57 @@ class AppServiceProvider extends ServiceProvider
             });
         });
 
+        \Illuminate\Support\Facades\RateLimiter::for('customer-portal-login', function (\Illuminate\Http\Request $request) {
+            $maxAttempts = (int) config('customer_portal.authentication.max_login_attempts', 5);
+            $decaySeconds = (int) config('customer_portal.authentication.login_decay_seconds', 60);
+
+            // IP-level ceiling to protect against credential spraying across multiple usernames.
+            return \Illuminate\Cache\RateLimiting\Limit::perMinutes(
+                max(1, (int) ceil($decaySeconds / 60)),
+                $maxAttempts * 3
+            )->by('customer-portal-ip:' . $request->ip());
+        });
+
+        \Illuminate\Support\Facades\RateLimiter::for('customer-portal-forgot-password', function (\Illuminate\Http\Request $request) {
+            $maxPerHour = (int) config('customer_portal.password_reset.max_requests_per_hour', 5);
+
+            return [
+                \Illuminate\Cache\RateLimiting\Limit::perMinute($maxPerHour * 2)
+                    ->by('customer-portal-forgot-ip-min:' . $request->ip()),
+                \Illuminate\Cache\RateLimiting\Limit::perHour($maxPerHour * 4)
+                    ->by('customer-portal-forgot-ip-hr:' . $request->ip()),
+            ];
+        });
+
+        \Illuminate\Support\Facades\RateLimiter::for('customer-portal-otp-verify', function (\Illuminate\Http\Request $request) {
+            $maxAttempts = (int) config('customer_portal.password_reset.max_verification_attempts', 5);
+            $challengeToken = $request->hasSession()
+                ? (string) data_get($request->session()->get(\App\Services\CustomerPortal\Auth\CustomerOtpService::SESSION_CHALLENGE_KEY), 'token', '')
+                : '';
+            $contextKey = $challengeToken !== '' ? sha1($challengeToken) : 'no-ctx';
+
+            return [
+                \Illuminate\Cache\RateLimiting\Limit::perMinutes(5, $maxAttempts * 3)
+                    ->by('customer-portal-otp-verify-ip:' . $request->ip()),
+                \Illuminate\Cache\RateLimiting\Limit::perMinutes(5, $maxAttempts * 2)
+                    ->by('customer-portal-otp-verify-ctx:' . $contextKey),
+            ];
+        });
+
+        \Illuminate\Support\Facades\RateLimiter::for('customer-portal-password-reset', function (\Illuminate\Http\Request $request) {
+            $authToken = $request->hasSession()
+                ? (string) data_get($request->session()->get(\App\Services\CustomerPortal\Auth\CustomerOtpService::SESSION_AUTHORIZATION_KEY), 'token', '')
+                : '';
+            $contextKey = $authToken !== '' ? sha1($authToken) : 'no-auth-ctx';
+
+            return [
+                \Illuminate\Cache\RateLimiting\Limit::perMinutes(10, 10)
+                    ->by('customer-portal-password-reset-ip:' . $request->ip()),
+                \Illuminate\Cache\RateLimiting\Limit::perMinutes(10, 5)
+                    ->by('customer-portal-password-reset-ctx:' . $contextKey),
+            ];
+        });
+
         $dateFormat = config('constants.date_format');
         $timeFormat = config('constants.time_format');
         $timezone = config('constants.timezone');

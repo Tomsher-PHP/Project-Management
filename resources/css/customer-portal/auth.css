@@ -1,0 +1,7 @@
+.cp-password-input[type="password"] {
+    letter-spacing: 0.08em;
+}
+
+.cp-password-input[type="password"]::placeholder {
+    letter-spacing: normal;
+}
