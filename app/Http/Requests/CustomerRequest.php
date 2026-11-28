@@ -105,8 +105,8 @@ class CustomerRequest extends FormRequest
             // Login Access
             'login_enabled' => ['boolean'],
             'username' => $loginEnabled
-                ? ['required', 'string', 'max:255', Rule::unique('customers', 'username')->ignore($customerId)]
-                : ['nullable', 'string', 'max:255'],
+                ? ['required', 'string', 'email', 'max:255', Rule::unique('customers', 'username')->ignore($customerId)]
+                : ['nullable', 'string', 'email', 'max:255'],
             'password' => $loginEnabled ? $passwordRules : ['nullable'],
             'password_confirmation' => $loginEnabled ? $passwordConfirmationRules : ['nullable'],
 
@@ -191,6 +191,7 @@ class CustomerRequest extends FormRequest
 
             'login_enabled.boolean' => 'The login access selection is invalid.',
             'username.required' => 'Username is required when login access is enabled.',
+            'username.email' => 'Username must be a valid email address.',
             'username.max' => 'Username may not be greater than 255 characters.',
             'username.unique' => 'This username is already taken.',
             'password.required' => 'Password is required when login access is enabled.',

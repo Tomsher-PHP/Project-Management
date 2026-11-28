@@ -86,7 +86,17 @@ class CustomerLoginAccessTest extends TestCase
         $this->from(route('customers.create'))
             ->post(route('customers.store'), $this->payload([
                 'login_enabled' => '1',
-                'username' => 'portal_user',
+                'username' => 'not-an-email',
+                'password' => 'PortalPass123',
+                'password_confirmation' => 'PortalPass123',
+            ]))
+            ->assertRedirect(route('customers.create'))
+            ->assertSessionHasErrors('username');
+
+        $this->from(route('customers.create'))
+            ->post(route('customers.store'), $this->payload([
+                'login_enabled' => '1',
+                'username' => 'portal_user@example.test',
                 'password' => 'short',
                 'password_confirmation' => 'mismatch',
             ]))
@@ -126,7 +136,7 @@ class CustomerLoginAccessTest extends TestCase
             'email' => 'shared@example.test',
             'sales_person_id' => $this->salesPerson->id,
             'login_enabled' => true,
-            'username' => 'unique.user',
+            'username' => 'unique.user@example.test',
             'password' => 'Secret123',
             'password_set_at' => now(),
         ]);
@@ -136,7 +146,7 @@ class CustomerLoginAccessTest extends TestCase
             'name' => 'Second Corp',
             'email' => 'shared@example.test',
             'login_enabled' => '1',
-            'username' => 'second.user',
+            'username' => 'second.user@example.test',
             'password' => 'Secret123',
             'password_confirmation' => 'Secret123',
         ]))->assertRedirect(route('customers.index'));
@@ -147,7 +157,7 @@ class CustomerLoginAccessTest extends TestCase
                 'name' => 'Third Corp',
                 'email' => 'shared@example.test',
                 'login_enabled' => '1',
-                'username' => '  UNIQUE.USER  ',
+                'username' => '  UNIQUE.USER@EXAMPLE.TEST  ',
                 'password' => 'Secret123',
                 'password_confirmation' => 'Secret123',
             ]))
@@ -163,7 +173,7 @@ class CustomerLoginAccessTest extends TestCase
             'email' => 'edit@example.test',
             'sales_person_id' => $this->salesPerson->id,
             'login_enabled' => true,
-            'username' => 'editable.user',
+            'username' => 'editable.user@example.test',
             'password' => 'Original123',
             'password_set_at' => now()->subDay(),
         ]);
@@ -174,7 +184,7 @@ class CustomerLoginAccessTest extends TestCase
         // Update without password keeps existing hash and timestamp
         $this->put(route('customers.update', $customer), $this->updatePayload($customer, [
             'login_enabled' => '1',
-            'username' => 'editable.user',
+            'username' => 'editable.user@example.test',
             'password' => '',
             'password_confirmation' => '',
         ]))->assertRedirect();
@@ -187,7 +197,7 @@ class CustomerLoginAccessTest extends TestCase
         $this->from(route('customers.edit', $customer))
             ->put(route('customers.update', $customer), $this->updatePayload($customer, [
                 'login_enabled' => '1',
-                'username' => 'editable.user',
+                'username' => 'editable.user@example.test',
                 'password' => 'NewSecret456',
                 'password_confirmation' => '',
             ]))
@@ -199,7 +209,7 @@ class CustomerLoginAccessTest extends TestCase
         // Valid password change updates hash and timestamp
         $this->put(route('customers.update', $customer), $this->updatePayload($customer, [
             'login_enabled' => '1',
-            'username' => 'editable.user',
+            'username' => 'editable.user@example.test',
             'password' => 'NewSecret456',
             'password_confirmation' => 'NewSecret456',
         ]))->assertRedirect();
@@ -217,7 +227,7 @@ class CustomerLoginAccessTest extends TestCase
             'name' => 'Toggle Corp',
             'sales_person_id' => $this->salesPerson->id,
             'login_enabled' => true,
-            'username' => 'toggle.user',
+            'username' => 'toggle.user@example.test',
             'password' => 'Toggle123',
             'password_set_at' => now(),
         ]);
@@ -234,13 +244,13 @@ class CustomerLoginAccessTest extends TestCase
 
         $customer->refresh();
         $this->assertFalse($customer->login_enabled);
-        $this->assertSame('toggle.user', $customer->username);
+        $this->assertSame('toggle.user@example.test', $customer->username);
         $this->assertSame($originalHash, $customer->getRawOriginal('password'));
 
         // Re-enable without entering a new password
         $this->put(route('customers.update', $customer), $this->updatePayload($customer, [
             'login_enabled' => '1',
-            'username' => 'toggle.user',
+            'username' => 'toggle.user@example.test',
             'password' => '',
             'password_confirmation' => '',
         ]))->assertRedirect();

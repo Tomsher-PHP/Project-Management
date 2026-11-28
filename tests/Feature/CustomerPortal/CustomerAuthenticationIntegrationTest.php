@@ -64,7 +64,7 @@ class CustomerAuthenticationIntegrationTest extends TestCase
                 'email' => 'e2e-portal@example.com',
                 'sales_person_id' => $admin->id,
                 'login_enabled' => '1',
-                'username' => 'e2e_portal_user',
+                'username' => 'e2e_portal_user@example.com',
                 'password' => 'InitialPass123',
                 'password_confirmation' => 'InitialPass123',
                 'primary_name' => 'Primary Contact',
@@ -74,7 +74,7 @@ class CustomerAuthenticationIntegrationTest extends TestCase
 
         $customer->refresh();
         $this->assertTrue($customer->login_enabled);
-        $this->assertSame('e2e_portal_user', $customer->username);
+        $this->assertSame('e2e_portal_user@example.com', $customer->username);
 
         // 3. Customer accesses /c-portal -> redirected to /c-portal/login.
         $jar = [];
@@ -86,7 +86,7 @@ class CustomerAuthenticationIntegrationTest extends TestCase
         $loginPage->assertOk();
 
         $this->sendWithJar('POST', route('customer.login.store', [], false), $jar, [
-            'username' => 'e2e_portal_user',
+            'username' => 'e2e_portal_user@example.com',
             'password' => 'InitialPass123',
         ])->assertRedirect(route('customer.dashboard'));
 
@@ -98,7 +98,7 @@ class CustomerAuthenticationIntegrationTest extends TestCase
         // Also keep a second active session in another browser to verify revocation on reset.
         $otherBrowserJar = [];
         $this->sendWithJar('POST', route('customer.login.store', [], false), $otherBrowserJar, [
-            'username' => 'e2e_portal_user',
+            'username' => 'e2e_portal_user@example.com',
             'password' => 'InitialPass123',
         ])->assertRedirect(route('customer.dashboard'));
 
@@ -112,7 +112,7 @@ class CustomerAuthenticationIntegrationTest extends TestCase
         Mail::fake();
         $sentOtp = null;
         $this->sendWithJar('POST', route('customer.password.otp.send', [], false), $jar, [
-            'username' => 'e2e_portal_user',
+            'username' => 'e2e_portal_user@example.com',
         ])->assertRedirect(route('customer.password.otp'));
 
         Mail::assertSent(PasswordResetOtpMail::class, function (PasswordResetOtpMail $mail) use (&$sentOtp) {
@@ -144,7 +144,7 @@ class CustomerAuthenticationIntegrationTest extends TestCase
 
         // 18. Customer logs in with new password.
         $this->sendWithJar('POST', route('customer.login.store', [], false), $jar, [
-            'username' => 'e2e_portal_user',
+            'username' => 'e2e_portal_user@example.com',
             'password' => 'RecoveredPass999',
         ])->assertRedirect(route('customer.dashboard'));
 
