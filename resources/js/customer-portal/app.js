@@ -1,64 +1,118 @@
+initTheme();
+
 document.addEventListener('DOMContentLoaded', () => {
     initSidebarDrawer();
-    initAccountMenu();
+    initThemeToggle();
+    initProfileDropdown();
+    initCopyEmail();
 });
 
-function initSidebarDrawer() {
-    const sidebar = document.querySelector('[data-cp-sidebar]');
-    const backdrop = document.querySelector('[data-cp-sidebar-backdrop]');
-    const openButton = document.querySelector('[data-cp-sidebar-open]');
-    const closeButton = document.querySelector('[data-cp-sidebar-close]');
+function initTheme() {
+    const savedTheme = localStorage.getItem('customer_portal_theme') || 'light';
+    applyTheme(savedTheme);
+}
 
-    if (!sidebar) {
-        return;
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
     }
+    localStorage.setItem('customer_portal_theme', theme);
+}
 
-    const setOpen = (isOpen) => {
-        sidebar.classList.toggle('-translate-x-full', !isOpen);
-        backdrop?.classList.toggle('hidden', !isOpen);
-        openButton?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    };
+function initThemeToggle() {
+    const toggleButtons = document.querySelectorAll('#theme-toggle, [data-cp-theme-toggle]');
 
-    openButton?.addEventListener('click', () => setOpen(true));
-    closeButton?.addEventListener('click', () => setOpen(false));
-    backdrop?.addEventListener('click', () => setOpen(false));
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            setOpen(false);
-        }
+    toggleButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            applyTheme(isDark ? 'light' : 'dark');
+        });
     });
 }
 
-function initAccountMenu() {
-    const container = document.querySelector('[data-cp-account-menu]');
-    const trigger = container?.querySelector('[data-cp-account-trigger]');
-    const dropdown = container?.querySelector('[data-cp-account-dropdown]');
+function initSidebarDrawer() {
+    const layoutWrapper = document.getElementById('layout-wrapper');
+    const drawerButtons = document.querySelectorAll('.drawer-btn');
+    const asideOverlay = document.querySelector('.aside-overlay');
 
-    if (!container || !trigger || !dropdown) {
+    if (!layoutWrapper) {
         return;
     }
 
-    const setExpanded = (expanded) => {
-        dropdown.classList.toggle('hidden', !expanded);
-        trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    if (localStorage.getItem('cp_sidebar_state') === 'collapsed') {
+        layoutWrapper.classList.remove('active');
+    }
+
+    const toggleSidebar = () => {
+        layoutWrapper.classList.toggle('active');
+        const state = layoutWrapper.classList.contains('active') ? 'expanded' : 'collapsed';
+        localStorage.setItem('cp_sidebar_state', state);
     };
 
-    trigger.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const isHidden = dropdown.classList.contains('hidden');
-        setExpanded(isHidden);
+    drawerButtons.forEach((button) => {
+        button.addEventListener('click', toggleSidebar);
     });
 
-    document.addEventListener('click', (event) => {
-        if (!container.contains(event.target)) {
-            setExpanded(false);
-        }
+    asideOverlay?.addEventListener('click', () => {
+        layoutWrapper.classList.remove('active');
+        localStorage.setItem('cp_sidebar_state', 'collapsed');
     });
+}
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            setExpanded(false);
+function initProfileDropdown() {
+    document.querySelectorAll('[data-cp-profile-wrapper]').forEach((wrapper) => {
+        const trigger = wrapper.querySelector('[data-cp-profile-trigger]');
+        const profileBox = wrapper.querySelector('[data-cp-profile-box]');
+        const profileOutside = wrapper.querySelector('[data-cp-profile-outside]');
+
+        if (!trigger || !profileBox) {
+            return;
         }
+
+        const setOpen = (isOpen) => {
+            profileBox.classList.toggle('hidden', !isOpen);
+            profileBox.classList.toggle('block', isOpen);
+            profileOutside?.classList.toggle('hidden', !isOpen);
+            profileOutside?.classList.toggle('block', isOpen);
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        };
+
+        trigger.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isCurrentlyHidden = profileBox.classList.contains('hidden');
+            setOpen(isCurrentlyHidden);
+        });
+
+        profileOutside?.addEventListener('click', () => setOpen(false));
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                setOpen(false);
+            }
+        });
+    });
+}
+
+function initCopyEmail() {
+    document.querySelectorAll('[data-cp-copy-email]').forEach((button) => {
+        button.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            const email = button.getAttribute('data-cp-copy-email');
+            if (!email || !navigator.clipboard) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(email);
+                button.setAttribute('title', 'Copied!');
+                window.setTimeout(() => {
+                    button.setAttribute('title', 'Copy email');
+                }, 1500);
+            } catch {
+                // Ignore clipboard permission errors.
+            }
+        });
     });
 }

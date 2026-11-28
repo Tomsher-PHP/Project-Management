@@ -1,54 +1,53 @@
-<div
-    data-cp-sidebar-backdrop
-    class="fixed inset-0 z-30 hidden bg-slate-900/50 lg:hidden"
-    aria-hidden="true"
-></div>
+@php
+    $portalCustomer = Auth::guard(config('customer_portal.authentication.guard', 'customer'))->user();
+    $isDashboardActive = request()->routeIs('customer.dashboard');
+    $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
+    $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
+@endphp
 
-<aside
-    data-cp-sidebar
-    class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform duration-200 ease-out lg:static lg:translate-x-0"
->
-    <div class="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-        <a href="{{ route('customer.dashboard') }}" class="flex items-center gap-2.5">
-            <img src="{{ asset(config('assets.icons.logo')) }}" class="h-8 w-auto" alt="{{ config('app.name', 'Project Management') }}" />
+<aside class="sidebar-wrapper fixed top-0 z-30 block h-full border-r border-bgray-200 bg-white dark:border-darkblack-500 dark:bg-darkblack-600 sm:hidden xl:block">
+    <div class="sidebar-header relative z-30 flex h-[60px] w-full items-center border-b border-r border-bgray-200 pl-6 pr-8 pb-4 dark:border-darkblack-400">
+        <a href="{{ route('customer.dashboard') }}" class="flex items-center">
+            <span class="relative inline-flex">
+                <img src="{{ asset(config('assets.icons.logo')) }}" class="block h-8 w-auto max-w-[140px] object-contain dark:hidden" alt="{{ config('app.name', 'Project Management') }}" />
+                <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden h-8 w-auto max-w-[140px] object-contain dark:block" alt="{{ config('app.name', 'Project Management') }}" />
+
+                <span class="absolute -bottom-4 -left-1 inline-flex shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                    Customer Portal
+                </span>
+            </span>
         </a>
-
-        <button
-            type="button"
-            data-cp-sidebar-close
-            aria-label="Close navigation menu"
-            class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800 lg:hidden"
-        >
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <button type="button" class="drawer-btn absolute right-0 top-[8px]" title="Toggle sidebar" aria-label="Toggle sidebar">
+            <span>
+                <svg width="16" height="40" viewBox="0 0 16 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 10C0 4.47715 4.47715 0 10 0H16V40H10C4.47715 40 0 35.5228 0 30V10Z" fill="#22C55E" />
+                    <path d="M10 15L6 20.0049L10 25.0098" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </span>
         </button>
     </div>
 
-    <nav class="flex-1 space-y-1 px-3 py-4" aria-label="Customer Portal navigation">
-        <a
-            href="{{ route('customer.dashboard') }}"
-            class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition {{ request()->routeIs('customer.dashboard') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}"
-        >
-            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-            </svg>
-            <span>Dashboard</span>
-        </a>
-    </nav>
-
-    <div class="border-t border-slate-200 p-3">
-        <form method="POST" action="{{ route('customer.logout') }}">
-            @csrf
-            <button
-                type="submit"
-                class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-rose-50 hover:text-rose-700"
-            >
-                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                </svg>
-                <span>Logout</span>
-            </button>
-        </form>
+    <div class="sidebar-body overflow-style-none relative z-30 h-screen w-full overflow-y-scroll pb-[200px] pl-8 pt-3">
+        <div class="nav-wrapper mb-[36px] pr-8">
+            <div class="item-wrapper mb-5">
+                <ul>
+                    <li class="item py-[8px] {{ $isDashboardActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                        <a href="{{ route('customer.dashboard') }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 9.75L12 3l9 6.75V21a1 1 0 01-1 1H4a1 1 0 01-1-1V9.75z" />
+                                            <path d="M9 22V12h6v10" />
+                                        </svg>
+                                    </span>
+                                    <span class="item-text text-base font-medium leading-none {{ $isDashboardActive ? $sidebarItemActiveClass : '' }}">Dashboard</span>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </aside>
