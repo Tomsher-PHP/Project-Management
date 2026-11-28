@@ -67,6 +67,11 @@
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
                                     </div>
                                 </td>
+                                <td class="px-6 py-5 xl:w-[140px] xl:px-0">
+                                    <div class="flex w-full items-center space-x-2.5">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Login Access</span>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
@@ -140,6 +145,15 @@
                                             <x-status-toggle :model="$customer" route="customers.toggleStatus" entity="customer" permission="customer.edit" />
                                         </div>
                                     </td>
+                                    <td class="px-6 py-5 xl:w-[140px] xl:px-0">
+                                        <div class="flex w-full items-center">
+                                            @if ($customer->login_enabled)
+                                                <span class="inline-flex rounded-full bg-success-50 px-3 py-1 text-xs font-semibold text-success-400 dark:bg-success-300/10 dark:text-success-300">Yes</span>
+                                            @else
+                                                <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">No</span>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center gap-2">
                                             <x-view-button :action="route('customers.show', $customer)" />
@@ -153,7 +167,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <x-table-no-data col-span="8" message="No customers found." />
+                                <x-table-no-data col-span="9" message="No customers found." />
                             @endforelse
                         </table>
                     </div>

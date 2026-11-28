@@ -7,11 +7,11 @@ use App\Traits\HasFormOptions;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 
-class Customer extends Model
+class Customer extends Authenticatable
 {
     use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
@@ -29,13 +29,26 @@ class Customer extends Model
         'sales_person_id',
         'new_to_company',
         'is_active',
+        'login_enabled',
+        'username',
+        'password',
+        'password_set_at',
+        'last_login_at',
         'added_by',
         'updated_by',
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 
     protected $casts = [
         'new_to_company' => 'boolean',
         'is_active' => 'boolean',
+        'login_enabled' => 'boolean',
+        'password' => 'hashed',
+        'password_set_at' => 'datetime',
+        'last_login_at' => 'datetime',
     ];
 
     protected $sortable = [
@@ -124,6 +137,9 @@ class Customer extends Model
 
     // Never show these fields in activity log details.
     protected array $activityLogExceptAttributes = [
+        'password',
+        'password_set_at',
+        'last_login_at',
         'added_by',
         'updated_by',
     ];
@@ -136,6 +152,8 @@ class Customer extends Model
             'customer_profile_grade_id' => 'Profile grade',
             'registered_country_id' => 'Registered country',
             'sales_person_id' => 'Sales person',
+            'login_enabled' => 'Login access',
+            'username' => 'Username',
         ];
     }
 
@@ -147,6 +165,7 @@ class Customer extends Model
             'customer_profile_grade_id' => CustomerProfileGrade::find($value)?->name ?? $value,
             'registered_country_id' => Country::find($value)?->name ?? $value,
             'sales_person_id' => User::find($value)?->name ?? $value,
+            'login_enabled' => $value ? 'Yes' : 'No',
             default => is_array($value) ? json_encode($value) : $value,
         };
     }

@@ -49,8 +49,9 @@ class CustomerController extends Controller
 
         // Generate customer code
         $customerCode = Customer::generateCustomerCode();
+        $hasExistingPassword = false;
 
-        return view('customers.create', compact('industries', 'parentIndustries', 'nextIndustrySortOrder', 'customerCode', 'emirates', 'salesPeople'));
+        return view('customers.create', compact('industries', 'parentIndustries', 'nextIndustrySortOrder', 'customerCode', 'emirates', 'salesPeople', 'hasExistingPassword'));
     }
 
     public function store(CustomerRequest $request, CustomerServices $service)
@@ -114,8 +115,9 @@ class CustomerController extends Controller
 
         // Generate customer code
         $customerCode = $customer->customer_code;
+        $hasExistingPassword = filled($customer->getRawOriginal('password'));
 
-        return view('customers.edit', compact('customer', 'industries', 'parentIndustries', 'nextIndustrySortOrder', 'emirates', 'customerCode', 'salesPeople'));
+        return view('customers.edit', compact('customer', 'industries', 'parentIndustries', 'nextIndustrySortOrder', 'emirates', 'customerCode', 'salesPeople', 'hasExistingPassword'));
     }
 
     public function update(CustomerRequest $request, Customer $customer, CustomerServices $service)

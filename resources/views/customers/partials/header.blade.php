@@ -2,7 +2,10 @@
     $primaryContact = $customer->contacts->firstWhere('is_primary', true);
     $emirates = config('constants.emirates', []);
     $emirateName = filled($customer->emirate) ? $emirates[$customer->emirate] ?? ucfirst(str_replace('_', ' ', $customer->emirate)) : null;
-    $detailItems = [['label' => 'Company Name', 'value' => $customer->name], ['label' => 'Contact Person', 'value' => $primaryContact?->name], ['label' => 'Email', 'value' => $customer->email], ['label' => 'Phone', 'value' => $primaryContact?->landline], ['label' => 'Mobile', 'value' => $primaryContact?->mobile], ['label' => 'Industry', 'value' => $customer->industry?->name], ['label' => 'Country', 'value' => $customer->country?->name], ['label' => 'Emirate', 'value' => $emirateName], ['label' => 'Sales Person', 'value' => $customer->salesPerson?->name]];
+    $detailItems = [['label' => 'Company Name', 'value' => $customer->name], ['label' => 'Contact Person', 'value' => $primaryContact?->name], ['label' => 'Email', 'value' => $customer->email], ['label' => 'Phone', 'value' => $primaryContact?->landline], ['label' => 'Mobile', 'value' => $primaryContact?->mobile], ['label' => 'Industry', 'value' => $customer->industry?->name], ['label' => 'Country', 'value' => $customer->country?->name], ['label' => 'Emirate', 'value' => $emirateName], ['label' => 'Sales Person', 'value' => $customer->salesPerson?->name], ['label' => 'Login Access', 'value' => $customer->login_enabled ? 'Yes' : 'No']];
+    if ($customer->login_enabled) {
+        $detailItems[] = ['label' => 'Username', 'value' => $customer->username];
+    }
 @endphp
 
 <div class="rounded-lg bg-white p-5 dark:bg-darkblack-600">

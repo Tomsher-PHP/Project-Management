@@ -8,6 +8,8 @@ $(document).ready(function () {
 
     contactIndex = contactsContainer.find('.contact-item').length;
 
+    initCustomerLoginAccess();
+
     $(document).on('click', '.modal-open[data-target="#multi-step-modal"]', function () {
         editingCard = null;
         resetModalForm();
@@ -188,5 +190,125 @@ $(document).ready(function () {
 
     function isValidEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function initCustomerLoginAccess() {
+        const scope = $('[data-customer-login-scope]');
+        if (!scope.length) {
+            return;
+        }
+
+        const toggle = scope.find('[data-customer-login-toggle]');
+        const fields = scope.find('[data-customer-login-fields]');
+        const usernameInput = scope.find('[data-customer-username]');
+        const passwordInput = scope.find('[data-customer-password]');
+        const confirmationInput = scope.find('[data-customer-password-confirmation]');
+        const confirmationStar = scope.find('[data-customer-password-confirmation-required]');
+        const companyEmailInput = $('#email');
+        const hasExistingPassword = scope.attr('data-has-existing-password') === '1';
+
+        let usernameManuallyEdited = String(usernameInput.val() || '').trim() !== '';
+
+        function syncCustomerLoginState(clearPasswords) {
+            const enabled = toggle.is(':checked');
+
+            fields.toggleClass('hidden', !enabled);
+            fields.find('input').prop('disabled', !enabled);
+            usernameInput.prop('required', enabled);
+
+            if (enabled) {
+                if (String(usernameInput.val() || '').trim() === '') {
+                    const companyEmail = String(companyEmailInput.val() || '').trim().toLowerCase();
+                    if (companyEmail !== '') {
+                        usernameInput.val(companyEmail);
+                    }
+                }
+                syncPasswordRequirements();
+            } else {
+                passwordInput.prop('required', false);
+                confirmationInput.prop('required', false);
+
+                if (clearPasswords) {
+                    passwordInput.val('').attr('type', 'password');
+                    confirmationInput.val('').attr('type', 'password');
+                }
+            }
+        }
+
+        function syncPasswordRequirements() {
+            const enabled = toggle.is(':checked');
+            if (!enabled) {
+                passwordInput.prop('required', false);
+                confirmationInput.prop('required', false);
+                return;
+            }
+
+            const hasTypedPassword = String(passwordInput.val() || '') !== '';
+            const requirePassword = !hasExistingPassword;
+            const requireConfirmation = !hasExistingPassword || hasTypedPassword;
+
+            passwordInput.prop('required', requirePassword);
+            confirmationInput.prop('required', requireConfirmation);
+            confirmationStar.toggleClass('hidden', !requireConfirmation);
+        }
+
+        toggle.on('change', function () {
+            syncCustomerLoginState(!toggle.is(':checked'));
+        });
+
+        usernameInput.on('input', function () {
+            usernameManuallyEdited = String(usernameInput.val() || '').trim() !== '';
+        });
+
+        companyEmailInput.on('input', function () {
+            if (!toggle.is(':checked') || usernameManuallyEdited) {
+                return;
+            }
+
+            usernameInput.val(String(companyEmailInput.val() || '').trim().toLowerCase());
+        });
+
+        passwordInput.on('input', function () {
+            syncPasswordRequirements();
+            confirmationInput[0]?.setCustomValidity('');
+        });
+
+        confirmationInput.on('input', function () {
+            confirmationInput[0]?.setCustomValidity('');
+        });
+
+        scope.closest('form').on('submit', function (event) {
+            if (!toggle.is(':checked')) {
+                return;
+            }
+
+            const password = String(passwordInput.val() || '');
+            const confirmation = String(confirmationInput.val() || '');
+
+            if (password !== '' && password !== confirmation) {
+                confirmationInput[0]?.setCustomValidity('Password confirmation does not match.');
+                confirmationInput[0]?.reportValidity();
+                event.preventDefault();
+                return;
+            }
+
+            confirmationInput[0]?.setCustomValidity('');
+        });
+
+        $(document).on('click', '[data-password-toggle]', function () {
+            const button = $(this);
+            const input = document.getElementById(button.data('target'));
+
+            if (!input) {
+                return;
+            }
+
+            const showPassword = input.type === 'password';
+            input.type = showPassword ? 'text' : 'password';
+            button.attr('aria-label', showPassword ? 'Hide password' : 'Show password');
+            button.attr('title', showPassword ? 'Hide password' : 'Show password');
+        });
+
+        syncCustomerLoginState(false);
     }
 });

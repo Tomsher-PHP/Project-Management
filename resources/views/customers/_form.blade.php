@@ -173,6 +173,74 @@
         </div>
     </div>
 
+    <!-- ================= LOGIN ACCESS ================= -->
+    @php
+        $customerLoginEnabled = (bool) old('login_enabled', $customer->login_enabled ?? false);
+        $hasExistingCustomerPassword = $hasExistingPassword ?? (isset($customer) && filled($customer->getRawOriginal('password')));
+    @endphp
+    <div class="mt-5" data-customer-login-scope data-has-existing-password="{{ $hasExistingCustomerPassword ? '1' : '0' }}">
+        <div class="mb-6 border-b border-bgray-200 pb-4 dark:border-darkblack-400">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Login Access</h3>
+            <p class="mt-1 text-base text-bgray-600 dark:text-bgray-50">Manage portal authentication credentials for this customer.</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div class="md:col-span-2 xl:col-span-3">
+                <input type="hidden" name="login_enabled" value="0">
+                <label class="inline-flex cursor-pointer items-center gap-3 text-base font-semibold text-bgray-700 dark:text-bgray-50">
+                    <input type="checkbox" id="login_enabled" name="login_enabled" value="1" data-customer-login-toggle {{ $customerLoginEnabled ? 'checked' : '' }} class="h-5 w-5 rounded border-bgray-300 text-success-300 focus:ring-success-200">
+                    <span>Login access?</span>
+                </label>
+                @error('login_enabled')
+                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div data-customer-login-fields class="md:col-span-2 xl:col-span-3 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 {{ $customerLoginEnabled ? '' : 'hidden' }}">
+                <div class="flex flex-col gap-2">
+                    <label for="username" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                        Username <x-red-star />
+                    </label>
+                    <input type="text" id="username" name="username" value="{{ old('username', $customer->username ?? '') }}" placeholder="Enter username" data-customer-username autocomplete="username" {{ $customerLoginEnabled ? 'required' : 'disabled' }} class="w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
+                    @error('username')
+                        <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="customer_password" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                        Password <span data-customer-password-required class="{{ $hasExistingCustomerPassword ? 'hidden' : '' }} text-error-300">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="customer_password" name="password" placeholder="{{ $hasExistingCustomerPassword ? 'Leave blank to keep existing password' : 'Enter password' }}" data-customer-password autocomplete="new-password" {{ $customerLoginEnabled ? ($hasExistingCustomerPassword ? '' : 'required') : 'disabled' }} class="w-full rounded-lg border border-gray-300 bg-white p-2 pr-11 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
+                        <button type="button" data-password-toggle data-target="customer_password" class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50" aria-label="Show password" title="Show password">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        </button>
+                    </div>
+                    <p class="text-xs text-bgray-500 dark:text-bgray-300">Minimum 8 characters with letters and numbers.</p>
+                    @error('password')
+                        <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="customer_password_confirmation" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                        Confirm Password <span data-customer-password-confirmation-required class="{{ $hasExistingCustomerPassword ? 'hidden' : '' }} text-error-300">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="customer_password_confirmation" name="password_confirmation" placeholder="Confirm password" data-customer-password-confirmation autocomplete="new-password" {{ $customerLoginEnabled ? ($hasExistingCustomerPassword ? '' : 'required') : 'disabled' }} class="w-full rounded-lg border border-gray-300 bg-white p-2 pr-11 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" />
+                        <button type="button" data-password-toggle data-target="customer_password_confirmation" class="absolute inset-y-0 right-3 flex items-center text-bgray-500 hover:text-success-300 dark:text-bgray-50" aria-label="Show password" title="Show password">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-7 9.75-7 9.75 7 9.75 7-3.5 7-9.75 7-9.75-7-9.75-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        </button>
+                    </div>
+                    @error('password_confirmation')
+                        <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= PRIMARY CONTACT ================= -->
     <div class="mt-5">
         <div class="mb-6 border-b border-bgray-200 pb-4 dark:border-darkblack-400">

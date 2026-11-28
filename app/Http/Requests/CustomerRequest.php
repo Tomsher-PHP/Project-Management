@@ -4,12 +4,38 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class CustomerRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $loginEnabled = $this->boolean('login_enabled');
+
+        if (! $loginEnabled) {
+            $this->merge([
+                'login_enabled' => false,
+                'username' => null,
+                'password' => null,
+                'password_confirmation' => null,
+            ]);
+
+            return;
+        }
+
+        $username = $this->input('username');
+
+        $this->merge([
+            'login_enabled' => true,
+            'username' => is_string($username) && trim($username) !== ''
+                ? mb_strtolower(trim($username))
+                : null,
+        ]);
     }
 
     /**
@@ -19,6 +45,20 @@ class CustomerRequest extends FormRequest
     {
         $customer = $this->route('customer');
         $customerId = $customer?->id;
+        $loginEnabled = $this->boolean('login_enabled');
+        $hasExistingPassword = $customer && filled($customer->getRawOriginal('password'));
+
+        $passwordRules = ['nullable', 'string', Password::min(8)->letters()->numbers(), 'confirmed'];
+        $passwordConfirmationRules = ['nullable', 'string'];
+
+        if ($loginEnabled) {
+            if (! $hasExistingPassword) {
+                $passwordRules = ['required', 'string', Password::min(8)->letters()->numbers(), 'confirmed'];
+                $passwordConfirmationRules = ['required', 'string'];
+            } else {
+                $passwordConfirmationRules = ['required_with:password', 'nullable', 'string'];
+            }
+        }
 
         return [
             // Customer
@@ -27,7 +67,6 @@ class CustomerRequest extends FormRequest
                 'nullable',
                 'email',
                 'max:150',
-                Rule::unique('customers', 'email')->ignore($customerId),
             ],
             'industry_id' => ['nullable', 'exists:industries,id'],
             'website' => [
@@ -62,6 +101,14 @@ class CustomerRequest extends FormRequest
             'company_address' => ['nullable', 'string', 'max:65535'],
             'sales_person_id' => ['required', 'exists:users,id'],
             'new_to_company' => ['sometimes', 'boolean'],
+
+            // Login Access
+            'login_enabled' => ['boolean'],
+            'username' => $loginEnabled
+                ? ['required', 'string', 'max:255', Rule::unique('customers', 'username')->ignore($customerId)]
+                : ['nullable', 'string', 'max:255'],
+            'password' => $loginEnabled ? $passwordRules : ['nullable'],
+            'password_confirmation' => $loginEnabled ? $passwordConfirmationRules : ['nullable'],
 
             // Primary Contact
             'primary_name' => ['required', 'string', 'max:255'],
@@ -135,13 +182,24 @@ class CustomerRequest extends FormRequest
         return [
             'name.required' => 'Company name is required.',
             'email.email' => 'Please enter a valid email address.',
-            'email.unique' => 'This customer email is already in use.',
             'industry_id.exists' => 'Selected industry is invalid.',
             'registered_country_id.exists' => 'Selected country is invalid.',
             'website.url' => 'Please enter a valid website URL.',
             'google_map_link.url' => 'Please enter a valid Google Map link.',
             'sales_person_id.required' => 'Sales person is required.',
             'sales_person_id.exists' => 'The selected sales person is invalid.',
+
+            'login_enabled.boolean' => 'The login access selection is invalid.',
+            'username.required' => 'Username is required when login access is enabled.',
+            'username.max' => 'Username may not be greater than 255 characters.',
+            'username.unique' => 'This username is already taken.',
+            'password.required' => 'Password is required when login access is enabled.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.letters' => 'Password must contain at least one letter.',
+            'password.numbers' => 'Password must contain at least one number.',
+            'password.confirmed' => 'Password confirmation does not match.',
+            'password_confirmation.required' => 'Confirm password is required when login access is enabled.',
+            'password_confirmation.required_with' => 'Confirm password is required when changing the password.',
 
             'primary_name.required' => 'Contact name is required.',
             'primary_email.email' => 'Please enter a valid email address for contact.',
@@ -164,6 +222,6 @@ class CustomerRequest extends FormRequest
 
     private function hasContactMethod(array $values): bool
     {
-        return collect($values)->contains(fn ($value) => filled($value));
+        return collect($values)->contains(fn($value) => filled($value));
     }
 }
