@@ -206,7 +206,6 @@ class CustomerUpdateService
                 $this->validateReplacementContacts($customer, $data['contacts']);
 
                 $existingContacts = $customer->contacts()->lockForUpdate()->get();
-                $preservedAuthByEmail = $this->collectPreservedAuthByEmail($existingContacts);
                 $oldContactSummaries = $this->formatContactActivitySummaries($existingContacts);
 
                 $contactsDeletedCount = $existingContacts->count();
@@ -223,8 +222,6 @@ class CustomerUpdateService
                     $email = isset($contactData['email']) && trim((string) $contactData['email']) !== ''
                         ? trim((string) $contactData['email'])
                         : null;
-                    $normalizedEmail = $email !== null ? strtolower($email) : null;
-                    $authData = $normalizedEmail !== null ? ($preservedAuthByEmail[$normalizedEmail] ?? null) : null;
 
                     $createdContacts[] = CustomerContact::create([
                         'customer_id' => $customer->id,
@@ -236,12 +233,6 @@ class CustomerUpdateService
                         'designation' => isset($contactData['designation']) && $contactData['designation'] !== '' ? (string) $contactData['designation'] : null,
                         'is_primary' => (bool) ($contactData['is_primary'] ?? false),
                         'is_active' => isset($contactData['is_active']) ? (bool) $contactData['is_active'] : true,
-                        'login_enabled' => $authData['login_enabled'] ?? false,
-                        'password' => $authData['password'] ?? null,
-                        'password_set_at' => $authData['password_set_at'] ?? null,
-                        'last_login_at' => $authData['last_login_at'] ?? null,
-                        'email_verified_at' => $authData['email_verified_at'] ?? null,
-                        'force_password_reset' => $authData['force_password_reset'] ?? false,
                     ]);
                     $contactsCreatedCount++;
                 }
@@ -348,37 +339,7 @@ class CustomerUpdateService
     }
 
     /**
-     * Collect portal authentication attributes from existing active contacts keyed by normalized email.
-     *
-     * @param  \Illuminate\Database\Eloquent\Collection<int, CustomerContact>  $existingContacts
-     * @return array<string, array<string, mixed>>
-     */
-    protected function collectPreservedAuthByEmail($existingContacts): array
-    {
-        $preserved = [];
-
-        foreach ($existingContacts as $existingContact) {
-            $rawEmail = $existingContact->email;
-            if (! is_string($rawEmail) || trim($rawEmail) === '') {
-                continue;
-            }
-
-            $normalizedEmail = strtolower(trim($rawEmail));
-            $preserved[$normalizedEmail] = [
-                'login_enabled' => (bool) $existingContact->login_enabled,
-                'password' => $existingContact->getRawOriginal('password'),
-                'password_set_at' => $existingContact->password_set_at,
-                'last_login_at' => $existingContact->last_login_at,
-                'email_verified_at' => $existingContact->email_verified_at,
-                'force_password_reset' => (bool) $existingContact->force_password_reset,
-            ];
-        }
-
-        return $preserved;
-    }
-
-    /**
-     * Format contact summaries for activity log display without exposing auth credentials.
+     * Format contact summaries for activity log display.
      *
      * @param  iterable<int, CustomerContact>  $contacts
      * @return array<int, string>

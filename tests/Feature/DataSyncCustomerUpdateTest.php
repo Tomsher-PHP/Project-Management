@@ -822,93 +822,12 @@ class DataSyncCustomerUpdateTest extends TestCase
         $this->assertSame('Other Contact', $otherContact->fresh()->name);
     }
 
-    public function test_35_replace_contacts_reusing_existing_emails_preserves_portal_credentials_and_hash(): void
-    {
-        $passwordSetAt = now()->subDays(5)->startOfSecond();
-        $lastLoginAt = now()->subHours(3)->startOfSecond();
-        $emailVerifiedAt = now()->subDays(4)->startOfSecond();
-
-        $this->contact1->update([
-            'login_enabled' => true,
-            'password' => 'PortalPass123',
-            'password_set_at' => $passwordSetAt,
-            'last_login_at' => $lastLoginAt,
-            'email_verified_at' => $emailVerifiedAt,
-            'force_password_reset' => true,
-        ]);
-
-        $originalId = $this->contact1->id;
-        $originalRawHash = $this->contact1->fresh()->getRawOriginal('password');
-
-        $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)
-            ->putJson('/api/integrations/customers/' . $this->externalCode, [
-                'contacts' => [
-                    [
-                        'name' => 'Primary Contact Renamed',
-                        'email' => '  PRIMARY@origcompany.ae  ',
-                        'is_primary' => true,
-                    ],
-                    [
-                        'name' => 'Brand New Email Contact',
-                        'email' => 'brandnew@origcompany.ae',
-                    ],
-                    [
-                        'name' => 'No Email Contact',
-                    ],
-                ],
-            ])
-            ->assertStatus(200)
-            ->assertJson([
-                'data' => [
-                    'updated' => true,
-                    'contacts' => [
-                        'deleted' => 2,
-                        'created' => 3,
-                        'updated' => 0,
-                    ],
-                ],
-            ]);
-
-        $recreated = CustomerContact::where('customer_id', $this->customer->id)
-            ->where('email', 'PRIMARY@origcompany.ae')
-            ->firstOrFail();
-
-        $this->assertNotSame($originalId, $recreated->id);
-        $this->assertSame('Primary Contact Renamed', $recreated->name);
-        $this->assertTrue($recreated->login_enabled);
-        $this->assertSame($originalRawHash, $recreated->getRawOriginal('password'));
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('PortalPass123', $recreated->password));
-        $this->assertSame($passwordSetAt->toISOString(), $recreated->password_set_at?->toISOString());
-        $this->assertSame($lastLoginAt->toISOString(), $recreated->last_login_at?->toISOString());
-        $this->assertSame($emailVerifiedAt->toISOString(), $recreated->email_verified_at?->toISOString());
-        $this->assertTrue($recreated->force_password_reset);
-
-        $brandNew = CustomerContact::where('customer_id', $this->customer->id)
-            ->where('email', 'brandnew@origcompany.ae')
-            ->firstOrFail();
-        $this->assertFalse($brandNew->login_enabled);
-        $this->assertNull($brandNew->getRawOriginal('password'));
-        $this->assertNull($brandNew->password_set_at);
-        $this->assertNull($brandNew->last_login_at);
-        $this->assertNull($brandNew->email_verified_at);
-        $this->assertFalse($brandNew->force_password_reset);
-
-        $noEmail = CustomerContact::where('customer_id', $this->customer->id)
-            ->whereNull('email')
-            ->firstOrFail();
-        $this->assertFalse($noEmail->login_enabled);
-        $this->assertNull($noEmail->getRawOriginal('password'));
-        $this->assertFalse($noEmail->force_password_reset);
-    }
-
-    public function test_36_previously_soft_deleted_email_conflict_returns_422_and_does_not_restore_auth(): void
+    public function test_36_previously_soft_deleted_email_conflict_returns_422(): void
     {
         $trashedContact = CustomerContact::create([
             'customer_id' => $this->customer->id,
             'name' => 'Archived Contact',
             'email' => 'archived@origcompany.ae',
-            'login_enabled' => true,
-            'password' => 'OldSecret123',
         ]);
         $trashedContact->delete();
 
@@ -962,13 +881,8 @@ class DataSyncCustomerUpdateTest extends TestCase
         $this->assertSame(2, CustomerContact::where('customer_id', $this->customer->id)->count());
     }
 
-    public function test_38_spatie_activity_log_records_customer_update_and_contact_replacement_without_auth_data(): void
+    public function test_38_spatie_activity_log_records_customer_update_and_contact_replacement(): void
     {
-        $this->contact1->update([
-            'login_enabled' => true,
-            'password' => 'PortalPass123',
-        ]);
-
         \Spatie\Activitylog\Models\Activity::query()->delete();
 
         $this->withHeader('Authorization', 'Bearer ' . $this->authorizedKey)

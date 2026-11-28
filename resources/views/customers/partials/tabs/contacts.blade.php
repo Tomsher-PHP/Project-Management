@@ -5,9 +5,6 @@
             <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
                 {{ $customer->contacts->count() }} {{ \Illuminate\Support\Str::plural('contact', $customer->contacts->count()) }}
             </span>
-            <span class="inline-flex rounded-full bg-success-50 px-3 py-1 text-xs font-semibold text-success-400 dark:bg-success-300/10 dark:text-success-300">
-                {{ $customer->contacts->where('login_enabled', true)->count() }} login enabled
-            </span>
         </div>
     </div>
 
@@ -32,10 +29,6 @@
                             <div class="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                                 @if ($contact->is_primary)
                                     <span class="inline-flex rounded-full bg-success-50 px-2.5 py-1 text-[11px] font-semibold text-success-400 dark:bg-success-300/10 dark:text-success-300">Primary</span>
-                                @endif
-
-                                @if ($contact->login_enabled)
-                                    <span class="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600 dark:bg-blue-400/10 dark:text-blue-600">Login enabled</span>
                                 @endif
                             </div>
                         </div>

@@ -4,39 +4,12 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class CustomerRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $contacts = $this->input('contacts', []);
-
-        if (is_array($contacts)) {
-            $contacts = array_map(function ($contact) {
-                if (! is_array($contact)) {
-                    return $contact;
-                }
-
-                $contact['login_enabled'] = in_array(
-                    $contact['login_enabled'] ?? false,
-                    [true, 1, '1', 'true', 'on'],
-                    true,
-                );
-
-                return $contact;
-            }, $contacts);
-        }
-
-        $this->merge([
-            'primary_login_enabled' => $this->boolean('primary_login_enabled'),
-            'contacts' => $contacts,
-        ]);
     }
 
     /**
@@ -46,9 +19,8 @@ class CustomerRequest extends FormRequest
     {
         $customer = $this->route('customer');
         $customerId = $customer?->id;
-        $primaryContactId = $customer?->primaryContact?->id;
 
-        $rules = [
+        return [
             // Customer
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -93,24 +65,11 @@ class CustomerRequest extends FormRequest
 
             // Primary Contact
             'primary_name' => ['required', 'string', 'max:255'],
-            'primary_email' => [
-                'bail',
-                Rule::requiredIf(fn () => $this->boolean('primary_login_enabled')),
-                'nullable',
-                'email',
-                'max:150',
-                Rule::unique('customer_contacts', 'email')->ignore($primaryContactId),
-            ],
+            'primary_email' => ['nullable', 'email', 'max:150'],
             'primary_landline' => ['nullable', 'string', 'max:255'],
             'primary_mobile' => ['nullable', 'string', 'max:255'],
             'primary_whatsapp' => ['nullable', 'string', 'max:255'],
             'primary_designation' => ['nullable', 'string', 'max:255'],
-            'primary_login_enabled' => ['required', 'boolean'],
-            'primary_password' => [
-                'nullable',
-                'string',
-                Password::min(8)->letters()->numbers(),
-            ],
 
             // Extra Contacts
             'contacts' => ['nullable', 'array'],
@@ -126,40 +85,14 @@ class CustomerRequest extends FormRequest
                 }),
             ],
             'contacts.*.name' => ['required', 'string', 'max:255'],
+            'contacts.*.email' => ['nullable', 'email', 'max:150'],
             'contacts.*.landline' => ['nullable', 'string', 'max:255'],
             'contacts.*.mobile' => ['nullable', 'string', 'max:255'],
             'contacts.*.whatsapp' => ['nullable', 'string', 'max:255'],
             'contacts.*.designation' => ['nullable', 'string', 'max:255'],
             'contacts.*.is_primary' => ['sometimes', 'boolean'],
             'contacts.*.is_active' => ['sometimes', 'boolean'],
-            'contacts.*.login_enabled' => ['required', 'boolean'],
         ];
-
-        foreach ($this->input('contacts', []) as $index => $contact) {
-            if (! is_array($contact)) {
-                continue;
-            }
-
-            $contactId = $contact['id'] ?? null;
-            $loginEnabled = (bool) ($contact['login_enabled'] ?? false);
-
-            $rules["contacts.{$index}.email"] = [
-                'bail',
-                Rule::requiredIf($loginEnabled),
-                'nullable',
-                'email',
-                'max:150',
-                Rule::unique('customer_contacts', 'email')->ignore($contactId),
-            ];
-
-            $rules["contacts.{$index}.password"] = [
-                'nullable',
-                'string',
-                Password::min(8)->letters()->numbers(),
-            ];
-        }
-
-        return $rules;
     }
 
     public function withValidator($validator): void
@@ -177,13 +110,6 @@ class CustomerRequest extends FormRequest
                 );
             }
 
-            $seenEmails = [];
-            $primaryEmail = $this->normalizedEmail($this->input('primary_email'));
-
-            if ($primaryEmail) {
-                $seenEmails[$primaryEmail] = 'primary_email';
-            }
-
             foreach ($this->input('contacts', []) as $index => $contact) {
                 if (! is_array($contact)) {
                     continue;
@@ -199,21 +125,6 @@ class CustomerRequest extends FormRequest
                         "contacts.{$index}.email",
                         'Please provide at least one contact method (Email, Mobile, WhatsApp, or Landline).',
                     );
-                }
-
-                $email = $this->normalizedEmail($contact['email'] ?? null);
-
-                if (! $email) {
-                    continue;
-                }
-
-                if (isset($seenEmails[$email])) {
-                    $validator->errors()->add(
-                        "contacts.{$index}.email",
-                        'This contact email is already in use.',
-                    );
-                } else {
-                    $seenEmails[$email] = "contacts.{$index}.email";
                 }
             }
         });
@@ -233,49 +144,26 @@ class CustomerRequest extends FormRequest
             'sales_person_id.exists' => 'The selected sales person is invalid.',
 
             'primary_name.required' => 'Contact name is required.',
-            'primary_email.required' => 'Email is required when login access is enabled.',
             'primary_email.email' => 'Please enter a valid email address for contact.',
-            'primary_email.unique' => 'This contact email is already in use.',
-            'primary_login_enabled.boolean' => 'The login access selection is invalid.',
-            'primary_password.min' => 'Password must be at least 8 characters.',
-            'primary_password.letters' => 'Password must contain at least one letter.',
-            'primary_password.numbers' => 'Password must contain at least one number.',
 
             'contacts.array' => 'Contacts must be an array.',
             'contacts.*.id.exists' => 'The selected contact is invalid.',
             'contacts.*.name.required' => 'Contact name is required.',
-            'contacts.*.email.required' => 'Email is required when login access is enabled.',
             'contacts.*.email.email' => 'Please enter a valid email address for contact.',
-            'contacts.*.email.unique' => 'This contact email is already in use.',
             'contacts.*.is_primary.boolean' => 'Is primary must be true or false.',
             'contacts.*.is_active.boolean' => 'Is active must be true or false.',
-            'contacts.*.login_enabled.boolean' => 'The login access selection is invalid.',
-            'contacts.*.password.min' => 'Password must be at least 8 characters.',
-            'contacts.*.password.letters' => 'Password must contain at least one letter.',
-            'contacts.*.password.numbers' => 'Password must contain at least one number.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'primary_password' => 'portal password',
             'contacts.*.email' => 'contact email',
-            'contacts.*.password' => 'contact password',
         ];
     }
 
     private function hasContactMethod(array $values): bool
     {
         return collect($values)->contains(fn ($value) => filled($value));
-    }
-
-    private function normalizedEmail(mixed $email): ?string
-    {
-        if (blank($email)) {
-            return null;
-        }
-
-        return mb_strtolower(trim((string) $email));
     }
 }

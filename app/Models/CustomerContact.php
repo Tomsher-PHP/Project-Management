@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
 
-class CustomerContact extends Authenticatable
+class CustomerContact extends Model
 {
     use HasFactory, SoftDeletes, Filterable, Sortable;
     use LogsModelActivity {
@@ -26,37 +26,15 @@ class CustomerContact extends Authenticatable
         'mobile',
         'whatsapp',
         'designation',
-        'password',
         'is_primary',
         'is_active',
-
-        // Customer Portal Authentication
-        'login_enabled',
-        'password_set_at',
-        'last_login_at',
-        'email_verified_at',
-        'force_password_reset',
-
-
         'added_by',
         'updated_by',
     ];
 
-    protected $hidden = [
-        'password',
-    ];
-
     protected $casts = [
-        'password' => 'hashed',
         'is_primary' => 'boolean',
         'is_active' => 'boolean',
-
-        // Customer Portal Authentication
-        'login_enabled' => 'boolean',
-        'password_set_at' => 'datetime',
-        'last_login_at' => 'datetime',
-        'email_verified_at' => 'datetime',
-        'force_password_reset' => 'boolean',
     ];
 
     protected $sortable = [
@@ -93,11 +71,6 @@ class CustomerContact extends Authenticatable
 
     // Never show these fields in activity log details.
     protected array $activityLogExceptAttributes = [
-        'password',
-        'password_set_at',
-        'last_login_at',
-        'email_verified_at',
-        'force_password_reset',
         'added_by',
         'updated_by',
     ];

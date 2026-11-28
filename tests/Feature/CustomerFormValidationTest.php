@@ -41,7 +41,6 @@ class CustomerFormValidationTest extends TestCase
             'sales_person_id' => $salesPerson->id,
             'primary_name' => 'John Contact',
             'primary_email' => 'john@acme-example.com',
-            'primary_login_enabled' => '0',
         ]);
 
         $response->assertRedirect(route('customers.index'));
@@ -56,7 +55,6 @@ class CustomerFormValidationTest extends TestCase
             'sales_person_id' => $salesPerson->id,
             'primary_name' => 'Jane Contact',
             'primary_email' => 'jane@badurl.com',
-            'primary_login_enabled' => '0',
         ]);
 
         $invalidResponse->assertSessionHasErrors('website');
@@ -78,7 +76,6 @@ class CustomerFormValidationTest extends TestCase
                 'sales_person_id' => $salesPerson->id,
                 'primary_name' => 'Contact Name',
                 'primary_email' => 'contact@example.com',
-                'primary_login_enabled' => '0',
             ]);
 
         $createPost->assertOk();
@@ -103,7 +100,6 @@ class CustomerFormValidationTest extends TestCase
                 'sales_person_id' => $salesPerson->id,
                 'primary_name' => 'Contact Name',
                 'primary_email' => 'contact2@example.com',
-                'primary_login_enabled' => '0',
             ]);
 
         $editPut->assertOk();

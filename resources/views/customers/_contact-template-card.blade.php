@@ -5,7 +5,6 @@
 
         <div class="pr-20">
             <h4 class="contact-name text-lg font-semibold text-bgray-800 dark:text-bgray-300"></h4>
-            <span class="contact-login-badge mt-1 hidden w-fit rounded-full bg-success-50 px-2 py-0.5 text-xs font-semibold text-success-400">Login enabled</span>
         </div>
 
         <p class="mt-2"><span class="font-medium text-bgray-700 dark:text-bgray-300">Email:</span> <span class="contact-email">--</span></p>
@@ -24,8 +23,6 @@
         <input type="hidden" class="contact-mobile-input">
         <input type="hidden" class="contact-landline-input">
         <input type="hidden" class="contact-whatsapp-input">
-        <input type="hidden" class="contact-login-enabled-input">
-        <input type="hidden" class="contact-password-input">
     </div>
 </template>
 
@@ -34,16 +31,12 @@
 @endphp
 
 @foreach ($contacts as $key => $contact)
-    @php
-        $loginEnabled = filter_var($contact['login_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
-    @endphp
     <div class="contact-item relative rounded-xl border border-success-300 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600" data-contact-id="{{ $contact['id'] ?? '' }}">
         <button type="button" class="edit-contact absolute right-10 top-2 text-bgray-900 dark:text-bgray-300" data-index="{{ $key }}">Edit</button>
         <button type="button" class="remove-contact absolute right-2 top-2 text-bgray-900 dark:text-bgray-300">✕</button>
 
         <div class="pr-20">
             <h4 class="contact-name text-lg font-semibold text-bgray-800 dark:text-bgray-300">{{ $contact['name'] ?? '' }}</h4>
-            <span class="contact-login-badge mt-1 {{ $loginEnabled ? 'inline-flex' : 'hidden' }} w-fit rounded-full bg-success-50 px-2 py-0.5 text-xs font-semibold text-success-400">Login enabled</span>
         </div>
 
         <p class="mt-2"><span class="font-medium text-bgray-800 dark:text-bgray-300">Email:</span> <span class="contact-email text-bgray-800 dark:text-bgray-300">{{ filled($contact['email'] ?? null) ? $contact['email'] : '--' }}</span></p>
@@ -65,7 +58,5 @@
         <input type="hidden" class="contact-mobile-input" name="contacts[{{ $key }}][mobile]" value="{{ $contact['mobile'] ?? '' }}">
         <input type="hidden" class="contact-landline-input" name="contacts[{{ $key }}][landline]" value="{{ $contact['landline'] ?? '' }}">
         <input type="hidden" class="contact-whatsapp-input" name="contacts[{{ $key }}][whatsapp]" value="{{ $contact['whatsapp'] ?? '' }}">
-        <input type="hidden" class="contact-login-enabled-input" name="contacts[{{ $key }}][login_enabled]" value="{{ $loginEnabled ? '1' : '0' }}">
-        <input type="hidden" class="contact-password-input" name="contacts[{{ $key }}][password]" value="">
     </div>
 @endforeach

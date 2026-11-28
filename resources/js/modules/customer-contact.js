@@ -8,10 +8,6 @@ $(document).ready(function () {
 
     contactIndex = contactsContainer.find('.contact-item').length;
 
-    $('[data-login-toggle]').each(function () {
-        updateLoginScope($(this).closest('[data-login-scope]'), false);
-    });
-
     $(document).on('click', '.modal-open[data-target="#multi-step-modal"]', function () {
         editingCard = null;
         resetModalForm();
@@ -31,19 +27,6 @@ $(document).ready(function () {
                 editingCard.find(`.contact-${field}-input`).val() || '',
             );
         });
-
-        // Existing passwords are never placed in the modal. For a contact added
-        // during this page visit, the hidden card value is preserved unless a
-        // replacement is entered.
-        form.find('[name="password"]').val('').attr('type', 'password');
-
-        const loginEnabled = Number(
-            editingCard.find('.contact-login-enabled-input').val(),
-        ) === 1;
-
-        form.find('[name="login_enabled"]')
-            .prop('checked', loginEnabled)
-            .trigger('change');
 
         modal.find('.modal-title').text('Edit Extra Contact');
         modal.find('#addDataBtn, .submit-btn').text('Update');
@@ -81,38 +64,6 @@ $(document).ready(function () {
             return;
         }
 
-        if (data.login_enabled && !data.email) {
-            showError('email', 'Email is required when login access is enabled.');
-            return;
-        }
-
-        if (data.password) {
-            if (data.password.length < 8) {
-                showError('password', 'Password must be at least 8 characters.');
-                return;
-            }
-
-            if (!/[A-Za-z]/.test(data.password)) {
-                showError('password', 'Password must contain at least one letter.');
-                return;
-            }
-
-            if (!/[0-9]/.test(data.password)) {
-                showError('password', 'Password must contain at least one number.');
-                return;
-            }
-        }
-
-        const previousPassword = editingCard
-            ? String(editingCard.find('.contact-password-input').val() || '')
-            : '';
-
-        if (!data.login_enabled) {
-            data.password = '';
-        } else if (!data.password) {
-            data.password = previousPassword;
-        }
-
         if (editingCard) {
             updateContactCard(editingCard, data);
         } else {
@@ -132,24 +83,6 @@ $(document).ready(function () {
         reindexContacts();
     });
 
-    $(document).on('change', '[data-login-toggle]', function () {
-        updateLoginScope($(this).closest('[data-login-scope]'), true);
-    });
-
-    $(document).on('click', '[data-password-toggle]', function () {
-        const button = $(this);
-        const input = document.getElementById(button.data('target'));
-
-        if (!input) {
-            return;
-        }
-
-        const showPassword = input.type === 'password';
-        input.type = showPassword ? 'text' : 'password';
-        button.attr('aria-label', showPassword ? 'Hide password' : 'Show password');
-        button.attr('title', showPassword ? 'Hide password' : 'Show password');
-    });
-
     function getFormData() {
         return {
             name: valueOf('name'),
@@ -158,8 +91,6 @@ $(document).ready(function () {
             mobile: valueOf('mobile'),
             landline: valueOf('landline'),
             whatsapp: valueOf('whatsapp'),
-            login_enabled: form.find('[name="login_enabled"]').is(':checked') ? 1 : 0,
-            password: String(form.find('[name="password"]').val() || ''),
         };
     }
 
@@ -192,12 +123,6 @@ $(document).ready(function () {
         ['name', 'email', 'designation', 'mobile', 'landline', 'whatsapp'].forEach(function (field) {
             card.find(`.contact-${field}-input`).val(data[field] || '');
         });
-
-        card.find('.contact-login-enabled-input').val(data.login_enabled ? '1' : '0');
-        card.find('.contact-password-input').val(data.password || '');
-        card.find('.contact-login-badge')
-            .toggleClass('hidden', !data.login_enabled)
-            .toggleClass('inline-flex', Boolean(data.login_enabled));
     }
 
     function setContactInputNames(card, index) {
@@ -208,8 +133,6 @@ $(document).ready(function () {
             mobile: 'contact-mobile-input',
             landline: 'contact-landline-input',
             whatsapp: 'contact-whatsapp-input',
-            login_enabled: 'contact-login-enabled-input',
-            password: 'contact-password-input',
         };
 
         Object.entries(fieldClasses).forEach(function ([field, className]) {
@@ -236,35 +159,12 @@ $(document).ready(function () {
         contactIndex = contactsContainer.find('.contact-item').length;
     }
 
-    function updateLoginScope(scope, clearPassword) {
-        if (!scope.length) {
-            return;
-        }
-
-        const enabled = scope.find('[data-login-toggle]').first().is(':checked');
-        const fields = scope.find('[data-login-fields]');
-        const email = scope.find('[data-login-email]').first();
-
-        fields.toggleClass('hidden', !enabled);
-        fields.find('input').prop('disabled', !enabled);
-        email.prop('required', enabled);
-        scope.find('[data-login-email-required]').toggleClass('hidden', !enabled);
-
-        if (!enabled && clearPassword) {
-            fields.find('input[type="password"], input[type="text"][autocomplete="new-password"]')
-                .val('')
-                .attr('type', 'password');
-        }
-    }
-
     function resetModalForm() {
         if (form[0]) {
             form[0].reset();
         }
 
-        form.find('[name="password"]').val('').attr('type', 'password');
         clearErrors();
-        updateLoginScope(form.find('[data-login-scope]'), false);
     }
 
     function showError(fieldName, message) {

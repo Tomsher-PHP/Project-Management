@@ -4,12 +4,14 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\EnsureActiveLoginSession;
 use App\Http\Middleware\PermissionByType;
+use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
 use App\Models\CustomerContact;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
 class CustomerContactLoginAccessTest extends TestCase
@@ -28,12 +30,36 @@ class CustomerContactLoginAccessTest extends TestCase
             EnsureActiveLoginSession::class,
             PermissionByType::class,
         ]);
-        Mail::fake();
     }
 
-    public function test_primary_contact_without_login_accepts_each_contact_method_individually(): void
+    public function test_customer_contact_model_is_a_standard_eloquent_model_without_auth_attributes(): void
     {
-        foreach (['primary_mobile', 'primary_whatsapp', 'primary_landline'] as $index => $method) {
+        $contact = new CustomerContact();
+
+        $this->assertInstanceOf(Model::class, $contact);
+        $this->assertNotInstanceOf(Authenticatable::class, $contact);
+
+        $authAttributes = [
+            'login_enabled',
+            'password',
+            'password_set_at',
+            'last_login_at',
+            'email_verified_at',
+            'force_password_reset',
+        ];
+
+        foreach ($authAttributes as $attribute) {
+            $this->assertNotContains($attribute, $contact->getFillable());
+            $this->assertArrayNotHasKey($attribute, $contact->getCasts());
+            $this->assertNotContains($attribute, $contact->getHidden());
+        }
+    }
+
+    public function test_customer_creation_and_primary_contact_accept_each_contact_method_individually(): void
+    {
+        foreach (['primary_email', 'primary_mobile', 'primary_whatsapp', 'primary_landline'] as $index => $method) {
+            $value = $method === 'primary_email' ? "contact{$index}@example.test" : '+971501234567';
+
             $this->post(route('customers.store'), $this->payload([
                 'name' => "Contact Method Customer {$index}",
                 'primary_name' => "Contact Method Person {$index}",
@@ -41,18 +67,12 @@ class CustomerContactLoginAccessTest extends TestCase
                 'primary_mobile' => null,
                 'primary_whatsapp' => null,
                 'primary_landline' => null,
-                $method => '+971501234567',
-                'primary_login_enabled' => false,
+                $method => $value,
             ]))->assertRedirect(route('customers.index'));
 
             $contact = CustomerContact::where('name', "Contact Method Person {$index}")->sole();
-
-            $this->assertFalse($contact->login_enabled);
-            $this->assertNull($contact->password);
-            $this->assertNull($contact->password_set_at);
+            $this->assertTrue($contact->is_primary);
         }
-
-        Mail::assertNothingSent();
     }
 
     public function test_primary_contact_requires_at_least_one_contact_method(): void
@@ -63,7 +83,6 @@ class CustomerContactLoginAccessTest extends TestCase
                 'primary_mobile' => null,
                 'primary_whatsapp' => null,
                 'primary_landline' => null,
-                'primary_login_enabled' => false,
             ]))
             ->assertRedirect(route('customers.create'))
             ->assertSessionHasErrors([
@@ -71,211 +90,51 @@ class CustomerContactLoginAccessTest extends TestCase
             ]);
     }
 
-    public function test_login_access_requires_email_but_does_not_require_password(): void
-    {
-        $this->from(route('customers.create'))
-            ->post(route('customers.store'), $this->payload([
-                'primary_email' => null,
-                'primary_mobile' => '+971501234567',
-                'primary_login_enabled' => true,
-            ]))
-            ->assertRedirect(route('customers.create'))
-            ->assertSessionHasErrors([
-                'primary_email' => 'Email is required when login access is enabled.',
-            ]);
-
-        $this->post(route('customers.store'), $this->payload([
-            'name' => 'No Password Customer',
-            'primary_email' => 'portal@example.test',
-            'primary_login_enabled' => true,
-            'primary_password' => null,
-        ]))
-            ->assertRedirect(route('customers.index'));
-
-        $contact = CustomerContact::where('email', 'portal@example.test')->sole();
-
-        $this->assertTrue($contact->login_enabled);
-        $this->assertNull($contact->password);
-        $this->assertNull($contact->password_set_at);
-    }
-
-    public function test_password_is_hashed_by_the_model_and_timestamped(): void
-    {
-        $this->post(route('customers.store'), $this->payload([
-            'primary_email' => 'secure@example.test',
-            'primary_login_enabled' => true,
-            'primary_password' => 'Secure123',
-        ]))
-            ->assertRedirect(route('customers.index'));
-
-        $contact = CustomerContact::where('email', 'secure@example.test')->sole();
-
-        $this->assertNotSame('Secure123', $contact->password);
-        $this->assertTrue(Hash::check('Secure123', $contact->password));
-        $this->assertNotNull($contact->password_set_at);
-        $this->assertArrayNotHasKey('password', $contact->toArray());
-        Mail::assertNothingSent();
-    }
-
-    public function test_duplicate_contact_email_is_rejected_and_own_email_is_allowed_on_update(): void
-    {
-        CustomerContact::factory()->create(['email' => 'taken@example.test']);
-
-        $this->post(route('customers.store'), $this->payload([
-            'primary_email' => 'taken@example.test',
-            'primary_login_enabled' => true,
-        ]))
-            ->assertSessionHasErrors('primary_email');
-
-        $customer = $this->createCustomerWithPrimaryContact();
-
-        $this->put(route('customers.update', $customer), $this->updatePayload($customer))
-            ->assertRedirect();
-    }
-
-    public function test_blank_password_preserves_existing_password_when_access_is_disabled_and_reenabled(): void
-    {
-        $customer = $this->createCustomerWithPrimaryContact('Original123');
-        $contact = $customer->primaryContact;
-        $originalHash = $contact->password;
-        $originalSetAt = $contact->password_set_at?->toISOString();
-
-        $this->put(route('customers.update', $customer), $this->updatePayload($customer, [
-            'primary_login_enabled' => false,
-            'primary_password' => null,
-        ]))
-            ->assertRedirect();
-
-        $contact->refresh();
-        $this->assertFalse($contact->login_enabled);
-        $this->assertSame($originalHash, $contact->password);
-        $this->assertSame($originalSetAt, $contact->password_set_at?->toISOString());
-
-        $this->put(route('customers.update', $customer), $this->updatePayload($customer, [
-            'primary_login_enabled' => true,
-            'primary_password' => '',
-        ]))
-            ->assertRedirect();
-
-        $contact->refresh();
-        $this->assertTrue($contact->login_enabled);
-        $this->assertSame($originalHash, $contact->password);
-        $this->assertSame($originalSetAt, $contact->password_set_at?->toISOString());
-    }
-
-    public function test_new_password_replaces_hash_and_password_timestamp(): void
-    {
-        $customer = $this->createCustomerWithPrimaryContact('Original123');
-        $contact = $customer->primaryContact;
-        $oldHash = $contact->password;
-        $oldTimestamp = $contact->password_set_at;
-
-        $this->travel(1)->minute();
-
-        $this->put(route('customers.update', $customer), $this->updatePayload($customer, [
-            'primary_password' => 'Replacement456',
-        ]))
-            ->assertRedirect();
-
-        $contact->refresh();
-        $this->assertNotSame($oldHash, $contact->password);
-        $this->assertTrue(Hash::check('Replacement456', $contact->password));
-        $this->assertTrue($contact->password_set_at->greaterThan($oldTimestamp));
-    }
-
-    public function test_extra_contact_login_access_and_password_transitions_are_persisted(): void
+    public function test_extra_contact_creation_updating_and_removal(): void
     {
         $this->post(route('customers.store'), $this->payload([
             'contacts' => [[
-                'name' => 'Extra Contact',
-                'email' => 'extra@example.test',
-                'mobile' => null,
-                'landline' => null,
-                'whatsapp' => null,
+                'name' => 'Extra Contact One',
+                'email' => 'extra1@example.test',
                 'designation' => 'Manager',
-                'login_enabled' => true,
-                'password' => 'Extra1234',
             ], [
-                'name' => 'Passwordless Extra Contact',
-                'email' => 'passwordless-extra@example.test',
-                'login_enabled' => true,
-            ], [
-                'name' => 'No Login Extra Contact',
+                'name' => 'Extra Contact Two',
                 'email' => null,
                 'landline' => '+97141234567',
-                'login_enabled' => false,
             ]],
-        ]))
-            ->assertRedirect(route('customers.index'));
+        ]))->assertRedirect(route('customers.index'));
 
         $customer = Customer::where('name', 'Test Customer')->sole();
-        $extra = $customer->extraContacts()->where('email', 'extra@example.test')->sole();
-        $passwordless = $customer->extraContacts()->where('email', 'passwordless-extra@example.test')->sole();
-        $noLogin = $customer->extraContacts()->where('name', 'No Login Extra Contact')->sole();
-        $originalHash = $extra->password;
-        $originalTimestamp = $extra->password_set_at?->toISOString();
+        $extraOne = $customer->extraContacts()->where('name', 'Extra Contact One')->sole();
+        $extraTwo = $customer->extraContacts()->where('name', 'Extra Contact Two')->sole();
 
-        $this->assertTrue($extra->login_enabled);
-        $this->assertTrue(Hash::check('Extra1234', $originalHash));
-        $this->assertTrue($passwordless->login_enabled);
-        $this->assertNull($passwordless->password);
-        $this->assertFalse($noLogin->login_enabled);
-        $this->assertNull($noLogin->password);
+        $this->assertSame('extra1@example.test', $extraOne->email);
+        $this->assertSame('+97141234567', $extraTwo->landline);
 
+        // Update Extra Contact One and remove Extra Contact Two
         $this->put(route('customers.update', $customer), $this->updatePayload($customer, [
+            'name' => 'Updated Test Customer',
+            'primary_name' => 'Updated Primary Contact',
             'contacts' => [[
-                'id' => $extra->id,
-                'name' => $extra->name,
-                'email' => $extra->email,
-                'designation' => $extra->designation,
-                'login_enabled' => false,
-                'password' => '',
-            ], [
-                'id' => $passwordless->id,
-                'name' => $passwordless->name,
-                'email' => $passwordless->email,
-                'login_enabled' => true,
-            ], [
-                'id' => $noLogin->id,
-                'name' => $noLogin->name,
-                'landline' => $noLogin->landline,
-                'login_enabled' => false,
+                'id' => $extraOne->id,
+                'name' => 'Extra Contact One Updated',
+                'email' => 'extra1-updated@example.test',
+                'designation' => 'Senior Manager',
             ]],
-        ]))
-            ->assertRedirect();
+        ]))->assertRedirect();
 
-        $extra->refresh();
-        $this->assertFalse($extra->login_enabled);
-        $this->assertSame($originalHash, $extra->password);
-        $this->assertSame($originalTimestamp, $extra->password_set_at?->toISOString());
+        $customer->refresh();
+        $this->assertSame('Updated Test Customer', $customer->name);
+        $this->assertSame('Updated Primary Contact', $customer->primaryContact->name);
 
-        $this->put(route('customers.update', $customer), $this->updatePayload($customer, [
-            'contacts' => [[
-                'id' => $extra->id,
-                'name' => $extra->name,
-                'email' => $extra->email,
-                'designation' => $extra->designation,
-                'login_enabled' => true,
-            ], [
-                'id' => $passwordless->id,
-                'name' => $passwordless->name,
-                'email' => $passwordless->email,
-                'login_enabled' => true,
-            ], [
-                'id' => $noLogin->id,
-                'name' => $noLogin->name,
-                'landline' => $noLogin->landline,
-                'login_enabled' => false,
-            ]],
-        ]))
-            ->assertRedirect();
+        $extraOne->refresh();
+        $this->assertSame('Extra Contact One Updated', $extraOne->name);
+        $this->assertSame('extra1-updated@example.test', $extraOne->email);
 
-        $extra->refresh();
-        $this->assertTrue($extra->login_enabled);
-        $this->assertSame($originalHash, $extra->password);
+        $this->assertSoftDeleted('customer_contacts', ['id' => $extraTwo->id]);
     }
 
-    public function test_extra_contact_without_login_requires_one_contact_method(): void
+    public function test_extra_contact_requires_one_contact_method_and_valid_email_format(): void
     {
         $this->post(route('customers.store'), $this->payload([
             'contacts' => [[
@@ -284,12 +143,42 @@ class CustomerContactLoginAccessTest extends TestCase
                 'mobile' => null,
                 'landline' => null,
                 'whatsapp' => null,
-                'login_enabled' => false,
             ]],
-        ]))
-            ->assertSessionHasErrors([
-                'contacts.0.email' => 'Please provide at least one contact method (Email, Mobile, WhatsApp, or Landline).',
-            ]);
+        ]))->assertSessionHasErrors([
+            'contacts.0.email' => 'Please provide at least one contact method (Email, Mobile, WhatsApp, or Landline).',
+        ]);
+
+        $this->post(route('customers.store'), $this->payload([
+            'contacts' => [[
+                'name' => 'Invalid Email Contact',
+                'email' => 'not-an-email',
+            ]],
+        ]))->assertSessionHasErrors([
+            'contacts.0.email',
+        ]);
+    }
+
+    public function test_customer_request_validation_accepts_duplicate_contact_emails(): void
+    {
+        CustomerContact::factory()->create(['email' => 'shared@example.test']);
+
+        $request = CustomerRequest::create(route('customers.store'), 'POST', $this->payload([
+            'primary_email' => 'shared@example.test',
+            'contacts' => [[
+                'name' => 'Duplicate Email Extra',
+                'email' => 'shared@example.test',
+            ]],
+        ]));
+
+        $validator = Validator::make(
+            $request->all(),
+            $request->rules(),
+            $request->messages(),
+            $request->attributes(),
+        );
+        $request->withValidator($validator);
+
+        $this->assertFalse($validator->fails());
     }
 
     private function payload(array $overrides = []): array
@@ -304,30 +193,8 @@ class CustomerContactLoginAccessTest extends TestCase
             'primary_whatsapp' => null,
             'primary_landline' => null,
             'primary_designation' => 'Director',
-            'primary_login_enabled' => false,
-            'primary_password' => null,
             'contacts' => [],
         ], $overrides);
-    }
-
-    private function createCustomerWithPrimaryContact(?string $password = null): Customer
-    {
-        $customer = Customer::create([
-            'customer_code' => Customer::generateCustomerCode(),
-            'name' => 'Existing Customer',
-            'sales_person_id' => $this->salesPerson->id,
-        ]);
-
-        $customer->contacts()->create([
-            'name' => 'Existing Primary',
-            'email' => 'existing@example.test',
-            'is_primary' => true,
-            'login_enabled' => true,
-            'password' => $password,
-            'password_set_at' => $password ? now() : null,
-        ]);
-
-        return $customer->fresh('primaryContact');
     }
 
     private function updatePayload(Customer $customer, array $overrides = []): array
@@ -342,8 +209,6 @@ class CustomerContactLoginAccessTest extends TestCase
             'primary_whatsapp' => $customer->primaryContact->whatsapp,
             'primary_landline' => $customer->primaryContact->landline,
             'primary_designation' => $customer->primaryContact->designation,
-            'primary_login_enabled' => $customer->primaryContact->login_enabled,
-            'primary_password' => null,
             'contacts' => [],
         ], $overrides);
     }
