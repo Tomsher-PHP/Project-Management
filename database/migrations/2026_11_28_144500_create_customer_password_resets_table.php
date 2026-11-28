@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email', 255);
             $table->string('challenge_token_hash', 255)
                 ->unique('customer_password_resets_challenge_token_hash_unique');
-            $table->string('otp_hash', 255);
+            $table->string('otp', 10);
             $table->unsignedInteger('attempt_count')->default(0);
             $table->timestamp('expires_at');
             $table->timestamp('verified_at')->nullable();

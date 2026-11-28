@@ -139,8 +139,8 @@ class CustomerOtpService
             ->first(['id', 'customer_id']);
 
         if (! $lookup) {
-            // Perform a dummy HMAC comparison to equalize timing for dummy/unknown contexts.
-            hash_equals($this->hashOtp('000000', $challengeTokenHash), $this->hashOtp($otp, $challengeTokenHash));
+            // Perform a constant-time dummy comparison to equalize timing for dummy/unknown contexts.
+            hash_equals('000000', $otp);
 
             throw ValidationException::withMessages([
                 'otp' => self::GENERIC_VERIFICATION_ERROR,
@@ -177,9 +177,7 @@ class CustomerOtpService
                 return ['success' => false];
             }
 
-            $expectedHash = $this->hashOtp($otp, $reset->challenge_token_hash);
-
-            if (! hash_equals($reset->otp_hash, $expectedHash)) {
+            if (! hash_equals((string) $reset->otp, (string) $otp)) {
                 $newAttempts = $reset->attempt_count + 1;
                 $updates = ['attempt_count' => $newAttempts];
 
@@ -471,11 +469,6 @@ class CustomerOtpService
         return hash('sha256', $resetToken);
     }
 
-    public function hashOtp(string $otp, string $challengeTokenHash): string
-    {
-        return hash_hmac('sha256', $challengeTokenHash . '|' . $otp, (string) config('app.key'));
-    }
-
     public function cooldownThrottleKey(string $normalizedUsername): string
     {
         return 'customer-portal-otp-cooldown:' . Str::transliterate(sha1($normalizedUsername));
@@ -502,13 +495,12 @@ class CustomerOtpService
         $otp = $this->generateOtp($otpLength);
         $challengeToken = bin2hex(random_bytes(32));
         $challengeTokenHash = $this->hashChallengeToken($challengeToken);
-        $otpHash = $this->hashOtp($otp, $challengeTokenHash);
 
         $reset = CustomerPasswordReset::query()->create([
             'customer_id' => $customer->id,
             'email' => trim((string) $customer->email),
             'challenge_token_hash' => $challengeTokenHash,
-            'otp_hash' => $otpHash,
+            'otp' => $otp,
             'attempt_count' => 0,
             'expires_at' => $now->copy()->addMinutes($expiryMinutes),
         ]);

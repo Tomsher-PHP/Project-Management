@@ -145,7 +145,7 @@ class CustomerForgotPasswordTest extends TestCase
 
         // Hidden attributes must not serialize.
         $serialized = $reset->toArray();
-        $this->assertArrayNotHasKey('otp_hash', $serialized);
+        $this->assertArrayNotHasKey('otp', $serialized);
         $this->assertArrayNotHasKey('challenge_token_hash', $serialized);
         $this->assertArrayNotHasKey('reset_token_hash', $serialized);
 
@@ -158,10 +158,7 @@ class CustomerForgotPasswordTest extends TestCase
             $sentOtp = $mail->otp;
             $this->assertSame('Customer Portal – Password Reset Verification Code', $mail->envelope()->subject);
             $this->assertMatchesRegularExpression('/^\d{6}$/', $mail->otp);
-            $this->assertNotSame($mail->otp, $reset->otp_hash);
-
-            $expectedHash = app(CustomerOtpService::class)->hashOtp($mail->otp, $reset->challenge_token_hash);
-            $this->assertTrue(hash_equals($reset->otp_hash, $expectedHash));
+            $this->assertSame($mail->otp, $reset->otp);
 
             return $mail->hasTo('company@acme.example')
                 && ! $mail->hasTo('primary-contact@acme.example')

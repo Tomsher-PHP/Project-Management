@@ -106,7 +106,7 @@ class CustomerPasswordResetCleanupTest extends TestCase
             'customer_id' => $customer->id,
             'email' => $customer->email,
             'challenge_token_hash' => hash('sha256', bin2hex(random_bytes(32))),
-            'otp_hash' => hash('sha256', bin2hex(random_bytes(32))),
+            'otp' => '123456',
             'attempt_count' => 0,
             'expires_at' => now()->addMinutes(5),
         ], $overrides));

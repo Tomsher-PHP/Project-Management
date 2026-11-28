@@ -13,7 +13,7 @@ class CustomerPasswordReset extends Model
         'customer_id',
         'email',
         'challenge_token_hash',
-        'otp_hash',
+        'otp',
         'attempt_count',
         'expires_at',
         'verified_at',
@@ -24,7 +24,7 @@ class CustomerPasswordReset extends Model
     ];
 
     protected $hidden = [
-        'otp_hash',
+        'otp',
         'challenge_token_hash',
         'reset_token_hash',
     ];

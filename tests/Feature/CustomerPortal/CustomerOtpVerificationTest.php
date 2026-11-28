@@ -95,9 +95,8 @@ class CustomerOtpVerificationTest extends TestCase
 
         // Set a known OTP with a leading zero bound to this challenge.
         $leadingZeroOtp = '012345';
-        $otpService = app(CustomerOtpService::class);
         $reset->update([
-            'otp_hash' => $otpService->hashOtp($leadingZeroOtp, $reset->challenge_token_hash),
+            'otp' => $leadingZeroOtp,
         ]);
 
         $resp = $this->sendWithJar('POST', route('customer.password.otp.verify', [], false), $jar, [
