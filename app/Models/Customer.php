@@ -66,6 +66,29 @@ class Customer extends Authenticatable
         static::updating(function ($model) {
             $model->updated_by = Auth::id() ?? null;
         });
+
+        static::updated(function (Customer $customer) {
+            $revokingChange = $customer->wasChanged(['username', 'password'])
+                || ($customer->wasChanged('login_enabled') && ! $customer->login_enabled)
+                || ($customer->wasChanged('is_active') && ! $customer->is_active);
+
+            if ($revokingChange) {
+                app(\App\Services\CustomerPortal\Auth\CustomerAuthService::class)
+                    ->revokeCustomerSessions($customer->getKey());
+                app(\App\Services\CustomerPortal\Auth\CustomerOtpService::class)
+                    ->invalidateOutstandingForCustomer($customer->getKey());
+            } elseif ($customer->wasChanged('email')) {
+                app(\App\Services\CustomerPortal\Auth\CustomerOtpService::class)
+                    ->invalidateOutstandingForCustomer($customer->getKey());
+            }
+        });
+
+        static::deleted(function (Customer $customer) {
+            app(\App\Services\CustomerPortal\Auth\CustomerAuthService::class)
+                ->revokeCustomerSessions($customer->getKey());
+            app(\App\Services\CustomerPortal\Auth\CustomerOtpService::class)
+                ->invalidateOutstandingForCustomer($customer->getKey());
+        });
     }
 
     public static function generateCustomerCode()

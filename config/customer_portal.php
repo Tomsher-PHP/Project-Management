@@ -21,6 +21,7 @@ return [
         'resend_interval_seconds' => 60,
         'max_requests_per_hour' => 5,
         'reset_token_expiry_minutes' => 10,
+        'retention_days' => 7,
     ],
 
 ];

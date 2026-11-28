@@ -34,3 +34,7 @@ Artisan::command('data-sync:recover-outbound-deliveries', function (\App\Service
 })->purpose('Recover and re-dispatch abandoned pending outbound data sync deliveries');
 
 Schedule::command('data-sync:recover-outbound-deliveries')->everyFiveMinutes()->withoutOverlapping();
+
+Schedule::command('customer-portal:prune-password-resets')
+    ->dailyAt('03:00')
+    ->withoutOverlapping();
